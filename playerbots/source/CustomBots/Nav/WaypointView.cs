@@ -302,8 +302,8 @@ namespace Server.CustomBots
 
                         // One line per pair, whichever end we reach first.
                         string key = string.CompareOrdinal(n.Name, other.Name) < 0
-                            ? n.Name + " " + other.Name
-                            : other.Name + " " + n.Name;
+                            ? n.Name + "\0" + other.Name
+                            : other.Name + "\0" + n.Name;
                         if (!done.Add(key))
                         {
                             continue;
