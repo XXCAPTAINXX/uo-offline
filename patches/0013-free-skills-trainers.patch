@@ -1,0 +1,46 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -5927,7 +5927,11 @@ namespace Server.Mobiles
+                 return TeachResult.SkillNotRaisable;
+             }
+ 
+-            var freePoints = Math.Max(m.Skills.Cap - m.Skills.Total, 0);
++            var freeTarget = Server.CustomBots.FreeSkillSystem.IsFree(m, theirSkill);
++            var freePoints = freeTarget
++                ? pointsToLearn
++                : Math.Max(m.Skills.Cap - Server.CustomBots.FreeSkillSystem.CappedTotalFixed(m), 0);
+             var freeablePoints = 0;
+ 
+             for (var i = 0; freePoints + freeablePoints < pointsToLearn && i < m.Skills.Length; ++i)
+@@ -5935,7 +5939,8 @@ namespace Server.Mobiles
+             {
+                 var sk = m.Skills[i];
+ 
+-                if (sk == theirSkill || sk.Lock != SkillLock.Down)
++                if (sk == theirSkill || Server.CustomBots.FreeSkillSystem.IsFree(m, sk) ||
++                    sk.Lock != SkillLock.Down)
+                 {
+                     continue;
+                 }
+@@ -5960,7 +5965,8 @@ namespace Server.Mobiles
+                 {
+                     var sk = m.Skills[i];
+ 
+-                    if (sk == theirSkill || sk.Lock != SkillLock.Down)
++                    if (sk == theirSkill || Server.CustomBots.FreeSkillSystem.IsFree(m, sk) ||
++                        sk.Lock != SkillLock.Down)
+                     {
+                         continue;
+                     }
+@@ -5978,7 +5984,9 @@ namespace Server.Mobiles
+                 }
+ 
+                 if (baseToSet > theirSkill.CapFixedPoint ||
+-                    m.Skills.Total - theirSkill.BaseFixedPoint + baseToSet > m.Skills.Cap)
++                    !freeTarget &&
++                    Server.CustomBots.FreeSkillSystem.CappedTotalFixed(m) -
++                    theirSkill.BaseFixedPoint + baseToSet > m.Skills.Cap)
+                 {
+                     return TeachResult.NotEnoughFreePoints;
+                 }
