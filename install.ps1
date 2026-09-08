@@ -1029,7 +1029,7 @@ function SwapT2AMap {
 function FetchSpawnMap {
   Banner "Fetching world spawn data"
   if (-not $ClassicT2A) {
-    Say "Modern profile: using ModernUO's expansion-aware JSON spawns; skipping Nerun's pre-T2A map."
+    Say "Modern profile: using UORespawn six-facet dynamic population; skipping Nerun's pre-T2A map."
     return
   }
   Banner "Fetching Nerun's pre-T2A spawn map"
