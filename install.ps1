@@ -546,9 +546,10 @@ function BuildModernUO {
     Say "$label — full output: $buildLog"
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "powershell.exe"
+    $psi.FileName = (Join-Path $DotnetRoot "dotnet.exe")
     $psi.WorkingDirectory = $ModernUODir
-    $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $ModernUODir 'publish.ps1')`" release win x64"
+    $buildProject = Join-Path $ModernUODir "Projects\BuildTool\BuildTool.csproj"
+    $psi.Arguments = "run --project `"$buildProject`" -- release win x64"
     $psi.UseShellExecute = $false
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
