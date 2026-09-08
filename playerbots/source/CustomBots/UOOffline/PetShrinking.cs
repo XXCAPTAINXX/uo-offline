@@ -83,7 +83,7 @@ public partial class ShrunkenPet : Item
 
         if (Core.SE)
         {
-            pet.Loyalty = MaxLoyalty;
+            pet.Loyalty = BaseCreature.MaxLoyalty;
         }
 
         from.SendMessage($"{pet.Name} has been restored.");
