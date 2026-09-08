@@ -370,8 +370,8 @@ namespace Server.CustomBots
 
             int cost = Math.Max(100, missing * GoldPerDurabilityPoint);
 
-            bool paid = from.Backpack?.ConsumeTotal(typeof(Gold), cost) == true ||
-                        Banker.Withdraw(from, cost);
+            bool paid = Banker.Withdraw(from, cost) ||
+                        from.Backpack?.ConsumeTotal(typeof(Gold), cost) == true;
 
             if (!paid)
             {
