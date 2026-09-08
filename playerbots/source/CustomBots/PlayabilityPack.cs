@@ -24,6 +24,7 @@ using Server.Engines.Spawners;
 using Server.Items;
 using Server.Maps;
 using Server.Mobiles;
+using Server.Network;
 using Server.Spells;
 
 namespace Server.CustomBots
@@ -54,6 +55,7 @@ namespace Server.CustomBots
         public static void Configure()
         {
             CommandSystem.Register("NewbieSetup", AccessLevel.GameMaster, NewbieSetup_OnCommand);
+            CommandSystem.Register("NewbieStatus", AccessLevel.Player, NewbieStatus_OnCommand);
             CommandSystem.Register("TravelBook", AccessLevel.Player, TravelBook_OnCommand);
 
             EventSink.WorldLoad += OnWorldLoad;
@@ -64,30 +66,72 @@ namespace Server.CustomBots
             Timer.DelayCall(TimeSpan.FromSeconds(1), EnsureWorld);
         }
 
-        public static bool IsInNewbieDungeon(Mobile m)
+        public static bool IsInNewbieDungeon(Mobile m) =>
+            m != null && IsInNewbieDungeon(m.Map, m.Location);
+
+        public static bool IsInNewbieDungeon(Map map, Point3D location)
         {
-            if (m?.Map != Map.Trammel)
+            if (map != Map.Trammel)
             {
                 return false;
             }
 
-            return m.X >= MinX && m.X < MaxXExclusive &&
-                   m.Y >= MinY && m.Y < MaxYExclusive;
+            return location.X >= MinX && location.X < MaxXExclusive &&
+                   location.Y >= MinY && location.Y < MaxYExclusive;
         }
 
-        public static bool IsInOldHavenTraining(Mobile m)
+        public static bool IsInOldHavenTraining(Mobile m) =>
+            m != null && IsInOldHavenTraining(m.Map, m.Location);
+
+        public static bool IsInOldHavenTraining(Map map, Point3D location)
         {
-            if (m?.Map != Map.Trammel)
+            if (map != Map.Trammel)
             {
                 return false;
             }
 
-            return m.X >= OldHavenMinX && m.X < OldHavenMaxXExclusive &&
-                   m.Y >= OldHavenMinY && m.Y < OldHavenMaxYExclusive;
+            return location.X >= OldHavenMinX && location.X < OldHavenMaxXExclusive &&
+                   location.Y >= OldHavenMinY && location.Y < OldHavenMaxYExclusive;
         }
 
         public static bool IsInNewbieTraining(Mobile m) =>
-            IsInNewbieDungeon(m) || IsInOldHavenTraining(m);
+            m != null && IsInNewbieTraining(m.Map, m.Location);
+
+        public static bool IsInNewbieTraining(Map map, Point3D location) =>
+            IsInNewbieDungeon(map, location) || IsInOldHavenTraining(map, location);
+
+        public static void RefreshLuckStatus(PlayerMobile pm, Map oldMap, Point3D oldLocation)
+        {
+            if (pm == null || pm.Deleted)
+            {
+                return;
+            }
+
+            bool wasTraining = IsInNewbieTraining(oldMap, oldLocation);
+            bool isTraining = IsInNewbieTraining(pm);
+
+            if (wasTraining == isTraining)
+            {
+                return;
+            }
+
+            // Luck is dynamic by location. Crossing the boundary does not
+            // otherwise dirty a stat, so explicitly refresh the AOS/ML status
+            // packet or TazUO will continue displaying the pre-zone value.
+            pm.NetState?.SendMobileStatus(pm);
+
+            if (isTraining)
+            {
+                pm.SendMessage(
+                    0x35,
+                    $"Newbie training active: +1000 Luck and {FastGainMultiplier}x player/pet skill gain to 100.0."
+                );
+            }
+            else
+            {
+                pm.SendMessage("Newbie training bonuses have ended.");
+            }
+        }
 
         public static int LuckBonus(PlayerMobile pm) =>
             pm != null && IsInNewbieTraining(pm) ? 1000 : 0;
@@ -398,6 +442,31 @@ namespace Server.CustomBots
             }
 
             return new Point3D(preferred.X, preferred.Y, preferredAverageZ);
+        }
+
+        private static void NewbieStatus_OnCommand(CommandEventArgs e)
+        {
+            if (e.Mobile is not PlayerMobile pm)
+            {
+                return;
+            }
+
+            pm.NetState?.SendMobileStatus(pm);
+
+            string zone = IsInNewbieDungeon(pm)
+                ? "Newbie Dungeon"
+                : IsInOldHavenTraining(pm)
+                    ? "Old Haven"
+                    : "None";
+
+            pm.SendMessage(0x35, "=== Newbie Training Status ===");
+            pm.SendMessage($"Zone: {zone}");
+            pm.SendMessage($"Current Luck: {pm.Luck:N0}");
+            pm.SendMessage(
+                IsInNewbieTraining(pm)
+                    ? $"+1000 zone Luck ACTIVE; {FastGainMultiplier}x player/pet skill gain to 100.0 ACTIVE."
+                    : "No newbie training bonus is currently active."
+            );
         }
 
         private static void TravelBook_OnCommand(CommandEventArgs e)
