@@ -545,11 +545,17 @@ function BuildModernUO {
   function RunPublishAttempt([string]$label) {
     Say "$label — full output: $buildLog"
 
+    # Never trust a cached native BuildTool from an older installer run.
+    # publish.ps1 will fetch the matching tool for the pinned engine commit.
+    $toolDir = Join-Path $ModernUODir "tools"
+    Remove-Item (Join-Path $toolDir "build-tool.exe") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $toolDir ".build-tool-commit") -Force -ErrorAction SilentlyContinue
+
     $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = (Join-Path $DotnetRoot "dotnet.exe")
+    $psi.FileName = "powershell.exe"
     $psi.WorkingDirectory = $ModernUODir
-    $buildProject = Join-Path $ModernUODir "Projects\BuildTool\BuildTool.csproj"
-    $psi.Arguments = "run --project `"$buildProject`" -- release win x64"
+    $publishScript = Join-Path $ModernUODir "publish.ps1"
+    $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$publishScript`" release win x64"
     $psi.UseShellExecute = $false
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
