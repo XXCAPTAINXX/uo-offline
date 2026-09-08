@@ -40,7 +40,7 @@ namespace Server.CustomBots
 
             // A free starter home is a one-time character grant. Travel book,
             // wallet and QoL bags are recoverable; house deeds are not.
-            public HashSet<int> StarterHomeCharacters { get; set; } = new();
+            public HashSet<uint> StarterHomeCharacters { get; set; } = new();
         }
 
         private static Dictionary<string, WalletRecord> _wallets =
@@ -263,9 +263,9 @@ namespace Server.CustomBots
                 return;
             }
 
-            record.StarterHomeCharacters ??= new HashSet<int>();
+            record.StarterHomeCharacters ??= new HashSet<uint>();
 
-            int serial = m.Serial.Value;
+            uint serial = m.Serial.Value;
             if (record.StarterHomeCharacters.Contains(serial))
             {
                 return;
@@ -354,7 +354,7 @@ namespace Server.CustomBots
 
                 foreach (var record in _wallets.Values)
                 {
-                    record.StarterHomeCharacters ??= new HashSet<int>();
+                    record.StarterHomeCharacters ??= new HashSet<uint>();
                 }
 
                 _dirty = false;
