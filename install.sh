@@ -81,6 +81,13 @@ MODERNUO_REPO="https://github.com/modernuo/ModernUO.git"
 # the API change broke, play it, then release. Empty means track main, which
 # is the old behaviour and the old lottery.
 MODERNUO_COMMIT="114dbba6e25f0e97e8537e54025d7bfa87c03a39"
+
+# UORespawn 2.0.1.4 — pinned ModernUO dynamic spawn dependency.
+UORESPAWN_COMMIT="26ad18a910dbc1318079035a87084d191ff173f9"
+UORESPAWN_RAW_BASE="https://raw.githubusercontent.com/Kita72/UORespawnProject/$UORESPAWN_COMMIT/UORespawnApp/Data"
+UORESPAWN_SERVER_ZIP_URL="$UORESPAWN_RAW_BASE/SERVER/MUO/UORespawnServer.zip"
+UORESPAWN_PACK_ZIP_URL="$UORESPAWN_RAW_BASE/PACKS/Approved/DefaultPack.zip"
+UORESPAWN_LICENSE_URL="https://raw.githubusercontent.com/Kita72/UORespawnProject/$UORESPAWN_COMMIT/LICENSE"
 MODERNUO_DIR="${INSTALL_ROOT}/ModernUO"
 DIST_DIR="${MODERNUO_DIR}/Distribution"
 CFG_DIR="${DIST_DIR}/Configuration"
@@ -1464,6 +1471,86 @@ install_playerbots() {
 }
 
 # ---------------------------------------------------------------------------
+# UORespawn modern world population
+# ---------------------------------------------------------------------------
+install_uorespawn() {
+  banner "Installing UORespawn modern spawn system"
+
+  local target="$MODERNUO_DIR/Projects/UOContent/Custom/UORespawnServer"
+  local dll="$DIST_DIR/ModernUO.dll"
+
+  if [[ "$CLASSIC_T2A" == "1" ]]; then
+    if [[ -d "$target" ]]; then
+      rm -rf "$target"
+      rm -f "$dll"
+    fi
+    say "Classic T2A profile: UORespawn is not installed."
+    return
+  fi
+
+  local cache="$INSTALL_ROOT/cache/UORespawn-$UORESPAWN_COMMIT"
+  local server_zip="$cache/UORespawnServer.zip"
+  local pack_zip="$cache/DefaultPack.zip"
+  mkdir -p "$cache"
+
+  if [[ ! -f "$server_zip" ]]; then
+    say "Downloading pinned UORespawn ModernUO server module..."
+    curl -fsSL "$UORESPAWN_SERVER_ZIP_URL" -o "$server_zip"
+  fi
+
+  if [[ ! -f "$pack_zip" ]]; then
+    say "Downloading pinned UORespawn six-facet DefaultPack..."
+    curl -fsSL "$UORESPAWN_PACK_ZIP_URL" -o "$pack_zip"
+  fi
+
+  local server_tmp="$cache/server-unpacked"
+  rm -rf "$server_tmp"
+  mkdir -p "$server_tmp"
+  unzip -q "$server_zip" -d "$server_tmp"
+
+  local core
+  core="$(find "$server_tmp" -type f -name UOR_Core.cs | head -n1)"
+  [[ -n "$core" ]] || die "UORespawnServer.zip did not contain UOR_Core.cs."
+
+  local source_root
+  source_root="$(dirname "$core")"
+  rm -rf "$target"
+  mkdir -p "$target"
+  cp -rT "$source_root" "$target"
+
+  local core_target="$target/UOR_Core.cs"
+  sed -i 's/if (m is PlayerMobile pm && !_RespawnerList.ContainsKey(pm.Serial))/if (m is PlayerMobile pm \&\& m is not Server.CustomBots.PlayerBot \&\& !_RespawnerList.ContainsKey(pm.Serial))/' "$core_target"
+  sed -i 's/if (m is PlayerMobile pm && _RespawnerList.ContainsKey(pm.Serial))/if (m is PlayerMobile pm \&\& m is not Server.CustomBots.PlayerBot \&\& _RespawnerList.ContainsKey(pm.Serial))/' "$core_target"
+  grep -q 'm is not Server.CustomBots.PlayerBot' "$core_target" || die "Pinned UORespawn player hooks changed; review integration before updating."
+
+  local input_dir="$DIST_DIR/Data/UORespawn/INPUT"
+  mkdir -p "$input_dir"
+
+  if [[ ! -f "$input_dir/UOR_RegionSpawn.bin" ]]; then
+    local pack_tmp="$cache/pack-unpacked"
+    rm -rf "$pack_tmp"
+    mkdir -p "$pack_tmp"
+    unzip -q "$pack_zip" -d "$pack_tmp"
+
+    local region pack_root
+    region="$(find "$pack_tmp" -type f -name UOR_RegionSpawn.bin | head -n1)"
+    [[ -n "$region" ]] || die "DefaultPack.zip did not contain UOR_RegionSpawn.bin."
+    pack_root="$(dirname "$region")"
+
+    find "$pack_root" -maxdepth 1 -type f \( -name 'UOR_*.bin' -o -name 'UOR_SpawnSettings.csv' \) -exec cp -f {} "$input_dir/" \;
+    ok "Seeded UORespawn DefaultPack (all six facets)."
+  else
+    say "Existing UORespawn INPUT data found; preserving your customized spawn pack."
+  fi
+
+  mkdir -p "$DIST_DIR/ThirdPartyLicenses"
+  curl -fsSL "$UORESPAWN_LICENSE_URL" -o "$DIST_DIR/ThirdPartyLicenses/UORespawn-MIT.txt"
+
+  rm -f "$dll"
+  ok "UORespawn installed; only real connected players drive dynamic spawning."
+}
+
+# ---------------------------------------------------------------------------
 main() {
   preflight
   install_deps
@@ -1471,6 +1558,7 @@ main() {
   bootstrap_dotnet
   apply_engine_patches
   install_playerbots
+  install_uorespawn
   install_map_editor
   build_modernuo
   fix_felucca_season
