@@ -1327,7 +1327,10 @@ apply_engine_patches() {
     fi
 
     if ! git -C "${MODERNUO_DIR}" apply --check "${patch}" 2>/dev/null; then
-      warn "${name} does not apply to this ModernUO checkout - skipping."
+      if [[ -n "${MODERNUO_COMMIT}" ]]; then
+        die "${name} does not apply cleanly to pinned ModernUO commit ${MODERNUO_COMMIT}. Refusing a partial install."
+      fi
+      warn "${name} does not apply to this unpinned ModernUO checkout - skipping."
       warn "See INTEGRATION-NOTES.txt if you need it applied by hand."
       continue
     fi
