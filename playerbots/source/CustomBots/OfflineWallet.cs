@@ -271,24 +271,32 @@ namespace Server.CustomBots
                 return;
             }
 
+            var supplies = new Bag
+            {
+                Name = "Starter Home Supplies"
+            };
+
             var deed = new SmallBrickHouseDeed
             {
                 Name = "Starter Small House Deed"
             };
 
-            if (m.AddToBackpack(deed))
+            supplies.DropItem(deed);
+            supplies.DropItem(new GoldRepairBench());
+
+            if (m.AddToBackpack(supplies))
             {
                 record.StarterHomeCharacters.Add(serial);
                 _dirty = true;
                 m.SendMessage(
                     0x35,
-                    "Starter home granted: a Small Brick House deed has been placed in your backpack. This free house deed is issued once per character."
+                    "Starter home granted: Starter Home Supplies contains a Small Brick House deed and Gold Repair Bench. This free home package is issued once per character."
                 );
             }
             else
             {
-                deed.Delete();
-                m.SendMessage("Make room in your backpack; your starter house deed has not been claimed yet.");
+                supplies.Delete();
+                m.SendMessage("Make room in your backpack; your starter home package has not been claimed yet.");
             }
         }
 
