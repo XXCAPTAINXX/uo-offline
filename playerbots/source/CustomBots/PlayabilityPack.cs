@@ -46,8 +46,8 @@ namespace Server.CustomBots
         public const int OldHavenMaxXExclusive = 3704;
         public const int OldHavenMaxYExclusive = 2543;
 
-        // New Haven bank is centered on the native bankers at 3484,2570/2576.
-        private static readonly Point3D NewHavenGateAnchor = new(3489, 2573, 20);
+        // South exterior convenience strip. The native bank region ends at y=2580.
+        private static readonly Point3D NewHavenGateAnchor = new(3480, 2582, 20);
 
         // Real Despise interior: ModernUO's region GoLocation is 5501,570,59.
         private static readonly Point3D TrainingGateAnchor = new(5501, 570, 59);
@@ -649,7 +649,7 @@ namespace Server.CustomBots
 
         protected override int GateItemID => 0x1822;
         protected override int GateHue => 0x59B;
-        protected override Point3D Destination => new(3489, 2573, 20);
+        protected override Point3D Destination => new(3480, 2582, 20);
         protected override string DestinationName => "New Haven Bank";
     }
 }
