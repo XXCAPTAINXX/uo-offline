@@ -30,6 +30,10 @@ jobs:
           set -e
           for patch in patches/*.patch; do
             [ -e "$patch" ] || continue
+            if [ "$(basename "$patch")" = "0005-spellhelper-t2a-dungeon-travel.patch" ]; then
+              echo "$(basename "$patch"): legacy T2A only; skipped"
+              continue
+            fi
             if git -C ModernUO apply --reverse --check "../$patch" >/dev/null 2>&1; then
               echo "$(basename "$patch"): already present"
             elif git -C ModernUO apply --check "../$patch" >/dev/null 2>&1; then
