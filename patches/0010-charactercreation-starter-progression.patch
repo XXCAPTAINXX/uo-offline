@@ -1,0 +1,14 @@
+diff --git a/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs b/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs
+--- a/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs
++++ b/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs
+@@ -242,6 +242,10 @@ public static partial class CharacterCreation
+             SetStats(newChar, state, profession?.Stats ?? args.Stats);
+             SetSkills(newChar, profession?.Skills ?? args.Skills);
+             GiveProfessionItems(newChar, profession, args.ShirtHue, args.PantsHue);
++
++            // UO Offline: every player character receives the shard starter
++            // progression package after normal profession equipment is created.
++            Server.UOOffline.StarterProvisioner.Provision(newChar);
+ 
+             if (race.ValidateHair(newChar, args.HairID))
+             {
