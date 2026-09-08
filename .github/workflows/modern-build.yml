@@ -1,0 +1,50 @@
+name: Modern Sandbox Build
+
+on:
+  push:
+    branches: [modern-evolution]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out UO Offline
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.201
+
+      - name: Check out pinned ModernUO
+        run: |
+          git clone https://github.com/modernuo/ModernUO.git ModernUO
+          git -C ModernUO checkout --detach 114dbba6e25f0e97e8537e54025d7bfa87c03a39
+
+      - name: Apply UO Offline engine patches
+        run: |
+          set -e
+          for patch in patches/*.patch; do
+            [ -e "$patch" ] || continue
+            if git -C ModernUO apply --reverse --check "../$patch" >/dev/null 2>&1; then
+              echo "$(basename "$patch"): already present"
+            elif git -C ModernUO apply --check "../$patch" >/dev/null 2>&1; then
+              git -C ModernUO apply "../$patch"
+              echo "$(basename "$patch"): applied"
+            else
+              echo "::warning file=$patch::Patch does not apply to the modern pin"
+            fi
+          done
+
+      - name: Install PlayerBots source
+        run: |
+          mkdir -p ModernUO/Projects/UOContent/CustomBots
+          cp -R playerbots/source/CustomBots/. ModernUO/Projects/UOContent/CustomBots/
+
+      - name: Build UOContent
+        working-directory: ModernUO
+        run: dotnet build Projects/UOContent/UOContent.csproj -c Release
