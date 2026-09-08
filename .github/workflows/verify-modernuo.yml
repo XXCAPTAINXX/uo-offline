@@ -125,4 +125,7 @@ jobs:
         if: runner.os == 'Windows'
         working-directory: UO Offline Space Test/ModernUO
         shell: pwsh
-        run: dotnet run --project Projects/BuildTool/BuildTool.csproj -- release win x64
+        run: |
+          Remove-Item tools/build-tool.exe -Force -ErrorAction SilentlyContinue
+          Remove-Item tools/.build-tool-commit -Force -ErrorAction SilentlyContinue
+          .\publish.ps1 release win x64
