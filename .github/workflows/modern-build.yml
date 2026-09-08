@@ -3,6 +3,8 @@ name: Modern Sandbox Build
 on:
   push:
     branches: [modern-evolution]
+  pull_request:
+    branches: [modern-evolution]
   workflow_dispatch:
 
 permissions:
