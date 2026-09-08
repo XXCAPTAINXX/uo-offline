@@ -32,6 +32,29 @@ using Server.Multis;
 
 namespace Server.CustomBots
 {
+    [SerializationGenerator(0, false)]
+    public partial class StarterFortuneEarrings : GoldEarrings
+    {
+        [Constructible]
+        public StarterFortuneEarrings()
+        {
+            Name = "Starter Fortune Earrings";
+            Hue = 0x501;
+            LootType = LootType.Blessed;
+
+            Attributes.LowerRegCost = 100;
+            Attributes.Luck = 200;
+        }
+
+        public override void GetProperties(IPropertyList list)
+        {
+            base.GetProperties(list);
+            list.Add("Starter item");
+            list.Add("100% Lower Reagent Cost");
+            list.Add("+200 Luck");
+        }
+    }
+
     [SerializationGenerator(0)]
     public partial class StarterReagentPouch : Bag
     {
