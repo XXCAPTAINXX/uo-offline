@@ -64,8 +64,8 @@ namespace Server.CustomBots
                 return;
             }
 
-            var book = Spellbook.FindEquippedSpellbook(caster) as StarterFullSpellbook
-                       ?? caster.Backpack.FindItemByType<StarterFullSpellbook>();
+            var book = Spellbook.FindEquippedSpellbook(caster) as EvolvingStarterFullSpellbook
+                       ?? caster.Backpack.FindItemByType<EvolvingStarterFullSpellbook>();
 
             if (book != null)
             {
@@ -83,7 +83,7 @@ namespace Server.CustomBots
 
             foreach (var item in wearer.Items)
             {
-                if (item is StarterAdventurerRobe robe)
+                if (item is EvolvingStarterAdventurerRobe robe)
                 {
                     robe.GainEvolutionXp(wearer, amount);
                     return;
@@ -123,7 +123,7 @@ namespace Server.CustomBots
     public partial class EvolvingStarterBroadsword : Broadsword
     {
         [SerializableField(0)] private int _evolutionLevel = 1;
-        [SerializableField(0)] private int _evolutionXp;
+        [SerializableField(1)] private int _evolutionXp;
 
         [Constructible]
         public EvolvingStarterBroadsword()
@@ -153,7 +153,7 @@ namespace Server.CustomBots
     public partial class EvolvingStarterKryss : Kryss
     {
         [SerializableField(0)] private int _evolutionLevel = 1;
-        [SerializableField(0)] private int _evolutionXp;
+        [SerializableField(1)] private int _evolutionXp;
 
         [Constructible]
         public EvolvingStarterKryss()
@@ -183,7 +183,7 @@ namespace Server.CustomBots
     public partial class EvolvingStarterMace : Mace
     {
         [SerializableField(0)] private int _evolutionLevel = 1;
-        [SerializableField(0)] private int _evolutionXp;
+        [SerializableField(1)] private int _evolutionXp;
 
         [Constructible]
         public EvolvingStarterMace()
@@ -213,7 +213,7 @@ namespace Server.CustomBots
     public partial class EvolvingStarterBow : Bow
     {
         [SerializableField(0)] private int _evolutionLevel = 1;
-        [SerializableField(0)] private int _evolutionXp;
+        [SerializableField(1)] private int _evolutionXp;
 
         [Constructible]
         public EvolvingStarterBow()
@@ -239,10 +239,18 @@ namespace Server.CustomBots
         }
     }
 
-    public partial class StarterFullSpellbook
+    [SerializationGenerator(0, false)]
+    public partial class EvolvingStarterFullSpellbook : StarterFullSpellbook
     {
-        [SerializableField(1)] private int _evolutionLevel = 1;
+        [SerializableField(0)] private int _evolutionLevel = 1;
         [SerializableField(1)] private int _evolutionXp;
+
+        [Constructible]
+        public EvolvingStarterFullSpellbook()
+        {
+            Name = "Evolving Starter Full Spellbook";
+            StarterEvolution.ApplyBookStats(this, _evolutionLevel);
+        }
 
         public void GainEvolutionXp(Mobile caster)
         {
@@ -263,20 +271,29 @@ namespace Server.CustomBots
             _evolutionXp -= needed;
             _evolutionLevel++;
             StarterEvolution.ApplyBookStats(this, _evolutionLevel);
-            caster?.SendMessage(0x35, $"Your Starter Full Spellbook evolved to level {_evolutionLevel}!");
+            caster?.SendMessage(0x35, $"Your starter spellbook evolved to level {_evolutionLevel}!");
         }
 
-        public void AddEvolutionProperties(IPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
+            base.GetProperties(list);
             list.Add($"Evolution Level: {Math.Max(1, _evolutionLevel)}/{StarterEvolution.MaxBookLevel}");
             list.Add($"Evolution XP: {_evolutionXp:N0}/{15 + Math.Max(1, _evolutionLevel) * 8:N0}");
         }
     }
 
-    public partial class StarterAdventurerRobe
+    [SerializationGenerator(0, false)]
+    public partial class EvolvingStarterAdventurerRobe : StarterAdventurerRobe
     {
-        [SerializableField(1)] private int _evolutionLevel = 1;
+        [SerializableField(0)] private int _evolutionLevel = 1;
         [SerializableField(1)] private int _evolutionXp;
+
+        [Constructible]
+        public EvolvingStarterAdventurerRobe()
+        {
+            Name = "Evolving Starter Adventurer Robe";
+            StarterEvolution.ApplyRobeStats(this, _evolutionLevel);
+        }
 
         public void GainEvolutionXp(Mobile wearer, int amount)
         {
@@ -297,11 +314,12 @@ namespace Server.CustomBots
             _evolutionXp -= needed;
             _evolutionLevel++;
             StarterEvolution.ApplyRobeStats(this, _evolutionLevel);
-            wearer?.SendMessage(0x35, $"Your Starter Adventurer Robe evolved to level {_evolutionLevel}!");
+            wearer?.SendMessage(0x35, $"Your starter robe evolved to level {_evolutionLevel}!");
         }
 
-        public void AddEvolutionProperties(IPropertyList list)
+        public override void GetProperties(IPropertyList list)
         {
+            base.GetProperties(list);
             list.Add($"Evolution Level: {Math.Max(1, _evolutionLevel)}/{StarterEvolution.MaxRobeLevel}");
             list.Add($"Evolution XP: {_evolutionXp:N0}/{75 + Math.Max(1, _evolutionLevel) * 25:N0}");
         }
