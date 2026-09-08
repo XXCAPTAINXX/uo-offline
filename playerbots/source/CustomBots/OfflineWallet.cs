@@ -42,6 +42,7 @@ namespace Server.CustomBots
             // wallet and QoL bags are recoverable; house deeds are not.
             public HashSet<uint> StarterHomeCharacters { get; set; } = new();
             public HashSet<uint> StarterEarringCharacters { get; set; } = new();
+            public HashSet<uint> StarterEquipmentCharacters { get; set; } = new();
         }
 
         private static Dictionary<string, WalletRecord> _wallets =
@@ -253,8 +254,50 @@ namespace Server.CustomBots
                 m.SendMessage("A Britannia Cleanup Bag has been placed in your backpack.");
             }
 
+            GiveStarterEquipmentOnce(m);
             GiveStarterHomeOnce(m);
             GiveStarterEarringsOnce(m);
+        }
+
+        private static void GiveStarterEquipmentOnce(Mobile m)
+        {
+            var record = RecordFor(m);
+            if (record == null || m?.Backpack == null)
+            {
+                return;
+            }
+
+            record.StarterEquipmentCharacters ??= new HashSet<uint>();
+
+            uint serial = m.Serial.Value;
+            if (record.StarterEquipmentCharacters.Contains(serial))
+            {
+                return;
+            }
+
+            var equipment = new Bag
+            {
+                Name = "New Haven Starter Equipment"
+            };
+
+            equipment.DropItem(new StarterAdventurerRobe());
+            equipment.DropItem(new StarterFullSpellbook());
+            equipment.DropItem(new StarterWeaponVoucher());
+
+            if (m.AddToBackpack(equipment))
+            {
+                record.StarterEquipmentCharacters.Add(serial);
+                _dirty = true;
+                m.SendMessage(
+                    0x35,
+                    "Starter equipment granted: Adventurer Robe, full Magery spellbook, and a weapon voucher."
+                );
+            }
+            else
+            {
+                equipment.Delete();
+                m.SendMessage("Make room in your backpack; your starter equipment has not been claimed yet.");
+            }
         }
 
         private static void GiveStarterHomeOnce(Mobile m)
@@ -343,6 +386,55 @@ namespace Server.CustomBots
             }
         }
 
+        public static int DepositBackpackGold(Mobile m)
+        {
+            if (m?.Backpack == null)
+            {
+                return 0;
+            }
+
+            // FindItemsByType searches nested containers as well, so a wallet
+            // double-click sweeps loose gold and gold tucked into ordinary bags.
+            var piles = new List<Gold>();
+            foreach (var gold in m.Backpack.FindItemsByType<Gold>())
+            {
+                if (gold?.Deleted == false && gold.Amount > 0)
+                {
+                    piles.Add(gold);
+                }
+            }
+
+            long deposited = 0;
+
+            foreach (var gold in piles)
+            {
+                if (gold.Deleted || gold.Amount <= 0)
+                {
+                    continue;
+                }
+
+                int amount = gold.Amount;
+                if (!Banker.Deposit(m, amount))
+                {
+                    continue;
+                }
+
+                deposited += amount;
+                gold.Delete();
+            }
+
+            if (deposited > 0)
+            {
+                m.SendMessage(0x35, $"{deposited:N0} gold deposited into your account wallet.");
+            }
+            else
+            {
+                m.SendMessage("There is no gold in your backpack to deposit.");
+            }
+
+            return deposited > int.MaxValue ? int.MaxValue : (int)deposited;
+        }
+
         public static void Show(Mobile m)
         {
             if (m == null)
@@ -399,6 +491,7 @@ namespace Server.CustomBots
                 {
                     record.StarterHomeCharacters ??= new HashSet<uint>();
                     record.StarterEarringCharacters ??= new HashSet<uint>();
+                    record.StarterEquipmentCharacters ??= new HashSet<uint>();
                 }
 
                 _dirty = false;
@@ -458,6 +551,7 @@ namespace Server.CustomBots
                 return;
             }
 
+            OfflineWalletSystem.DepositBackpackGold(from);
             OfflineWalletSystem.Show(from);
         }
     }
