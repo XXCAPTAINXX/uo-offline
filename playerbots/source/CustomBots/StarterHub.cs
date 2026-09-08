@@ -378,7 +378,7 @@ namespace Server.CustomBots
             AddBuy(ref builder, 25, 180, 4, "Starter Fortune Earrings (100 LRC / 200 Luck)", 2500);
             AddBuy(ref builder, 25, 215, 5, "90% Reagent Pouch", 750);
             AddBuy(ref builder, 25, 250, 6, "Gold Repair Bench", 5000);
-            AddBuy(ref builder, 25, 285, 7, "Britannia Cleanup Bag", 250);
+            AddBuy(ref builder, 25, 285, 7, "Britannia Cleanup Bag", 50);
             AddBuy(ref builder, 25, 320, 8, "Blessed Travel Book", 250);
 
             builder.AddButton(160, 350, 4005, 4007, 0);
@@ -416,7 +416,7 @@ namespace Server.CustomBots
                     StarterHub.Buy(from, 5000, () => new GoldRepairBench(), "Gold Repair Bench");
                     break;
                 case 7:
-                    StarterHub.Buy(from, 250, () => new BritanniaCleanupBag(), "Britannia Cleanup Bag");
+                    StarterHub.Buy(from, 50, () => new BritanniaCleanupBag(), "Britannia Cleanup Bag");
                     break;
                 case 8:
                     StarterHub.Buy(from, 250, () => new OfflineTravelBook(), "Blessed Travel Book");
