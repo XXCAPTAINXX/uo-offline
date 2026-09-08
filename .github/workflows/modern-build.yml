@@ -44,7 +44,8 @@ jobs:
           )
 
           foreach ($name in $required) {
-            if ($engine -notmatch "(?m)^function\\s+$name\\b") {
+            $pattern = "(?m)^function\s+$([regex]::Escape($name))\b"
+            if ($engine -notmatch $pattern) {
               throw "install.ps1 is missing required function: $name"
             }
           }
