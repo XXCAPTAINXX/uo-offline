@@ -1523,6 +1523,10 @@ install_uorespawn() {
   sed -i 's/if (m is PlayerMobile pm && _RespawnerList.ContainsKey(pm.Serial))/if (m is PlayerMobile pm \&\& m is not Server.CustomBots.PlayerBot \&\& _RespawnerList.ContainsKey(pm.Serial))/' "$core_target"
   grep -q 'm is not Server.CustomBots.PlayerBot' "$core_target" || die "Pinned UORespawn player hooks changed; review integration before updating."
 
+  local search_target="$target/Timers/SearchTimer.cs"
+  sed -i 's/if (UOR_Core.IsPaused) return;/if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieTraining(_Player)) return;/' "$search_target"
+  grep -q 'NewbiePlayability.IsInNewbieTraining' "$search_target" || die "Pinned UORespawn SearchTimer hook changed; review newbie-dungeon suppression before updating."
+
   local input_dir="$DIST_DIR/Data/UORespawn/INPUT"
   mkdir -p "$input_dir"
 
@@ -1541,6 +1545,14 @@ install_uorespawn() {
     ok "Seeded UORespawn DefaultPack (all six facets)."
   else
     say "Existing UORespawn INPUT data found; preserving your customized spawn pack."
+  fi
+
+  local spawn_settings="$input_dir/UOR_SpawnSettings.csv"
+  if [[ -f "$spawn_settings" ]]; then
+    sed -i 's/^ENABLE_VENDOR_SPAWN,.*/ENABLE_VENDOR_SPAWN,False/' "$spawn_settings"
+    sed -i 's/^ENABLE_VENDOR_NIGHT,.*/ENABLE_VENDOR_NIGHT,False/' "$spawn_settings"
+    sed -i 's/^ENABLE_VENDOR_EXTRA,.*/ENABLE_VENDOR_EXTRA,False/' "$spawn_settings"
+    ok "UORespawn vendor spawning disabled; native ModernUO town vendors own services."
   fi
 
   mkdir -p "$DIST_DIR/ThirdPartyLicenses"
