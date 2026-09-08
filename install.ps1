@@ -56,6 +56,14 @@ $UpdateModernUO = $false
 
 $ClassicUOReleaseUrl = "https://api.github.com/repos/ClassicUO/ClassicUO/releases"
 
+# UORespawn 2.0.1.4 — ModernUO-native dynamic world population.
+# Pinned for reproducible installs; update only after CI/build/runtime review.
+$UORespawnCommit = "26ad18a910dbc1318079035a87084d191ff173f9"
+$UORespawnRawBase = "https://raw.githubusercontent.com/Kita72/UORespawnProject/$UORespawnCommit/UORespawnApp/Data"
+$UORespawnServerZipUrl = "$UORespawnRawBase/SERVER/MUO/UORespawnServer.zip"
+$UORespawnPackZipUrl = "$UORespawnRawBase/PACKS/Approved/DefaultPack.zip"
+$UORespawnLicenseUrl = "https://raw.githubusercontent.com/Kita72/UORespawnProject/$UORespawnCommit/LICENSE"
+
 # Razor (Community Edition) — the classic UO assistant, loaded into
 # ClassicUO as a plugin so clicking Play opens the game with Razor attached.
 # $InstallRazor = $false to skip.
@@ -529,6 +537,103 @@ function InstallPlayerBots {
   $dll = Join-Path $DistDir "ModernUO.dll"
   if (Test-Path $dll) { Remove-Item $dll -Force }
   Ok "PlayerBots deployed (compiled by the next ModernUO build)"
+}
+
+# ---------------------------------------------------------------------------
+# Step 4c — UORespawn modern world population
+# ---------------------------------------------------------------------------
+function InstallUORespawn {
+  Banner "Installing UORespawn modern spawn system"
+
+  $target = Join-Path $ModernUODir "Projects\UOContent\Custom\UORespawnServer"
+  $dll = Join-Path $DistDir "ModernUO.dll"
+
+  if ($ClassicT2A) {
+    if (Test-Path $target) {
+      Remove-Item $target -Recurse -Force
+      if (Test-Path $dll) { Remove-Item $dll -Force }
+    }
+    Say "Classic T2A profile: UORespawn is not installed."
+    return
+  }
+
+  $cache = Join-Path $InstallRoot "cache\UORespawn-$UORespawnCommit"
+  New-Item -ItemType Directory -Force -Path $cache | Out-Null
+
+  $serverZip = Join-Path $cache "UORespawnServer.zip"
+  $packZip = Join-Path $cache "DefaultPack.zip"
+
+  if (-not (Test-Path $serverZip)) {
+    Say "Downloading pinned UORespawn ModernUO server module..."
+    Invoke-WebRequest -Uri $UORespawnServerZipUrl -OutFile $serverZip -Headers @{ "User-Agent" = "uo-offline-installer" }
+  }
+
+  if (-not (Test-Path $packZip)) {
+    Say "Downloading pinned UORespawn six-facet DefaultPack..."
+    Invoke-WebRequest -Uri $UORespawnPackZipUrl -OutFile $packZip -Headers @{ "User-Agent" = "uo-offline-installer" }
+  }
+
+  $serverTmp = Join-Path $cache "server-unpacked"
+  Remove-Item $serverTmp -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Force -Path $serverTmp | Out-Null
+  Expand-Archive -Path $serverZip -DestinationPath $serverTmp -Force
+
+  $core = Get-ChildItem -Path $serverTmp -Recurse -Filter "UOR_Core.cs" -File | Select-Object -First 1
+  if (-not $core) { Die "UORespawnServer.zip did not contain UOR_Core.cs." }
+
+  $sourceRoot = $core.Directory.FullName
+  Remove-Item $target -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Force -Path $target | Out-Null
+  Copy-Item -Recurse -Force (Join-Path $sourceRoot "*") $target
+
+  # UORespawn is intentionally player-centric. PlayerBot inherits
+  # PlayerMobile, so make the exclusion explicit even though ambient bots
+  # normally have no NetState/Connected event. This prevents future bot
+  # lifecycle changes from turning hundreds of bots into spawn anchors.
+  $coreTarget = Join-Path $target "UOR_Core.cs"
+  $coreText = Get-Content $coreTarget -Raw
+  $connectOld = 'if (m is PlayerMobile pm && !_RespawnerList.ContainsKey(pm.Serial))'
+  $connectNew = 'if (m is PlayerMobile pm && m is not Server.CustomBots.PlayerBot && !_RespawnerList.ContainsKey(pm.Serial))'
+  $logoutOld = 'if (m is PlayerMobile pm && _RespawnerList.ContainsKey(pm.Serial))'
+  $logoutNew = 'if (m is PlayerMobile pm && m is not Server.CustomBots.PlayerBot && _RespawnerList.ContainsKey(pm.Serial))'
+
+  if (-not $coreText.Contains($connectOld) -or -not $coreText.Contains($logoutOld)) {
+    Die "Pinned UORespawn player event hooks changed; review integration before updating."
+  }
+
+  $coreText = $coreText.Replace($connectOld, $connectNew).Replace($logoutOld, $logoutNew)
+  Set-Content -Path $coreTarget -Value $coreText -NoNewline
+
+  # Seed the six-facet DefaultPack only on first install. Never overwrite
+  # INPUT data on re-install because the player/editor may have customized it.
+  $inputDir = Join-Path $DistDir "Data\UORespawn\INPUT"
+  New-Item -ItemType Directory -Force -Path $inputDir | Out-Null
+  $existingPack = Join-Path $inputDir "UOR_RegionSpawn.bin"
+
+  if (-not (Test-Path $existingPack)) {
+    $packTmp = Join-Path $cache "pack-unpacked"
+    Remove-Item $packTmp -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $packTmp | Out-Null
+    Expand-Archive -Path $packZip -DestinationPath $packTmp -Force
+
+    $region = Get-ChildItem -Path $packTmp -Recurse -Filter "UOR_RegionSpawn.bin" -File | Select-Object -First 1
+    if (-not $region) { Die "DefaultPack.zip did not contain UOR_RegionSpawn.bin." }
+
+    $packRoot = $region.Directory.FullName
+    foreach ($file in (Get-ChildItem -Path $packRoot -File | Where-Object { $_.Name -like "UOR_*.bin" -or $_.Name -eq "UOR_SpawnSettings.csv" })) {
+      Copy-Item $file.FullName (Join-Path $inputDir $file.Name) -Force
+    }
+    Ok "Seeded UORespawn DefaultPack (all six facets)."
+  } else {
+    Say "Existing UORespawn INPUT data found; preserving your customized spawn pack."
+  }
+
+  $licenseDir = Join-Path $DistDir "ThirdPartyLicenses"
+  New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
+  Invoke-WebRequest -Uri $UORespawnLicenseUrl -OutFile (Join-Path $licenseDir "UORespawn-MIT.txt") -Headers @{ "User-Agent" = "uo-offline-installer" }
+
+  if (Test-Path $dll) { Remove-Item $dll -Force }
+  Ok "UORespawn installed; only real connected players drive dynamic spawning."
 }
 
 # ---------------------------------------------------------------------------
@@ -1654,6 +1759,7 @@ $script:InstallSteps = @(
   @{ Name = "Download the ModernUO server"; Run = { FetchModernUO } },
   @{ Name = "Patch the engine";            Run = { ApplyEnginePatches } },
   @{ Name = "Add the PlayerBots";           Run = { InstallPlayerBots } },
+  @{ Name = "Add modern world spawning";     Run = { InstallUORespawn } },
   @{ Name = "Build the server";             Run = { BuildModernUO } },
   @{ Name = "Apply map season profile";      Run = { FixFeluccaSeason } },
   @{ Name = "Find current UO game data";      Run = { FindOrDownloadUOData } },
