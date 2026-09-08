@@ -86,13 +86,29 @@ namespace Server.CustomBots
         public override void AddItem(Item dropped)
         {
             base.AddItem(dropped);
-            InvalidateWeight();
+            RefreshCarryWeight();
         }
 
         public override void RemoveItem(Item dropped)
         {
             base.RemoveItem(dropped);
-            InvalidateWeight();
+            RefreshCarryWeight();
+        }
+
+        private void RefreshCarryWeight()
+        {
+            // BaseQuiver has a private/generated InvalidateWeight helper that
+            // custom containers cannot call. Rebuild totals at the actual
+            // inventory root instead; Mobile.UpdateTotals recursively asks
+            // this pouch for its overridden reduced TotalWeight.
+            if (RootParent is Mobile mobile)
+            {
+                mobile.UpdateTotals();
+            }
+            else if (Parent is Container parent)
+            {
+                parent.UpdateTotals();
+            }
         }
 
         public override void GetProperties(IPropertyList list)
