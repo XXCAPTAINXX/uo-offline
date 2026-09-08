@@ -1,0 +1,56 @@
+diff --git a/Projects/UOContent/Spells/Fourth/Recall.cs b/Projects/UOContent/Spells/Fourth/Recall.cs
+--- a/Projects/UOContent/Spells/Fourth/Recall.cs
++++ b/Projects/UOContent/Spells/Fourth/Recall.cs
+@@ -103,18 +103,8 @@ namespace Server.Spells.Fourth
+ 
+         public override void GetCastSkills(out double min, out double max)
+         {
+-            if (TransformationSpellHelper.UnderTransformation(Caster, typeof(WraithFormSpell)))
+-            {
+-                min = max = 0;
+-            }
+-            else if (Core.SE && m_Book != null) // recall using Runebook charge
+-            {
+-                min = max = 0;
+-            }
+-            else
+-            {
+-                base.GetCastSkills(out min, out max);
+-            }
++            // UO Offline convenience rule: Recall never requires Magery skill.
++            min = max = 0;
+         }
+ 
+         public override void OnCast()
+diff --git a/Projects/UOContent/Spells/Sixth/Mark.cs b/Projects/UOContent/Spells/Sixth/Mark.cs
+--- a/Projects/UOContent/Spells/Sixth/Mark.cs
++++ b/Projects/UOContent/Spells/Sixth/Mark.cs
+@@ -21,6 +21,12 @@ namespace Server.Spells.Sixth
+ 
+         public override SpellCircle Circle => SpellCircle.Sixth;
+ 
++        public override void GetCastSkills(out double min, out double max)
++        {
++            // UO Offline convenience rule: Mark never requires Magery skill.
++            min = max = 0;
++        }
++
+         public void Target(Item item)
+         {
+             if (item is not RecallRune rune)
+diff --git a/Projects/UOContent/Spells/Seventh/GateTravel.cs b/Projects/UOContent/Spells/Seventh/GateTravel.cs
+--- a/Projects/UOContent/Spells/Seventh/GateTravel.cs
++++ b/Projects/UOContent/Spells/Seventh/GateTravel.cs
+@@ -29,6 +29,12 @@ public class GateTravelSpell : MagerySpell, IRecallSpell
+ 
+     public override SpellCircle Circle => SpellCircle.Seventh;
+ 
++    public override void GetCastSkills(out double min, out double max)
++    {
++        // UO Offline convenience rule: Gate Travel never requires Magery skill.
++        min = max = 0;
++    }
++
+     public void Effect(Point3D loc, Map map, bool checkMulti)
+     {
+         if (Sigil.ExistsOn(Caster))
