@@ -617,7 +617,7 @@ function InstallUORespawn {
   $searchTarget = Join-Path $target "Timers\SearchTimer.cs"
   $searchText = Get-Content $searchTarget -Raw
   $searchOld = 'if (UOR_Core.IsPaused) return;'
-  $searchNew = 'if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieTraining(_Player)) return;'
+  $searchNew = 'if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieDungeon(_Player)) return;'
 
   if (-not $searchText.Contains($searchOld)) {
     Die "Pinned UORespawn SearchTimer hook changed; review newbie-dungeon suppression before updating."
