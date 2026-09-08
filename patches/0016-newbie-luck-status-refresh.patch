@@ -1,0 +1,21 @@
+diff --git a/Projects/UOContent/Mobiles/PlayerMobile.cs b/Projects/UOContent/Mobiles/PlayerMobile.cs
+--- a/Projects/UOContent/Mobiles/PlayerMobile.cs
++++ b/Projects/UOContent/Mobiles/PlayerMobile.cs
+@@ -4571,6 +4571,8 @@ namespace Server.Mobiles
+ 
+         protected override void OnLocationChange(Point3D oldLocation)
+         {
++            Server.CustomBots.NewbiePlayability.RefreshLuckStatus(this, Map, oldLocation);
++
+             CheckLightLevels(false);
+ 
+             DuelContext?.OnLocationChanged(this);
+@@ -4621,6 +4623,8 @@ namespace Server.Mobiles
+ 
+         protected override void OnMapChange(Map oldMap)
+         {
++            Server.CustomBots.NewbiePlayability.RefreshLuckStatus(this, oldMap, Location);
++
+             if (Map != Faction.Facet && oldMap == Faction.Facet || Map == Faction.Facet && oldMap != Faction.Facet)
+             {
+                 InvalidateProperties();
