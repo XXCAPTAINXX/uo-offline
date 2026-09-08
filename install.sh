@@ -1367,6 +1367,11 @@ apply_engine_patches() {
   for patch in "${patches[@]}"; do
     name="$(basename "${patch}")"
 
+    if [[ "${CLASSIC_T2A}" != "1" && "${name}" == "0005-spellhelper-t2a-dungeon-travel.patch" ]]; then
+      say "${name} (legacy T2A only; skipped for Modern Sandbox)"
+      continue
+    fi
+
     # Already applied? Reversing it cleanly is the test.
     if git -C "${MODERNUO_DIR}" apply --reverse --check "${patch}" 2>/dev/null; then
       ok "${name} (already applied)"
