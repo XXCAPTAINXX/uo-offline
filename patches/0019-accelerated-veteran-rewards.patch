@@ -1,0 +1,62 @@
+diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
+--- a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
++++ b/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
+@@ -12,6 +12,8 @@ namespace Server.Engines.VeteranRewards
+         private static RewardCategory[] m_Categories;
+         private static RewardList[] m_Lists;
+ 
++        private const int StarterVeteranYears = 5;
++
+         public static bool Enabled { get; private set; }
+ 
+         // assuming vet rewards are enabled, should total skill cap bonuses be awarded? (720 skills total at 4th level)
+@@ -74,7 +76,7 @@ namespace Server.Engines.VeteranRewards
+                 return false;
+             }
+ 
+-            ts = list.Age - acct.AccountAge;
++            ts = list.Age - GetEffectiveAccountAge(acct);
+ 
+             return ts <= TimeSpan.Zero;
+         }
+@@ -91,8 +93,13 @@ namespace Server.Engines.VeteranRewards
+         }
+ 
+         public static int GetRewardLevel(Account acct) =>
+-            Math.Max((int)(acct.AccountAge.TotalDays / RewardInterval.TotalDays), 0);
++            Math.Max(
++                StarterVeteranYears + (int)(acct.AccountAge.TotalDays / RewardInterval.TotalDays),
++                StarterVeteranYears
++            );
++
++        private static TimeSpan GetEffectiveAccountAge(Account acct) =>
++            acct.AccountAge + TimeSpan.FromTicks(RewardInterval.Ticks * StarterVeteranYears);
+ 
+         public static bool HasHalfLevel(Mobile mob)
+         {
+@@ -104,7 +111,8 @@ namespace Server.Engines.VeteranRewards
+             return HasHalfLevel(acct);
+         }
+ 
+-        public static bool HasHalfLevel(Account acct) => acct.AccountAge.TotalDays / RewardInterval.TotalDays >= 0.5;
++        public static bool HasHalfLevel(Account acct) =>
++            GetEffectiveAccountAge(acct).TotalDays / RewardInterval.TotalDays >= 0.5;
+ 
+         public static bool ConsumeRewardPoint(Mobile mob)
+         {
+@@ -157,14 +165,7 @@ namespace Server.Engines.VeteranRewards
+                 cur = Utility.ToInt32(tag);
+             }
+ 
+-            if (level >= 6)
+-            {
+-                max = 9 + (level - 6) * 2;
+-            }
+-            else
+-            {
+-                max = 2 + level;
+-            }
++            max = level;
+         }
+ 
+         public static bool CheckIsUsableBy(Mobile from, Item item, object[] args = null)

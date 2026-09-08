@@ -1,0 +1,15 @@
+diff --git a/Projects/UOContent/Engines/ML Quests/Items/SpeckledPoisonSac.cs b/Projects/UOContent/Engines/ML Quests/Items/SpeckledPoisonSac.cs
+--- a/Projects/UOContent/Engines/ML Quests/Items/SpeckledPoisonSac.cs
++++ b/Projects/UOContent/Engines/ML Quests/Items/SpeckledPoisonSac.cs
+@@ -3,8 +3,8 @@ using ModernUO.Serialization;
+ namespace Server.Items;
+ 
+ [SerializationGenerator(0, false)]
+-public partial class SpeckledPoisonSac : TransientItem
++public partial class SpeckledPoisonSac : Item
+ {
+     [Constructible]
+-    public SpeckledPoisonSac() : base(0x23A, TimeSpan.FromHours(1)) => LootType = LootType.Blessed;
++    public SpeckledPoisonSac() : base(0x23A) => LootType = LootType.Blessed;
+ 
+     public override int LabelNumber => 1073133; // Speckled Poison Sac

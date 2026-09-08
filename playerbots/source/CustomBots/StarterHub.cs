@@ -25,8 +25,12 @@ namespace Server.CustomBots
 {
     public static class StarterHub
     {
-        private static readonly Point3D GearStoneAnchor = new(3492, 2570, 20);
-        private static readonly Point3D ResourceStoneAnchor = new(3492, 2576, 20);
+        // South exterior wall of the New Haven bank (bank region ends at y=2580).
+        // Keep the interior clear and make the convenience strip obvious.
+        private static readonly Point3D HitchingPostAnchor = new(3482, 2582, 20);
+        private static readonly Point3D GearStoneAnchor = new(3484, 2582, 20);
+        private static readonly Point3D ResourceStoneAnchor = new(3486, 2582, 20);
+        private static readonly Point3D OrganizerStoneAnchor = new(3488, 2582, 20);
 
         public static void Configure()
         {
@@ -40,8 +44,10 @@ namespace Server.CustomBots
                 return;
             }
 
+            EnsureStone<NewHavenHitchingPost>(HitchingPostAnchor);
             EnsureStone<StarterGearStone>(GearStoneAnchor);
             EnsureStone<StarterResourceStone>(ResourceStoneAnchor);
+            EnsureStone<StarterOrganizerStone>(OrganizerStoneAnchor);
         }
 
         private static void EnsureStone<T>(Point3D preferred) where T : Item, new()
@@ -163,10 +169,10 @@ namespace Server.CustomBots
         {
             BaseWeapon weapon = choice switch
             {
-                1 => new Broadsword(),
-                2 => new Kryss(),
-                3 => new Mace(),
-                4 => new Bow(),
+                1 => new EvolvingStarterBroadsword(),
+                2 => new EvolvingStarterKryss(),
+                3 => new EvolvingStarterMace(),
+                4 => new EvolvingStarterBow(),
                 _ => null
             };
 
@@ -174,19 +180,6 @@ namespace Server.CustomBots
             {
                 return null;
             }
-
-            weapon.Name = choice switch
-            {
-                1 => "Starter Broadsword",
-                2 => "Starter Kryss",
-                3 => "Starter Mace",
-                4 => "Starter Bow",
-                _ => "Starter Weapon"
-            };
-
-            weapon.LootType = LootType.Blessed;
-            weapon.Attributes.WeaponDamage = 10;
-            weapon.Attributes.HitChance = 5;
 
             if (weapon is Bow)
             {
@@ -219,6 +212,7 @@ namespace Server.CustomBots
 
             Attributes.LowerManaCost = 5;
             Attributes.NightSight = 1;
+
         }
 
         public override void GetProperties(IPropertyList list)
@@ -247,6 +241,7 @@ namespace Server.CustomBots
             base.GetProperties(list);
             list.Add("All 64 Magery spells");
             list.Add("Starter item");
+            AddEvolutionProperties(list);
         }
     }
 
@@ -383,7 +378,7 @@ namespace Server.CustomBots
             AddBuy(ref builder, 25, 180, 4, "Starter Fortune Earrings (100 LRC / 200 Luck)", 2500);
             AddBuy(ref builder, 25, 215, 5, "90% Reagent Pouch", 750);
             AddBuy(ref builder, 25, 250, 6, "Gold Repair Bench", 5000);
-            AddBuy(ref builder, 25, 285, 7, "Britannia Cleanup Bag", 250);
+            AddBuy(ref builder, 25, 285, 7, "Britannia Cleanup Bag", 50);
             AddBuy(ref builder, 25, 320, 8, "Blessed Travel Book", 250);
 
             builder.AddButton(160, 350, 4005, 4007, 0);
@@ -403,10 +398,10 @@ namespace Server.CustomBots
             switch (info.ButtonID)
             {
                 case 1:
-                    StarterHub.Buy(from, 500, () => new StarterAdventurerRobe(), "Starter Adventurer Robe");
+                    StarterHub.Buy(from, 500, () => new EvolvingStarterAdventurerRobe(), "Starter Adventurer Robe");
                     break;
                 case 2:
-                    StarterHub.Buy(from, 1000, () => new StarterFullSpellbook(), "Full Spellbook");
+                    StarterHub.Buy(from, 1000, () => new EvolvingStarterFullSpellbook(), "Full Spellbook");
                     break;
                 case 3:
                     StarterHub.Buy(from, 500, () => new StarterWeaponVoucher(), "Starter Weapon Voucher");
@@ -421,7 +416,7 @@ namespace Server.CustomBots
                     StarterHub.Buy(from, 5000, () => new GoldRepairBench(), "Gold Repair Bench");
                     break;
                 case 7:
-                    StarterHub.Buy(from, 250, () => new BritanniaCleanupBag(), "Britannia Cleanup Bag");
+                    StarterHub.Buy(from, 50, () => new BritanniaCleanupBag(), "Britannia Cleanup Bag");
                     break;
                 case 8:
                     StarterHub.Buy(from, 250, () => new OfflineTravelBook(), "Blessed Travel Book");
