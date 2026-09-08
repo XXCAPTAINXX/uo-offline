@@ -5,6 +5,7 @@ using Server.Items;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
 using Server.Multis;
+using Server.Multis.Deeds;
 using Server.Network;
 
 namespace Server.UOOffline;
