@@ -53,6 +53,40 @@ jobs:
           mkdir -p ModernUO/Projects/UOContent/CustomBots
           cp -R playerbots/source/CustomBots/. ModernUO/Projects/UOContent/CustomBots/
 
+      - name: Install pinned UORespawn source and six-facet pack
+        run: |
+          set -euo pipefail
+          UOR_COMMIT=26ad18a910dbc1318079035a87084d191ff173f9
+          UOR_BASE="https://raw.githubusercontent.com/Kita72/UORespawnProject/$UOR_COMMIT/UORespawnApp/Data"
+
+          curl -fsSL "$UOR_BASE/SERVER/MUO/UORespawnServer.zip" -o /tmp/uorespawn-server.zip
+          rm -rf /tmp/uorespawn-server
+          mkdir -p /tmp/uorespawn-server
+          unzip -q /tmp/uorespawn-server.zip -d /tmp/uorespawn-server
+
+          CORE="$(find /tmp/uorespawn-server -type f -name UOR_Core.cs | head -n1)"
+          test -n "$CORE"
+          ROOT="$(dirname "$CORE")"
+
+          mkdir -p ModernUO/Projects/UOContent/Custom/UORespawnServer
+          cp -R "$ROOT"/. ModernUO/Projects/UOContent/Custom/UORespawnServer/
+
+          CORE_TARGET=ModernUO/Projects/UOContent/Custom/UORespawnServer/UOR_Core.cs
+          sed -i 's/if (m is PlayerMobile pm && !_RespawnerList.ContainsKey(pm.Serial))/if (m is PlayerMobile pm \&\& m is not Server.CustomBots.PlayerBot \&\& !_RespawnerList.ContainsKey(pm.Serial))/' "$CORE_TARGET"
+          sed -i 's/if (m is PlayerMobile pm && _RespawnerList.ContainsKey(pm.Serial))/if (m is PlayerMobile pm \&\& m is not Server.CustomBots.PlayerBot \&\& _RespawnerList.ContainsKey(pm.Serial))/' "$CORE_TARGET"
+          grep -q 'm is not Server.CustomBots.PlayerBot' "$CORE_TARGET"
+
+          curl -fsSL "$UOR_BASE/PACKS/Approved/DefaultPack.zip" -o /tmp/uorespawn-pack.zip
+          rm -rf /tmp/uorespawn-pack
+          mkdir -p /tmp/uorespawn-pack
+          unzip -q /tmp/uorespawn-pack.zip -d /tmp/uorespawn-pack
+          REGION="$(find /tmp/uorespawn-pack -type f -name UOR_RegionSpawn.bin | head -n1)"
+          test -n "$REGION"
+          PACK_ROOT="$(dirname "$REGION")"
+
+          mkdir -p ModernUO/Distribution/Data/UORespawn/INPUT
+          find "$PACK_ROOT" -maxdepth 1 -type f \( -name 'UOR_*.bin' -o -name 'UOR_SpawnSettings.csv' \) -exec cp -f {} ModernUO/Distribution/Data/UORespawn/INPUT/ \;
+
       - name: Build UOContent
         working-directory: ModernUO
         run: dotnet build Projects/UOContent/UOContent.csproj -c Release
