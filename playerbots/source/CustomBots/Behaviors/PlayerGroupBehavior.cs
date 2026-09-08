@@ -44,6 +44,14 @@ namespace Server.CustomBots
 
         private DateTime _lostSince = DateTime.MinValue;
 
+        // Follow-progress watchdog. The old follower could repeatedly choose
+        // an unwalkable offset beside the player and run into the same wall
+        // forever. We now choose valid slots first, then nudge/recover only
+        // when distance genuinely stops improving.
+        private DateTime _lastFollowProgressAt = DateTime.MinValue;
+        private int _bestFollowDistance = int.MaxValue;
+        private int _followRecoveryStage;
+
         public override string GetStatusLine(PlayerBot bot)
         {
             var leader = LeaderOf(bot);
@@ -111,6 +119,16 @@ namespace Server.CustomBots
             else
             {
                 _lostSince = DateTime.MinValue;
+            }
+
+            if (!BotPlayerParty.IsHolding(bot) && bot.Combatant == null &&
+                bot.Map == leader.Map && dist > CloseEnough)
+            {
+                TrackFollowProgress(bot, leader, dist);
+            }
+            else
+            {
+                ResetFollowProgress(dist);
             }
 
             // Assist: whatever is on ANY of us is on all of us. This used
@@ -221,11 +239,23 @@ namespace Server.CustomBots
 
         // Follow slot: a stable per-bot spot on a small ring around the
         // leader, so a full party fans out instead of stacking on one tile.
+        // Every candidate is checked with the engine before it becomes a
+        // navigation goal — never tell a bot to stand inside a wall.
         protected override Point3D? SelectPatrolGoal(PlayerBot bot)
         {
             var leader = LeaderOf(bot);
             if (leader == null || leader.Map != bot.Map)
             {
+                return null;
+            }
+
+            if (BotPlayerParty.TryGetHoldPoint(bot, out var hold, out var holdMap))
+            {
+                if (holdMap == bot.Map && Dist(bot.Location, hold) > 1)
+                {
+                    return FindValidNear(bot.Map, hold, bot.Serial.ToInt32(), 2);
+                }
+
                 return null;
             }
 
@@ -235,10 +265,7 @@ namespace Server.CustomBots
                 return null; // near enough — idle mill beside the group
             }
 
-            int seed = bot.Serial.ToInt32();
-            int ox = seed % (FollowSlotRadius * 2 + 1) - FollowSlotRadius;
-            int oy = seed / 7 % (FollowSlotRadius * 2 + 1) - FollowSlotRadius;
-            return new Point3D(leader.X + ox, leader.Y + oy, leader.Z);
+            return FindValidNear(bot.Map, leader.Location, bot.Serial.ToInt32(), FollowSlotRadius);
         }
 
         // The leader moves — a follow goal more than a couple of tiles
@@ -254,6 +281,111 @@ namespace Server.CustomBots
         // everyone else.
         protected override bool PatrolRuns => true;
 
+        private void TrackFollowProgress(PlayerBot bot, Mobile leader, int dist)
+        {
+            if (_lastFollowProgressAt == DateTime.MinValue)
+            {
+                _lastFollowProgressAt = Core.Now;
+                _bestFollowDistance = dist;
+                _followRecoveryStage = 0;
+                return;
+            }
+
+            if (dist < _bestFollowDistance)
+            {
+                _bestFollowDistance = dist;
+                _lastFollowProgressAt = Core.Now;
+                _followRecoveryStage = 0;
+                return;
+            }
+
+            if (Core.Now - _lastFollowProgressAt < TimeSpan.FromSeconds(3))
+            {
+                return;
+            }
+
+            _lastFollowProgressAt = Core.Now;
+            _followRecoveryStage++;
+
+            if (_followRecoveryStage <= 2)
+            {
+                if (BotStuckEscape.SidestepAny(bot))
+                {
+                    StuckTelemetry.Record(bot, "party_follow_nudge", $"distance {dist}");
+                }
+                return;
+            }
+
+            // This is a bug-recovery relocation, not normal travel. It only
+            // fires for a player-led follower on the same map after repeated
+            // failure to get any closer. Keep it local to the leader.
+            if (dist <= 30)
+            {
+                var safe = FindValidNear(bot.Map, leader.Location, bot.Serial.ToInt32() + _followRecoveryStage, 3);
+                if (Dist(safe, leader.Location) <= 4)
+                {
+                    StuckTelemetry.Record(
+                        bot,
+                        "party_follow_recover",
+                        $"distance {dist} -> ({safe.X},{safe.Y},{safe.Z})"
+                    );
+                    bot.MoveToWorld(safe, bot.Map);
+                    _bestFollowDistance = Dist(bot.Location, leader.Location);
+                    _followRecoveryStage = 0;
+                    return;
+                }
+            }
+
+            BotStuckEscape.TryExtract(bot, "player-party-follow");
+            _bestFollowDistance = Dist(bot.Location, leader.Location);
+            _followRecoveryStage = 0;
+        }
+
+        private void ResetFollowProgress(int dist)
+        {
+            _lastFollowProgressAt = Core.Now;
+            _bestFollowDistance = dist;
+            _followRecoveryStage = 0;
+        }
+
+        private static Point3D FindValidNear(Map map, Point3D center, int seed, int radius)
+        {
+            if (map == null || map == Map.Internal)
+            {
+                return center;
+            }
+
+            int span = radius * 2 + 1;
+            int start = Math.Abs(seed);
+            int total = span * span;
+
+            // Stable but rotated candidate order keeps a party spread out.
+            for (int i = 0; i < total; i++)
+            {
+                int n = (start + i) % total;
+                int dx = n % span - radius;
+                int dy = n / span - radius;
+
+                if (dx == 0 && dy == 0)
+                {
+                    continue;
+                }
+
+                int x = center.X + dx;
+                int y = center.Y + dy;
+                int z = map.GetAverageZ(x, y);
+                if (map.CanSpawnMobile(x, y, z))
+                {
+                    return new Point3D(x, y, z);
+                }
+            }
+
+            int cz = map.GetAverageZ(center.X, center.Y);
+            return map.CanSpawnMobile(center.X, center.Y, cz)
+                ? new Point3D(center.X, center.Y, cz)
+                : center;
+        }
+
         private void LeaveGroup(PlayerBot bot, bool sayGoodbye)
         {
             if (bot.Party is Party p)
@@ -261,6 +393,7 @@ namespace Server.CustomBots
                 p.Remove(bot);
             }
             bot.Party = null;
+            BotPlayerParty.SetHolding(bot, null, false);
 
             if (sayGoodbye && Utility.RandomDouble() < 0.6)
             {
