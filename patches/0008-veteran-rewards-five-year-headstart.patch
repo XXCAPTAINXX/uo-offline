@@ -21,7 +21,7 @@ diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projec
 -        public static bool HasHalfLevel(Account acct) => acct.AccountAge.TotalDays / RewardInterval.TotalDays >= 0.5;
 +        public static bool HasHalfLevel(Account acct) =>
 +            5 + acct.AccountAge.TotalDays / RewardInterval.TotalDays >= 0.5;
-@@ -153,8 +157,3 @@ namespace Server.Engines.VeteranRewards
+@@ -153,9 +157,3 @@ namespace Server.Engines.VeteranRewards
 -            if (level >= 6)
 -            {
 -                max = 9 + (level - 6) * 2;
