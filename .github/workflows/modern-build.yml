@@ -24,6 +24,15 @@ jobs:
         with:
           dotnet-version: 10.0.201
 
+      - name: Validate installers
+        shell: pwsh
+        run: |
+          [void][ScriptBlock]::Create((Get-Content -Raw ./install.ps1))
+          [void][ScriptBlock]::Create((Get-Content -Raw ./install-gui.ps1))
+
+      - name: Validate Linux installer
+        run: bash -n install.sh
+
       - name: Check out pinned ModernUO
         run: |
           git clone https://github.com/modernuo/ModernUO.git ModernUO
