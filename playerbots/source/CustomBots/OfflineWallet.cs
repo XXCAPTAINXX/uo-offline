@@ -41,6 +41,7 @@ namespace Server.CustomBots
             // A free starter home is a one-time character grant. Travel book,
             // wallet and QoL bags are recoverable; house deeds are not.
             public HashSet<uint> StarterHomeCharacters { get; set; } = new();
+            public HashSet<uint> StarterEarringCharacters { get; set; } = new();
         }
 
         private static Dictionary<string, WalletRecord> _wallets =
@@ -253,6 +254,7 @@ namespace Server.CustomBots
             }
 
             GiveStarterHomeOnce(m);
+            GiveStarterEarringsOnce(m);
         }
 
         private static void GiveStarterHomeOnce(Mobile m)
@@ -297,6 +299,47 @@ namespace Server.CustomBots
             {
                 supplies.Delete();
                 m.SendMessage("Make room in your backpack; your starter home package has not been claimed yet.");
+            }
+        }
+
+        private static void GiveStarterEarringsOnce(Mobile m)
+        {
+            var record = RecordFor(m);
+            if (record == null)
+            {
+                return;
+            }
+
+            record.StarterEarringCharacters ??= new HashSet<uint>();
+
+            uint serial = m.Serial.Value;
+            if (record.StarterEarringCharacters.Contains(serial))
+            {
+                return;
+            }
+
+            var earrings = new StarterFortuneEarrings();
+
+            // Equip immediately when the slot is free so a brand-new
+            // character starts at 100% LRC and +200 visible Luck.
+            bool granted = m.FindItemOnLayer(Layer.Earrings) == null
+                ? m.EquipItem(earrings)
+                : m.AddToBackpack(earrings);
+
+            if (granted)
+            {
+                record.StarterEarringCharacters.Add(serial);
+                _dirty = true;
+                m.NetState?.SendMobileStatus(m);
+                m.SendMessage(
+                    0x35,
+                    "Starter Fortune Earrings granted: 100% Lower Reagent Cost and +200 Luck."
+                );
+            }
+            else
+            {
+                earrings.Delete();
+                m.SendMessage("Make room in your backpack; your Starter Fortune Earrings have not been claimed yet.");
             }
         }
 
@@ -355,6 +398,7 @@ namespace Server.CustomBots
                 foreach (var record in _wallets.Values)
                 {
                     record.StarterHomeCharacters ??= new HashSet<uint>();
+                    record.StarterEarringCharacters ??= new HashSet<uint>();
                 }
 
                 _dirty = false;
