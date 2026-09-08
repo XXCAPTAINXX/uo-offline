@@ -86,7 +86,7 @@ jobs:
           grep -q 'm is not Server.CustomBots.PlayerBot' "$CORE_TARGET"
 
           SEARCH_TARGET=ModernUO/Projects/UOContent/Custom/UORespawnServer/Timers/SearchTimer.cs
-          sed -i 's/if (UOR_Core.IsPaused) return;/if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieTraining(_Player)) return;/' "$SEARCH_TARGET"
+          sed -i 's/if (UOR_Core.IsPaused) return;/if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieDungeon(_Player)) return;/' "$SEARCH_TARGET"
           grep -q 'NewbiePlayability.IsInNewbieTraining' "$SEARCH_TARGET"
 
           curl -fsSL "$UOR_BASE/PACKS/Approved/DefaultPack.zip" -o /tmp/uorespawn-pack.zip
