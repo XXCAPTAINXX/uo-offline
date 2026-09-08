@@ -1,0 +1,50 @@
+diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
+--- a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
++++ b/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
+@@ -65,7 +65,10 @@ namespace Server.Engines.VeteranRewards
+                 return false;
+             }
+ 
+-            ts = list.Age - acct.AccountAge;
++            // UO Offline progression: every account starts with five veteran
++            // years of credit. RewardInterval is 30 days on this shard, so
++            // every real month advances one additional veteran year.
++            ts = list.Age - (acct.AccountAge + RewardInterval * 5);
+ 
+             return ts <= TimeSpan.Zero;
+         }
+@@ -82,8 +85,8 @@ namespace Server.Engines.VeteranRewards
+         }
+ 
+         public static int GetRewardLevel(Account acct) =>
+-            Math.Max((int)(acct.AccountAge.TotalDays / RewardInterval.TotalDays), 0);
++            5 + Math.Max((int)(acct.AccountAge.TotalDays / RewardInterval.TotalDays), 0);
+ 
+         public static bool HasHalfLevel(Mobile mob)
+         {
+@@ -96,7 +99,8 @@ namespace Server.Engines.VeteranRewards
+             return HasHalfLevel(acct);
+         }
+ 
+-        public static bool HasHalfLevel(Account acct) => acct.AccountAge.TotalDays / RewardInterval.TotalDays >= 0.5;
++        public static bool HasHalfLevel(Account acct) =>
++            5 + acct.AccountAge.TotalDays / RewardInterval.TotalDays >= 0.5;
+ 
+         public static bool ConsumeRewardPoint(Mobile mob)
+         {
+@@ -147,14 +151,9 @@ namespace Server.Engines.VeteranRewards
+                 cur = Utility.ToInt32(tag);
+             }
+ 
+-            if (level >= 6)
+-            {
+-                max = 9 + (level - 6) * 2;
+-            }
+-            else
+-            {
+-                max = 2 + level;
+-            }
++            // One selection per effective veteran year. A fresh account is
++            // level five, so it begins with exactly five reward selections.
++            max = level;
+         }
