@@ -56,7 +56,7 @@ namespace Server.CustomBots
                 return;
             }
 
-            Timer.DelayCall(TimeSpan.FromSeconds(3), ImportNativeVendors);
+            Timer.DelayCall(TimeSpan.FromSeconds(3), () => ImportNativeVendors());
         }
 
         public static int ImportNativeVendors()
