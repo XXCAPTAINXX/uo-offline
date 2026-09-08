@@ -67,7 +67,7 @@ namespace Server.CustomBots
                     return;
                 }
 
-                if (pet is PackLlama or PackHorse or Beetle && pet.Backpack?.Items.Count > 0)
+                if ((pet is PackLlama or PackHorse or Beetle) && pet.Backpack?.Items.Count > 0)
                 {
                     from.SendMessage("Unload the pack animal before shrinking it.");
                     return;
@@ -91,7 +91,6 @@ namespace Server.CustomBots
                 pet.ControlOrder = OrderType.Stay;
                 pet.Internalize();
                 pet.SetControlMaster(null);
-                pet.SummonMaster = null;
                 pet.IsStabled = false;
                 pet.StabledBy = null;
 
@@ -114,7 +113,7 @@ namespace Server.CustomBots
             _pet = pet;
             _owner = owner;
             Name = $"Shrunken Pet: {pet?.Name ?? "pet"}";
-            Hue = pet?.Hue & 0x0FFF ?? 0;
+            Hue = (pet?.Hue ?? 0) & 0x0FFF;
             LootType = LootType.Blessed;
             Weight = 1.0;
         }
@@ -235,7 +234,7 @@ namespace Server.CustomBots
             int count = 0;
             foreach (var item in found)
             {
-                if (item?.Deleted == false && CheckHold(null, item, false, true, 0, 0))
+                if (item?.Deleted == false && Accepts(item))
                 {
                     DropItem(item);
                     count++;
@@ -292,6 +291,7 @@ namespace Server.CustomBots
         {
             "IrksBrain",
             "SabrixEye",
+            "SabrixsEye",
             "LissithsSilk",
             "MaleficClaw",
             "DryadsBlessing",
