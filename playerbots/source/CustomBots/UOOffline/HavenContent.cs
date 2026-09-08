@@ -480,6 +480,7 @@ public static class HavenContentBootstrap
     private static readonly Point2D NewHavenUpgrade = new(3483, 2582);
     private static readonly Point2D NewHavenRewards = new(3485, 2582);
     private static readonly Point2D NewHavenHitchingPost = new(3487, 2582);
+    private static readonly Point2D NewHavenDungeonPortal = new(3489, 2582);
     private static readonly Point2D OldHavenBoss = new(3670, 2587);
     private static readonly Point2D OldHavenSteed = new(3690, 2525);
 
@@ -487,6 +488,7 @@ public static class HavenContentBootstrap
     private static readonly Point2D BritainUpgrade = new(1430, 1697);
     private static readonly Point2D BritainRewards = new(1432, 1697);
     private static readonly Point2D BritainHitchingPost = new(1434, 1697);
+    private static readonly Point2D BritainDungeonPortal = new(1436, 1697);
     private static readonly Point2D FeluccaSteed = new(1388, 1498);
 
     public static void Initialize() =>
@@ -499,6 +501,7 @@ public static class HavenContentBootstrap
         EnsureItem<HavenUpgradeStone>(Map.Trammel, NewHavenUpgrade);
         EnsureItem<SpecialRewardStone>(Map.Trammel, NewHavenRewards);
         EnsureItem<FreePetHitchingPost>(Map.Trammel, NewHavenHitchingPost);
+        EnsureItem<UOOfflineDungeonPortal>(Map.Trammel, NewHavenDungeonPortal);
         EnsureSpawner<OldHavenBossSpawner>(Map.Trammel, OldHavenBoss);
         EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, OldHavenSteed);
 
@@ -508,6 +511,7 @@ public static class HavenContentBootstrap
         EnsureItem<HavenUpgradeStone>(Map.Felucca, BritainUpgrade);
         EnsureItem<SpecialRewardStone>(Map.Felucca, BritainRewards);
         EnsureItem<FreePetHitchingPost>(Map.Felucca, BritainHitchingPost);
+        EnsureItem<UOOfflineDungeonPortal>(Map.Felucca, BritainDungeonPortal);
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
     }
 
