@@ -65,6 +65,7 @@ jobs:
           set -e
           for patch in patches/*.patch; do
             [ -e "$patch" ] || continue
+            echo "checking $(basename "$patch")"
             if [ "$(basename "$patch")" = "0005-spellhelper-t2a-dungeon-travel.patch" ]; then
               echo "$(basename "$patch"): legacy T2A only; skipped"
               continue
