@@ -112,18 +112,10 @@ $optBox.BackColor = $colPanel
 $panelWelcome.Controls.Add($optBox)
 $optBox.Controls.Add((NewLabel "Options" 20 12 300 24 $fontHead $colText))
 
-$chkT2A = New-Object System.Windows.Forms.CheckBox
-$chkT2A.Text = "Install the authentic T2A-era world map (recommended — pre-destruction Magincia)"
-$chkT2A.Checked = $true
-$chkT2A.Location = New-Object System.Drawing.Point(28, 42)
-$chkT2A.Size = New-Object System.Drawing.Size(690, 24)
-$chkT2A.Font = $fontBody; $chkT2A.ForeColor = $colText
-$optBox.Controls.Add($chkT2A)
-
 $chkRazor = New-Object System.Windows.Forms.CheckBox
 $chkRazor.Text = "Install the Razor assistant (recommended — loads inside the game client)"
 $chkRazor.Checked = $true
-$chkRazor.Location = New-Object System.Drawing.Point(28, 70)
+$chkRazor.Location = New-Object System.Drawing.Point(28, 42)
 $chkRazor.Size = New-Object System.Drawing.Size(690, 24)
 $chkRazor.Font = $fontBody; $chkRazor.ForeColor = $colText
 $optBox.Controls.Add($chkRazor)
@@ -131,7 +123,7 @@ $optBox.Controls.Add($chkRazor)
 $chkMap = New-Object System.Windows.Forms.CheckBox
 $chkMap.Text = "Install the map editor (waypoints, spawns and a live view of every bot)"
 $chkMap.Checked = $true
-$chkMap.Location = New-Object System.Drawing.Point(28, 98)
+$chkMap.Location = New-Object System.Drawing.Point(28, 70)
 $chkMap.Size = New-Object System.Drawing.Size(690, 24)
 $chkMap.Font = $fontBody; $chkMap.ForeColor = $colText
 $optBox.Controls.Add($chkMap)
@@ -306,12 +298,11 @@ $form.Controls.Add($panelDone)
 $script:ps = $null
 $script:rs = $null
 
-function StartWorker($optT2A, $optRazor, $optMap, $installPath) {
+function StartWorker($optRazor, $optMap, $installPath) {
     $script:rs = [runspacefactory]::CreateRunspace()
     $script:rs.Open()
     $script:rs.SessionStateProxy.SetVariable('sync',       $sync)
     $script:rs.SessionStateProxy.SetVariable('EnginePath', $EnginePath)
-    $script:rs.SessionStateProxy.SetVariable('OptT2A',     $optT2A)
     $script:rs.SessionStateProxy.SetVariable('OptRazor',   $optRazor)
     $script:rs.SessionStateProxy.SetVariable('OptMap',     $optMap)
     $script:rs.SessionStateProxy.SetVariable('InstallChoice', $installPath)
@@ -322,7 +313,6 @@ function StartWorker($optT2A, $optRazor, $optMap, $installPath) {
         try {
             . $EnginePath -NoRun
             if ($InstallChoice) { Set-InstallRoot $InstallChoice }
-            $InstallT2AMap = $OptT2A
             $InstallRazor  = $OptRazor
             $InstallMapEditor = $OptMap
 
@@ -402,7 +392,7 @@ $btnInstall.Add_Click({
         return
     }
     $script:InstallRootLabel = $chosenPath
-    StartWorker $chkT2A.Checked $chkRazor.Checked $chkMap.Checked $chosenPath
+    StartWorker $chkRazor.Checked $chkMap.Checked $chosenPath
     $timer.Start()
 })
 

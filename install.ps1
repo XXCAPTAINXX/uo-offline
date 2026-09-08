@@ -2,7 +2,7 @@
 # UO Offline (ModernUO edition) — Windows Installer
 #
 # The Windows counterpart to install.sh. Same result: a fully offline
-# single-player UO shard with the PlayerBots system, T2A era, localhost only.
+# single-player UO shard with the PlayerBots system, Mondain's Legacy content, localhost only.
 #
 # What this does:
 #   1. Checks/installs .NET SDK 10 (per-user, no admin needed).
@@ -10,11 +10,8 @@
 #   3. Builds ModernUO (bots compiled in) for Windows x64.
 #   4. Downloads the UO Classic 7.0.23.1 game data from a community mirror
 #      and installs it (or uses an existing install if found).
-#   4b. Swaps in genuine T2A-era Felucca map art (intact Magincia) from the
-#      UO Second Age distribution. Reversible; $InstallT2AMap = $false to skip.
-#   5. Downloads Nerun's pre-T2A spawn map.
 #   6. Downloads the ClassicUO client (Windows build).
-#   7. Writes ModernUO + ClassicUO configs (T2A, localhost only).
+#   7. Writes ModernUO + ClassicUO configs (Mondain's Legacy, localhost only).
 #   8. Installs start/stop scripts and a Desktop shortcut.
 #
 # Run via install.bat (double-click — opens the GUI installer), or run this
@@ -52,7 +49,7 @@ $ModernUOCommit = "e7f85d404d52e0def1fb342b3dc185894a57017d"
 # UO Offline update channel. Never use the upstream/original fork's updater:
 # our launcher may only fetch code from this repository and RC channel.
 $UOOfflineUpdateRepo   = "XXCAPTAINXX/uo-offline"
-$UOOfflineUpdateBranch = "haven-rc2"
+$UOOfflineUpdateBranch = "haven-rc3"
 
 # Only consulted when $ModernUOCommit is "". A checkout that has built once is
 # known-good; pulling upstream mid-install can drag in months of engine
@@ -70,22 +67,6 @@ $RazorReleaseUrl = "https://api.github.com/repos/markdwags/Razor/releases/latest
 $UODataUrl     = "https://mirror.ashkantra.de/fullclients/7.0.23.1.exe"
 $UODataVersion = "7.0.23.1"
 
-$SpawnMapUrl   = "https://raw.githubusercontent.com/Nerun/runuo-nerun-distro/master/Distro/Data/Nerun's%20Distro/Spawns/uoclassic/UOClassic.map"
-
-# Genuine T2A-era Felucca map art (intact Magincia, pre-destruction world),
-# pulled from the official UO Second Age (client 5.0.8.3) distribution. The
-# 7.0.23.1 data above ships modern map art with 15+ years of EA world edits;
-# swapping these three files restores the T2A look. Set $InstallT2AMap = $false
-# to keep modern map art. See docs/T2A-MAP.md.
-$InstallT2AMap   = $true
-
-# The map editor: a browser tool for the waypoint network, destinations,
-# zones, spawns, and a live view of every bot in the world. Optional - it is
-# a builder's tool, not something you need to play. $false to skip.
-$InstallMapEditor = $true
-$PythonEmbedUrl   = "https://www.python.org/ftp/python/3.12.8/python-3.12.8-embed-amd64.zip"
-$T2AInstallerUrl = "https://download.uosecondage.com/UOSA_Client_Setup.exe"
-$T2AMulFiles     = @("map0.mul", "statics0.mul", "staidx0.mul")
 
 $DotnetRoot    = Join-Path $env:USERPROFILE ".dotnet"
 $DotnetVersion = "10.0.201"
@@ -134,8 +115,8 @@ if ($InstallPath) {
 }
 
 # Config defaults
-$ExpansionId   = 1
-$ExpansionName = "T2A"
+$ExpansionId   = 7
+$ExpansionName = "Mondain's Legacy"
 $OwnerUser     = "admin"
 $OwnerPass     = "admin"
 $ListenAddr    = "127.0.0.1:2593"
@@ -223,13 +204,6 @@ function Preflight {
     Remove-Item $probe -Force -ErrorAction SilentlyContinue
   } catch {
     Die "'$InstallRoot' is not writable. Pick a folder in your user area, not Program Files."
-  }
-
-  # The T2A map swap shells out to an NSIS installer whose /D= switch cannot
-  # take a quoted path, so a space breaks it unless 7-Zip is available.
-  if ($InstallRoot -match [char]32 -and -not (Get-Command 7z -ErrorAction SilentlyContinue)) {
-    Warn "Install path contains a space and 7-Zip is not installed."
-    Warn "The T2A map art step may be skipped. A path without spaces avoids it."
   }
 
   # Lock runtime updates for the entire install. If anything fails after
@@ -561,41 +535,71 @@ function BuildModernUO {
   $env:DOTNET_ROOT = $DotnetRoot
 
   if (Test-Path (Join-Path $DistDir "ModernUO.dll")) {
-    Say "ModernUO already built. Skipping (delete Distribution\ModernUO.dll to force rebuild)."
+    Say "ModernUO already built. Skipping (delete Distribution\\ModernUO.dll to force rebuild)."
     return
   }
-  # publish.ps1 sets its own $ErrorActionPreference = "Stop", so a failing
-  # build throws out of it rather than just returning non-zero. Catch that,
-  # because the whole point is to look at the result and decide whether a
-  # retry is worth it.
-  $tryPublish = {
-    try {
-      Invoke-ScriptTolerant { & .\publish.ps1 release win x64 }
-    } catch {
-      Warn "Build attempt failed: $($_.Exception.Message)"
+
+  $buildLog = Join-Path $InstallRoot "modernuo-build.log"
+  Remove-Item $buildLog -Force -ErrorAction SilentlyContinue
+
+  function RunPublishAttempt([string]$label) {
+    Say "$label — full output: $buildLog"
+
+    # Never trust a cached native BuildTool from an older installer run.
+    # publish.ps1 will fetch the matching tool for the pinned engine commit.
+    $toolDir = Join-Path $ModernUODir "tools"
+    Remove-Item (Join-Path $toolDir "build-tool.exe") -Force -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $toolDir ".build-tool-commit") -Force -ErrorAction SilentlyContinue
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = "powershell.exe"
+    $psi.WorkingDirectory = $ModernUODir
+    $publishScript = Join-Path $ModernUODir "publish.ps1"
+    $psi.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$publishScript`" release win x64"
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
+    [void]$proc.Start()
+
+    $stdout = $proc.StandardOutput.ReadToEnd()
+    $stderr = $proc.StandardError.ReadToEnd()
+    $proc.WaitForExit()
+
+    @(
+      "===== $label ====="
+      $stdout
+      $stderr
+      "===== exit code $($proc.ExitCode) ====="
+      ""
+    ) | Add-Content -Path $buildLog
+
+    if ($proc.ExitCode -ne 0) {
+      Warn "Build attempt failed with exit code $($proc.ExitCode)."
+      $interesting = Get-Content $buildLog -ErrorAction SilentlyContinue |
+        Where-Object { $_ -match 'error CS|error MSB|error SG|Build FAILED|failed with exit code|Unhandled exception|fatal:' } |
+        Select-Object -Last 20
+      foreach ($line in $interesting) { Warn $line }
     }
+
+    return $proc.ExitCode
   }
 
-  Push-Location $ModernUODir
-  try {
-    & $tryPublish
+  $first = RunPublishAttempt "Build attempt 1"
 
-    if (-not (Test-Path (Join-Path $DistDir "ModernUO.dll"))) {
-      # A build can fail on stale intermediate output left behind by a
-      # DIFFERENT .NET SDK - anyone with Visual Studio has a second one, and
-      # whichever ran last wins. The giveaway is the build tool reporting
-      # "'Cleaning project' failed with exit code 1", with a
-      # ResolvePackageAssets NullReferenceException buried in the output.
-      # Clearing obj/ and bin/ makes restore regenerate them; it costs a
-      # minute and fixes it, so try once before giving up.
-      Warn "Build produced no ModernUO.dll. Clearing stale build output and retrying once..."
-      ClearBuildArtifacts
-      & $tryPublish
-    }
-  } finally {
-    Pop-Location
+  if (-not (Test-Path (Join-Path $DistDir "ModernUO.dll"))) {
+    Warn "Build produced no ModernUO.dll. Clearing stale build output and retrying once..."
+    ClearBuildArtifacts
+    $second = RunPublishAttempt "Build attempt 2"
   }
-  if (-not (Test-Path (Join-Path $DistDir "ModernUO.dll"))) { Die "Build produced no ModernUO.dll. Check output above." }
+
+  if (-not (Test-Path (Join-Path $DistDir "ModernUO.dll"))) {
+    Die "Build produced no ModernUO.dll. Full compiler output is saved at $buildLog"
+  }
+
   Ok "Build artifacts at $DistDir"
 }
 
@@ -864,6 +868,32 @@ function SwapT2AMap {
 }
 
 # ---------------------------------------------------------------------------
+# Modern map migration
+# ---------------------------------------------------------------------------
+function EnsureModernMapArt {
+  if (-not $script:UOData) { return }
+
+  $backupDir = Join-Path $script:UOData "_backup-modern-map"
+  if (-not (Test-Path $backupDir)) {
+    Say "Modern map art retained; no legacy T2A swap backup found."
+    return
+  }
+
+  $restored = 0
+  foreach ($name in @("map0.mul", "statics0.mul", "staidx0.mul", "radarcol.mul", "tiledata.mul")) {
+    $backup = Join-Path $backupDir $name
+    if (Test-Path $backup) {
+      Copy-Item $backup (Join-Path $script:UOData $name) -Force
+      $restored++
+    }
+  }
+
+  if ($restored -gt 0) {
+    Ok "Restored $restored modern map/data file(s) from the legacy T2A backup."
+  }
+}
+
+# ---------------------------------------------------------------------------
 # Step 7 — Nerun's spawn map
 # ---------------------------------------------------------------------------
 function FetchSpawnMap {
@@ -954,16 +984,8 @@ function InstallRazor {
 # Step 9 — ModernUO config
 # ---------------------------------------------------------------------------
 function WriteModernUOConfig {
-  # Keep a shard name that is already set.
-  #
-  # ClassicUO keeps each player's audio, video, interface and macros in
-  # Data/Profiles/<account>/<SERVER NAME>/<character>. Rename the shard and
-  # the client looks in a folder that does not exist, builds a fresh one from
-  # defaults, and it looks for all the world like the update wiped their
-  # settings. Nothing is lost, but it is lost as far as they can tell.
-  #
-  # So only a fresh install gets our name. An install that already has one
-  # keeps it, which still suppresses the shard-name prompt.
+  # Preserve an existing shard name because ClassicUO profile folders are
+  # keyed by server name.
   $script:ResolvedShardName = $ShardName
   $existingCfg = [IO.Path]::Combine($CfgDir, "modernuo.json")
   if (Test-Path $existingCfg) {
@@ -1002,25 +1024,24 @@ function WriteModernUOConfig {
 "@ | Set-Content (Join-Path $CfgDir "modernuo.json")
   Ok "Wrote modernuo.json"
 
-  # The full schema, matching install.sh. An abbreviated file used to go
-  # here, which left most flags to chance and set ContextMenus off while
-  # setting ExpansionT2A on - the same bit, contradicting itself.
+  # Our requested content baseline is Mondain's Legacy: New Haven,
+  # Peerless encounters/keys, Spellweaving and the ML world all require it.
+  # Use the exact expansion schema/flags from the pinned ModernUO release.
   @"
 {
-  "Id": $ExpansionId,
+  "Id": 7,
   "ClientFlags": "None",
   "SupportedFeatures": {
-    "ExpansionT2A": true,
     "T2A": true,
-    "UOR": false,
+    "UOR": true,
     "UOTD": false,
-    "LBR": false,
-    "AOS": false,
+    "LBR": true,
+    "AOS": true,
     "SixthCharacterSlot": false,
-    "SE": false,
-    "ML": false,
+    "SE": true,
+    "ML": true,
     "EighthAge": false,
-    "NinthAge": false,
+    "NinthAge": true,
     "TenthAge": false,
     "IncreasedStorage": false,
     "SeventhCharacterSlot": false,
@@ -1036,22 +1057,25 @@ function WriteModernUOConfig {
     "TOL": false,
     "EJ": false
   },
+  "MapSelectionFlags": {
+    "Felucca": true,
+    "Trammel": true,
+    "Ilshenar": true,
+    "Malas": true,
+    "Tokuno": true,
+    "TerMer": false
+  },
   "CharacterListFlags": {
     "Unk1": false,
     "OverwriteConfigButton": false,
     "OneCharacterSlot": false,
-    "ExpansionNone": false,
-    "ExpansionUOTD": false,
-    "ExpansionLBR": false,
-    "ExpansionT2A": true,
-    "ExpansionUOR": false,
     "ContextMenus": true,
     "SlotLimit": false,
-    "AOS": false,
+    "AOS": true,
     "SixthCharacterSlot": false,
-    "SE": false,
-    "ML": false,
-    "KR": false,
+    "SE": true,
+    "ML": true,
+    "Unk2": false,
     "UO3DClientType": false,
     "Unk3": false,
     "SeventhCharacterSlot": false,
@@ -1060,11 +1084,10 @@ function WriteModernUOConfig {
     "NewFeluccaAreas": false
   },
   "HousingFlags": {
-    "AOS": false,
-    "HousingAOS": false,
-    "SE": false,
-    "ML": false,
-    "Crystal": false,
+    "AOS": true,
+    "SE": true,
+    "ML": true,
+    "Crystal": true,
     "SA": false,
     "HS": false,
     "Gothic": false,
@@ -1074,39 +1097,29 @@ function WriteModernUOConfig {
     "TOL": false,
     "EJ": false
   },
-  "MobileStatusVersion": 0,
-  "MapSelectionFlags": {
-    "Felucca": true,
-    "Trammel": false,
-    "Ilshenar": false,
-    "Malas": false,
-    "Tokuno": false,
-    "TerMur": false
-  }
+  "MobileStatusVersion": 6
 }
 "@ | Set-Content (Join-Path $CfgDir "expansion.json")
-  Ok "Wrote expansion.json (T2A, Felucca-only)"
+  Ok "Wrote expansion.json (Mondain's Legacy — Felucca/Trammel/Ilshenar/Malas/Tokuno)"
 
-  # The Young player system is a UO:R-era feature that did not exist in T2A.
-  # Left on, young characters also get a Trammel-only public moongate list,
-  # which filters down to nothing on this Felucca-only shard and makes the
-  # city moongates silently do nothing for every non-staff player.
+  # Keep the stock Young restrictions disabled because this shard supplies
+  # its own starter progression and unrestricted utility travel.
   $FlagsDir = Join-Path $CfgDir "FeatureFlags"
   New-Item -ItemType Directory -Force -Path $FlagsDir | Out-Null
   @"
 [
   {
     "Key": "young_player_system",
-    "Description": "UO:R-era new player (Young) system. Off for T2A: no (Young) name suffix, no young monster protection, no Haven transport, no New Player Ticket, and no Trammel-only public moongate list.",
+    "Description": "Disabled: UO Offline uses its own New Haven starter progression and travel rules.",
     "Enabled": false,
     "DefaultEnabled": true,
     "Category": "Content",
-    "LastModified": "2026-08-23T00:00:00Z",
-    "LastModifiedBy": "T2A ruleset"
+    "LastModified": "2026-09-08T00:00:00Z",
+    "LastModifiedBy": "UO Offline"
   }
 ]
 "@ | Set-Content (Join-Path $FlagsDir "flags.json")
-  Ok "Wrote FeatureFlags/flags.json (Young player system off - not a T2A feature)"
+  Ok "Wrote FeatureFlags/flags.json (custom starter system; Young restrictions off)"
 }
 
 # ---------------------------------------------------------------------------
@@ -1519,8 +1532,7 @@ $script:InstallSteps = @(
   @{ Name = "Build the server";             Run = { BuildModernUO } },
   @{ Name = "Set Felucca to summer";        Run = { FixFeluccaSeason } },
   @{ Name = "Get the UO game data";         Run = { FindOrDownloadUOData } },
-  @{ Name = "Install T2A-era map art";      Run = { SwapT2AMap } },
-  @{ Name = "Fetch the monster spawns";     Run = { FetchSpawnMap } },
+  @{ Name = "Verify modern world map";       Run = { EnsureModernMapArt } },
   @{ Name = "Download ClassicUO client";    Run = { InstallClassicUO } },
   @{ Name = "Download Razor assistant";     Run = { InstallRazor } },
   @{ Name = "Write the configuration";      Run = { WriteModernUOConfig; WriteClassicUOSettings } },

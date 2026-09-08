@@ -31,7 +31,7 @@ LOCK="${INSTALL_ROOT}/uo-offline-update.lock"
 TIMEOUT=6
 
 ALLOWED_REPO="XXCAPTAINXX/uo-offline"
-ALLOWED_BRANCH="haven-rc2"
+ALLOWED_BRANCH="haven-rc3"
 
 TITLE="UO Offline - update available"
 

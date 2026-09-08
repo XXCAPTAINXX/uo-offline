@@ -100,6 +100,14 @@ jobs:
           New-Item -ItemType Directory -Force -Path ModernUO/Projects/UOContent/CustomBots | Out-Null
           Copy-Item -Recurse -Force playerbots/source/CustomBots/* ModernUO/Projects/UOContent/CustomBots/
 
+      - name: Stage Windows build under a path containing spaces
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dst = Join-Path $PWD "UO Offline Space Test\ModernUO"
+          New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dst) | Out-Null
+          Copy-Item -Recurse -Force ModernUO $dst
+
       - name: Setup .NET from ModernUO global.json
         uses: actions/setup-dotnet@v4
         with:
@@ -115,6 +123,9 @@ jobs:
 
       - name: Build ModernUO (Windows)
         if: runner.os == 'Windows'
-        working-directory: ModernUO
+        working-directory: UO Offline Space Test/ModernUO
         shell: pwsh
-        run: .\publish.ps1 release win x64
+        run: |
+          Remove-Item tools/build-tool.exe -Force -ErrorAction SilentlyContinue
+          Remove-Item tools/.build-tool-commit -Force -ErrorAction SilentlyContinue
+          .\publish.ps1 release win x64

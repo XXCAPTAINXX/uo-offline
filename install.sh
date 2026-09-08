@@ -10,10 +10,7 @@
 #   5. Downloads ClassicUO from GitHub releases.
 #   6. Downloads UO Classic 7.0.23.1 game data from a community mirror
 #      (or uses an existing install if one is already on disk).
-#   6b. Swaps in genuine T2A-era Felucca map art (intact Magincia) from the
-#      UO Second Age distribution. Reversible; INSTALL_T2A_MAP=0 to skip.
-#   7. Downloads Nerun's pre-T2A spawn map for world population.
-#   8. Writes correct ModernUO and ClassicUO configs (T2A, localhost-only).
+#   8. Writes correct ModernUO and ClassicUO configs (Mondain's Legacy, localhost-only).
 #   9. Installs start/stop scripts and a desktop launcher.
 #
 # After install, run start.sh (or click the UO Offline desktop icon).
@@ -78,7 +75,7 @@ MODERNUO_REPO="https://github.com/modernuo/ModernUO.git"
 # is the old behaviour and the old lottery.
 MODERNUO_COMMIT="e7f85d404d52e0def1fb342b3dc185894a57017d"
 UO_OFFLINE_UPDATE_REPO="XXCAPTAINXX/uo-offline"
-UO_OFFLINE_UPDATE_BRANCH="haven-rc2"
+UO_OFFLINE_UPDATE_BRANCH="haven-rc3"
 MODERNUO_DIR="${INSTALL_ROOT}/ModernUO"
 DIST_DIR="${MODERNUO_DIR}/Distribution"
 CFG_DIR="${DIST_DIR}/Configuration"
@@ -96,22 +93,12 @@ UO_DATA_DIR="${INSTALL_ROOT}/UOData/${UO_DATA_VERSION}"
 
 # Nerun's pre-T2A spawn data. ModernUO's [GenerateSpawners command parses
 # the .map format directly.
-SPAWN_MAP_URL="https://raw.githubusercontent.com/Nerun/runuo-nerun-distro/master/Distro/Data/Nerun's%20Distro/Spawns/uoclassic/UOClassic.map"
-
-# Genuine T2A-era Felucca map art (intact Magincia, pre-destruction world),
-# pulled from the official UO Second Age (client 5.0.8.3) distribution. The
-# 7.0.23.1 data above ships modern map art with 15+ years of EA world edits;
-# swapping these three files restores the T2A look. Set INSTALL_T2A_MAP=0 to
-# keep modern map art. See docs/T2A-MAP.md.
-INSTALL_T2A_MAP=1
-T2A_INSTALLER_URL="https://download.uosecondage.com/UOSA_Client_Setup.exe"
-T2A_SRC_DIR="${INSTALL_ROOT}/t2a-src"
 
 # ---------------------------------------------------------------------------
 # Config defaults
 # ---------------------------------------------------------------------------
-EXPANSION_ID=1
-EXPANSION_NAME="T2A"
+EXPANSION_ID=7
+EXPANSION_NAME="Mondain's Legacy"
 OWNER_USER="admin"
 OWNER_PASS="admin"
 LISTEN_ADDR="127.0.0.1:2593"
@@ -854,9 +841,6 @@ install_classicuo() {
 # Step 9 — Write configs (using the correct schemas we learned the hard way)
 # ---------------------------------------------------------------------------
 write_modernuo_config() {
-  # Keep a shard name that is already set. ClassicUO stores each player's
-  # audio, video, interface and macros under the server's name, so renaming
-  # the shard makes all of it look wiped. Only a fresh install gets ours.
   RESOLVED_SHARD_NAME="${SHARD_NAME}"
   local _cfg="${CFG_DIR}/modernuo.json"
   if [[ -f "${_cfg}" ]]; then
@@ -870,10 +854,8 @@ write_modernuo_config() {
   fi
 
   banner "Writing ModernUO configuration"
-
   mkdir -p "${CFG_DIR}"
 
-  # modernuo.json — server runtime config.
   cat > "${CFG_DIR}/modernuo.json" <<EOF
 {
   "assemblyDirectories": ["./Assemblies"],
@@ -894,24 +876,24 @@ write_modernuo_config() {
 EOF
   ok "Wrote modernuo.json"
 
-  # expansion.json — the REAL schema, capitalized keys, all flags spelled out.
-  # T2A gets Felucca map only, ExpansionT2A flag on, LiveAccount on.
+  # Mondain's Legacy is the minimum content baseline for New Haven,
+  # Peerless encounters/keys and Spellweaving. These flags match the pinned
+  # ModernUO expansion definition rather than a hand-built T2A subset.
   cat > "${CFG_DIR}/expansion.json" <<EOF
 {
-  "Id": ${EXPANSION_ID},
+  "Id": 7,
   "ClientFlags": "None",
   "SupportedFeatures": {
-    "ExpansionT2A": true,
     "T2A": true,
-    "UOR": false,
+    "UOR": true,
     "UOTD": false,
-    "LBR": false,
-    "AOS": false,
+    "LBR": true,
+    "AOS": true,
     "SixthCharacterSlot": false,
-    "SE": false,
-    "ML": false,
+    "SE": true,
+    "ML": true,
     "EighthAge": false,
-    "NinthAge": false,
+    "NinthAge": true,
     "TenthAge": false,
     "IncreasedStorage": false,
     "SeventhCharacterSlot": false,
@@ -927,22 +909,25 @@ EOF
     "TOL": false,
     "EJ": false
   },
+  "MapSelectionFlags": {
+    "Felucca": true,
+    "Trammel": true,
+    "Ilshenar": true,
+    "Malas": true,
+    "Tokuno": true,
+    "TerMer": false
+  },
   "CharacterListFlags": {
     "Unk1": false,
     "OverwriteConfigButton": false,
     "OneCharacterSlot": false,
-    "ExpansionNone": false,
-    "ExpansionUOTD": false,
-    "ExpansionLBR": false,
-    "ExpansionT2A": true,
-    "ExpansionUOR": false,
     "ContextMenus": true,
     "SlotLimit": false,
-    "AOS": false,
+    "AOS": true,
     "SixthCharacterSlot": false,
-    "SE": false,
-    "ML": false,
-    "KR": false,
+    "SE": true,
+    "ML": true,
+    "Unk2": false,
     "UO3DClientType": false,
     "Unk3": false,
     "SeventhCharacterSlot": false,
@@ -951,11 +936,10 @@ EOF
     "NewFeluccaAreas": false
   },
   "HousingFlags": {
-    "AOS": false,
-    "HousingAOS": false,
-    "SE": false,
-    "ML": false,
-    "Crystal": false,
+    "AOS": true,
+    "SE": true,
+    "ML": true,
+    "Crystal": true,
     "SA": false,
     "HS": false,
     "Gothic": false,
@@ -965,39 +949,26 @@ EOF
     "TOL": false,
     "EJ": false
   },
-  "MobileStatusVersion": 0,
-  "MapSelectionFlags": {
-    "Felucca": true,
-    "Trammel": false,
-    "Ilshenar": false,
-    "Malas": false,
-    "Tokuno": false,
-    "TerMur": false
-  }
+  "MobileStatusVersion": 6
 }
 EOF
-  ok "Wrote expansion.json (T2A, Felucca-only)"
+  ok "Wrote expansion.json (Mondain's Legacy — Felucca/Trammel/Ilshenar/Malas/Tokuno)"
 
-  # FeatureFlags/flags.json - the Young player system is a UO:R-era feature
-  # that did not exist in T2A. Left on, young characters also get a
-  # Trammel-only public moongate list, which filters down to nothing on this
-  # Felucca-only shard and makes the city moongates silently do nothing for
-  # every non-staff player.
   mkdir -p "${CFG_DIR}/FeatureFlags"
   cat > "${CFG_DIR}/FeatureFlags/flags.json" <<'EOF'
 [
   {
     "Key": "young_player_system",
-    "Description": "UO:R-era new player (Young) system. Off for T2A: no (Young) name suffix, no young monster protection, no Haven transport, no New Player Ticket, and no Trammel-only public moongate list.",
+    "Description": "Disabled: UO Offline uses its own New Haven starter progression and travel rules.",
     "Enabled": false,
     "DefaultEnabled": true,
     "Category": "Content",
-    "LastModified": "2026-08-23T00:00:00Z",
-    "LastModifiedBy": "T2A ruleset"
+    "LastModified": "2026-09-08T00:00:00Z",
+    "LastModifiedBy": "UO Offline"
   }
 ]
 EOF
-  ok "Wrote FeatureFlags/flags.json (Young player system off - not a T2A feature)"
+  ok "Wrote FeatureFlags/flags.json (custom starter system; Young restrictions off)"
 }
 
 # ---------------------------------------------------------------------------
@@ -1456,8 +1427,6 @@ main() {
   build_modernuo
   fix_felucca_season
   find_or_download_uo_data
-  swap_t2a_map
-  fetch_spawn_map
   install_classicuo
   write_modernuo_config
   write_classicuo_settings
