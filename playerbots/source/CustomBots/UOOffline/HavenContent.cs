@@ -178,7 +178,9 @@ public partial class StarterSupplyStone : Item
             new("Apprentice blade - 250 gold", 0xF61),
             new("Apprentice fencer - 250 gold", 0x1401),
             new("Apprentice mace - 250 gold", 0x1407),
-            new("Apprentice bow - 250 gold", 0x13B2)
+            new("Apprentice bow - 250 gold", 0x13B2),
+            new("Champion progression archive - 250 gold", 0x2259, 0x489),
+            new("Peerless key vault - 250 gold", 0x9A8, 0x497)
         ];
 
         public StarterSupplyMenu() : base("New Haven Starter Supplies", MenuEntries)
@@ -216,6 +218,8 @@ public partial class StarterSupplyStone : Item
                 5 => new ApprenticeFencer(),
                 6 => new ApprenticeMace(),
                 7 => new ApprenticeBow(),
+                8 => new ProgressionArchive(),
+                9 => new PeerlessKeyVault(),
                 _ => null
             };
 
