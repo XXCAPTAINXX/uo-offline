@@ -1,0 +1,103 @@
+name: Verify ModernUO install path
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout UO Offline
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned ModernUO
+        uses: actions/checkout@v4
+        with:
+          repository: modernuo/ModernUO
+          ref: e7f85d404d52e0def1fb342b3dc185894a57017d
+          path: ModernUO
+          fetch-depth: 0
+
+      - name: Validate installer syntax (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash -n install.sh
+
+      - name: Validate installer syntax (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          [scriptblock]::Create((Get-Content install.ps1 -Raw)) | Out-Null
+          [scriptblock]::Create((Get-Content install-gui.ps1 -Raw)) | Out-Null
+
+      - name: Apply engine patches (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for patch in patches/*.patch; do
+            if git -C ModernUO apply --reverse --check "../$patch" 2>/dev/null; then
+              echo "already applied: $patch"
+            else
+              git -C ModernUO apply --check "../$patch"
+              git -C ModernUO apply "../$patch"
+            fi
+          done
+
+      - name: Apply engine patches (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-ChildItem patches -Filter *.patch | Sort-Object Name | ForEach-Object {
+            $patch = $_.FullName
+            git -C ModernUO apply --reverse --check $patch 2>$null
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "already applied: $($_.Name)"
+            } else {
+              git -C ModernUO apply --check $patch
+              if ($LASTEXITCODE -ne 0) { throw "Patch failed check: $($_.Name)" }
+              git -C ModernUO apply $patch
+              if ($LASTEXITCODE -ne 0) { throw "Patch failed apply: $($_.Name)" }
+            }
+          }
+
+      - name: Deploy custom UOContent (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          mkdir -p ModernUO/Projects/UOContent/CustomBots
+          cp -r playerbots/source/CustomBots/. ModernUO/Projects/UOContent/CustomBots/
+
+      - name: Deploy custom UOContent (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path ModernUO/Projects/UOContent/CustomBots | Out-Null
+          Copy-Item -Recurse -Force playerbots/source/CustomBots/* ModernUO/Projects/UOContent/CustomBots/
+
+      - name: Setup .NET from ModernUO global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: ModernUO/global.json
+
+      - name: Build ModernUO (Linux)
+        if: runner.os == 'Linux'
+        working-directory: ModernUO
+        shell: bash
+        run: |
+          chmod +x publish.sh
+          ./publish.sh release linux x64
+
+      - name: Build ModernUO (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ModernUO
+        shell: pwsh
+        run: .\publish.ps1 release win x64
