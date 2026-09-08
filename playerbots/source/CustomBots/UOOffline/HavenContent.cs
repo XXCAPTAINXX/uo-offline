@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ModernUO.Serialization;
 using Server.Engines.Spawners;
 using Server.Items;
@@ -496,6 +497,8 @@ public static class HavenContentBootstrap
 
     private static void EnsureContent()
     {
+        RemoveBrokenNewHavenDungeonPortal();
+
         // Intended ML-era hub.
         EnsureItem<StarterSupplyStone>(Map.Trammel, NewHavenSupply);
         EnsureItem<HavenUpgradeStone>(Map.Trammel, NewHavenUpgrade);
@@ -513,6 +516,42 @@ public static class HavenContentBootstrap
         EnsureItem<FreePetHitchingPost>(Map.Felucca, BritainHitchingPost);
         EnsureItem<UOOfflineDungeonPortal>(Map.Felucca, BritainDungeonPortal);
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
+    }
+
+    private static void RemoveBrokenNewHavenDungeonPortal()
+    {
+        // The existing portal reported inside New Haven bank is inert. Remove
+        // only explicitly named/typed dungeon portals from the bank interior;
+        // ordinary moongates and teleporters are left alone.
+        var bounds = new Rectangle2D(3479, 2565, 14, 16);
+        var remove = new List<Item>();
+
+        foreach (var item in Map.Trammel.GetItemsInBounds(bounds))
+        {
+            if (item.Deleted || item is UOOfflineDungeonPortal)
+            {
+                continue;
+            }
+
+            var typeName = item.GetType().Name;
+            var displayName = item.Name ?? string.Empty;
+
+            if (typeName.Contains("DungeonPortal", StringComparison.OrdinalIgnoreCase) ||
+                displayName.Equals("Dungeon Portal", StringComparison.OrdinalIgnoreCase))
+            {
+                remove.Add(item);
+            }
+        }
+
+        foreach (var item in remove)
+        {
+            item.Delete();
+        }
+
+        if (remove.Count > 0)
+        {
+            Console.WriteLine($"[uo-offline] removed {remove.Count} inert New Haven dungeon portal item(s)");
+        }
     }
 
     private static Point3D AtSurface(Map map, Point2D p) =>
