@@ -27,8 +27,27 @@ jobs:
       - name: Validate installers
         shell: pwsh
         run: |
-          [void][ScriptBlock]::Create((Get-Content -Raw ./install.ps1))
+          $engine = Get-Content -Raw ./install.ps1
+          [void][ScriptBlock]::Create($engine)
           [void][ScriptBlock]::Create((Get-Content -Raw ./install-gui.ps1))
+
+          $required = @(
+            "BuildModernUO",
+            "FixFeluccaSeason",
+            "FindOrDownloadUOData",
+            "SwapT2AMap",
+            "FetchSpawnMap",
+            "InstallClassicUO",
+            "InstallTazUO",
+            "InstallUORespawn",
+            "InstallRuntimeScripts"
+          )
+
+          foreach ($name in $required) {
+            if ($engine -notmatch "(?m)^function\\s+$name\\b") {
+              throw "install.ps1 is missing required function: $name"
+            }
+          }
 
       - name: Validate Linux installer
         run: bash -n install.sh
