@@ -1,0 +1,14 @@
+diff --git a/Projects/UOContent/Spells/Base/Spell.cs b/Projects/UOContent/Spells/Base/Spell.cs
+--- a/Projects/UOContent/Spells/Base/Spell.cs
++++ b/Projects/UOContent/Spells/Base/Spell.cs
+@@ -774,6 +774,10 @@ namespace Server.Spells
+             else if (CheckFizzle())
+             {
+                 Caster.Mana -= mana;
++
++                // Evolving UO Offline grimoires gain experience only after the
++                // normal spell sequence succeeds its fizzle/skill check.
++                Server.UOOffline.StarterProgression.OnSuccessfulSpellCast(Caster);
+ 
+                 if (Scroll is SpellScroll)
+                 {

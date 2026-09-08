@@ -477,7 +477,10 @@ function ApplyEnginePatches {
 
     Invoke-Native git @("-C", $ModernUODir, "apply", "--check", $path) -IgnoreExitCode | Out-Null
     if ($LASTEXITCODE -ne 0) {
-      Warn "$name does not apply to this ModernUO checkout - skipping."
+      if ($ModernUOCommit) {
+        Die "$name does not apply cleanly to the pinned ModernUO commit $ModernUOCommit. Refusing a partial install."
+      }
+      Warn "$name does not apply to this unpinned ModernUO checkout - skipping."
       Warn "See INTEGRATION-NOTES.txt if you need it applied by hand."
       continue
     }

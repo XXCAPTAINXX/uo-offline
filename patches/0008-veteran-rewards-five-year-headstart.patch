@@ -1,7 +1,7 @@
 diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
 --- a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
 +++ b/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs
-@@ -65,7 +65,10 @@ namespace Server.Engines.VeteranRewards
+@@ -77,7 +77,10 @@
                  return false;
              }
  
@@ -13,16 +13,18 @@ diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projec
  
              return ts <= TimeSpan.Zero;
          }
-@@ -82,8 +85,8 @@ namespace Server.Engines.VeteranRewards
+@@ -92,8 +95,8 @@
+             return GetRewardLevel(acct);
          }
  
-         public static int GetRewardLevel(Account acct) =>
+-        public static int GetRewardLevel(Account acct) =>
 -            Math.Max((int)(acct.AccountAge.TotalDays / RewardInterval.TotalDays), 0);
++        public static int GetRewardLevel(Account acct) =>
 +            5 + Math.Max((int)(acct.AccountAge.TotalDays / RewardInterval.TotalDays), 0);
  
          public static bool HasHalfLevel(Mobile mob)
          {
-@@ -96,7 +99,8 @@ namespace Server.Engines.VeteranRewards
+@@ -105,7 +108,8 @@
              return HasHalfLevel(acct);
          }
  
@@ -32,7 +34,7 @@ diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projec
  
          public static bool ConsumeRewardPoint(Mobile mob)
          {
-@@ -147,14 +151,9 @@ namespace Server.Engines.VeteranRewards
+@@ -159,14 +163,8 @@
                  cur = Utility.ToInt32(tag);
              }
  
@@ -44,7 +46,8 @@ diff --git a/Projects/UOContent/Engines/Veteran Rewards/RewardSystem.cs b/Projec
 -            {
 -                max = 2 + level;
 -            }
-+            // One selection per effective veteran year. A fresh account is
-+            // level five, so it begins with exactly five reward selections.
++            // One selection per effective veteran year.
 +            max = level;
          }
+ 
+         public static bool CheckIsUsableBy(Mobile from, Item item, object[] args = null)
