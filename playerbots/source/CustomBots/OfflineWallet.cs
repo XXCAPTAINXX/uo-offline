@@ -280,8 +280,8 @@ namespace Server.CustomBots
                 Name = "New Haven Starter Equipment"
             };
 
-            equipment.DropItem(new StarterAdventurerRobe());
-            equipment.DropItem(new StarterFullSpellbook());
+            equipment.DropItem(new EvolvingStarterAdventurerRobe());
+            equipment.DropItem(new EvolvingStarterFullSpellbook());
             equipment.DropItem(new StarterWeaponVoucher());
 
             if (m.AddToBackpack(equipment))
