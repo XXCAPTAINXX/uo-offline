@@ -25,8 +25,12 @@ namespace Server.CustomBots
 {
     public static class StarterHub
     {
-        private static readonly Point3D GearStoneAnchor = new(3492, 2570, 20);
-        private static readonly Point3D ResourceStoneAnchor = new(3492, 2576, 20);
+        // South exterior wall of the New Haven bank (bank region ends at y=2580).
+        // Keep the interior clear and make the convenience strip obvious.
+        private static readonly Point3D HitchingPostAnchor = new(3482, 2582, 20);
+        private static readonly Point3D GearStoneAnchor = new(3484, 2582, 20);
+        private static readonly Point3D ResourceStoneAnchor = new(3486, 2582, 20);
+        private static readonly Point3D OrganizerStoneAnchor = new(3488, 2582, 20);
 
         public static void Configure()
         {
@@ -40,8 +44,10 @@ namespace Server.CustomBots
                 return;
             }
 
+            EnsureStone<NewHavenHitchingPost>(HitchingPostAnchor);
             EnsureStone<StarterGearStone>(GearStoneAnchor);
             EnsureStone<StarterResourceStone>(ResourceStoneAnchor);
+            EnsureStone<StarterOrganizerStone>(OrganizerStoneAnchor);
         }
 
         private static void EnsureStone<T>(Point3D preferred) where T : Item, new()
