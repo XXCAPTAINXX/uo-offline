@@ -1,0 +1,50 @@
+diff --git a/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs b/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs
+--- a/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs
++++ b/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs
+@@ -232,25 +232,25 @@ namespace Server.Mobiles
+ 
+             var bought = buyer.AccessLevel >= AccessLevel.GameMaster;
+ 
++            // Offline shard economy: ordinary NPC purchases should draw from
++            // the account/bank wallet first. Players should not have to carry
++            // physical gold just to buy reagents, tools, food, mounts, etc.
+             var cont = buyer.Backpack;
+-            if (!bought && cont != null)
++            if (!bought && Banker.Withdraw(buyer, totalCost))
+             {
+-                if (cont.ConsumeTotal(typeof(Gold), totalCost))
+-                {
+-                    bought = true;
+-                }
+-                else if (totalCost < 2000)
+-                {
+-                    SayTo(buyer, 500192); // Begging thy pardon, but thou canst not afford that.
+-                }
++                bought = true;
++                fromBank = true;
+             }
+ 
+-            if (!bought && totalCost >= 2000)
++            // Physical backpack gold remains a fallback for compatibility and
++            // immersion if the account/bank wallet is empty.
++            if (!bought && cont?.ConsumeTotal(typeof(Gold), totalCost) == true)
+             {
+-                if (Banker.Withdraw(buyer, totalCost))
+-                {
+-                    bought = true;
+-                    fromBank = true;
+-                }
+-                else
+-                {
+-                    SayTo(buyer, 500191); // Begging thy pardon, but thy bank account lacks these funds.
+-                }
++                bought = true;
++                fromBank = false;
++            }
++
++            if (!bought)
++            {
++                SayTo(buyer, 500191); // Begging thy pardon, but thy bank account lacks these funds.
+             }
+ 
+             if (!bought)
