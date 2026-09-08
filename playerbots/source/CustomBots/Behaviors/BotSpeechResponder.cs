@@ -199,23 +199,31 @@ namespace Server.CustomBots
                 return;
             }
 
-            // 1. My name? That always gets a turn and an answer — even if
-            // someone else already piped up, and even mid-cooldown (its
-            // own short guard applies instead). A name + group ask
-            // ("garrick wanna hunt?") is a direct recruitment.
+            // 1. My name? Direct control phrases deliberately bypass the
+            // ordinary chatter cooldown so "stay!" works immediately.
             if (ContainsWord(lower, FirstName(bot.Name)))
             {
+                Claim(speaker, lower);
+
+                if (HandleNamedControl(bot, speaker, lower))
+                {
+                    return;
+                }
+
                 if (!_lastReplyAt.TryGetValue(bot.Serial, out var last) ||
                     Core.Now - last >= NameReplyGuard)
                 {
-                    Claim(speaker, lower);
                     if (MatchesAny(lower, GroupAskPhrases))
                     {
                         AnswerGroupAsk(bot, speaker);
                     }
                     else
                     {
-                        Reply(bot, speaker, "respond_name");
+                        DirectSay(
+                            bot,
+                            speaker,
+                            "yeah? say follow me, stay, come, leave, or help"
+                        );
                     }
                 }
                 return;
@@ -390,6 +398,122 @@ namespace Server.CustomBots
                 }
             }
             return true;
+        }
+
+        private static bool HandleNamedControl(PlayerBot bot, Mobile speaker, string lower)
+        {
+            var first = FirstName(bot.Name);
+            int at = lower.IndexOf(first, StringComparison.Ordinal);
+            if (at < 0)
+            {
+                return false;
+            }
+
+            var command = lower[(at + first.Length)..]
+                .Trim(' ', ',', '.', ':', ';', '!', '?');
+
+            switch (command)
+            {
+                case "help":
+                case "command":
+                case "commands":
+                case "control":
+                case "controls":
+                    DirectSay(bot, speaker, "follow me / stay / come / leave");
+                    Timer.DelayCall(TimeSpan.FromSeconds(1.0), () =>
+                    {
+                        if (!bot.Deleted && bot.Alive)
+                        {
+                            bot.Say("i'll also assist your fights while we're partied");
+                        }
+                    });
+                    return true;
+
+                case "follow":
+                case "follow me":
+                case "come with me":
+                case "join me":
+                case "join my party":
+                    if (BotPlayerParty.IsLedBy(bot, speaker))
+                    {
+                        BotPlayerParty.SetHolding(bot, speaker, false);
+                        DirectSay(bot, speaker, "right behind you");
+                    }
+                    else
+                    {
+                        AnswerGroupAsk(bot, speaker);
+                    }
+                    return true;
+
+                case "stay":
+                case "stay here":
+                case "wait":
+                case "wait here":
+                case "hold":
+                case "hold here":
+                    if (BotPlayerParty.SetHolding(bot, speaker, true))
+                    {
+                        DirectSay(bot, speaker, "staying here");
+                    }
+                    else
+                    {
+                        DirectSay(bot, speaker, $"party me first — say {first} follow me");
+                    }
+                    return true;
+
+                case "come":
+                case "come here":
+                case "resume":
+                    if (BotPlayerParty.IsLedBy(bot, speaker))
+                    {
+                        BotPlayerParty.SetHolding(bot, speaker, false);
+                        DirectSay(bot, speaker, "coming");
+                    }
+                    else
+                    {
+                        AnswerGroupAsk(bot, speaker);
+                    }
+                    return true;
+
+                case "leave":
+                case "dismiss":
+                case "go home":
+                case "leave party":
+                    if (BotPlayerParty.ReleaseFromPlayer(bot, speaker))
+                    {
+                        DirectSay(bot, speaker, "catch you later");
+                    }
+                    else
+                    {
+                        DirectSay(bot, speaker, "im not following you");
+                    }
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static void DirectSay(PlayerBot bot, Mobile speaker, string line)
+        {
+            if (bot == null || speaker == null || string.IsNullOrEmpty(line))
+            {
+                return;
+            }
+
+            var d = bot.GetDirectionTo(speaker);
+            if (bot.Direction != d)
+            {
+                bot.Direction = d;
+            }
+
+            _lastReplyAt[bot.Serial] = Core.Now;
+            Timer.DelayCall(TimeSpan.FromSeconds(0.25), () =>
+            {
+                if (!bot.Deleted && bot.Alive && !speaker.Deleted && bot.Map == speaker.Map)
+                {
+                    bot.Say(line);
+                }
+            });
         }
 
         // A free bot says yes and joins (the "im in" comes from the
