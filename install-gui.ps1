@@ -94,7 +94,7 @@ $introBox.Controls.Add((NewLabel "This installer will:" 20 16 690 24 $fontHead $
 $introSteps = @(
     "1.  Build the game server — with the living world of player-like bots compiled in",
     "2.  Download the ClassicUO game client and the Razor assistant (macros and hotkeys)",
-    "3.  Fetch the UO art and map data (~1.3 GB, from community mirrors)",
+    "3.  Use your fully patched current Ultima Online data for modern-era maps, art and content",
     "4.  Configure everything for offline play on this PC only",
     "5.  Put a `"UO Offline`" shortcut on your desktop — one click starts the server and takes you in-game with Razor attached"
 )
@@ -113,8 +113,8 @@ $panelWelcome.Controls.Add($optBox)
 $optBox.Controls.Add((NewLabel "Options" 20 12 300 24 $fontHead $colText))
 
 $chkT2A = New-Object System.Windows.Forms.CheckBox
-$chkT2A.Text = "Install the authentic T2A-era world map (recommended — pre-destruction Magincia)"
-$chkT2A.Checked = $true
+$chkT2A.Text = "Legacy T2A mode (old Felucca-only rules/map — leave OFF for Modern Sandbox)"
+$chkT2A.Checked = $false
 $chkT2A.Location = New-Object System.Drawing.Point(28, 42)
 $chkT2A.Size = New-Object System.Drawing.Size(690, 24)
 $chkT2A.Font = $fontBody; $chkT2A.ForeColor = $colText
@@ -320,9 +320,12 @@ function StartWorker($optT2A, $optRazor, $optMap, $installPath) {
     $script:ps.Runspace = $script:rs
     [void]$script:ps.AddScript({
         try {
-            . $EnginePath -NoRun
+            if ($OptT2A) {
+                . $EnginePath -NoRun -ClassicT2A
+            } else {
+                . $EnginePath -NoRun
+            }
             if ($InstallChoice) { Set-InstallRoot $InstallChoice }
-            $InstallT2AMap = $OptT2A
             $InstallRazor  = $OptRazor
             $InstallMapEditor = $OptMap
 
