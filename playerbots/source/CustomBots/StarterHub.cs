@@ -169,10 +169,10 @@ namespace Server.CustomBots
         {
             BaseWeapon weapon = choice switch
             {
-                1 => new Broadsword(),
-                2 => new Kryss(),
-                3 => new Mace(),
-                4 => new Bow(),
+                1 => new EvolvingStarterBroadsword(),
+                2 => new EvolvingStarterKryss(),
+                3 => new EvolvingStarterMace(),
+                4 => new EvolvingStarterBow(),
                 _ => null
             };
 
@@ -180,19 +180,6 @@ namespace Server.CustomBots
             {
                 return null;
             }
-
-            weapon.Name = choice switch
-            {
-                1 => "Starter Broadsword",
-                2 => "Starter Kryss",
-                3 => "Starter Mace",
-                4 => "Starter Bow",
-                _ => "Starter Weapon"
-            };
-
-            weapon.LootType = LootType.Blessed;
-            weapon.Attributes.WeaponDamage = 10;
-            weapon.Attributes.HitChance = 5;
 
             if (weapon is Bow)
             {
@@ -206,7 +193,7 @@ namespace Server.CustomBots
         }
     }
 
-    [SerializationGenerator(0, false)]
+    [SerializationGenerator(1, false)]
     public partial class StarterAdventurerRobe : Robe
     {
         [Constructible]
@@ -225,6 +212,8 @@ namespace Server.CustomBots
 
             Attributes.LowerManaCost = 5;
             Attributes.NightSight = 1;
+
+            StarterEvolution.ApplyRobeStats(this, 1);
         }
 
         public override void GetProperties(IPropertyList list)
@@ -235,10 +224,11 @@ namespace Server.CustomBots
             list.Add("+1 Hit / Stamina / Mana Regeneration");
             list.Add("Lower Mana Cost 5%");
             list.Add("Night Sight");
+            AddEvolutionProperties(list);
         }
     }
 
-    [SerializationGenerator(0, false)]
+    [SerializationGenerator(1, false)]
     public partial class StarterFullSpellbook : Spellbook
     {
         [Constructible]
@@ -246,6 +236,7 @@ namespace Server.CustomBots
         {
             Name = "Starter Full Spellbook";
             LootType = LootType.Blessed;
+            StarterEvolution.ApplyBookStats(this, 1);
         }
 
         public override void GetProperties(IPropertyList list)
@@ -253,6 +244,7 @@ namespace Server.CustomBots
             base.GetProperties(list);
             list.Add("All 64 Magery spells");
             list.Add("Starter item");
+            AddEvolutionProperties(list);
         }
     }
 
