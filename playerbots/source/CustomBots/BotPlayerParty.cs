@@ -55,6 +55,14 @@ namespace Server.CustomBots
         public static bool IsHolding(PlayerBot bot) =>
             bot != null && _holds.ContainsKey(bot.Serial);
 
+        public static void ClearHolding(PlayerBot bot)
+        {
+            if (bot != null)
+            {
+                _holds.Remove(bot.Serial);
+            }
+        }
+
         public static bool TryGetHoldPoint(PlayerBot bot, out Point3D location, out Map map)
         {
             location = default;
