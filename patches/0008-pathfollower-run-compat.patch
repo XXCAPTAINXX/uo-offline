@@ -1,0 +1,30 @@
+diff --git a/Projects/UOContent/Engines/Pathing/PathFollower.cs b/Projects/UOContent/Engines/Pathing/PathFollower.cs
+--- a/Projects/UOContent/Engines/Pathing/PathFollower.cs
++++ b/Projects/UOContent/Engines/Pathing/PathFollower.cs
+@@ -80,7 +80,9 @@ public class PathFollower
+     public static bool Check(Point3D loc, Point3D goal, int range) =>
+         Utility.InRange(loc, goal, range) && (range > 1 || (loc.Z - goal.Z).Abs() < 16);
+ 
+-    public bool Follow(int range)
++    public bool Follow(int range) => Follow(false, range);
++
++    public bool Follow(bool run, int range)
+     {
+         var goal = GetGoalLocation();
+         Direction d;
+@@ -95,14 +97,14 @@ public class PathFollower
+ 
+         if (!(Enabled && m_Path.Success))
+         {
+-            d = m_From.GetDirectionTo(goal);
++            d = m_From.GetDirectionTo(goal, run);
+             m_From.SetDirection(d);
+ 
+             return Move(d) is MoveResult.Success or MoveResult.SuccessAutoTurn && Check(m_From.Location, goal, range);
+         }
+ 
+-        d = m_From.GetDirectionTo(m_Next);
++        d = m_From.GetDirectionTo(m_Next, run);
+         m_From.SetDirection(d);
+         var res = Move(d);
+ 
