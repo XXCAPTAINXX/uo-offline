@@ -474,12 +474,14 @@ public static class HavenContentBootstrap
     private static readonly Point2D NewHavenSupply = new(3481, 2582);
     private static readonly Point2D NewHavenUpgrade = new(3483, 2582);
     private static readonly Point2D NewHavenRewards = new(3485, 2582);
+    private static readonly Point2D NewHavenHitchingPost = new(3487, 2582);
     private static readonly Point2D OldHavenBoss = new(3670, 2587);
     private static readonly Point2D OldHavenSteed = new(3690, 2525);
 
     private static readonly Point2D BritainSupply = new(1428, 1697);
     private static readonly Point2D BritainUpgrade = new(1430, 1697);
     private static readonly Point2D BritainRewards = new(1432, 1697);
+    private static readonly Point2D BritainHitchingPost = new(1434, 1697);
     private static readonly Point2D FeluccaSteed = new(1388, 1498);
 
     public static void Initialize() =>
@@ -491,6 +493,7 @@ public static class HavenContentBootstrap
         EnsureItem<StarterSupplyStone>(Map.Trammel, NewHavenSupply);
         EnsureItem<HavenUpgradeStone>(Map.Trammel, NewHavenUpgrade);
         EnsureItem<SpecialRewardStone>(Map.Trammel, NewHavenRewards);
+        EnsureItem<FreePetHitchingPost>(Map.Trammel, NewHavenHitchingPost);
         EnsureSpawner<OldHavenBossSpawner>(Map.Trammel, OldHavenBoss);
         EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, OldHavenSteed);
 
@@ -499,6 +502,7 @@ public static class HavenContentBootstrap
         EnsureItem<StarterSupplyStone>(Map.Felucca, BritainSupply);
         EnsureItem<HavenUpgradeStone>(Map.Felucca, BritainUpgrade);
         EnsureItem<SpecialRewardStone>(Map.Felucca, BritainRewards);
+        EnsureItem<FreePetHitchingPost>(Map.Felucca, BritainHitchingPost);
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
     }
 
