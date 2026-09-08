@@ -1,7 +1,6 @@
-diff --git a/Projects/UOContent/Engines/Pathing/PathFollower.cs b/Projects/UOContent/Engines/Pathing/PathFollower.cs
 --- a/Projects/UOContent/Engines/Pathing/PathFollower.cs
 +++ b/Projects/UOContent/Engines/Pathing/PathFollower.cs
-@@ -80,7 +80,9 @@ public class PathFollower
+@@ -83,7 +83,9 @@
      public static bool Check(Point3D loc, Point3D goal, int range) =>
          Utility.InRange(loc, goal, range) && (range > 1 || (loc.Z - goal.Z).Abs() < 16);
  
@@ -12,7 +11,7 @@ diff --git a/Projects/UOContent/Engines/Pathing/PathFollower.cs b/Projects/UOCon
      {
          var goal = GetGoalLocation();
          Direction d;
-@@ -95,14 +97,14 @@ public class PathFollower
+@@ -97,13 +99,13 @@
  
          if (!(Enabled && m_Path.Success))
          {
