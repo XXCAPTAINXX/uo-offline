@@ -430,8 +430,7 @@ namespace Server.CustomBots
                     BotPanelActions.RunCommand(from, "TelGen");
                     BotPanelActions.RunCommand(from, "MoonGen");
                     BotPanelActions.RunCommand(from, "TownCriers");
-                    BotPanelActions.RunCommand(from,
-                        "GenerateSpawners Spawners/uoclassic/UOClassic.map");
+                    BotPanelActions.GenerateWorldSpawners(from);
                     // Both halves of the player bot population: the towns and
                     // roads from GenerateBots, the reds from GeneratePKs.
                     BotPanelActions.RunCommand(from, "GenerateBots");
