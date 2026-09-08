@@ -1480,9 +1480,26 @@ function WriteModernUOConfig {
 }
 
 # ---------------------------------------------------------------------------
-# Step 10 — ClassicUO settings.json
+# Step 10 — TazUO profile settings
+# ---------------------------------------------------------------------------
+function WriteTazUOSettings {
+  if ($ClassicT2A) { return }
+
+  Banner "Writing TazUO offline profile"
+  $binPath = Join-Path $InstallRoot ".tazuo-bin-path"
+  if (-not (Test-Path $binPath)) { Warn "TazUO executable path missing; skipping profile."; return }
+
+  $settingsPath = Join-Path $TazUODir "uo-offline-settings.json"
+  if (-not (Test-Path $settingsPath)) { "{}" | Set-Content $settingsPath }
+  Set-Content (Join-Path $InstallRoot ".tazuo-settings-path") $settingsPath
+  Ok "TazUO profile: $settingsPath"
+}
+
+# ---------------------------------------------------------------------------
+# Step 10b — ClassicUO settings.json (legacy only)
 # ---------------------------------------------------------------------------
 function WriteClassicUOSettings {
+  if (-not $ClassicT2A) { return }
   Banner "Writing ClassicUO settings.json"
   if (-not (Test-Path $ClassicUODir)) { Warn "ClassicUO dir missing; skipping."; return }
   $uoData = $script:UOData.Replace([char]92,[char]47)
@@ -1709,12 +1726,20 @@ function InstallRuntimeScripts {
   $binPath = Join-Path $InstallRoot ".classicuo-bin-path"
   if (Test-Path $binPath) { $cuoBin = Get-Content $binPath }
 
+  $tazBin = ""
+  $tazPath = Join-Path $InstallRoot ".tazuo-bin-path"
+  if (Test-Path $tazPath) { $tazBin = Get-Content $tazPath }
+
+  $tazSettings = Join-Path $TazUODir "uo-offline-settings.json"
+  $uoDataForClient = $script:UOData
+  $clientVersionForLaunch = if ($script:ResolvedClientVersion) { $script:ResolvedClientVersion } else { "7.0.61.0" }
+
   $startPs1 = Join-Path $InstallRoot "start.ps1"
   @"
 # One-click play: start the ModernUO server (minimized) unless one is
 # already running, wait until it's actually listening on 2593, THEN launch
-# ClassicUO — which loads Razor as its plugin (see settings.json) and
-# auto-logs into the shard. Polling the port avoids the race where the
+# the configured client. Modern Sandbox launches TazUO; legacy T2A launches
+# ClassicUO with Razor. Polling the port avoids the race where the
 # client connects before the server has finished its (slow) first boot.
 `$dist = "$DistDir"
 `$dotnet = "$DotnetRoot\dotnet.exe"
@@ -1804,9 +1829,36 @@ if (PortOpen) {
   }
 }
 
+`$taz = "$tazBin"
 `$cuo = "$cuoBin"
-if (`$cuo -and (Test-Path `$cuo)) { Start-Process -FilePath `$cuo -WorkingDirectory (Split-Path -Parent `$cuo) }
-else { Write-Host "ClassicUO.exe not found; start it manually." }
+`$uoData = "$uoDataForClient"
+`$clientVersion = "$clientVersionForLaunch"
+`$tazSettings = "$tazSettings"
+
+if (`$taz -and (Test-Path `$taz)) {
+  `$args = @(
+    "-settings", `$tazSettings,
+    "-username", "$OwnerUser",
+    "-password", "$OwnerPass",
+    "-ip", "127.0.0.1",
+    "-port", "2593",
+    "-uopath", `$uoData,
+    "-clientversion", `$clientVersion,
+    "-saveaccount", "true",
+    "-autologin", "true",
+    "-last_server_name", "$ShardName"
+  )
+  Start-Process -FilePath `$taz -ArgumentList `$args -WorkingDirectory (Split-Path -Parent `$taz)
+}
+elseif (`$cuo -and (Test-Path `$cuo)) {
+  Write-Host "TazUO not found; falling back to ClassicUO."
+  Start-Process -FilePath `$cuo -WorkingDirectory (Split-Path -Parent `$cuo)
+}
+else {
+  [System.Windows.Forms.MessageBox]::Show(
+    "No supported client executable was found. Re-run install.bat to install TazUO.",
+    "UO Offline - client missing") | Out-Null
+}
 "@ | Set-Content $startPs1
   Ok "Wrote start.ps1"
 
@@ -1852,15 +1904,15 @@ function Finish {
 Install root:   $InstallRoot
 Profile:        $InstallProfile
 Server:         $DistDir
-Client:         $ClassicUODir
-Razor:          $RazorDir  (loads inside ClassicUO as a plugin)
+Client:         $(if ($ClassicT2A) { $ClassicUODir } else { $TazUODir })
+Assistant:      $(if ($ClassicT2A) { "Razor" } else { "TazUO built-in / Legion" })
 UO data:        $($script:UOData)
 Listener:       $ListenAddr  (localhost only, offline)
 Owner login:    $OwnerUser / $OwnerPass
 
 To play:        Double-click the "UO Offline" desktop shortcut — it starts
-                the server, then opens the game with Razor attached and
-                logs you straight in. (or run $InstallRoot\start.bat)
+                the server, then opens $(if ($ClassicT2A) { "ClassicUO" } else { "TazUO" })
+                against localhost. (or run $InstallRoot\start.bat)
 
 First launch: create the owner account in-game ($OwnerUser/$OwnerPass),
 make a character, then populate the world with the [-commands in
@@ -1887,9 +1939,9 @@ $script:InstallSteps = @(
   @{ Name = "Find current UO game data";      Run = { FindOrDownloadUOData } },
   @{ Name = "Apply selected map profile";     Run = { SwapT2AMap } },
   @{ Name = "Configure world spawns";         Run = { FetchSpawnMap } },
-  @{ Name = "Download ClassicUO client";    Run = { InstallClassicUO } },
-  @{ Name = "Download Razor assistant";     Run = { InstallRazor } },
-  @{ Name = "Write the configuration";      Run = { WriteModernUOConfig; WriteClassicUOSettings } },
+  @{ Name = "Install Modern client";        Run = { InstallTazUO; InstallClassicUO } },
+  @{ Name = "Install legacy assistant";      Run = { InstallRazor } },
+  @{ Name = "Write the configuration";      Run = { WriteModernUOConfig; WriteTazUOSettings; WriteClassicUOSettings } },
   @{ Name = "Install the map editor";       Run = { InstallMapEditor } },
   @{ Name = "Create launcher + shortcut";   Run = { InstallRuntimeScripts } }
 )
