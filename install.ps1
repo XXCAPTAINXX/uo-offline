@@ -862,6 +862,32 @@ function SwapT2AMap {
 }
 
 # ---------------------------------------------------------------------------
+# Modern map migration
+# ---------------------------------------------------------------------------
+function EnsureModernMapArt {
+  if (-not $script:UOData) { return }
+
+  $backupDir = Join-Path $script:UOData "_backup-modern-map"
+  if (-not (Test-Path $backupDir)) {
+    Say "Modern map art retained; no legacy T2A swap backup found."
+    return
+  }
+
+  $restored = 0
+  foreach ($name in @("map0.mul", "statics0.mul", "staidx0.mul", "radarcol.mul", "tiledata.mul")) {
+    $backup = Join-Path $backupDir $name
+    if (Test-Path $backup) {
+      Copy-Item $backup (Join-Path $script:UOData $name) -Force
+      $restored++
+    }
+  }
+
+  if ($restored -gt 0) {
+    Ok "Restored $restored modern map/data file(s) from the legacy T2A backup."
+  }
+}
+
+# ---------------------------------------------------------------------------
 # Step 7 — Nerun's spawn map
 # ---------------------------------------------------------------------------
 function FetchSpawnMap {
@@ -1500,6 +1526,7 @@ $script:InstallSteps = @(
   @{ Name = "Build the server";             Run = { BuildModernUO } },
   @{ Name = "Set Felucca to summer";        Run = { FixFeluccaSeason } },
   @{ Name = "Get the UO game data";         Run = { FindOrDownloadUOData } },
+  @{ Name = "Verify modern world map";       Run = { EnsureModernMapArt } },
   @{ Name = "Download ClassicUO client";    Run = { InstallClassicUO } },
   @{ Name = "Download Razor assistant";     Run = { InstallRazor } },
   @{ Name = "Write the configuration";      Run = { WriteModernUOConfig; WriteClassicUOSettings } },
