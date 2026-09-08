@@ -10,8 +10,22 @@ The `modern-evolution` branch is the modern-era development line.
 - Modern UO data: required
 - T2A map replacement: OFF by default
 - Nerun pre-T2A spawn map: skipped in Modern mode
-- ModernUO expansion-aware JSON spawns: used in Modern mode
+- UORespawn 2.0.1.4 dynamic population: enabled in Modern mode
+- UORespawn DefaultPack: ecology/regions/tiles/vendors for all six maps
+- PlayerBots are explicitly excluded from UORespawn spawn-anchor tracking
 - Classic T2A remains available as an explicit legacy profile
+
+## World population model
+
+Modern Sandbox no longer uses the old Nerun T2A spawn map.
+
+General world population comes from the pinned UORespawn ModernUO module and its DefaultPack. UORespawn is player-centric: creatures are searched/spawned around actual connected players according to map, terrain, region, time, weather and pack rules.
+
+The installer seeds `Distribution/Data/UORespawn/INPUT/` only when no existing UORespawn pack is present. Re-running the installer therefore preserves edited spawn data.
+
+Do not use ModernUO's broad **Generate Spawners** world-building action on a normal Modern Sandbox unless you intentionally want to layer static JSON spawns on top of UORespawn. ModernUO's native scripted systems remain available for special encounters/content as we continue the modernization.
+
+Use `[UORespawn` as an Administrator to open the UORespawn control panel. Its spawn editor can later be linked directly to the installed ModernUO tree.
 
 ## Windows
 
@@ -58,8 +72,6 @@ Do not point Modern Sandbox at the old 7.0.23.1 T2A data directory.
 
 ## Build status
 
-A GitHub Actions compile workflow is included at `.github/workflows/modern-build.yml`.
+GitHub Actions validates the PowerShell and Bash installer syntax, checks out the pinned ModernUO version, applies the UO Offline engine patches, copies PlayerBots, installs the pinned UORespawn ModernUO server module and six-facet pack, and builds UOContent.
 
-The workflow checks out the pinned ModernUO version, applies the UO Offline engine patches when they still apply, copies PlayerBots into UOContent, and builds the UOContent project.
-
-A successful compile is required before calling this baseline tested. Runtime/client testing is still required after that.
+The integrated ModernUO + PlayerBots + Guild Storage + UORespawn build passed CI on September 8, 2026. Runtime/client/world-content testing is still required before treating every facet as fully validated.
