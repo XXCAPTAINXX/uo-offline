@@ -77,6 +77,8 @@ MODERNUO_REPO="https://github.com/modernuo/ModernUO.git"
 # the API change broke, play it, then release. Empty means track main, which
 # is the old behaviour and the old lottery.
 MODERNUO_COMMIT="e7f85d404d52e0def1fb342b3dc185894a57017d"
+UO_OFFLINE_UPDATE_REPO="XXCAPTAINXX/uo-offline"
+UO_OFFLINE_UPDATE_BRANCH="haven-rc2"
 MODERNUO_DIR="${INSTALL_ROOT}/ModernUO"
 DIST_DIR="${MODERNUO_DIR}/Distribution"
 CFG_DIR="${DIST_DIR}/Configuration"
@@ -147,6 +149,18 @@ preflight() {
   [[ -w "${INSTALL_ROOT}" ]] \
     || die "${INSTALL_ROOT} is not writable. Pick a folder you own."
 
+  # Disable runtime updates until every install step succeeds. If the
+  # installer stops halfway through, the existing launcher can still start
+  # the old shard but cannot mutate it through an update.
+  printf '%s\n' "install-in-progress" > "${INSTALL_ROOT}/uo-offline-update.lock"
+
+  # Replace a stale/original updater immediately so an older version stamp
+  # can never send this customized shard back to the upstream fork.
+  if [[ -f "${SCRIPT_DIR}/scripts/update-check.sh" ]]; then
+    cp "${SCRIPT_DIR}/scripts/update-check.sh" "${INSTALL_ROOT}/update-check.sh"
+    chmod +x "${INSTALL_ROOT}/update-check.sh"
+  fi
+
   ok "Install root: ${INSTALL_ROOT}"
 }
 
@@ -198,18 +212,26 @@ install_deps() {
 # touches -- the stock-file patches are exactly that kind of edit -- and a
 # checkout that will not move still builds whatever is on disk.
 set_modernuo_commit() {
-  if [[ "$(git rev-parse HEAD 2>/dev/null)" == "${MODERNUO_COMMIT}" ]]; then
-    say "Already on the pinned commit ${MODERNUO_COMMIT:0:9}."
-    return 0
-  fi
+  # Engine patches intentionally dirty tracked ModernUO files. The source
+  # clone is a build workspace, so restore tracked files before moving to the
+  # pinned commit. git reset --hard leaves untracked runtime data, including
+  # Distribution/Saves, alone.
+  say "Restoring tracked ModernUO source before applying this release..."
 
-  if git checkout --detach "${MODERNUO_COMMIT}"; then
-    say "ModernUO pinned to ${MODERNUO_COMMIT:0:9}."
-  else
-    warn "Could not move the ModernUO clone to ${MODERNUO_COMMIT:0:9}."
-    warn "Continuing with the checkout on disk. If the build fails, delete the"
-    warn "ModernUO folder and re-run to get a clean clone at the pinned commit."
+  if [[ -f .git/shallow ]]; then
+    git fetch --unshallow || git fetch --depth=2147483647
   fi
+  git fetch --all --tags --force     || die "Could not fetch the pinned ModernUO history."
+
+  git reset --hard HEAD     || die "Could not reset tracked ModernUO changes."
+  git checkout --detach "${MODERNUO_COMMIT}"     || die "Could not checkout pinned ModernUO commit ${MODERNUO_COMMIT:0:9}."
+  git reset --hard "${MODERNUO_COMMIT}"     || die "Could not restore pinned ModernUO commit ${MODERNUO_COMMIT:0:9}."
+
+  local actual
+  actual="$(git rev-parse HEAD 2>/dev/null || true)"
+  [[ "${actual}" == "${MODERNUO_COMMIT}" ]]     || die "ModernUO ended on ${actual:-unknown}, expected ${MODERNUO_COMMIT}."
+
+  say "ModernUO pinned cleanly to ${MODERNUO_COMMIT:0:9}."
 }
 
 fetch_modernuo() {
@@ -1046,6 +1068,11 @@ install_runtime_scripts() {
 
   write_version_stamp
 
+  # A successful runtime-script step re-enables updates. Failed installs keep
+  # the lock file and therefore cannot update through the desktop launcher.
+  rm -f "${INSTALL_ROOT}/uo-offline-update.lock"
+  ok "Launcher updates enabled for ${UO_OFFLINE_UPDATE_REPO} / ${UO_OFFLINE_UPDATE_BRANCH}"
+
   chmod +x "${INSTALL_ROOT}/start.sh" \
            "${INSTALL_ROOT}/stop.sh" \
            "${INSTALL_ROOT}/reset-first-launch.sh"
@@ -1065,8 +1092,8 @@ install_runtime_scripts() {
 # will not offer updates, which is the quiet, safe direction to fail in.
 # ---------------------------------------------------------------------------
 write_version_stamp() {
-  local repo="Klein187/uo-offline"
-  local branch="main"
+  local repo="${UO_OFFLINE_UPDATE_REPO}"
+  local branch="${UO_OFFLINE_UPDATE_BRANCH}"
   local sha=""
   local api="https://api.github.com/repos/${repo}/commits/${branch}"
 
@@ -1079,7 +1106,7 @@ write_version_stamp() {
   fi
 
   if [[ -z "${sha}" ]]; then
-    warn "Could not determine the source version; the launcher will not check for updates."
+    warn "Could not determine the source version; automatic updates will stay disabled."
     return 0
   fi
 
@@ -1091,7 +1118,7 @@ write_version_stamp() {
   "InstalledUtc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
-  ok "Version stamp: ${sha:0:7}"
+  ok "Version stamp: ${repo} / ${branch} / ${sha:0:7}"
 }
 
 # ---------------------------------------------------------------------------
@@ -1367,6 +1394,9 @@ install_playerbots() {
   fi
 
   say "Deploying bot source -> ${src_target}"
+  # Whole-dir replacement prevents deleted or renamed source files from a
+  # previous RC lingering and compiling beside the new versions.
+  rm -rf "${src_target}"
   mkdir -p "${src_target}"
   cp -rT "${src_dir}/source/CustomBots" "${src_target}"
   echo "${new_hash}" > "${hash_file}"

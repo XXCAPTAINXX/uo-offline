@@ -28,7 +28,9 @@ jobs:
       - name: Validate installer syntax (Linux)
         if: runner.os == 'Linux'
         shell: bash
-        run: bash -n install.sh
+        run: |
+          bash -n install.sh
+          bash -n scripts/update-check.sh
 
       - name: Validate installer syntax (Windows)
         if: runner.os == 'Windows'
@@ -36,6 +38,21 @@ jobs:
         run: |
           [scriptblock]::Create((Get-Content install.ps1 -Raw)) | Out-Null
           [scriptblock]::Create((Get-Content install-gui.ps1 -Raw)) | Out-Null
+          [scriptblock]::Create((Get-Content scripts/update-check.ps1 -Raw)) | Out-Null
+
+      - name: Verify customized update channel
+        shell: pwsh
+        run: |
+          $files = @('install.ps1','install.sh','scripts/update-check.ps1','scripts/update-check.sh')
+          foreach ($file in $files) {
+            $text = Get-Content $file -Raw
+            if ($text -match 'Klein187/uo-offline') {
+              throw "Forbidden upstream update channel found in $file"
+            }
+            if ($text -notmatch 'XXCAPTAINXX/uo-offline') {
+              throw "Customized update repository missing from $file"
+            }
+          }
 
       - name: Apply engine patches (Linux)
         if: runner.os == 'Linux'

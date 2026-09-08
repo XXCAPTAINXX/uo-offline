@@ -25,6 +25,12 @@ $ErrorActionPreference = "Stop"
 $InstallRoot = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $StampPath   = Join-Path $InstallRoot "uo-offline-version.json"
 $SkipPath    = Join-Path $InstallRoot "uo-offline-skipped.txt"
+$LockPath    = Join-Path $InstallRoot "uo-offline-update.lock"
+
+# Safety boundary: this launcher is allowed to update ONLY our customized
+# UO Offline RC channel. A stale stamp from the original fork is ignored.
+$AllowedRepo   = "XXCAPTAINXX/uo-offline"
+$AllowedBranch = "haven-rc2"
 
 # How long we are willing to make the player wait on the network before
 # giving up and just starting the game.
@@ -40,6 +46,13 @@ function Emit([string]$verdict) {
 # trace in the player's face.
 # -------------------------------------------------------------------------
 try {
+    # An interrupted/failed installer leaves this lock behind deliberately.
+    # Starting the old server is okay; updating an incomplete install is not.
+    if (Test-Path $LockPath) {
+        Emit "continue"
+        return
+    }
+
     if (-not (Test-Path $StampPath)) {
         # No version stamp: installed before this feature existed, or the
         # stamp could not be written. Nothing to compare against.
@@ -55,6 +68,12 @@ try {
     if ([string]::IsNullOrWhiteSpace($localSha) -or
         [string]::IsNullOrWhiteSpace($repo) -or
         [string]::IsNullOrWhiteSpace($branch)) {
+        Emit "continue"
+        return
+    }
+
+    if ($repo -ne $AllowedRepo -or $branch -ne $AllowedBranch) {
+        # Never follow an old/original project's update channel.
         Emit "continue"
         return
     }
@@ -219,7 +238,8 @@ try {
     # background job would look like the launcher did nothing.
     Start-Process -FilePath "powershell.exe" -ArgumentList @(
         "-NoProfile", "-ExecutionPolicy", "Bypass",
-        "-File", "`"$($installer.FullName)`""
+        "-File", "`"$($installer.FullName)`"",
+        "-InstallPath", "`"$InstallRoot`""
     ) -WorkingDirectory $installer.DirectoryName | Out-Null
 
     Emit "updating"
