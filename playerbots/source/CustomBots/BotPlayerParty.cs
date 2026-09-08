@@ -21,6 +21,7 @@
 // =========================================================================
 
 using System;
+using System.Collections.Generic;
 using Server;
 using Server.Engines.PartySystem;
 using Server.Mobiles;
@@ -29,12 +30,83 @@ namespace Server.CustomBots
 {
     public static class BotPlayerParty
     {
+        private sealed class HoldState
+        {
+            public Point3D Location;
+            public Map Map;
+        }
+
+        // "Stay" is deliberately runtime state. A normal ambient PlayerBot
+        // is still transient; persistent buddy/guild-bot orders will move to
+        // their durable record when that tier is implemented.
+        private static readonly Dictionary<Serial, HoldState> _holds = new();
+
         // True when the bot is a MEMBER of a real player's party — used
         // to shield it from the session curve and lifecycle reassignment
         // for as long as the adventure runs.
         public static bool InPlayerParty(PlayerBot bot) =>
             bot?.Party is Party p && p.Leader != null &&
             p.Leader.Player && p.Leader is not PlayerBot;
+
+        public static bool IsLedBy(PlayerBot bot, Mobile player) =>
+            bot != null && player != null &&
+            bot.Party is Party p && p.Leader == player;
+
+        public static bool IsHolding(PlayerBot bot) =>
+            bot != null && _holds.ContainsKey(bot.Serial);
+
+        public static bool TryGetHoldPoint(PlayerBot bot, out Point3D location, out Map map)
+        {
+            location = default;
+            map = null;
+
+            if (bot == null || !_holds.TryGetValue(bot.Serial, out var state))
+            {
+                return false;
+            }
+
+            location = state.Location;
+            map = state.Map;
+            return true;
+        }
+
+        public static bool SetHolding(PlayerBot bot, Mobile player, bool hold)
+        {
+            if (!IsLedBy(bot, player))
+            {
+                return false;
+            }
+
+            if (hold)
+            {
+                _holds[bot.Serial] = new HoldState
+                {
+                    Location = bot.Location,
+                    Map = bot.Map
+                };
+            }
+            else
+            {
+                _holds.Remove(bot.Serial);
+            }
+
+            return true;
+        }
+
+        public static bool ReleaseFromPlayer(PlayerBot bot, Mobile player)
+        {
+            if (!IsLedBy(bot, player) || bot.Party is not Party p)
+            {
+                return false;
+            }
+
+            _holds.Remove(bot.Serial);
+            p.Remove(bot);
+            bot.Party = null;
+            bot.Combatant = null;
+            bot.Behavior = new TravelerBehavior();
+            return true;
+        }
 
         // Called every behavior tick, before the behavior runs. Cheap:
         // pending invites park a Mobile (not a Party) in bot.Party.
@@ -84,6 +156,7 @@ namespace Server.CustomBots
                     }
 
                     p.OnAccept(bot);
+                    _holds.Remove(bot.Serial);
 
                     var line = ChatLibrary.PickRandom("party_join");
                     if (!string.IsNullOrEmpty(line))
@@ -246,6 +319,11 @@ namespace Server.CustomBots
 
         private static void Decline(PlayerBot bot, Mobile inviter, bool say)
         {
+            if (bot != null)
+            {
+                _holds.Remove(bot.Serial);
+            }
+
             if (inviter?.Party is Party p)
             {
                 p.OnDecline(bot, inviter);
