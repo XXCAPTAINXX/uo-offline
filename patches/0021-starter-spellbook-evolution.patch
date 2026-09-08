@@ -1,0 +1,11 @@
+diff --git a/Projects/UOContent/Spells/Base/Spell.cs b/Projects/UOContent/Spells/Base/Spell.cs
+--- a/Projects/UOContent/Spells/Base/Spell.cs
++++ b/Projects/UOContent/Spells/Base/Spell.cs
+@@ -937,6 +937,7 @@ namespace Server.Spells
+                     m_Spell._castTimer = null;
+                     caster.OnSpellCast(m_Spell);
+                     caster.Region?.OnSpellCast(caster, m_Spell);
++                    Server.CustomBots.StarterEvolution.OnSpellCast(caster);
+                     caster.NextSpellTime =
+                         Core.TickCount + (int)m_Spell.GetCastRecovery().TotalMilliseconds; // Spell.NextSpellDelay;
+ 
