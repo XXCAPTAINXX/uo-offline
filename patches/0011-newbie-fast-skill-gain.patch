@@ -1,0 +1,41 @@
+--- a/Projects/UOContent/Skills/SkillCheck.cs
++++ b/Projects/UOContent/Skills/SkillCheck.cs
+@@ -128,6 +128,11 @@
+                 {
+                     gc *= 2;
+                 }
++
++                if (Server.CustomBots.NewbiePlayability.FastGainEligible(from, skill))
++                {
++                    gc *= Server.CustomBots.NewbiePlayability.FastGainMultiplier;
++                }
+ 
+                 if (gc >= Utility.RandomDouble())
+                 {
+@@ -222,6 +227,7 @@
+         if (skill.Base < skill.Cap && skill.Lock == SkillLock.Up)
+         {
+             var toGain = 1;
++            var newbieFastGain = Server.CustomBots.NewbiePlayability.FastGainEligible(from, skill);
+ 
+             if (skill.Base <= 10.0)
+             {
+@@ -246,10 +252,16 @@
+                 toGain *= Utility.RandomMinMax(2, 5);
+             }
+ 
++            if (newbieFastGain)
++            {
++                toGain *= Server.CustomBots.NewbiePlayability.FastGainMultiplier;
++            }
++
+             if (!from.Player || skills.Total < skills.Cap)
+             {
+-                skill.BaseFixedPoint = Math.Min(skill.BaseFixedPoint + toGain, skill.CapFixedPoint);
++                var gainCap = newbieFastGain
++                    ? Math.Min(skill.CapFixedPoint, 1000)
++                    : skill.CapFixedPoint;
++                skill.BaseFixedPoint = Math.Min(skill.BaseFixedPoint + toGain, gainCap);
+             }
+         }
+ 
