@@ -60,6 +60,8 @@ $ModernUOCommit = "114dbba6e25f0e97e8537e54025d7bfa87c03a39"
 $UpdateModernUO = $false
 
 $ClassicUOReleaseUrl = "https://api.github.com/repos/ClassicUO/ClassicUO/releases"
+$TazUOReleaseUrl = "https://api.github.com/repos/PlayTazUO/TazUO/releases/latest"
+$TazUOLicenseUrl = "https://raw.githubusercontent.com/PlayTazUO/TazUO/main/LICENSE.md"
 
 # UORespawn 2.0.1.4 — ModernUO-native dynamic world population.
 # Pinned for reproducible installs; update only after CI/build/runtime review.
@@ -72,7 +74,7 @@ $UORespawnLicenseUrl = "https://raw.githubusercontent.com/Kita72/UORespawnProjec
 # Razor (Community Edition) — the classic UO assistant, loaded into
 # ClassicUO as a plugin so clicking Play opens the game with Razor attached.
 # $InstallRazor = $false to skip.
-$InstallRazor   = $true
+$InstallRazor   = $ClassicT2A
 $RazorReleaseUrl = "https://api.github.com/repos/markdwags/Razor/releases/latest"
 
 # Modern Sandbox is the default. It uses the player's fully patched current
@@ -132,6 +134,7 @@ function Set-InstallRoot {
   $script:CfgDir       = [IO.Path]::Combine($script:DistDir, "Configuration")
   $script:SpawnersDir  = [IO.Path]::Combine($script:DistDir, "Spawners", "uoclassic")
   $script:ClassicUODir = [IO.Path]::Combine($Path, "ClassicUO")
+  $script:TazUODir     = [IO.Path]::Combine($Path, "TazUO")
   $script:RazorDir     = [IO.Path]::Combine($Path, "Razor")
   $script:UODataDir    = [IO.Path]::Combine($Path, "UOData", $UODataVersion)
   $script:T2ASrcDir    = [IO.Path]::Combine($Path, "t2a-src")
@@ -1114,6 +1117,10 @@ function FetchSpawnMap {
 # ---------------------------------------------------------------------------
 function InstallClassicUO {
   Banner "Downloading ClassicUO client (Windows)"
+  if (-not $ClassicT2A) {
+    Say "Modern Sandbox uses TazUO; skipping ClassicUO."
+    return
+  }
   if ((Test-Path $ClassicUODir) -and (Get-ChildItem $ClassicUODir -ErrorAction SilentlyContinue)) {
     Say "ClassicUO already present. Skipping."; return
   }
@@ -1138,6 +1145,54 @@ function InstallClassicUO {
   $cuo = Get-ChildItem $ClassicUODir -Recurse -Filter "ClassicUO.exe" | Select-Object -First 1
   if ($cuo) { Set-Content (Join-Path $InstallRoot ".classicuo-bin-path") $cuo.FullName; Ok "ClassicUO: $($cuo.FullName)" }
   else { Warn "ClassicUO extracted but ClassicUO.exe not located; start script will search at launch." }
+}
+
+# ---------------------------------------------------------------------------
+# Step 8a — TazUO (Modern Sandbox client)
+# ---------------------------------------------------------------------------
+function InstallTazUO {
+  Banner "Installing TazUO client"
+
+  if ($ClassicT2A) {
+    Say "Classic T2A profile: keeping ClassicUO + Razor."
+    return
+  }
+
+  $known = Join-Path $InstallRoot ".tazuo-bin-path"
+  if (Test-Path $known) {
+    $knownExe = (Get-Content $known -ErrorAction SilentlyContinue | Select-Object -First 1)
+    if ($knownExe -and (Test-Path $knownExe)) {
+      Say "TazUO already present. Skipping download."
+      return
+    }
+  }
+
+  New-Item -ItemType Directory -Force -Path $TazUODir | Out-Null
+  Say "Querying TazUO for the latest Windows build..."
+  $rel = Invoke-RestMethod -Uri $TazUOReleaseUrl -Headers @{ "User-Agent"="uo-offline-installer" }
+  $asset = $rel.assets | Where-Object { $_.name -eq "win-x64.zip" } | Select-Object -First 1
+  if (-not $asset) { Die "Could not find the TazUO win-x64 release asset." }
+
+  $tmpZip = Join-Path $InstallRoot ".tazuo.zip"
+  Say "Downloading TazUO $($rel.name)..."
+  Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $tmpZip -Headers @{ "User-Agent"="uo-offline-installer" }
+  Expand-Archive -Path $tmpZip -DestinationPath $TazUODir -Force
+  Remove-Item $tmpZip -Force -ErrorAction SilentlyContinue
+
+  $hit = Get-ChildItem $TazUODir -Recurse -Filter "TazUO.exe" -File | Select-Object -First 1
+  if (-not $hit) { Die "TazUO extracted but TazUO.exe was not found." }
+
+  Set-Content $known $hit.FullName
+
+  $licenseDir = Join-Path $DistDir "ThirdPartyLicenses"
+  New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
+  try {
+    Invoke-WebRequest -Uri $TazUOLicenseUrl -OutFile (Join-Path $licenseDir "TazUO-BSD-2-Clause.md") -Headers @{ "User-Agent"="uo-offline-installer" }
+  } catch {
+    Warn "Could not download TazUO license notice: $($_.Exception.Message)"
+  }
+
+  Ok "TazUO: $($hit.FullName)"
 }
 
 # ---------------------------------------------------------------------------
