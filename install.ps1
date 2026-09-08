@@ -476,6 +476,11 @@ function ApplyEnginePatches {
     $name = $patch.Name
     $path = $patch.FullName
 
+    if (-not $ClassicT2A -and $name -eq "0005-spellhelper-t2a-dungeon-travel.patch") {
+      Say "$name (legacy T2A only; skipped for Modern Sandbox)"
+      continue
+    }
+
     # Already applied? Reversing it cleanly is the test.
     Invoke-Native git @("-C", $ModernUODir, "apply", "--reverse", "--check", $path) -IgnoreExitCode | Out-Null
     if ($LASTEXITCODE -eq 0) { Ok "$name (already applied)"; continue }
