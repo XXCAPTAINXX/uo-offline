@@ -25,7 +25,7 @@
 # installer (install-gui.ps1) dot-sources this file as its engine and
 # invokes the steps itself.
 # =========================================================================
-param([switch]$NoRun, [string]$InstallPath)
+param([switch]$NoRun, [string]$InstallPath, [switch]$ClassicT2A)
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
@@ -47,7 +47,7 @@ $MinGitReleaseUrl = "https://api.github.com/repos/git-for-windows/git/releases/l
 # So the version is pinned. Moving it is a deliberate step: bump the sha,
 # build, fix whatever the API change broke, play it, then release. Set it to
 # "" to track main instead, which is the old behaviour and the old lottery.
-$ModernUOCommit = "e7f85d404d52e0def1fb342b3dc185894a57017d"
+$ModernUOCommit = "114dbba6e25f0e97e8537e54025d7bfa87c03a39"
 
 # Only consulted when $ModernUOCommit is "". A checkout that has built once is
 # known-good; pulling upstream mid-install can drag in months of engine
@@ -62,17 +62,22 @@ $ClassicUOReleaseUrl = "https://api.github.com/repos/ClassicUO/ClassicUO/release
 $InstallRazor   = $true
 $RazorReleaseUrl = "https://api.github.com/repos/markdwags/Razor/releases/latest"
 
-$UODataUrl     = "https://mirror.ashkantra.de/fullclients/7.0.23.1.exe"
-$UODataVersion = "7.0.23.1"
+# Modern Sandbox is the default. It uses the player's fully patched current
+# UO Classic data instead of forcing an old 7.0.23.1 data set. Pass
+# -ClassicT2A only when intentionally building the legacy T2A sandbox.
+$InstallProfile = if ($ClassicT2A) { "ClassicT2A" } else { "Modern" }
+
+if ($ClassicT2A) {
+  $UODataUrl       = "https://mirror.ashkantra.de/fullclients/7.0.23.1.exe"
+  $UODataVersion   = "7.0.23.1"
+  $InstallT2AMap   = $true
+} else {
+  $UODataUrl       = $null
+  $UODataVersion   = "current"
+  $InstallT2AMap   = $false
+}
 
 $SpawnMapUrl   = "https://raw.githubusercontent.com/Nerun/runuo-nerun-distro/master/Distro/Data/Nerun's%20Distro/Spawns/uoclassic/UOClassic.map"
-
-# Genuine T2A-era Felucca map art (intact Magincia, pre-destruction world),
-# pulled from the official UO Second Age (client 5.0.8.3) distribution. The
-# 7.0.23.1 data above ships modern map art with 15+ years of EA world edits;
-# swapping these three files restores the T2A look. Set $InstallT2AMap = $false
-# to keep modern map art. See docs/T2A-MAP.md.
-$InstallT2AMap   = $true
 
 # The map editor: a browser tool for the waypoint network, destinations,
 # zones, spawns, and a live view of every bot in the world. Optional - it is
@@ -129,8 +134,8 @@ if ($InstallPath) {
 }
 
 # Config defaults
-$ExpansionId   = 1
-$ExpansionName = "T2A"
+$ExpansionId   = if ($ClassicT2A) { 1 } else { 11 }
+$ExpansionName = if ($ClassicT2A) { "T2A" } else { "Endless Journey" }
 $OwnerUser     = "admin"
 $OwnerPass     = "admin"
 $ListenAddr    = "127.0.0.1:2593"
@@ -592,6 +597,7 @@ function ClearBuildArtifacts {
 # ---------------------------------------------------------------------------
 function FixFeluccaSeason {
   Banner "Setting Felucca season to Summer"
+  if (-not $ClassicT2A) { Say "Modern profile: keeping ModernUO's map seasons."; return }
   $mapdef = Join-Path $ModernUODir "Distribution\Data\map-definitions.json"
   if (-not (Test-Path $mapdef)) { Warn "map-definitions.json not found. Skipping."; return }
   $txt = Get-Content $mapdef -Raw
@@ -609,8 +615,83 @@ function FixFeluccaSeason {
 # ---------------------------------------------------------------------------
 # Step 6 — UO game data: detect existing, else download + install
 # ---------------------------------------------------------------------------
+function Test-ModernUODataFolder {
+  param([string]$Path)
+  if (-not $Path -or -not (Test-Path $Path)) { return $false }
+
+  $artOk  = (Test-Path (Join-Path $Path "art.mul")) -or
+            (Test-Path (Join-Path $Path "artLegacyMUL.uop"))
+  $mapOk  = (Test-Path (Join-Path $Path "map0.mul")) -or
+            (Test-Path (Join-Path $Path "map0LegacyMUL.uop"))
+  $tileOk = Test-Path (Join-Path $Path "tiledata.mul")
+
+  return $artOk -and $mapOk -and $tileOk
+}
+
+function Set-ResolvedClientVersion {
+  param([string]$DataPath)
+
+  $script:ResolvedClientVersion = $null
+  $client = Get-ChildItem -Path $DataPath -Filter "client*.exe" -File -ErrorAction SilentlyContinue |
+            Sort-Object Name |
+            Select-Object -First 1
+
+  if ($client) {
+    try {
+      $v = $client.VersionInfo.FileVersion
+      if ($v) { $script:ResolvedClientVersion = (($v -split '[ ,]')[0]).Trim() }
+    } catch { }
+  }
+
+  # ModernUO's EJ baseline requires at least 7.0.61.0. This value is only a
+  # fallback for the bundled ClassicUO settings when no client.exe is present;
+  # the server itself reads the actual patched data files from DataPath.
+  if (-not $script:ResolvedClientVersion) {
+    $script:ResolvedClientVersion = "7.0.61.0"
+  }
+}
+
 function FindOrDownloadUOData {
   Banner "Locating UO game data"
+
+  if (-not $ClassicT2A) {
+    $modernCandidates = @(
+      "${env:ProgramFiles(x86)}\Electronic Arts\Ultima Online Classic",
+      "$env:ProgramFiles\Electronic Arts\Ultima Online Classic",
+      "${env:ProgramFiles(x86)}\Broadsword\Ultima Online Classic",
+      "$env:ProgramFiles\Broadsword\Ultima Online Classic",
+      "$env:USERPROFILE\Ultima Online Classic",
+      "$env:USERPROFILE\Games\Ultima Online Classic",
+      "$env:USERPROFILE\Desktop\Ultima Online Classic"
+    )
+
+    foreach ($c in $modernCandidates) {
+      if (Test-ModernUODataFolder $c) {
+        $script:UOData = $c
+        Set-ResolvedClientVersion $c
+        Ok "Using current UO data: $c"
+        Ok "Detected client version: $($script:ResolvedClientVersion)"
+        return
+      }
+    }
+
+    # Re-use a previously selected/copied modern data directory if present.
+    $uoDataRoot = Join-Path $InstallRoot "UOData"
+    if (Test-Path $uoDataRoot) {
+      $tileHits = Get-ChildItem -Path $uoDataRoot -Recurse -Filter "tiledata.mul" -File -ErrorAction SilentlyContinue
+      foreach ($hit in $tileHits) {
+        if (Test-ModernUODataFolder $hit.DirectoryName) {
+          $script:UOData = $hit.DirectoryName
+          Set-ResolvedClientVersion $hit.DirectoryName
+          Ok "Using current UO data: $($hit.DirectoryName)"
+          Ok "Detected client version: $($script:ResolvedClientVersion)"
+          return
+        }
+      }
+    }
+
+    Die "Modern Sandbox needs a fully patched current Ultima Online Classic installation. Install/patch the official Classic Client from https://uo.com/client-download/ and re-run. The legacy 7.0.23.1 download is intentionally not used in Modern mode."
+  }
   $candidates = @(
     "${env:ProgramFiles(x86)}\Electronic Arts\Ultima Online Classic",
     "$env:ProgramFiles\Electronic Arts\Ultima Online Classic",
@@ -836,6 +917,11 @@ function SwapT2AMap {
 # Step 7 — Nerun's spawn map
 # ---------------------------------------------------------------------------
 function FetchSpawnMap {
+  Banner "Fetching world spawn data"
+  if (-not $ClassicT2A) {
+    Say "Modern profile: using ModernUO's expansion-aware JSON spawns; skipping Nerun's pre-T2A map."
+    return
+  }
   Banner "Fetching Nerun's pre-T2A spawn map"
   New-Item -ItemType Directory -Force -Path $SpawnersDir | Out-Null
   $target = Join-Path $SpawnersDir "UOClassic.map"
@@ -971,15 +1057,13 @@ function WriteModernUOConfig {
 "@ | Set-Content (Join-Path $CfgDir "modernuo.json")
   Ok "Wrote modernuo.json"
 
-  # The full schema, matching install.sh. An abbreviated file used to go
-  # here, which left most flags to chance and set ContextMenus off while
-  # setting ExpansionT2A on - the same bit, contradicting itself.
-  @"
+  if ($ClassicT2A) {
+    @"
 {
-  "Id": $ExpansionId,
+  "Id": 1,
+  "Name": "The Second Age",
   "ClientFlags": "None",
   "SupportedFeatures": {
-    "ExpansionT2A": true,
     "T2A": true,
     "UOR": false,
     "UOTD": false,
@@ -1009,18 +1093,12 @@ function WriteModernUOConfig {
     "Unk1": false,
     "OverwriteConfigButton": false,
     "OneCharacterSlot": false,
-    "ExpansionNone": false,
-    "ExpansionUOTD": false,
-    "ExpansionLBR": false,
-    "ExpansionT2A": true,
-    "ExpansionUOR": false,
     "ContextMenus": true,
     "SlotLimit": false,
     "AOS": false,
     "SixthCharacterSlot": false,
     "SE": false,
     "ML": false,
-    "KR": false,
     "UO3DClientType": false,
     "Unk3": false,
     "SeventhCharacterSlot": false,
@@ -1030,7 +1108,6 @@ function WriteModernUOConfig {
   },
   "HousingFlags": {
     "AOS": false,
-    "HousingAOS": false,
     "SE": false,
     "ML": false,
     "Crystal": false,
@@ -1050,32 +1127,124 @@ function WriteModernUOConfig {
     "Ilshenar": false,
     "Malas": false,
     "Tokuno": false,
-    "TerMur": false
+    "TerMer": false
   }
 }
 "@ | Set-Content (Join-Path $CfgDir "expansion.json")
-  Ok "Wrote expansion.json (T2A, Felucca-only)"
+    Ok "Wrote expansion.json (Classic T2A, Felucca-only)"
+  } else {
+    # Mirror ModernUO's current Endless Journey expansion definition and
+    # enable every map exposed by the EJ era.
+    @"
+{
+  "Id": 11,
+  "Name": "Endless Journey",
+  "RequiredClient": "7.0.61.0",
+  "ClientFlags": "None",
+  "SupportedFeatures": {
+    "T2A": true,
+    "UOR": true,
+    "UOTD": false,
+    "LBR": true,
+    "AOS": true,
+    "SixthCharacterSlot": false,
+    "SE": true,
+    "ML": true,
+    "EighthAge": false,
+    "NinthAge": true,
+    "TenthAge": false,
+    "IncreasedStorage": false,
+    "SeventhCharacterSlot": false,
+    "RoleplayFaces": false,
+    "TrialAccount": false,
+    "LiveAccount": true,
+    "SA": true,
+    "HS": true,
+    "Gothic": true,
+    "Rustic": true,
+    "Jungle": true,
+    "Shadowguard": true,
+    "TOL": true,
+    "EJ": true
+  },
+  "CharacterListFlags": {
+    "Unk1": false,
+    "OverwriteConfigButton": false,
+    "OneCharacterSlot": false,
+    "ContextMenus": true,
+    "SlotLimit": false,
+    "AOS": true,
+    "SixthCharacterSlot": false,
+    "SE": true,
+    "ML": true,
+    "UO3DClientType": false,
+    "Unk3": false,
+    "SeventhCharacterSlot": false,
+    "Unk4": false,
+    "NewMovementSystem": false,
+    "NewFeluccaAreas": false
+  },
+  "HousingFlags": {
+    "AOS": true,
+    "SE": true,
+    "ML": true,
+    "Crystal": true,
+    "SA": true,
+    "HS": true,
+    "Gothic": true,
+    "Rustic": true,
+    "Jungle": true,
+    "Shadowguard": true,
+    "TOL": true,
+    "EJ": true
+  },
+  "MobileStatusVersion": 6,
+  "MapSelectionFlags": {
+    "Felucca": true,
+    "Trammel": true,
+    "Ilshenar": true,
+    "Malas": true,
+    "Tokuno": true,
+    "TerMer": true
+  }
+}
+"@ | Set-Content (Join-Path $CfgDir "expansion.json")
+    Ok "Wrote expansion.json (Modern Sandbox / Endless Journey / all maps)"
+  }
 
-  # The Young player system is a UO:R-era feature that did not exist in T2A.
-  # Left on, young characters also get a Trammel-only public moongate list,
-  # which filters down to nothing on this Felucca-only shard and makes the
-  # city moongates silently do nothing for every non-staff player.
   $FlagsDir = Join-Path $CfgDir "FeatureFlags"
   New-Item -ItemType Directory -Force -Path $FlagsDir | Out-Null
-  @"
+  if ($ClassicT2A) {
+    @"
 [
   {
     "Key": "young_player_system",
-    "Description": "UO:R-era new player (Young) system. Off for T2A: no (Young) name suffix, no young monster protection, no Haven transport, no New Player Ticket, and no Trammel-only public moongate list.",
+    "Description": "UO:R-era new player system disabled for the legacy T2A profile.",
     "Enabled": false,
     "DefaultEnabled": true,
     "Category": "Content",
-    "LastModified": "2026-08-23T00:00:00Z",
-    "LastModifiedBy": "T2A ruleset"
+    "LastModified": "2026-09-08T00:00:00Z",
+    "LastModifiedBy": "ClassicT2A profile"
   }
 ]
 "@ | Set-Content (Join-Path $FlagsDir "flags.json")
-  Ok "Wrote FeatureFlags/flags.json (Young player system off - not a T2A feature)"
+    Ok "Young player system disabled for Classic T2A."
+  } else {
+    @"
+[
+  {
+    "Key": "young_player_system",
+    "Description": "Modern Sandbox uses the modern-era new-player rules.",
+    "Enabled": true,
+    "DefaultEnabled": true,
+    "Category": "Content",
+    "LastModified": "2026-09-08T00:00:00Z",
+    "LastModifiedBy": "Modern profile"
+  }
+]
+"@ | Set-Content (Join-Path $FlagsDir "flags.json")
+    Ok "Modern feature flags restored."
+  }
 }
 
 # ---------------------------------------------------------------------------
@@ -1085,6 +1254,7 @@ function WriteClassicUOSettings {
   Banner "Writing ClassicUO settings.json"
   if (-not (Test-Path $ClassicUODir)) { Warn "ClassicUO dir missing; skipping."; return }
   $uoData = $script:UOData.Replace([char]92,[char]47)
+  $clientVersion = if ($script:ResolvedClientVersion) { $script:ResolvedClientVersion } else { $UODataVersion }
   $targets = @($ClassicUODir)
   $binPath = Join-Path $InstallRoot ".classicuo-bin-path"
   if (Test-Path $binPath) { $nested = Split-Path -Parent (Get-Content $binPath); if ($nested -ne $ClassicUODir) { $targets += $nested } }
@@ -1107,7 +1277,7 @@ function WriteClassicUOSettings {
   "ip": "127.0.0.1",
   "port": 2593,
   "ultimaonlinedirectory": "$uoData",
-  "clientversion": "$UODataVersion",
+  "clientversion": "$clientVersion",
   "lastservernum": 1,
   "last_server_name": "$(if ($script:ResolvedShardName) { $script:ResolvedShardName } else { $ShardName })",
   "fps": 60,
@@ -1134,8 +1304,8 @@ function WriteClassicUOSettings {
 # will not offer updates, which is the quiet, safe direction to fail in.
 # ---------------------------------------------------------------------------
 function WriteVersionStamp {
-  $repo   = "Klein187/uo-offline"
-  $branch = "main"
+  $repo   = "XXCAPTAINXX/uo-offline"
+  $branch = "modern-evolution"
   $sha    = ""
 
   try {
@@ -1448,6 +1618,7 @@ function Finish {
   Write-Host @"
 
 Install root:   $InstallRoot
+Profile:        $InstallProfile
 Server:         $DistDir
 Client:         $ClassicUODir
 Razor:          $RazorDir  (loads inside ClassicUO as a plugin)
@@ -1479,10 +1650,10 @@ $script:InstallSteps = @(
   @{ Name = "Patch the engine";            Run = { ApplyEnginePatches } },
   @{ Name = "Add the PlayerBots";           Run = { InstallPlayerBots } },
   @{ Name = "Build the server";             Run = { BuildModernUO } },
-  @{ Name = "Set Felucca to summer";        Run = { FixFeluccaSeason } },
-  @{ Name = "Get the UO game data";         Run = { FindOrDownloadUOData } },
-  @{ Name = "Install T2A-era map art";      Run = { SwapT2AMap } },
-  @{ Name = "Fetch the monster spawns";     Run = { FetchSpawnMap } },
+  @{ Name = "Apply map season profile";      Run = { FixFeluccaSeason } },
+  @{ Name = "Find current UO game data";      Run = { FindOrDownloadUOData } },
+  @{ Name = "Apply selected map profile";     Run = { SwapT2AMap } },
+  @{ Name = "Configure world spawns";         Run = { FetchSpawnMap } },
   @{ Name = "Download ClassicUO client";    Run = { InstallClassicUO } },
   @{ Name = "Download Razor assistant";     Run = { InstallRazor } },
   @{ Name = "Write the configuration";      Run = { WriteModernUOConfig; WriteClassicUOSettings } },
