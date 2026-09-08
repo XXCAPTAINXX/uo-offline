@@ -68,6 +68,23 @@ namespace Server.CustomBots
         public static int LuckBonus(PlayerMobile pm) =>
             pm != null && IsInNewbieTraining(pm) ? 1000 : 0;
 
+        public static bool FastGainEligible(Mobile from, Skill skill)
+        {
+            if (from == null || skill == null || skill.Base >= 100.0 ||
+                !IsInNewbieTraining(from))
+            {
+                return false;
+            }
+
+            // Real characters and their controlled pets train here. Ambient
+            // population PlayerBots are intentionally excluded so the zone
+            // doesn't silently power-level the simulated shard population.
+            return from is PlayerMobile and not PlayerBot ||
+                   from is BaseCreature { Controlled: true, IsDeadPet: false };
+        }
+
+        public const int FastGainMultiplier = 5;
+
         public static void EnsureWorld()
         {
             if (!Core.ML ||
@@ -350,7 +367,7 @@ namespace Server.CustomBots
             base.Travel(from);
             from?.SendMessage(
                 0x35,
-                "Newbie Dungeon bonus active: +1000 Luck. Undead kills also award Sovereigns."
+                "Newbie Dungeon: +1000 Luck, 5x player/pet skill gain to 100.0, and Sovereigns from kills."
             );
         }
     }
