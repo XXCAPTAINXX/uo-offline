@@ -393,7 +393,7 @@ namespace Server.CustomBots
                 p.Remove(bot);
             }
             bot.Party = null;
-            BotPlayerParty.SetHolding(bot, null, false);
+            BotPlayerParty.ClearHolding(bot);
 
             if (sayGoodbye && Utility.RandomDouble() < 0.6)
             {
