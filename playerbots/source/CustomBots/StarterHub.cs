@@ -193,7 +193,7 @@ namespace Server.CustomBots
         }
     }
 
-    [SerializationGenerator(1, false)]
+    [SerializationGenerator(0, false)]
     public partial class StarterAdventurerRobe : Robe
     {
         [Constructible]
@@ -213,7 +213,6 @@ namespace Server.CustomBots
             Attributes.LowerManaCost = 5;
             Attributes.NightSight = 1;
 
-            StarterEvolution.ApplyRobeStats(this, 1);
         }
 
         public override void GetProperties(IPropertyList list)
@@ -224,11 +223,10 @@ namespace Server.CustomBots
             list.Add("+1 Hit / Stamina / Mana Regeneration");
             list.Add("Lower Mana Cost 5%");
             list.Add("Night Sight");
-            AddEvolutionProperties(list);
         }
     }
 
-    [SerializationGenerator(1, false)]
+    [SerializationGenerator(0, false)]
     public partial class StarterFullSpellbook : Spellbook
     {
         [Constructible]
@@ -236,7 +234,6 @@ namespace Server.CustomBots
         {
             Name = "Starter Full Spellbook";
             LootType = LootType.Blessed;
-            StarterEvolution.ApplyBookStats(this, 1);
         }
 
         public override void GetProperties(IPropertyList list)
@@ -401,10 +398,10 @@ namespace Server.CustomBots
             switch (info.ButtonID)
             {
                 case 1:
-                    StarterHub.Buy(from, 500, () => new StarterAdventurerRobe(), "Starter Adventurer Robe");
+                    StarterHub.Buy(from, 500, () => new EvolvingStarterAdventurerRobe(), "Starter Adventurer Robe");
                     break;
                 case 2:
-                    StarterHub.Buy(from, 1000, () => new StarterFullSpellbook(), "Full Spellbook");
+                    StarterHub.Buy(from, 1000, () => new EvolvingStarterFullSpellbook(), "Full Spellbook");
                     break;
                 case 3:
                     StarterHub.Buy(from, 500, () => new StarterWeaponVoucher(), "Starter Weapon Voucher");
