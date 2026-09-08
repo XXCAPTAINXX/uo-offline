@@ -1,36 +1,69 @@
 diff --git a/Projects/UOContent/Skills/SkillCheck.cs b/Projects/UOContent/Skills/SkillCheck.cs
 --- a/Projects/UOContent/Skills/SkillCheck.cs
 +++ b/Projects/UOContent/Skills/SkillCheck.cs
-@@ -128,6 +128,11 @@
+@@ -108,7 +108,8 @@ public static class SkillCheck
+             }
+             else if (AllowGain(from, skill, amObj))
+             {
+-                var gc = (double)(from.Skills.Cap - from.Skills.Total) / from.Skills.Cap;
++                var cappedTotal = Server.CustomBots.FreeSkillSystem.CappedTotalFixed(from);
++                var gc = (double)(from.Skills.Cap - cappedTotal) / from.Skills.Cap;
+                 gc += (skill.Cap - skill.Base) / skill.Cap;
+                 gc /= 2;
+ 
+@@ -125,6 +126,11 @@ public static class SkillCheck
+                 {
                      gc *= 2;
                  }
- 
++
 +                if (Server.CustomBots.NewbiePlayability.FastGainEligible(from, skill))
 +                {
 +                    gc *= Server.CustomBots.NewbiePlayability.FastGainMultiplier;
 +                }
-+
+ 
                  if (gc >= Utility.RandomDouble())
                  {
-                     Gain(from, skill);
-@@ -220,6 +225,7 @@
+@@ -217,6 +223,8 @@ public static class SkillCheck
          if (skill.Base < skill.Cap && skill.Lock == SkillLock.Up)
          {
              var toGain = 1;
 +            var newbieFastGain = Server.CustomBots.NewbiePlayability.FastGainEligible(from, skill);
++            var freeSkill = Server.CustomBots.FreeSkillSystem.IsFree(from, skill);
  
              if (skill.Base <= 10.0)
              {
-@@ -247,9 +253,17 @@
+@@ -226,7 +234,8 @@ public static class SkillCheck
+ 
+             var skills = from.Skills;
+ 
+-            if (from.Player && skills.Total / (double)skills.Cap >= Utility.RandomDouble())
++            if (from.Player && !freeSkill &&
++                Server.CustomBots.FreeSkillSystem.CappedTotalFixed(from) / (double)skills.Cap >= Utility.RandomDouble())
+             {
+                 for (var i = 0; i < skills.Length; ++i)
+                 {
+@@ -234,7 +243,8 @@ public static class SkillCheck
+                 {
+                     var toLower = skills[i];
+ 
+-                    if (toLower != skill && toLower.Lock == SkillLock.Down && toLower.BaseFixedPoint >= toGain)
++                    if (toLower != skill && !Server.CustomBots.FreeSkillSystem.IsFree(from, toLower) &&
++                        toLower.Lock == SkillLock.Down && toLower.BaseFixedPoint >= toGain)
+                     {
+                         toLower.BaseFixedPoint = Math.Max(toLower.BaseFixedPoint - toGain, 0);
+                         break;
+@@ -247,9 +257,18 @@ public static class SkillCheck
                  toGain *= Utility.RandomMinMax(2, 5);
              }
  
+-            if (!from.Player || skills.Total < skills.Cap)
 +            if (newbieFastGain)
 +            {
 +                toGain *= Server.CustomBots.NewbiePlayability.FastGainMultiplier;
 +            }
 +
-             if (!from.Player || skills.Total < skills.Cap)
++            if (!from.Player || freeSkill ||
++                Server.CustomBots.FreeSkillSystem.CappedTotalFixed(from) < skills.Cap)
              {
 -                skill.BaseFixedPoint = Math.Min(skill.BaseFixedPoint + toGain, skill.CapFixedPoint);
 +                var gainCap = newbieFastGain
@@ -39,4 +72,3 @@ diff --git a/Projects/UOContent/Skills/SkillCheck.cs b/Projects/UOContent/Skills
 +                skill.BaseFixedPoint = Math.Min(skill.BaseFixedPoint + toGain, gainCap);
              }
          }
- 
