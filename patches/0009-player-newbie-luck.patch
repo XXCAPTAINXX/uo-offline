@@ -1,0 +1,12 @@
+--- a/Projects/UOContent/Mobiles/PlayerMobile.cs
++++ b/Projects/UOContent/Mobiles/PlayerMobile.cs
+@@ -326,7 +326,8 @@
+ 
+         public List<Mobile> PermaFlags { get; private set; }
+ 
+-        public override int Luck => AosAttributes.GetValue(this, AosAttribute.Luck);
++        public override int Luck =>
++            AosAttributes.GetValue(this, AosAttribute.Luck) + Server.CustomBots.NewbiePlayability.LuckBonus(this);
+ 
+         public BOBFilter BOBFilter { get; private set; }
+ 
