@@ -25,9 +25,14 @@
 # installer (install-gui.ps1) dot-sources this file as its engine and
 # invokes the steps itself.
 # =========================================================================
-param([switch]$NoRun, [string]$InstallPath, [switch]$ClassicT2A)
+param([switch]$NoRun, [string]$InstallPath, [switch]$ClassicT2A, [string]$UODataPath)
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$script:PreferredUODataPath = if ($UODataPath) {
+  [Environment]::ExpandEnvironmentVariables($UODataPath).Trim().TrimEnd([char]92, [char]47)
+} else {
+  $null
+}
 
 # ---------------------------------------------------------------------------
 # Paths and URLs
@@ -235,7 +240,7 @@ function Preflight {
 
   # The T2A map swap shells out to an NSIS installer whose /D= switch cannot
   # take a quoted path, so a space breaks it unless 7-Zip is available.
-  if ($InstallRoot -match [char]32 -and -not (Get-Command 7z -ErrorAction SilentlyContinue)) {
+  if ($ClassicT2A -and $InstallRoot -match [char]32 -and -not (Get-Command 7z -ErrorAction SilentlyContinue)) {
     Warn "Install path contains a space and 7-Zip is not installed."
     Warn "The T2A map art step may be skipped. A path without spaces avoids it."
   }
@@ -738,6 +743,38 @@ function Test-ModernUODataFolder {
   return $artOk -and $mapOk -and $tileOk
 }
 
+function Resolve-ModernUODataFolder {
+  param([string]$Path)
+
+  if (-not $Path) { return $null }
+
+  $expanded = [Environment]::ExpandEnvironmentVariables($Path).Trim().TrimEnd([char]92, [char]47)
+  if (-not (Test-Path $expanded)) { return $null }
+
+  if (Test-ModernUODataFolder $expanded) { return $expanded }
+
+  # A launcher/TazUO folder may contain the actual UO data one or two levels
+  # below it. Search shallowly instead of forcing the player to know the exact
+  # nested data directory. Never recurse an entire drive.
+  $root = [IO.Path]::GetPathRoot($expanded)
+  if ($expanded.TrimEnd([char]92, [char]47) -eq $root.TrimEnd([char]92, [char]47)) {
+    return $null
+  }
+
+  try {
+    $tileHits = Get-ChildItem -Path $expanded -Recurse -Depth 3 -Filter "tiledata.mul" -File -ErrorAction SilentlyContinue |
+      Select-Object -First 12
+
+    foreach ($hit in $tileHits) {
+      if (Test-ModernUODataFolder $hit.DirectoryName) {
+        return $hit.DirectoryName
+      }
+    }
+  } catch { }
+
+  return $null
+}
+
 function Set-ResolvedClientVersion {
   param([string]$DataPath)
 
@@ -765,21 +802,51 @@ function FindOrDownloadUOData {
   Banner "Locating UO game data"
 
   if (-not $ClassicT2A) {
+    if ($script:PreferredUODataPath) {
+      $resolved = Resolve-ModernUODataFolder $script:PreferredUODataPath
+      if ($resolved) {
+        $script:UOData = $resolved
+        Set-ResolvedClientVersion $resolved
+        Ok "Using selected current UO data: $resolved"
+        Ok "Detected client version: $($script:ResolvedClientVersion)"
+        return
+      }
+
+      Die "The selected UO data folder '$($script:PreferredUODataPath)' is not a usable current UO Classic data folder. Choose the folder containing tiledata.mul plus artLegacyMUL.uop/art.mul and map0LegacyMUL.uop/map0.mul."
+    }
+
     $modernCandidates = @(
       "${env:ProgramFiles(x86)}\Electronic Arts\Ultima Online Classic",
       "$env:ProgramFiles\Electronic Arts\Ultima Online Classic",
       "${env:ProgramFiles(x86)}\Broadsword\Ultima Online Classic",
       "$env:ProgramFiles\Broadsword\Ultima Online Classic",
+      "${env:ProgramFiles(x86)}\Ultima Online Classic",
+      "$env:ProgramFiles\Ultima Online Classic",
       "$env:USERPROFILE\Ultima Online Classic",
       "$env:USERPROFILE\Games\Ultima Online Classic",
       "$env:USERPROFILE\Desktop\Ultima Online Classic"
     )
 
-    foreach ($c in $modernCandidates) {
-      if (Test-ModernUODataFolder $c) {
-        $script:UOData = $c
-        Set-ResolvedClientVersion $c
-        Ok "Using current UO data: $c"
+    # UO/TazUO installs are commonly placed on a game drive rather than C:.
+    # Probe a small set of conventional folders on every mounted filesystem
+    # drive without performing an expensive full-drive recursive scan.
+    foreach ($drive in (Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue)) {
+      if (-not $drive.Root) { continue }
+      $modernCandidates += @(
+        (Join-Path $drive.Root "Ultima Online Classic"),
+        (Join-Path $drive.Root "Games\Ultima Online Classic"),
+        (Join-Path $drive.Root "UO\Ultima Online Classic"),
+        (Join-Path $drive.Root "Electronic Arts\Ultima Online Classic"),
+        (Join-Path $drive.Root "Broadsword\Ultima Online Classic")
+      )
+    }
+
+    foreach ($c in ($modernCandidates | Where-Object { $_ } | Select-Object -Unique)) {
+      $resolved = Resolve-ModernUODataFolder $c
+      if ($resolved) {
+        $script:UOData = $resolved
+        Set-ResolvedClientVersion $resolved
+        Ok "Using current UO data: $resolved"
         Ok "Detected client version: $($script:ResolvedClientVersion)"
         return
       }
@@ -800,7 +867,7 @@ function FindOrDownloadUOData {
       }
     }
 
-    Die "Modern Sandbox needs a fully patched current Ultima Online Classic installation. Install/patch the official Classic Client from https://uo.com/client-download/ and re-run. The legacy 7.0.23.1 download is intentionally not used in Modern mode."
+    Die "Modern Sandbox could not auto-detect your current UO Classic data. Re-run the GUI and use Browse next to Current UO data folder, then select the fully patched Ultima Online Classic folder used by TazUO. It must contain tiledata.mul plus the current art/map data files."
   }
   $candidates = @(
     "${env:ProgramFiles(x86)}\Electronic Arts\Ultima Online Classic",
