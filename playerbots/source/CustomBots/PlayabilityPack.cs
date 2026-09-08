@@ -98,13 +98,15 @@ namespace Server.CustomBots
             EnsureGate<NewbieDungeonEntrance>(NewHavenGateAnchor, Map.Trammel);
             EnsureGate<NewbieDungeonExit>(TrainingGateAnchor, Map.Trammel);
 
+            PrepareNewbieDungeon();
+
             // Known walkable Despise spawn points from ModernUO's own data.
             EnsureSpawner(
                 "UO Offline Newbie Spawn NorthWest",
                 new Point3D(5460, 526, 60),
                 5,
-                homeRange: 12,
-                walkingRange: 20,
+                12,
+                20,
                 "Skeleton",
                 "Zombie",
                 "Mongbat"
@@ -114,8 +116,8 @@ namespace Server.CustomBots
                 "UO Offline Newbie Spawn NorthEast",
                 new Point3D(5503, 529, 60),
                 6,
-                homeRange: 12,
-                walkingRange: 20,
+                12,
+                20,
                 "Skeleton",
                 "Zombie",
                 "HeadlessOne"
@@ -125,8 +127,8 @@ namespace Server.CustomBots
                 "UO Offline Newbie Spawn SouthWest",
                 new Point3D(5464, 600, 45),
                 5,
-                homeRange: 12,
-                walkingRange: 20,
+                12,
+                20,
                 "Skeleton",
                 "Zombie",
                 "Mongbat"
@@ -136,8 +138,8 @@ namespace Server.CustomBots
                 "UO Offline Newbie Spawn SouthEast",
                 new Point3D(5504, 597, 45),
                 6,
-                homeRange: 12,
-                walkingRange: 20,
+                12,
+                20,
                 "Skeleton",
                 "Zombie",
                 "HeadlessOne"
@@ -147,12 +149,54 @@ namespace Server.CustomBots
                 "UO Offline Newbie Healer",
                 new Point3D(5498, 566, 59),
                 1,
-                homeRange: 4,
-                walkingRange: 4,
+                4,
+                4,
                 "WanderingHealer"
             );
 
             EnsureNewHavenQuesters();
+        }
+
+        private static void PrepareNewbieDungeon()
+        {
+            // This section of Despise is intentionally reserved for beginner
+            // training. If someone previously generated the stock Despise
+            // spawners, remove only those that physically sit inside our
+            // reserved rectangle. Never touch the rest of the dungeon.
+            var spawnersToDelete = new System.Collections.Generic.List<Item>();
+
+            foreach (var item in World.Items.Values)
+            {
+                if (item is not ISpawner || item.Deleted || item.Map != Map.Trammel)
+                {
+                    continue;
+                }
+
+                if (item.X < MinX || item.X >= MaxXExclusive ||
+                    item.Y < MinY || item.Y >= MaxYExclusive)
+                {
+                    continue;
+                }
+
+                if (item.Name?.StartsWith("UO Offline Newbie", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    continue;
+                }
+
+                spawnersToDelete.Add(item);
+            }
+
+            foreach (var item in spawnersToDelete)
+            {
+                item.Delete();
+            }
+
+            if (spawnersToDelete.Count > 0)
+            {
+                Console.WriteLine(
+                    $"[newbie] removed {spawnersToDelete.Count} non-newbie spawner(s) from reserved dungeon section"
+                );
+            }
         }
 
         private static void EnsureGate<T>(Point3D preferred, Map map) where T : Item, new()
@@ -168,7 +212,7 @@ namespace Server.CustomBots
                         gateBase.RefreshVisual();
                     }
 
-                    if (existing.Map != map || !existing.Location.InRange(loc, 2))
+                    if (existing.Map != map || !Utility.InRange(existing.Location, loc, 2))
                     {
                         existing.MoveToWorld(loc, map);
                         Console.WriteLine($"[newbie] moved {typeof(T).Name} to {map.Name} {loc}");
@@ -209,7 +253,7 @@ namespace Server.CustomBots
 
                 // Migration: old versions placed these in Old Haven. Rebuild
                 // named newbie spawners if the desired location changed.
-                if (sp.Map == Map.Trammel && sp.Location.InRange(loc, 3))
+                if (sp.Map == Map.Trammel && Utility.InRange(sp.Location, loc, 3))
                 {
                     return;
                 }
@@ -277,8 +321,8 @@ namespace Server.CustomBots
                 $"UO Offline New Haven Quest - {type}",
                 location,
                 1,
-                homeRange: 0,
-                walkingRange: 2,
+                0,
+                2,
                 type
             );
         }
