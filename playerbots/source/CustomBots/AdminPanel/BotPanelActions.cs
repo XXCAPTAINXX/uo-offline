@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using Server;
 using Server.Commands;
+using Server.Maps;
 using Server.Network;
 
 namespace Server.CustomBots
