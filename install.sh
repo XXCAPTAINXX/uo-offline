@@ -49,6 +49,8 @@ for _arg_i in $(seq 1 $#); do
     INSTALL_ROOT="${!_arg_i#*=}"
   elif [[ "${!_arg_i}" == "--no-map-editor" ]]; then
     INSTALL_MAP_EDITOR=0
+  elif [[ "${!_arg_i}" == "--classic-t2a" ]]; then
+    CLASSIC_T2A=1
   fi
 done
 
@@ -56,6 +58,8 @@ done
 # bots - not something you need in order to play. On by default, off with
 # --no-map-editor or INSTALL_MAP_EDITOR=0.
 INSTALL_MAP_EDITOR="${INSTALL_MAP_EDITOR:-1}"
+CLASSIC_T2A="${CLASSIC_T2A:-0}"
+INSTALL_PROFILE="$([[ "${CLASSIC_T2A}" == "1" ]] && echo "ClassicT2A" || echo "Modern")"
 unset _arg_i _next
 
 INSTALL_ROOT="${INSTALL_ROOT:-${HOME}/uo-modernuo}"
@@ -76,7 +80,7 @@ MODERNUO_REPO="https://github.com/modernuo/ModernUO.git"
 # CS1501. Moving the pin is a deliberate step: bump the sha, build, fix what
 # the API change broke, play it, then release. Empty means track main, which
 # is the old behaviour and the old lottery.
-MODERNUO_COMMIT="e7f85d404d52e0def1fb342b3dc185894a57017d"
+MODERNUO_COMMIT="114dbba6e25f0e97e8537e54025d7bfa87c03a39"
 MODERNUO_DIR="${INSTALL_ROOT}/ModernUO"
 DIST_DIR="${MODERNUO_DIR}/Distribution"
 CFG_DIR="${DIST_DIR}/Configuration"
@@ -85,11 +89,13 @@ SPAWNERS_DIR="${DIST_DIR}/Spawners/uoclassic"
 CLASSICUO_DIR="${INSTALL_ROOT}/ClassicUO"
 CLASSICUO_RELEASE_URL="https://api.github.com/repos/ClassicUO/ClassicUO/releases"
 
-# UO Classic 7.0.23.1 from the ashkantra mirror. Old enough that ClassicUO's
-# animation loader handles it without crashing on UOP formats, new enough to
-# have all the T2A-era art needed.
-UO_DATA_URL="https://mirror.ashkantra.de/fullclients/7.0.23.1.exe"
-UO_DATA_VERSION="7.0.23.1"
+if [[ "${CLASSIC_T2A}" == "1" ]]; then
+  UO_DATA_URL="https://mirror.ashkantra.de/fullclients/7.0.23.1.exe"
+  UO_DATA_VERSION="7.0.23.1"
+else
+  UO_DATA_URL=""
+  UO_DATA_VERSION="7.0.61.0"
+fi
 UO_DATA_DIR="${INSTALL_ROOT}/UOData/${UO_DATA_VERSION}"
 
 # Nerun's pre-T2A spawn data. ModernUO's [GenerateSpawners command parses
@@ -101,15 +107,20 @@ SPAWN_MAP_URL="https://raw.githubusercontent.com/Nerun/runuo-nerun-distro/master
 # 7.0.23.1 data above ships modern map art with 15+ years of EA world edits;
 # swapping these three files restores the T2A look. Set INSTALL_T2A_MAP=0 to
 # keep modern map art. See docs/T2A-MAP.md.
-INSTALL_T2A_MAP=1
+INSTALL_T2A_MAP="$([[ "${CLASSIC_T2A}" == "1" ]] && echo 1 || echo 0)"
 T2A_INSTALLER_URL="https://download.uosecondage.com/UOSA_Client_Setup.exe"
 T2A_SRC_DIR="${INSTALL_ROOT}/t2a-src"
 
 # ---------------------------------------------------------------------------
 # Config defaults
 # ---------------------------------------------------------------------------
-EXPANSION_ID=1
-EXPANSION_NAME="T2A"
+if [[ "${CLASSIC_T2A}" == "1" ]]; then
+  EXPANSION_ID=1
+  EXPANSION_NAME="T2A"
+else
+  EXPANSION_ID=11
+  EXPANSION_NAME="Endless Journey"
+fi
 OWNER_USER="admin"
 OWNER_PASS="admin"
 LISTEN_ADDR="127.0.0.1:2593"
@@ -558,6 +569,39 @@ PYEOF
 find_or_download_uo_data() {
   banner "Locating UO game data"
 
+  if [[ "${CLASSIC_T2A}" != "1" ]]; then
+    local modern_candidates=()
+    [[ -n "${UO_DATA:-}" ]] && modern_candidates+=("${UO_DATA}")
+    modern_candidates+=(
+      "${HOME}/.steam/steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/Electronic Arts/Ultima Online Classic"
+      "${HOME}/.steam/steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/Broadsword/Ultima Online Classic"
+      "${HOME}/Games/Ultima Online Classic"
+      "${HOME}/Ultima Online Classic"
+      "${HOME}/Desktop/Ultima Online Classic"
+      "${HOME}/.wine/drive_c/Program Files (x86)/Electronic Arts/Ultima Online Classic"
+      "${HOME}/.wine/drive_c/Program Files (x86)/Broadsword/Ultima Online Classic"
+      "${INSTALL_ROOT}/UOData/current"
+      "/mnt/uo"
+    )
+
+    local pattern c art_ok map_ok
+    for pattern in "${modern_candidates[@]}"; do
+      for c in ${pattern}; do
+        [[ -d "${c}" ]] || continue
+        art_ok=0; map_ok=0
+        [[ -f "${c}/art.mul" || -f "${c}/artLegacyMUL.uop" ]] && art_ok=1
+        [[ -f "${c}/map0.mul" || -f "${c}/map0LegacyMUL.uop" ]] && map_ok=1
+        if [[ "${art_ok}" == "1" && "${map_ok}" == "1" && -f "${c}/tiledata.mul" ]]; then
+          UO_DATA="${c}"
+          ok "Using current UO data: ${UO_DATA}"
+          return
+        fi
+      done
+    done
+
+    die "Modern Sandbox needs fully patched current Ultima Online Classic data. Install/patch the official client from https://uo.com/client-download/ or set UO_DATA to that directory, then re-run. The legacy 7.0.23.1 data set is intentionally not used."
+  fi
+
   # Common locations for an existing install. Modern client versions (post
   # 7.0.59) crash ClassicUO's animation loader, so we only accept older.
   local candidates=(
@@ -747,6 +791,11 @@ swap_t2a_map() {
 # Step 7 — Download Nerun's pre-T2A spawn map
 # ---------------------------------------------------------------------------
 fetch_spawn_map() {
+  banner "Fetching world spawn data"
+  if [[ "${CLASSIC_T2A}" != "1" ]]; then
+    say "Modern profile: using ModernUO's expansion-aware JSON spawns; skipping Nerun's pre-T2A map."
+    return
+  fi
   banner "Fetching Nerun's pre-T2A spawn map"
 
   mkdir -p "${SPAWNERS_DIR}"
@@ -872,110 +921,107 @@ write_modernuo_config() {
 EOF
   ok "Wrote modernuo.json"
 
-  # expansion.json — the REAL schema, capitalized keys, all flags spelled out.
-  # T2A gets Felucca map only, ExpansionT2A flag on, LiveAccount on.
-  cat > "${CFG_DIR}/expansion.json" <<EOF
+  if [[ "${CLASSIC_T2A}" == "1" ]]; then
+    cat > "${CFG_DIR}/expansion.json" <<EOF
 {
-  "Id": ${EXPANSION_ID},
+  "Id": 1,
+  "Name": "The Second Age",
   "ClientFlags": "None",
   "SupportedFeatures": {
-    "ExpansionT2A": true,
-    "T2A": true,
-    "UOR": false,
-    "UOTD": false,
-    "LBR": false,
-    "AOS": false,
-    "SixthCharacterSlot": false,
-    "SE": false,
-    "ML": false,
-    "EighthAge": false,
-    "NinthAge": false,
-    "TenthAge": false,
-    "IncreasedStorage": false,
-    "SeventhCharacterSlot": false,
-    "RoleplayFaces": false,
-    "TrialAccount": false,
-    "LiveAccount": true,
-    "SA": false,
-    "HS": false,
-    "Gothic": false,
-    "Rustic": false,
-    "Jungle": false,
-    "Shadowguard": false,
-    "TOL": false,
-    "EJ": false
+    "T2A": true, "UOR": false, "UOTD": false, "LBR": false, "AOS": false,
+    "SixthCharacterSlot": false, "SE": false, "ML": false, "EighthAge": false,
+    "NinthAge": false, "TenthAge": false, "IncreasedStorage": false,
+    "SeventhCharacterSlot": false, "RoleplayFaces": false, "TrialAccount": false,
+    "LiveAccount": true, "SA": false, "HS": false, "Gothic": false,
+    "Rustic": false, "Jungle": false, "Shadowguard": false, "TOL": false, "EJ": false
   },
   "CharacterListFlags": {
-    "Unk1": false,
-    "OverwriteConfigButton": false,
-    "OneCharacterSlot": false,
-    "ExpansionNone": false,
-    "ExpansionUOTD": false,
-    "ExpansionLBR": false,
-    "ExpansionT2A": true,
-    "ExpansionUOR": false,
-    "ContextMenus": true,
-    "SlotLimit": false,
-    "AOS": false,
-    "SixthCharacterSlot": false,
-    "SE": false,
-    "ML": false,
-    "KR": false,
-    "UO3DClientType": false,
-    "Unk3": false,
-    "SeventhCharacterSlot": false,
-    "Unk4": false,
-    "NewMovementSystem": false,
-    "NewFeluccaAreas": false
+    "Unk1": false, "OverwriteConfigButton": false, "OneCharacterSlot": false,
+    "ContextMenus": true, "SlotLimit": false, "AOS": false,
+    "SixthCharacterSlot": false, "SE": false, "ML": false,
+    "UO3DClientType": false, "Unk3": false, "SeventhCharacterSlot": false,
+    "Unk4": false, "NewMovementSystem": false, "NewFeluccaAreas": false
   },
   "HousingFlags": {
-    "AOS": false,
-    "HousingAOS": false,
-    "SE": false,
-    "ML": false,
-    "Crystal": false,
-    "SA": false,
-    "HS": false,
-    "Gothic": false,
-    "Rustic": false,
-    "Jungle": false,
-    "Shadowguard": false,
-    "TOL": false,
-    "EJ": false
+    "AOS": false, "SE": false, "ML": false, "Crystal": false, "SA": false,
+    "HS": false, "Gothic": false, "Rustic": false, "Jungle": false,
+    "Shadowguard": false, "TOL": false, "EJ": false
   },
   "MobileStatusVersion": 0,
   "MapSelectionFlags": {
-    "Felucca": true,
-    "Trammel": false,
-    "Ilshenar": false,
-    "Malas": false,
-    "Tokuno": false,
-    "TerMur": false
+    "Felucca": true, "Trammel": false, "Ilshenar": false,
+    "Malas": false, "Tokuno": false, "TerMer": false
   }
 }
 EOF
-  ok "Wrote expansion.json (T2A, Felucca-only)"
+    ok "Wrote expansion.json (Classic T2A)"
+  else
+    cat > "${CFG_DIR}/expansion.json" <<EOF
+{
+  "Id": 11,
+  "Name": "Endless Journey",
+  "RequiredClient": "7.0.61.0",
+  "ClientFlags": "None",
+  "SupportedFeatures": {
+    "T2A": true, "UOR": true, "UOTD": false, "LBR": true, "AOS": true,
+    "SixthCharacterSlot": false, "SE": true, "ML": true, "EighthAge": false,
+    "NinthAge": true, "TenthAge": false, "IncreasedStorage": false,
+    "SeventhCharacterSlot": false, "RoleplayFaces": false, "TrialAccount": false,
+    "LiveAccount": true, "SA": true, "HS": true, "Gothic": true,
+    "Rustic": true, "Jungle": true, "Shadowguard": true, "TOL": true, "EJ": true
+  },
+  "CharacterListFlags": {
+    "Unk1": false, "OverwriteConfigButton": false, "OneCharacterSlot": false,
+    "ContextMenus": true, "SlotLimit": false, "AOS": true,
+    "SixthCharacterSlot": false, "SE": true, "ML": true,
+    "UO3DClientType": false, "Unk3": false, "SeventhCharacterSlot": false,
+    "Unk4": false, "NewMovementSystem": false, "NewFeluccaAreas": false
+  },
+  "HousingFlags": {
+    "AOS": true, "SE": true, "ML": true, "Crystal": true, "SA": true,
+    "HS": true, "Gothic": true, "Rustic": true, "Jungle": true,
+    "Shadowguard": true, "TOL": true, "EJ": true
+  },
+  "MobileStatusVersion": 6,
+  "MapSelectionFlags": {
+    "Felucca": true, "Trammel": true, "Ilshenar": true,
+    "Malas": true, "Tokuno": true, "TerMer": true
+  }
+}
+EOF
+    ok "Wrote expansion.json (Modern Sandbox / Endless Journey / all maps)"
+  fi
 
-  # FeatureFlags/flags.json - the Young player system is a UO:R-era feature
-  # that did not exist in T2A. Left on, young characters also get a
-  # Trammel-only public moongate list, which filters down to nothing on this
-  # Felucca-only shard and makes the city moongates silently do nothing for
-  # every non-staff player.
   mkdir -p "${CFG_DIR}/FeatureFlags"
-  cat > "${CFG_DIR}/FeatureFlags/flags.json" <<'EOF'
+  if [[ "${CLASSIC_T2A}" == "1" ]]; then
+    cat > "${CFG_DIR}/FeatureFlags/flags.json" <<'EOF'
 [
   {
     "Key": "young_player_system",
-    "Description": "UO:R-era new player (Young) system. Off for T2A: no (Young) name suffix, no young monster protection, no Haven transport, no New Player Ticket, and no Trammel-only public moongate list.",
+    "Description": "Disabled by the Classic T2A profile.",
     "Enabled": false,
     "DefaultEnabled": true,
     "Category": "Content",
-    "LastModified": "2026-08-23T00:00:00Z",
-    "LastModifiedBy": "T2A ruleset"
+    "LastModified": "2026-09-08T00:00:00Z",
+    "LastModifiedBy": "ClassicT2A profile"
   }
 ]
 EOF
-  ok "Wrote FeatureFlags/flags.json (Young player system off - not a T2A feature)"
+  else
+    cat > "${CFG_DIR}/FeatureFlags/flags.json" <<'EOF'
+[
+  {
+    "Key": "young_player_system",
+    "Description": "Enabled by the Modern Sandbox profile.",
+    "Enabled": true,
+    "DefaultEnabled": true,
+    "Category": "Content",
+    "LastModified": "2026-09-08T00:00:00Z",
+    "LastModifiedBy": "Modern profile"
+  }
+]
+EOF
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -1065,8 +1111,8 @@ install_runtime_scripts() {
 # will not offer updates, which is the quiet, safe direction to fail in.
 # ---------------------------------------------------------------------------
 write_version_stamp() {
-  local repo="Klein187/uo-offline"
-  local branch="main"
+  local repo="XXCAPTAINXX/uo-offline"
+  local branch="modern-evolution"
   local sha=""
   local api="https://api.github.com/repos/${repo}/commits/${branch}"
 
@@ -1166,7 +1212,7 @@ install_desktop_entry() {
 Type=Application
 Name=UO Offline
 GenericName=Ultima Online (offline)
-Comment=Offline Ultima Online — T2A era
+Comment=Offline Ultima Online — Modern Sandbox
 Exec=${INSTALL_ROOT}/start.sh
 Icon=applications-games
 Terminal=false
@@ -1188,6 +1234,7 @@ finish() {
   cat <<EOF
 
 Install root:   ${INSTALL_ROOT}
+Profile:        ${INSTALL_PROFILE}
 Server:         ${DIST_DIR}
 Client:         ${CLASSICUO_DIR}
 UO data:        ${UO_DATA}
