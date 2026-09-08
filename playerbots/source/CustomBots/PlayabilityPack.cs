@@ -295,7 +295,8 @@ namespace Server.CustomBots
         }
     }
 
-    public abstract class NewbieGateBase : Item
+    [SerializationGenerator(0)]
+    public abstract partial class NewbieGateBase : Item
     {
         protected NewbieGateBase(int hue) : base(0xF6C)
         {
