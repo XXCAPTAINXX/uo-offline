@@ -291,17 +291,33 @@ public partial class HavenUpgradeStone : Item
             return;
         }
 
-        var cost = robe.UpgradeTier + 1;
-        if (pack.ConsumeTotal(typeof(HavenMark), cost) != true)
+        if (robe.BoundTo != null && robe.BoundTo != from)
         {
-            from.SendMessage($"The next robe upgrade requires {cost} Haven mark(s).");
+            from.SendMessage("That starter robe is bound to another character.");
             return;
         }
 
-        if (!robe.TryUpgrade(from))
+        if (robe.UpgradeTier >= robe.MaxUpgradeTier)
         {
-            // This only happens for a bound/maxed robe. Refund the marks.
-            pack.DropItem(new HavenMark(cost));
+            from.SendMessage("That starter robe is already fully upgraded.");
+            return;
+        }
+
+        var markCost = robe.UpgradeTier + 1;
+        var goldCost = markCost * 5000;
+        var paidWithMarks = pack.ConsumeTotal(typeof(HavenMark), markCost);
+
+        if (!paidWithMarks && !HavenEconomy.TryPay(from, goldCost))
+        {
+            from.SendMessage(
+                $"The next robe upgrade requires {markCost} Haven mark(s) or {goldCost:N0} gold."
+            );
+            return;
+        }
+
+        if (!robe.TryUpgrade(from) && paidWithMarks)
+        {
+            pack.DropItem(new HavenMark(markCost));
         }
     }
 }
