@@ -49,6 +49,11 @@ $MinGitReleaseUrl = "https://api.github.com/repos/git-for-windows/git/releases/l
 # "" to track main instead, which is the old behaviour and the old lottery.
 $ModernUOCommit = "e7f85d404d52e0def1fb342b3dc185894a57017d"
 
+# UO Offline update channel. Never use the upstream/original fork's updater:
+# our launcher may only fetch code from this repository and RC channel.
+$UOOfflineUpdateRepo   = "XXCAPTAINXX/uo-offline"
+$UOOfflineUpdateBranch = "haven-rc2"
+
 # Only consulted when $ModernUOCommit is "". A checkout that has built once is
 # known-good; pulling upstream mid-install can drag in months of engine
 # changes and turn a working shard into one that will not compile.
@@ -225,6 +230,20 @@ function Preflight {
   if ($InstallRoot -match [char]32 -and -not (Get-Command 7z -ErrorAction SilentlyContinue)) {
     Warn "Install path contains a space and 7-Zip is not installed."
     Warn "The T2A map art step may be skipped. A path without spaces avoids it."
+  }
+
+  # Lock runtime updates for the entire install. If anything fails after
+  # this point, the existing desktop shortcut may still launch the old shard,
+  # but it must NOT offer an update from any source while the install is
+  # incomplete. A successful launcher-install step clears this lock.
+  $updateLock = Join-Path $InstallRoot "uo-offline-update.lock"
+  Set-Content -Path $updateLock -Value "install-in-progress" -Encoding ASCII
+
+  # Replace an older updater immediately, before the build. This protects an
+  # existing install whose version stamp still points at the original fork.
+  $safeUpdater = Join-Path $ScriptDir "scripts\update-check.ps1"
+  if (Test-Path $safeUpdater) {
+    Copy-Item $safeUpdater (Join-Path $InstallRoot "update-check.ps1") -Force
   }
 
   Ok "Install root: $InstallRoot"
@@ -420,27 +439,31 @@ function FetchModernUO {
 function SetModernUOCommit {
   Push-Location $ModernUODir
   try {
-    $head = (Invoke-Native git @("rev-parse", "HEAD") -IgnoreExitCode) -join ""
-    if ($head.Trim() -eq $ModernUOCommit) {
-      Say "Already on the pinned commit $($ModernUOCommit.Substring(0,9))."
-      return
-    }
+    # This source checkout is a build workspace, not the player's world.
+    # Engine patches intentionally modify tracked files, so a later install
+    # MUST discard those tracked edits before switching commits. git reset
+    # --hard does not remove untracked runtime data such as Distribution\Saves.
+    Say "Restoring tracked ModernUO source before applying this release..."
 
-    # The pinned commit can be older OR newer than what is on disk, and a
-    # shallow or stale clone may not have it at all. Fetch before reaching
-    # for it. --force because upstream re-points the build-tool-latest tag
-    # every release, and without it the fetch fails outright.
     if (Test-Path ".git\shallow") {
       Invoke-Native git @("fetch", "--unshallow") -IgnoreExitCode | Out-Null
     }
-    Invoke-Native git @("fetch", "--all", "--tags", "--force") -IgnoreExitCode | Out-Null
+    Invoke-Native git @("fetch", "--all", "--tags", "--force") | Out-Null
 
+    Invoke-Native git @("reset", "--hard", "HEAD") | Out-Null
     Invoke-Native git @("checkout", "--detach", $ModernUOCommit) | Out-Null
-    Say "ModernUO pinned to $($ModernUOCommit.Substring(0,9))."
+    Invoke-Native git @("reset", "--hard", $ModernUOCommit) | Out-Null
+
+    $actual = ((Invoke-Native git @("rev-parse", "HEAD")) -join "").Trim()
+    if ($actual -ne $ModernUOCommit) {
+      throw "ModernUO ended on $actual instead of $ModernUOCommit"
+    }
+
+    Say "ModernUO pinned cleanly to $($ModernUOCommit.Substring(0,9))."
   } catch {
-    Warn "Could not move the ModernUO clone to $($ModernUOCommit.Substring(0,9)): $($_.Exception.Message)"
-    Warn "Continuing with the checkout already on disk. If the build fails, delete"
-    Warn "the ModernUO folder and re-run to get a clean clone at the pinned commit."
+    # A mixed engine tree is more dangerous than a failed install. Do not
+    # continue and hope it builds: stop before patches or custom code touch it.
+    throw "Could not restore ModernUO to pinned commit $($ModernUOCommit.Substring(0,9)): $($_.Exception.Message)"
   } finally {
     Pop-Location
   }
@@ -501,6 +524,11 @@ function InstallPlayerBots {
   $srcTarget = Join-Path $ModernUODir "Projects\UOContent\CustomBots"
 
   Say "Deploying bot source -> $srcTarget"
+  # Remove the previous generated source first so files deleted/renamed by a
+  # newer RC cannot linger and compile alongside their replacements.
+  if (Test-Path $srcTarget) {
+    Remove-Item $srcTarget -Recurse -Force
+  }
   New-Item -ItemType Directory -Force -Path $srcTarget | Out-Null
   Copy-Item -Recurse -Force (Join-Path $srcDir "source\CustomBots\*") $srcTarget
 
@@ -1137,10 +1165,12 @@ function WriteClassicUOSettings {
 # will not offer updates, which is the quiet, safe direction to fail in.
 # ---------------------------------------------------------------------------
 function WriteVersionStamp {
-  $repo   = "Klein187/uo-offline"
-  $branch = "main"
+  $repo   = $UOOfflineUpdateRepo
+  $branch = $UOOfflineUpdateBranch
   $sha    = ""
 
+  # A git checkout gives us the exact source revision. ZIP installs have no
+  # .git folder, so resolve the approved RC channel head instead.
   try {
     Push-Location $ScriptDir
     try {
@@ -1159,7 +1189,7 @@ function WriteVersionStamp {
   }
 
   if (-not $sha) {
-    Warn "Could not determine the source version; the launcher will not check for updates."
+    Warn "Could not determine the source version; automatic updates will stay disabled."
     return
   }
 
@@ -1170,7 +1200,7 @@ function WriteVersionStamp {
     InstalledUtc = (Get-Date).ToUniversalTime().ToString("o")
   }
   $stamp | ConvertTo-Json | Set-Content (Join-Path $InstallRoot "uo-offline-version.json")
-  Ok "Version stamp: $($sha.Substring(0, [Math]::Min(7, $sha.Length)))"
+  Ok "Version stamp: $repo / $branch / $($sha.Substring(0, [Math]::Min(7, $sha.Length)))"
 }
 
 # ---------------------------------------------------------------------------
@@ -1426,6 +1456,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0start.ps1"
     Ok "Wrote update-check.ps1"
   }
   WriteVersionStamp
+
+  # Only a successful install gets to re-enable launcher updates.
+  $updateLock = Join-Path $InstallRoot "uo-offline-update.lock"
+  Remove-Item $updateLock -Force -ErrorAction SilentlyContinue
+  Ok "Launcher updates enabled for $UOOfflineUpdateRepo / $UOOfflineUpdateBranch"
 
   # Desktop shortcut to start.ps1, with the UO icon when the repo ships one.
   $iconSpec = "shell32.dll,18"
