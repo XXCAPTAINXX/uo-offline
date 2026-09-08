@@ -25,6 +25,7 @@ using Server;
 using Server.Commands;
 using Server.Items;
 using Server.Mobiles;
+using Server.Multis.Deeds;
 
 namespace Server.CustomBots
 {
@@ -33,8 +34,13 @@ namespace Server.CustomBots
         private sealed class WalletRecord
         {
             public int Sovereigns { get; set; }
+            public int CleanupPoints { get; set; }
             public bool StarterGranted { get; set; }
             public DateTime LastDailyUtc { get; set; }
+
+            // A free starter home is a one-time character grant. Travel book,
+            // wallet and QoL bags are recoverable; house deeds are not.
+            public HashSet<int> StarterHomeCharacters { get; set; } = new();
         }
 
         private static Dictionary<string, WalletRecord> _wallets =
@@ -93,6 +99,29 @@ namespace Server.CustomBots
         }
 
         public static int Sovereigns(Mobile m) => RecordFor(m, false)?.Sovereigns ?? 0;
+        public static int CleanupPoints(Mobile m) => RecordFor(m, false)?.CleanupPoints ?? 0;
+
+        public static int CreditCleanup(Mobile m, int amount, string reason = null)
+        {
+            if (m == null || amount <= 0)
+            {
+                return CleanupPoints(m);
+            }
+
+            var record = RecordFor(m);
+            if (record == null)
+            {
+                return 0;
+            }
+
+            long next = (long)record.CleanupPoints + amount;
+            record.CleanupPoints = next > int.MaxValue ? int.MaxValue : (int)next;
+            _dirty = true;
+
+            var suffix = string.IsNullOrWhiteSpace(reason) ? "" : $" ({reason})";
+            m.SendMessage(0x59, $"+{amount} Cleanup Points{suffix}. Total: {record.CleanupPoints:N0}");
+            return record.CleanupPoints;
+        }
 
         public static int Credit(Mobile m, int amount, string reason = null, bool message = true)
         {
@@ -210,6 +239,57 @@ namespace Server.CustomBots
                 m.AddToBackpack(new AdventurersWallet());
                 m.SendMessage("An Adventurer's Wallet has been placed in your backpack.");
             }
+
+            if (m.Backpack.FindItemByType<StarterReagentPouch>() == null)
+            {
+                m.AddToBackpack(new StarterReagentPouch());
+                m.SendMessage("A 90% weight-reduction Reagent Pouch has been placed in your backpack.");
+            }
+
+            if (m.Backpack.FindItemByType<BritanniaCleanupBag>() == null)
+            {
+                m.AddToBackpack(new BritanniaCleanupBag());
+                m.SendMessage("A Britannia Cleanup Bag has been placed in your backpack.");
+            }
+
+            GiveStarterHomeOnce(m);
+        }
+
+        private static void GiveStarterHomeOnce(Mobile m)
+        {
+            var record = RecordFor(m);
+            if (record == null)
+            {
+                return;
+            }
+
+            record.StarterHomeCharacters ??= new HashSet<int>();
+
+            int serial = m.Serial.Value;
+            if (record.StarterHomeCharacters.Contains(serial))
+            {
+                return;
+            }
+
+            var deed = new SmallBrickHouseDeed
+            {
+                Name = "Starter Small House Deed"
+            };
+
+            if (m.AddToBackpack(deed))
+            {
+                record.StarterHomeCharacters.Add(serial);
+                _dirty = true;
+                m.SendMessage(
+                    0x35,
+                    "Starter home granted: a Small Brick House deed has been placed in your backpack. This free house deed is issued once per character."
+                );
+            }
+            else
+            {
+                deed.Delete();
+                m.SendMessage("Make room in your backpack; your starter house deed has not been claimed yet.");
+            }
         }
 
         public static void Show(Mobile m)
@@ -222,8 +302,9 @@ namespace Server.CustomBots
             long gold = m.Account?.GetTotalGold() ?? 0;
             m.SendMessage(0x35, "=== Adventurer's Wallet ===");
             m.SendMessage($"Sovereigns: {Sovereigns(m):N0}");
+            m.SendMessage($"Cleanup Points: {CleanupPoints(m):N0}");
             m.SendMessage($"Account gold: {gold:N0}");
-            m.SendMessage("Sovereigns are reserved for the offline UO Store.");
+            m.SendMessage("Sovereigns are reserved for the offline UO Store; Cleanup Points will fund the cleanup reward catalog.");
         }
 
         private static void Wallet_OnCommand(CommandEventArgs e) => Show(e.Mobile);
@@ -262,6 +343,11 @@ namespace Server.CustomBots
                 _wallets = loaded != null
                     ? new Dictionary<string, WalletRecord>(loaded, StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, WalletRecord>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var record in _wallets.Values)
+                {
+                    record.StarterHomeCharacters ??= new HashSet<int>();
+                }
 
                 _dirty = false;
             }
