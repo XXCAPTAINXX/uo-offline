@@ -59,7 +59,7 @@ $fontMono  = New-Object System.Drawing.Font("Consolas", 9)
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text            = "UO Offline — Installer"
-$form.ClientSize      = New-Object System.Drawing.Size(820, 648)
+$form.ClientSize      = New-Object System.Drawing.Size(820, 730)
 $form.StartPosition   = "CenterScreen"
 $form.FormBorderStyle = "FixedSingle"
 $form.MaximizeBox     = $false
@@ -136,13 +136,13 @@ $chkMap.Size = New-Object System.Drawing.Size(690, 24)
 $chkMap.Font = $fontBody; $chkMap.ForeColor = $colText
 $optBox.Controls.Add($chkMap)
 
-$panelWelcome.Controls.Add((NewLabel "Installs to:" 42 549 78 22 $fontBody $colDim))
+$panelWelcome.Controls.Add((NewLabel "Installs to:" 42 535 78 22 $fontBody $colDim))
 
 # Editable on purpose: Change... is the easy path, but typing a path directly
 # is quicker if you already know where it goes.
 $txtPath = New-Object System.Windows.Forms.TextBox
 $txtPath.Text = $InstallRootLabel
-$txtPath.Location = New-Object System.Drawing.Point(124, 546)
+$txtPath.Location = New-Object System.Drawing.Point(124, 532)
 $txtPath.Size = New-Object System.Drawing.Size(310, 26)
 $txtPath.Font = $fontBody
 $txtPath.BackColor = $colPanel; $txtPath.ForeColor = $colText
@@ -151,7 +151,7 @@ $panelWelcome.Controls.Add($txtPath)
 
 $btnBrowse = New-Object System.Windows.Forms.Button
 $btnBrowse.Text = "Change..."
-$btnBrowse.Location = New-Object System.Drawing.Point(444, 544)
+$btnBrowse.Location = New-Object System.Drawing.Point(444, 530)
 $btnBrowse.Size = New-Object System.Drawing.Size(100, 30)
 $btnBrowse.Font = $fontBody
 $btnBrowse.BackColor = $colPanel; $btnBrowse.ForeColor = $colText; $btnBrowse.FlatStyle = "Flat"
@@ -173,9 +173,47 @@ $btnBrowse.Add_Click({
 })
 $panelWelcome.Controls.Add($btnBrowse)
 
+$panelWelcome.Controls.Add((NewLabel "Current UO data:" 42 577 112 22 $fontBody $colDim))
+
+$txtUOData = New-Object System.Windows.Forms.TextBox
+$txtUOData.Text = ""
+$txtUOData.Location = New-Object System.Drawing.Point(158, 574)
+$txtUOData.Size = New-Object System.Drawing.Size(386, 26)
+$txtUOData.Font = $fontBody
+$txtUOData.BackColor = $colPanel; $txtUOData.ForeColor = $colText
+$txtUOData.BorderStyle = "FixedSingle"
+$panelWelcome.Controls.Add($txtUOData)
+
+$btnBrowseUO = New-Object System.Windows.Forms.Button
+$btnBrowseUO.Text = "Browse..."
+$btnBrowseUO.Location = New-Object System.Drawing.Point(554, 572)
+$btnBrowseUO.Size = New-Object System.Drawing.Size(100, 30)
+$btnBrowseUO.Font = $fontBody
+$btnBrowseUO.BackColor = $colPanel; $btnBrowseUO.ForeColor = $colText; $btnBrowseUO.FlatStyle = "Flat"
+$btnBrowseUO.Add_Click({
+    $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dlg.Description = "Choose the fully patched Ultima Online Classic data folder used by TazUO. It should contain tiledata.mul and current art/map data."
+    if ($txtUOData.Text -and (Test-Path $txtUOData.Text)) { $dlg.SelectedPath = $txtUOData.Text }
+    if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $txtUOData.Text = $dlg.SelectedPath
+    }
+    $dlg.Dispose()
+})
+$panelWelcome.Controls.Add($btnBrowseUO)
+
+$lblUOHint = NewLabel "Leave blank to auto-detect. If TazUO/UO is in a custom folder, browse to it here." 158 604 580 20 $fontMono $colDim
+$panelWelcome.Controls.Add($lblUOHint)
+
+$chkT2A.Add_CheckedChanged({
+    $enabled = -not $chkT2A.Checked
+    $txtUOData.Enabled = $enabled
+    $btnBrowseUO.Enabled = $enabled
+    $lblUOHint.Enabled = $enabled
+})
+
 $btnInstall = New-Object System.Windows.Forms.Button
 $btnInstall.Text = "Install"
-$btnInstall.Location = New-Object System.Drawing.Point(600, 576)
+$btnInstall.Location = New-Object System.Drawing.Point(600, 650)
 $btnInstall.Size = New-Object System.Drawing.Size(180, 44)
 $btnInstall.Font = $fontHead
 $btnInstall.BackColor = $colGold
@@ -185,7 +223,7 @@ $panelWelcome.Controls.Add($btnInstall)
 
 $btnQuit = New-Object System.Windows.Forms.Button
 $btnQuit.Text = "Cancel"
-$btnQuit.Location = New-Object System.Drawing.Point(470, 576)
+$btnQuit.Location = New-Object System.Drawing.Point(470, 650)
 $btnQuit.Size = New-Object System.Drawing.Size(115, 44)
 $btnQuit.Font = $fontBody
 $btnQuit.BackColor = $colPanel; $btnQuit.ForeColor = $colText; $btnQuit.FlatStyle = "Flat"
@@ -306,7 +344,7 @@ $form.Controls.Add($panelDone)
 $script:ps = $null
 $script:rs = $null
 
-function StartWorker($optT2A, $optRazor, $optMap, $installPath) {
+function StartWorker($optT2A, $optRazor, $optMap, $installPath, $uoDataPath) {
     $script:rs = [runspacefactory]::CreateRunspace()
     $script:rs.Open()
     $script:rs.SessionStateProxy.SetVariable('sync',       $sync)
@@ -315,6 +353,7 @@ function StartWorker($optT2A, $optRazor, $optMap, $installPath) {
     $script:rs.SessionStateProxy.SetVariable('OptRazor',   $optRazor)
     $script:rs.SessionStateProxy.SetVariable('OptMap',     $optMap)
     $script:rs.SessionStateProxy.SetVariable('InstallChoice', $installPath)
+    $script:rs.SessionStateProxy.SetVariable('UODataChoice', $uoDataPath)
 
     $script:ps = [powershell]::Create()
     $script:ps.Runspace = $script:rs
@@ -323,7 +362,7 @@ function StartWorker($optT2A, $optRazor, $optMap, $installPath) {
             if ($OptT2A) {
                 . $EnginePath -NoRun -ClassicT2A
             } else {
-                . $EnginePath -NoRun
+                . $EnginePath -NoRun -UODataPath $UODataChoice
             }
             if ($InstallChoice) { Set-InstallRoot $InstallChoice }
             $InstallRazor  = $OptRazor
@@ -405,7 +444,8 @@ $btnInstall.Add_Click({
         return
     }
     $script:InstallRootLabel = $chosenPath
-    StartWorker $chkT2A.Checked $chkRazor.Checked $chkMap.Checked $chosenPath
+    $chosenUOData = $txtUOData.Text.Trim()
+    StartWorker $chkT2A.Checked $chkRazor.Checked $chkMap.Checked $chosenPath $chosenUOData
     $timer.Start()
 })
 
