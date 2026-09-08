@@ -27,9 +27,17 @@ set -uo pipefail
 INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP="${INSTALL_ROOT}/uo-offline-version.json"
 SKIP="${INSTALL_ROOT}/uo-offline-skipped.txt"
+LOCK="${INSTALL_ROOT}/uo-offline-update.lock"
 TIMEOUT=6
 
+ALLOWED_REPO="XXCAPTAINXX/uo-offline"
+ALLOWED_BRANCH="haven-rc2"
+
 TITLE="UO Offline - update available"
+
+# An interrupted/failed installer deliberately leaves this lock behind.
+# Starting the old server is safe; mutating it through an update is not.
+[[ ! -f "${LOCK}" ]] || exit 0
 
 # Nothing to compare against, or no way to ask: launch the game.
 [[ -f "${STAMP}" ]] || exit 0
@@ -48,6 +56,9 @@ REPO="$(json_field Repo        "${STAMP_TEXT}")"
 BRANCH="$(json_field Branch    "${STAMP_TEXT}")"
 
 [[ -n "${LOCAL_SHA}" && -n "${REPO}" && -n "${BRANCH}" ]] || exit 0
+
+# Never follow a stale version stamp from the original/upstream fork.
+[[ "${REPO}" == "${ALLOWED_REPO}" && "${BRANCH}" == "${ALLOWED_BRANCH}" ]] || exit 0
 
 API="https://api.github.com/repos/${REPO}"
 UA="User-Agent: uo-offline-launcher"
@@ -192,15 +203,15 @@ chmod +x "${INSTALLER}" 2>/dev/null
 # from the desktop icon there is no terminal, so open one - the rebuild
 # takes minutes and a silent background job looks like nothing happened.
 if [[ -t 1 ]]; then
-  ( cd "$(dirname "${INSTALLER}")" && bash "${INSTALLER}" )
+  ( cd "$(dirname "${INSTALLER}")" && bash "${INSTALLER}" --install-root "${INSTALL_ROOT}" )
   exit 10
 fi
 
 for term in konsole gnome-terminal xfce4-terminal x-terminal-emulator xterm; do
   command -v "${term}" >/dev/null 2>&1 || continue
   case "${term}" in
-    gnome-terminal) "${term}" -- bash -lc "cd '$(dirname "${INSTALLER}")' && bash '${INSTALLER}'; echo; read -r -p 'Done. Press Enter to close.'" & ;;
-    *)              "${term}" -e bash -lc "cd '$(dirname "${INSTALLER}")' && bash '${INSTALLER}'; echo; read -r -p 'Done. Press Enter to close.'" & ;;
+    gnome-terminal) "${term}" -- bash -lc "cd '$(dirname "${INSTALLER}")' && bash '${INSTALLER}' --install-root '${INSTALL_ROOT}'; echo; read -r -p 'Done. Press Enter to close.'" & ;;
+    *)              "${term}" -e bash -lc "cd '$(dirname "${INSTALLER}")' && bash '${INSTALLER}' --install-root '${INSTALL_ROOT}'; echo; read -r -p 'Done. Press Enter to close.'" & ;;
   esac
   exit 10
 done
