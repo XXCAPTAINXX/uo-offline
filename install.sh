@@ -800,7 +800,7 @@ swap_t2a_map() {
 fetch_spawn_map() {
   banner "Fetching world spawn data"
   if [[ "${CLASSIC_T2A}" != "1" ]]; then
-    say "Modern profile: using ModernUO's expansion-aware JSON spawns; skipping Nerun's pre-T2A map."
+    say "Modern profile: using UORespawn six-facet dynamic population; skipping Nerun's pre-T2A map."
     return
   fi
   banner "Fetching Nerun's pre-T2A spawn map"
