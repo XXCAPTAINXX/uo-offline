@@ -1,0 +1,11 @@
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -3554,6 +3554,8 @@
+ 
+                     if (ds.m_Mobile is PlayerMobile pm)
+                     {
++                        Server.CustomBots.OfflineWalletSystem.OnNewbieKill(pm, this);
++
+                         if (MLQuestSystem.Enabled)
+                         {
+                             MLQuestSystem.HandleKill(pm, this);
