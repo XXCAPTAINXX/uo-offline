@@ -9,8 +9,8 @@
 //   * a DISTINCT orange dungeon portal sits beside New Haven bank
 //   * the portal leads to a real Trammel Despise dungeon interior
 //   * the newbie room has controlled weak spawns and a healer
-//   * UORespawn is suppressed while a player is inside the newbie bounds
-//   * +1000 Luck and 5x player/pet skill gain apply only in that dungeon
+//   * UORespawn is suppressed only inside the dedicated newbie dungeon
+//   * +1000 Luck and 5x player/pet skill gain apply in the dungeon AND Old Haven
 //   * New Haven quest instructors are explicitly restored at canonical points
 //
 // Native town/vendor population is restored separately by NativeTownPopulation.
@@ -37,6 +37,14 @@ namespace Server.CustomBots
         public const int MaxXExclusive = 5525;
         public const int MaxYExclusive = 620;
 
+        // Canonical Old Haven training bounds used by the original New Haven
+        // skill quests. Keep this outdoor area useful even though the shard
+        // now also has a dedicated newbie dungeon.
+        public const int OldHavenMinX = 3589;
+        public const int OldHavenMinY = 2443;
+        public const int OldHavenMaxXExclusive = 3704;
+        public const int OldHavenMaxYExclusive = 2543;
+
         // New Haven bank is centered on the native bankers at 3484,2570/2576.
         private static readonly Point3D NewHavenGateAnchor = new(3489, 2573, 20);
 
@@ -56,7 +64,7 @@ namespace Server.CustomBots
             Timer.DelayCall(TimeSpan.FromSeconds(1), EnsureWorld);
         }
 
-        public static bool IsInNewbieTraining(Mobile m)
+        public static bool IsInNewbieDungeon(Mobile m)
         {
             if (m?.Map != Map.Trammel)
             {
@@ -66,6 +74,20 @@ namespace Server.CustomBots
             return m.X >= MinX && m.X < MaxXExclusive &&
                    m.Y >= MinY && m.Y < MaxYExclusive;
         }
+
+        public static bool IsInOldHavenTraining(Mobile m)
+        {
+            if (m?.Map != Map.Trammel)
+            {
+                return false;
+            }
+
+            return m.X >= OldHavenMinX && m.X < OldHavenMaxXExclusive &&
+                   m.Y >= OldHavenMinY && m.Y < OldHavenMaxYExclusive;
+        }
+
+        public static bool IsInNewbieTraining(Mobile m) =>
+            IsInNewbieDungeon(m) || IsInOldHavenTraining(m);
 
         public static int LuckBonus(PlayerMobile pm) =>
             pm != null && IsInNewbieTraining(pm) ? 1000 : 0;
