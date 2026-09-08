@@ -1524,7 +1524,7 @@ install_uorespawn() {
   grep -q 'm is not Server.CustomBots.PlayerBot' "$core_target" || die "Pinned UORespawn player hooks changed; review integration before updating."
 
   local search_target="$target/Timers/SearchTimer.cs"
-  sed -i 's/if (UOR_Core.IsPaused) return;/if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieTraining(_Player)) return;/' "$search_target"
+  sed -i 's/if (UOR_Core.IsPaused) return;/if (UOR_Core.IsPaused || Server.CustomBots.NewbiePlayability.IsInNewbieDungeon(_Player)) return;/' "$search_target"
   grep -q 'NewbiePlayability.IsInNewbieTraining' "$search_target" || die "Pinned UORespawn SearchTimer hook changed; review newbie-dungeon suppression before updating."
 
   local input_dir="$DIST_DIR/Data/UORespawn/INPUT"
