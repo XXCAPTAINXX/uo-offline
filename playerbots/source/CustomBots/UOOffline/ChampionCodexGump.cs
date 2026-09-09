@@ -83,7 +83,7 @@ public sealed class ChampionCodexGump : Gump
             }
             if (skills.Length == 0) { AddLabel(27, 150, 0, "No skill scrolls stored yet. Collect backpack or drag scrolls onto the codex."); }
         }
-        AddLabel(26, 527, 0, "Withdrawals preserve the original scroll. Transcendence totals appear on hover.");
+        Button(26, 522, 8, "Combine power scrolls");
         if (_page > 0) { Button(26, 550, 5, "Previous"); }
         AddLabel(216, 552, 0, $"Page {_page + 1} / {pages}");
         if (_page + 1 < pages) { Button(350, 550, 6, "Next"); }
@@ -122,6 +122,7 @@ public sealed class ChampionCodexGump : Gump
             case 5: DisplayTo(from, _codex, _page - 1, _other, _ownedOnly); return;
             case 6: DisplayTo(from, _codex, _page + 1, _other, _ownedOnly); return;
             case 7: _codex.DisplayTo(from); break;
+            case 8: ChampionScrollCombineGump.DisplayTo(from, _codex); return;
             default: Withdraw(from, info.ButtonID); break;
         }
         DisplayTo(from, _codex, _page, _other, _ownedOnly);

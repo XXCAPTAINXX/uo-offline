@@ -85,7 +85,7 @@ public partial class HavenIslandTrial : Item
                     player.Map == Map && player.InRange(Location, 24))
                 {
                     HavenAstralRewards.Award(player, 5);
-                    player.SendMessage("Woodland trial complete! Five Astral shards awarded; loot the champion for gold, marks and a power scroll.");
+                    player.SendMessage("Woodland trial complete! Five Astral shards awarded; loot the champion for gold, marks and five power scrolls.");
                 }
             }
             Reset(); ReadyAt = Core.Now + TimeSpan.FromMinutes(2);
@@ -108,7 +108,7 @@ public partial class HavenIslandTrial : Item
     {
         base.GetProperties(list);
         list.Add($"{"Beginner champion trial: three short waves and one boss"}");
-        list.Add($"{"Rewards: gold, five 105/110 scrolls, 20 Haven marks, 5 Astral shards"}");
+        list.Add($"{"Rewards: 25,000-40,000 gold, five 105/110 scrolls, 20 Haven marks, 5 Astral shards"}");
         list.Add($"{"Stage:"} {Stage}/4\t{"Wave kills:"} {Kills}/6");
         list.Add($"{"Double-click to start or check progress"}");
     }
@@ -138,7 +138,7 @@ public partial class HavenTrialCreature : BaseCreature
     public override void GenerateLoot()
     {
         if (m_Spawning) { return; }
-        PackGold(TrialStage == 4 ? 2000 : 30, TrialStage == 4 ? 3000 : 60);
+        PackGold(TrialStage == 4 ? 25000 : 30, TrialStage == 4 ? 40000 : 60);
         if (TrialStage == 4) { PackItem(new HavenMark(20)); for (var i = 0; i < 5; i++) { PackItem(PowerScroll.CreateRandomNoCraft(5, 10)); } }
     }
     public override void OnDeath(Container corpse) { Trial?.Defeated(this); base.OnDeath(corpse); }

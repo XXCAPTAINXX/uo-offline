@@ -58,6 +58,33 @@ public partial class HavenPetTraining : Item
             ? MaxSlots(pet) == 2 ? 25560 : MaxSlots(pet) == 3 ? 23810 : 15010 : 15010;
         pet.InvalidateProperties(); return true;
     }
+    internal string Status(BaseCreature pet) => Active
+        ? Progress >= 10000 ? "Training complete - spend your points" : "Training active - fight suitable enemies"
+        : pet.ControlSlots >= MaxSlots(pet) ? "Maximum training slots reached" : "Ready to begin training";
+
+    internal bool BeginWithFeedback(Mobile owner, BaseCreature pet)
+    {
+        if (!Owned(owner, pet) || Find(pet) != this)
+        {
+            owner?.SendMessage("Bring your living pet nearby and dismount before training.");
+            return false;
+        }
+        if (Active)
+        {
+            owner.SendMessage(Progress >= 10000
+                ? "Combat training is complete. Spend your points, then finish this stage."
+                : "Training is already active. Your pet must damage wild enemies whose Wrestling is no more than 50 below its own. Use several enemies, then Refresh to see progress.");
+            return false;
+        }
+        if (pet.ControlSlots >= MaxSlots(pet))
+        {
+            owner.SendMessage("This pet has reached its maximum training slots. Its existing skills can still improve through use.");
+            return false;
+        }
+        if (!Begin(owner, pet)) { return false; }
+        owner.SendMessage($"Training started for {pet.Name}. Have your pet fight wild enemies, then Refresh to see progress. Spend points once combat progress reaches 100%.");
+        return true;
+    }
     public static void AwardDamage(BaseCreature target, Mobile attacker, int damage)
     {
         if (damage <= 0 || attacker is not BaseCreature pet || pet is HavenCompanion || pet.Summoned || pet.IsDeadPet ||
@@ -191,6 +218,7 @@ public sealed class HavenPetTrainingGump : Gump
         AddLabel(225, 24, 53, "ANIMAL TRAINING");
         AddHtml(28, 53, 640, 24, $"<BASEFONT COLOR=#FFFFFF>{Utility.FixHtml(pet.Name)}</BASEFONT>");
         AddLabel(28, 82, 1152, $"Slots {pet.ControlSlots}/{HavenPetTraining.MaxSlots(pet)}   Progress {record.Progress / 100.0:F1}%   Available points {record.Points:F1}");
+        AddLabel(28, 103, 53, record.Status(pet));
         AddAlphaRegion(24, 122, 184, 324); AddAlphaRegion(220, 122, 456, 324);
         AddLabel(42, 136, 53, "CATEGORIES"); AddLabel(238, 136, 53, "SELECTIONS");
         for (var i = 0; i < Categories.Length; i++)
@@ -235,7 +263,7 @@ public sealed class HavenPetTrainingGump : Gump
             AddLabel(238, 342, 53, record.Healing > 0 ? "Healing learned" : "Healing not yet learned");
         }
         AddHtml(28, 456, 644, 36, "<BASEFONT COLOR=#FFFFFF>Train through combat to 100%, then spend points. The first purchase adds one follower slot. Purchases apply immediately.</BASEFONT>");
-        Button(28, 501, 900, "Begin training"); Button(228, 501, 901, confirmFinish ? "Confirm finish" : "Finish stage");
+        Button(28, 501, 900, record.Active ? "Training status" : "Begin training"); Button(228, 501, 901, confirmFinish ? "Confirm finish" : "Finish stage");
         Button(442, 501, 903, "Info"); Button(557, 501, 0, "Close");
         Button(28, 535, 904, "Animal Lore"); Button(228, 535, 902, "Refresh");
         if (confirmFinish) { AddLabel(380, 537, 53, "Finishing discards leftover points."); }
@@ -254,7 +282,7 @@ public sealed class HavenPetTrainingGump : Gump
         }
         var record = HavenPetTraining.Get(_pet); var success = false;
         if (button == 901 && !_confirmFinish) { DisplayTo(owner, _pet, true, _category); return; }
-        if (button == 900) { success = record.Begin(owner, _pet); }
+        if (button == 900) { record.BeginWithFeedback(owner, _pet); DisplayTo(owner, _pet, category: _category); return; }
         else if (button == 901) { success = record.Finish(owner, _pet); }
         else if (button == 910) { success = record.LearnHealing(owner, _pet); }
         else if (button is >= 100 and < 111) { success = record.Upgrade(owner, _pet, button - 100, 1); }

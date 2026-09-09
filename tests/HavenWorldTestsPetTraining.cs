@@ -26,7 +26,10 @@ public class HavenWorldTestsPetTraining
         {
             var record = HavenPetTraining.Get(pet);
             enemy.OnDamage(200, pet, false); Assert.Equal(0, record.Progress);
-            Assert.True(record.Begin(owner, pet));
+            Assert.True(record.BeginWithFeedback(owner, pet));
+            Assert.True(record.Active);
+            Assert.Contains("Training active", record.Status(pet));
+            Assert.False(record.BeginWithFeedback(owner, pet));
             for (var i = 0; i < 60; i++) { enemy.OnDamage(200, pet, false); }
             Assert.Equal(5000, record.Progress);
             Assert.False(record.Upgrade(owner, pet, 0, 1));
