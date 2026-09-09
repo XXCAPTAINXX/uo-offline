@@ -1442,7 +1442,7 @@ public class HavenWorldTests
         finally { companion.Delete(); owner.Delete(); }
     }
     [Fact]
-    public void TamingAndLoreDoNotConsumeSkillBudgetOrLowerOtherSkills()
+    public void TamingLoreAndFocusDoNotConsumeSkillBudgetOrLowerOtherSkills()
     {
         var player = new PlayerMobile { Player = true, Body = 0x190, SkillsCap = 1000 };
         try
@@ -1450,9 +1450,12 @@ public class HavenWorldTests
             player.Skills.Swords.Base = 100;
             player.Skills.AnimalTaming.Base = 20;
             player.Skills.AnimalLore.Base = 20;
+            player.Skills.Focus.Base = 20;
             Assert.Equal(1000, HavenFreeSkills.CountedTotal(player));
             Server.Misc.SkillCheck.Gain(player, player.Skills.AnimalTaming);
             Server.Misc.SkillCheck.Gain(player, player.Skills.AnimalLore);
+            Server.Misc.SkillCheck.Gain(player, player.Skills.Focus);
+            Assert.Equal(20.1, player.Skills.Focus.Base);
             Assert.Equal(20.1, player.Skills.AnimalTaming.Base);
             Assert.Equal(20.1, player.Skills.AnimalLore.Base);
             Assert.Equal(100.0, player.Skills.Swords.Base);
@@ -1481,7 +1484,8 @@ public class HavenWorldTests
             player.Skills.Swords.Base = 100;
             trainer.Skills.AnimalLore.Base = 90;
             trainer.Skills.AnimalTaming.Base = 90;
-            foreach (var skill in new[] { SkillName.AnimalTaming, SkillName.AnimalLore })
+            trainer.Skills.Focus.Base = 90;
+            foreach (var skill in new[] { SkillName.AnimalTaming, SkillName.AnimalLore, SkillName.Focus })
             {
                 var learned = 0;
                 Assert.Equal(BaseCreature.TeachResult.Success, trainer.CheckTeachSkills(skill, player, 100, ref learned, true));
