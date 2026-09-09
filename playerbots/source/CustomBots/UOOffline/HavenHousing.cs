@@ -4,6 +4,11 @@ namespace Server.UOOffline;
 
 public static class HavenHousing
 {
+    // Foundation walls can bridge shallow dips and cover small bumps without burying the floor.
+    public static bool SupportsFoundation(int foundationZ, int landMinZ, int landMaxZ, TileFlag flags) =>
+        (flags & (TileFlag.Impassable | TileFlag.Wet)) == 0 &&
+        landMinZ >= foundationZ - 4 && landMaxZ <= foundationZ + 2;
+
     // Lift only Haven's blanket ban. Named shops, houses and special regions keep their restrictions.
     public static bool IsResidentialRegion(Region region, Map map, Point3D point) =>
         HavenNewcomerLuck.IsInArea(map, point) && !IsProtectedSite(point) &&
