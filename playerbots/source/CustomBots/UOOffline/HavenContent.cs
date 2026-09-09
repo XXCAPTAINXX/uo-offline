@@ -71,16 +71,28 @@ public partial class OldHavenWarden : BaseCreature
 
     public override void GenerateLoot()
     {
-        PackGold(500, 900);
-        if (!m_Spawning) { PackItem(new HavenMark(Utility.RandomMinMax(3, 6))); }
-        AddLoot(LootPack.Average);
+        AddLoot(LootPack.Rich);
+        if (m_Spawning) { return; }
+        PackGold(1500, 2500);
+        PackItem(new HavenMark(Utility.RandomMinMax(3, 6)));
+        PackItem(CreateBossGear(m_KillersLuck));
+        PackItem(CreateBossGear(m_KillersLuck));
+        if (Utility.RandomDouble() < 0.15) { PackItem(SpecialBraceletFactory.CreateRandom()); }
+        if (Utility.RandomDouble() < 0.20) { PackItem(new HavenSetRing(Utility.Random(9))); }
+    }
 
-        // The bracelets are a meaningful early chase reward without making
-        // the boss an end-game money printer.
-        if (Utility.RandomDouble() < 0.15)
+    internal static Item CreateBossGear(int luckChance)
+    {
+        var item = Loot.RandomArmorOrShieldOrWeaponOrJewelry();
+        var properties = Utility.RandomMinMax(3, 5);
+        switch (item)
         {
-            PackItem(SpecialBraceletFactory.CreateRandom());
+            case BaseWeapon weapon: BaseRunicTool.ApplyAttributesTo(weapon, false, luckChance, properties, 50, 85); break;
+            case BaseArmor armor: BaseRunicTool.ApplyAttributesTo(armor, false, luckChance, properties, 50, 85); break;
+            case BaseHat hat: BaseRunicTool.ApplyAttributesTo(hat, false, luckChance, properties, 50, 85); break;
+            case BaseJewel jewel: BaseRunicTool.ApplyAttributesTo(jewel, false, luckChance, properties, 50, 85); break;
         }
+        return item;
     }
 }
 

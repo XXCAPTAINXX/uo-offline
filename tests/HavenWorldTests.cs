@@ -1955,6 +1955,8 @@ public class HavenWorldTests
             Assert.Equal(0, warden.Backpack.GetAmount(typeof(HavenMark)));
             warden.GenerateLoot(false);
             Assert.InRange(warden.Backpack.GetAmount(typeof(HavenMark)), 3, 6);
+            Assert.True(warden.Backpack.GetAmount(typeof(Gold)) >= 1500);
+            Assert.True(warden.Backpack.Items.Count(i => i is BaseWeapon or BaseArmor or BaseJewel or BaseHat) >= 2);
         }
         finally { boss.Delete(); steeds.Delete(); warden.Delete(); }
     }
