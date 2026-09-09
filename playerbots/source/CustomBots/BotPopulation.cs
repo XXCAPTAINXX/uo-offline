@@ -37,7 +37,8 @@ namespace Server.CustomBots
         // set (Data/CustomSpawns/pk_spawns.json) instead of the TargetCount
         // split, so they need their own dial to scale alongside the towns.
         // [GeneratePKs multiplies every spawn's amount by this.
-        public static int PKDensityMultiplier { get; set; } = 2;
+        public static int PKDensityMultiplier { get; set; } = 0;
+        public static bool PKEnabled => PKDensityMultiplier > 0;
 
         // Safety ceiling for the startup respawn. Sits ABOVE TargetCount so
         // it never caps a legitimate population — it only catches a genuine

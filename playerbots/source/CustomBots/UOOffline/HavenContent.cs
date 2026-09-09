@@ -447,17 +447,18 @@ public static class HavenEconomy
         }
 
         var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
-        if (wallet?.Balance >= amount && wallet.TrySpend(amount))
+        var walletGold = (int)Math.Min(amount, Math.Max(0, wallet?.Balance ?? 0));
+        var backpackGold = Math.Min(amount - walletGold, from.Backpack.GetAmount(typeof(Gold)));
+        var bankGold = amount - walletGold - backpackGold;
+        // Check the complete payment before removing any wallet or loose gold.
+        // All payment operations run together on the game thread.
+        if (bankGold > 0 && !Banker.Withdraw(from, bankGold))
         {
-            return true;
+            return false;
         }
-
-        if (from.Backpack.ConsumeTotal(typeof(Gold), amount))
-        {
-            return true;
-        }
-
-        return Banker.Withdraw(from, amount);
+        if (backpackGold > 0) { from.Backpack.ConsumeTotal(typeof(Gold), backpackGold); }
+        if (walletGold > 0) { wallet.TrySpend(walletGold); }
+        return true;
     }
 }
 

@@ -38,7 +38,8 @@ public sealed class HavenItemPreviewGump : Gump
             AddHtml(105, 84, 390, 245, Describe(preview), false, true);
         }
         finally { preview?.Delete(); }
-        AddHtml(28, 340, 482, 45, $"{menu.Question}");
+        AddHtml(28, 330, 482, 45, $"{menu.Question}");
+        AddHtml(28, 375, 482, 20, "Gold payments use wallet first, then backpack and bank.");
         AddButton(28, 399, 4014, 4016, 2);
         AddLabel(66, 401, 0, "Back");
         AddButton(200, 399, 4005, 4007, 1);

@@ -5,7 +5,9 @@
 Player-bot spawners now fill to two-thirds of their saved counts, rounded to the
 nearest whole bot, retaining at least one at small nonempty spawners. The 1,600
 base target becomes an effective target of 1,067. Daily session and party limits
-use that effective target. PK and fixed-role bot spawners are scaled too.
+use that effective target. Fixed-role bot spawners are scaled too. PK bots are
+disabled (zero density): saved PK spawners cannot refill, automatic PK placement
+is disabled, and a bot assigned the PK behavior is removed before its next action.
 Ordinary NPC/monster spawners are unaffected. Counts are not rewritten, so
 restarts do not compound the reduction. `[SetBotPopulation` edits the base
 target; its messages also show the effective target.

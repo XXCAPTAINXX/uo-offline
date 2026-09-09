@@ -34,6 +34,41 @@ public class HavenWorldTests
     }
     private static string SpawnRoot => Environment.GetEnvironmentVariable("HAVEN_WORLD_DATA") ?? Core.BaseDirectory;
 
+    [Theory]
+    [InlineData(500, 0, 250, true, 250, 0)]
+    [InlineData(100, 200, 250, true, 0, 50)]
+    [InlineData(100, 100, 250, false, 100, 100)]
+    public void StonePaymentUsesWalletAndDoesNotChargeInsufficientFunds(int balance, int gold, int price, bool paid, int expectedWallet, int expectedGold)
+    {
+        var player = new PlayerMobile { Player = true };
+        player.AddItem(new Backpack());
+        var wallet = new AdventurersWallet();
+        wallet.Deposit(balance);
+        player.Backpack.DropItem(wallet);
+        if (gold > 0) { player.Backpack.DropItem(new Gold(gold)); }
+        try
+        {
+            Assert.Equal(paid, HavenEconomy.TryPay(player, price));
+            Assert.Equal(expectedWallet, wallet.Balance);
+            Assert.Equal(expectedGold, player.Backpack.GetAmount(typeof(Gold)));
+        }
+        finally { player.Delete(); }
+    }
+
+    [Fact]
+    public void PkSpawnersStayEmptyAndGenerationIsDisabled()
+    {
+        var spawner = new PlayerBotSpawner("PK", 12, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2));
+        try
+        {
+            Assert.False(BotPopulation.PKEnabled);
+            spawner.Respawn();
+            Assert.Empty(spawner.Spawned);
+            Assert.Equal((0, 0), GeneratePKsCommand.PlaceDefault());
+        }
+        finally { spawner.Delete(); }
+    }
+
     [Fact]
     public void BotDensityKeepsSavedCountsAndNativeSpawnsUnchanged()
     {

@@ -23,6 +23,9 @@ Supply/reward listings show item icons. Selecting an item opens its stats and
 price with separate Buy and Back buttons. Stats and art come from the same
 factory as the purchased item; temporary preview items are deleted immediately.
 Robe upgrades show current and next-tier attributes before confirmation.
+Gold purchases use the adventurer's wallet first, then backpack gold, then the
+bank for any remainder. Insufficient total funds leave wallet and backpack gold
+untouched. Haven-mark reward/upgrade payment retains its existing priority.
 The Blessed Travel Book is available for 250 gold, using the earlier branch's
 portable moongate behavior, enabled-facet selector and normal travel checks.
 
