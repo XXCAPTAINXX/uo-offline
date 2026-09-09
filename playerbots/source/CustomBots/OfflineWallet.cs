@@ -278,9 +278,13 @@ namespace Server.CustomBots
                 Name = "Starter Home Supplies"
             };
 
-            var deed = new SmallBrickHouseDeed
+            // A two-story villa is still a modest starter footprint, but it
+            // gives a new solo player enough room for storage, crafting,
+            // trophies, and early collection systems without immediately
+            // outgrowing the welcome-home reward.
+            var deed = new VillaDeed
             {
-                Name = "Starter Small House Deed"
+                Name = "Starter Two-Story Villa Deed"
             };
 
             supplies.DropItem(deed);
@@ -292,7 +296,7 @@ namespace Server.CustomBots
                 _dirty = true;
                 m.SendMessage(
                     0x35,
-                    "Starter home granted: Starter Home Supplies contains a Small Brick House deed and Gold Repair Bench. This free home package is issued once per character."
+                    "Starter home granted: Starter Home Supplies contains a Two-Story Villa deed and Gold Repair Bench. This free home package is issued once per character."
                 );
             }
             else
