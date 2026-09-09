@@ -220,6 +220,97 @@ namespace Server.CustomBots
                 "WanderingHealer"
             );
 
+            // New Haven should feel alive the moment a new character steps
+            // outside. These are intentionally gentle, tameable, and useful
+            // beginner creatures rather than end-game ecology.
+            EnsureSpawner(
+                "UO Offline New Haven Meadow West",
+                new Point3D(3450, 2605, 10),
+                10,
+                18,
+                24,
+                "Rabbit",
+                "Hind",
+                "GreatHart",
+                "Cow",
+                "Goat",
+                "Sheep"
+            );
+
+            EnsureSpawner(
+                "UO Offline New Haven Mount Meadow",
+                new Point3D(3506, 2640, 0),
+                8,
+                18,
+                24,
+                "Horse",
+                "RidableLlama",
+                "ForestOstard"
+            );
+
+            EnsureSpawner(
+                "UO Offline New Haven Practice Creatures",
+                new Point3D(3560, 2585, 0),
+                10,
+                18,
+                24,
+                "GiantRat",
+                "Mongbat",
+                "HeadlessOne",
+                "Slime"
+            );
+
+            // Old Haven is the outdoor bridge between tutorial play and the
+            // real world: plentiful low-tier targets, some tameables/mounts,
+            // plus one forgiving named boss with starter-quality rewards.
+            EnsureSpawner(
+                "UO Offline Old Haven Training West",
+                new Point3D(3610, 2470, 0),
+                10,
+                20,
+                26,
+                "Skeleton",
+                "Zombie",
+                "HeadlessOne",
+                "Mongbat",
+                "GiantRat"
+            );
+
+            EnsureSpawner(
+                "UO Offline Old Haven Training East",
+                new Point3D(3682, 2510, 0),
+                9,
+                20,
+                26,
+                "Orc",
+                "Lizardman",
+                "Skeleton",
+                "Zombie"
+            );
+
+            EnsureSpawner(
+                "UO Offline Old Haven Taming Meadow",
+                new Point3D(3650, 2525, 0),
+                7,
+                18,
+                24,
+                "Horse",
+                "Hind",
+                "GreatHart",
+                "ForestOstard"
+            );
+
+            EnsureSpawner(
+                "UO Offline Old Haven Warden",
+                new Point3D(3645, 2478, 0),
+                1,
+                TimeSpan.FromMinutes(8),
+                TimeSpan.FromMinutes(12),
+                8,
+                10,
+                "OldHavenWarden"
+            );
+
             EnsureNewHavenQuesters();
         }
 
@@ -305,9 +396,30 @@ namespace Server.CustomBots
             int homeRange = 0,
             int walkingRange = 2,
             params string[] types
+        ) =>
+            EnsureSpawner(
+                name,
+                preferred,
+                amount,
+                TimeSpan.FromSeconds(20),
+                TimeSpan.FromSeconds(45),
+                homeRange,
+                walkingRange,
+                types
+            );
+
+        private static void EnsureSpawner(
+            string name,
+            Point3D preferred,
+            int amount,
+            TimeSpan minDelay,
+            TimeSpan maxDelay,
+            int homeRange,
+            int walkingRange,
+            params string[] types
         )
         {
-            var loc = FindSafe(Map.Trammel, preferred, 8);
+            var loc = FindSafe(Map.Trammel, preferred, 12);
 
             foreach (var item in World.Items.Values)
             {
@@ -317,8 +429,8 @@ namespace Server.CustomBots
                     continue;
                 }
 
-                // Migration: old versions placed these in Old Haven. Rebuild
-                // named newbie spawners if the desired location changed.
+                // Migration: move/rebuild named UO Offline spawners when the
+                // authored starter layout changes between builds.
                 if (sp.Map == Map.Trammel && Utility.InRange(sp.Location, loc, 3))
                 {
                     return;
@@ -330,8 +442,8 @@ namespace Server.CustomBots
 
             var spawner = new Spawner(
                 amount,
-                TimeSpan.FromSeconds(20),
-                TimeSpan.FromSeconds(45),
+                minDelay,
+                maxDelay,
                 0,
                 default,
                 types
