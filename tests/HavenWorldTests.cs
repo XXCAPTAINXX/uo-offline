@@ -1273,7 +1273,7 @@ public class HavenWorldTests
                 Assert.False(spawner.IsEmpty, $"No NPCs spawned for {dto.Name} at {dto.Location}.");
                 Assert.Contains(spawner.Spawned.Keys, s => s is BaseCreature { Deleted: false, Alive: true });
             }
-            Assert.Equal(30, created.Count);
+            Assert.Equal(33, created.Count);
         }
         finally
         {
@@ -2223,7 +2223,7 @@ public class HavenWorldTests
             Assert.Null(companion.Backpack.FindItemByType<HavenMark>());
             foreach (var kind in Enum.GetValues<HavenExpeditionKind>())
             {
-                var loot = HavenCompanionExpedition.CreateLoot(kind, 5);
+                var loot = HavenCompanionExpedition.CreateLoot(kind, 5, null, 0.99);
                 try
                 {
                     Assert.NotEmpty(loot.Items);
@@ -2309,7 +2309,7 @@ public class HavenWorldTests
             Assert.Null(companion.Expedition);
             companion.Skills.AnimalLore.Base = 100;
             Assert.True(HavenCompanionExpedition.Start(companion, owner, HavenExpeditionKind.TameDragon));
-            Assert.True(companion.Expedition.Return(owner, companion.Expedition.Due));
+            Assert.True(companion.Expedition.Return(owner, companion.Expedition.Due, 0.99));
             var voucher = companion.Backpack.FindItemByType<HavenExpeditionPetClaim>();
             Assert.NotNull(voucher);
             Assert.Equal(owner, voucher.Owner);
@@ -2332,6 +2332,57 @@ public class HavenWorldTests
             CheckBounds(new HavenCompanionGump(companion, 5), 370, 370);
         }
         finally { claimedPet?.Delete(); loot?.Delete(); companion.Delete(); owner.Delete(); other.Delete(); }
+    }
+
+    [SkippableFact]
+    public void RarePetAbilitiesSupportOwnerAndRespectCooldownAndPetProtection()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var wolf = new HavenMoonfang();
+        var enemy = new Dragon();
+        var friendly = new Horse();
+        try
+        {
+            owner.MoveToWorld(new Point3D(3511, 2575, 14), Map.Trammel);
+            wolf.MoveToWorld(owner.Location, owner.Map);
+            enemy.MoveToWorld(owner.Location, owner.Map);
+            friendly.MoveToWorld(owner.Location, owner.Map);
+            wolf.SetControlMaster(owner);
+            friendly.SetControlMaster(owner);
+            owner.Hits = 1;
+            var next = DateTime.MinValue;
+            Assert.False(HavenRarePetAbility.Activate(wolf, friendly, 2, ref next));
+            Assert.True(HavenRarePetAbility.Activate(wolf, enemy, 2, ref next));
+            Assert.True(owner.Hits > 1);
+            Assert.False(HavenRarePetAbility.Activate(wolf, enemy, 2, ref next));
+            Assert.Equal(110, wolf.Skills.Wrestling.Cap);
+        }
+        finally { friendly.Delete(); enemy.Delete(); wolf.Delete(); owner.Delete(); }
+    }
+
+    [Fact]
+    public void FullTamingMissionsAlwaysReturnSelectedPetWithPersistedRarity()
+    {
+        foreach (var (roll, tier) in new[] { (0.0, 0), (0.699, 0), (0.70, 1), (0.919, 1), (0.92, 2), (0.989, 2), (0.99, 3) })
+        {
+            var bag = HavenCompanionExpedition.CreateLoot(HavenExpeditionKind.TameHorse, 5, null, roll);
+            HavenExpeditionPetClaim copy = null;
+            try
+            {
+                var claim = bag.FindItemByType<HavenExpeditionPetClaim>();
+                Assert.NotNull(claim);
+                Assert.Equal(HavenExpeditionKind.TameHorse, claim.Kind);
+                Assert.Equal(tier, claim.Rarity);
+                var writer = new BufferWriter(true);
+                claim.Serialize(writer);
+                copy = new HavenExpeditionPetClaim(World.NewItem);
+                copy.Deserialize(new BufferReader(writer.Buffer.AsSpan(0, (int)writer.Position).ToArray()));
+                Assert.Equal(tier, copy.Rarity);
+                Assert.Equal(claim.Kind, copy.Kind);
+            }
+            finally { bag.Delete(); copy?.Delete(); }
+        }
     }
 
     private static void CheckBounds(Gump gump, int width, int height)

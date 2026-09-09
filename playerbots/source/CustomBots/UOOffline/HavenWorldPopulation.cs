@@ -145,6 +145,17 @@ public static class HavenWorldPopulation
             "Horse", "RidableLlama", "ForestOstard");
         yield return TrainingSpawn("Haven practice creatures", new Point3D(3560, 2585, 0), 10, 18,
             "GiantRat", "Mongbat", "HeadlessOne", "Slime");
+        foreach (var (name, x, y, delay) in new[] { ("HavenEmberwing", 3455, 2630, 30), ("HavenMoonfang", 3600, 2670, 60), ("HavenStormscale", 3740, 2440, 120) })
+        {
+            yield return new SpawnerDataDto
+            {
+                Guid = Guid.NewGuid(), Name = name, Map = Map.Trammel,
+                Location = new Point3D(x, y, Map.Trammel.GetAverageZ(x, y)),
+                Count = 1, HomeRange = 6, WalkingRange = 6,
+                MinDelay = TimeSpan.FromMinutes(delay), MaxDelay = TimeSpan.FromMinutes(delay * 2),
+                Entries = new List<SpawnerEntry> { new(name, 100, 1) }
+            };
+        }
     }
 
     private static SpawnerDto TrainingSpawn(string name, Point3D location, int count, int range, params string[] types)

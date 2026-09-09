@@ -5,7 +5,7 @@ using Server.Mobiles;
 
 namespace Server.UOOffline;
 
-public enum HavenExpeditionKind { Grind, Ore, Wood, Leather, Reagents, TamePackHorse, TameHorse, TameOstard, TameBeetle, TameDragon, TameWhiteWyrm }
+public enum HavenExpeditionKind { Grind, Ore, Wood, Leather, Reagents, TamePackHorse, TameHorse, TameOstard, TameBeetle, TameDragon, TameWhiteWyrm, TameEmberwing, TameMoonfang, TameStormscale }
 
 [SerializationGenerator(0)]
 public partial class HavenCompanionExpedition : Item
@@ -56,7 +56,7 @@ public partial class HavenCompanionExpedition : Item
         if (owner.NetState != null && Return(owner, Core.Now)) { return; }
         _timer = Timer.DelayCall(TimeSpan.FromSeconds(30), CheckReturn);
     }
-    internal bool Return(Mobile owner, DateTime now)
+    internal bool Return(Mobile owner, DateTime now, double? tamingRoll = null)
     {
         if (Deleted || Claimed || Companion?.Deleted != false || owner?.Deleted != false || Companion.BoundOwner != owner ||
             owner.Map == null || owner.Map == Map.Internal) { return false; }
@@ -69,7 +69,7 @@ public partial class HavenCompanionExpedition : Item
         companion.ControlTarget = owner; companion.ControlOrder = OrderType.Follow;
         if (minutes > 0)
         {
-            var loot = CreateLoot(Kind, minutes, owner);
+            var loot = CreateLoot(Kind, minutes, owner, tamingRoll);
             if (companion.Backpack.TryDropItem(companion, loot, false)) { owner.SendMessage("Expedition loot is in your companion's pack."); }
             else if (owner.Backpack?.TryDropItem(owner, loot, false) == true) { owner.SendMessage("The shared pack is full; expedition loot is in your backpack."); }
             else { loot.MoveToWorld(owner.Location, owner.Map); owner.SendMessage("Both packs are full; expedition supplies are at your feet."); }
@@ -79,13 +79,18 @@ public partial class HavenCompanionExpedition : Item
         Delete();
         return true;
     }
-    internal static Bag CreateLoot(HavenExpeditionKind kind, int minutes, Mobile owner = null)
+    internal static Bag CreateLoot(HavenExpeditionKind kind, int minutes, Mobile owner = null, double? tamingRoll = null)
     {
         var bag = new Bag { Name = $"{kind} expedition supplies" };
         if (HavenTamingMissions.IsTaming(kind))
         {
-            if (minutes >= 5) { bag.DropItem(new HavenExpeditionPetClaim { Owner = owner, Kind = kind }); }
-            else { owner?.SendMessage("Taming missions need the full five minutes to return a pet."); }
+            if (minutes < 5) { owner?.SendMessage("Taming missions need the full five minutes to return a pet."); }
+            else
+            {
+                var rarity = HavenTamingMissions.RollRarity(tamingRoll ?? Utility.RandomDouble());
+                bag.DropItem(new HavenExpeditionPetClaim { Owner = owner, Kind = kind, Rarity = rarity });
+                owner?.SendMessage($"Your companion found a {HavenPetRarity.RarityName(rarity)} {HavenTamingMissions.PetName(kind)}! Move the claim to your backpack to redeem it.");
+            }
             return bag;
         }
         switch (kind)

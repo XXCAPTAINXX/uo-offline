@@ -6,7 +6,8 @@ namespace Server.UOOffline;
 
 public static class HavenTamingMissions
 {
-    public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameWhiteWyrm;
+    public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameStormscale;
+    internal static int RollRarity(double roll) => roll < 0.70 ? 0 : roll < 0.92 ? 1 : roll < 0.99 ? 2 : 3;
     public static string PetName(HavenExpeditionKind kind) => kind switch
     {
         HavenExpeditionKind.TamePackHorse => "Pack horse",
@@ -15,6 +16,9 @@ public static class HavenTamingMissions
         HavenExpeditionKind.TameBeetle => "Giant beetle",
         HavenExpeditionKind.TameDragon => "Dragon",
         HavenExpeditionKind.TameWhiteWyrm => "White wyrm",
+        HavenExpeditionKind.TameEmberwing => "Emberwing ostard",
+        HavenExpeditionKind.TameMoonfang => "Moonfang wolf",
+        HavenExpeditionKind.TameStormscale => "Stormscale drake",
         _ => "Unknown pet"
     };
     public static double Requirement(HavenExpeditionKind kind) => kind switch
@@ -23,6 +27,9 @@ public static class HavenTamingMissions
         HavenExpeditionKind.TameHorse or HavenExpeditionKind.TameOstard or HavenExpeditionKind.TameBeetle => 29.1,
         HavenExpeditionKind.TameDragon => 93.9,
         HavenExpeditionKind.TameWhiteWyrm => 96.3,
+        HavenExpeditionKind.TameEmberwing => 65,
+        HavenExpeditionKind.TameMoonfang => 95,
+        HavenExpeditionKind.TameStormscale => 110,
         _ => double.MaxValue
     };
     internal static bool CanStart(HavenCompanion companion, HavenExpeditionKind kind) =>
@@ -35,18 +42,23 @@ public static class HavenTamingMissions
         HavenExpeditionKind.TameBeetle => new Beetle(),
         HavenExpeditionKind.TameDragon => new Dragon(),
         HavenExpeditionKind.TameWhiteWyrm => new WhiteWyrm(),
+        HavenExpeditionKind.TameEmberwing => new HavenEmberwing(),
+        HavenExpeditionKind.TameMoonfang => new HavenMoonfang(),
+        HavenExpeditionKind.TameStormscale => new HavenStormscale(),
         _ => null
     };
 }
 
-[SerializationGenerator(0)]
+[SerializationGenerator(1)]
 public partial class HavenExpeditionPetClaim : Item
 {
     [SerializableField(0)] private Mobile _owner;
     [SerializableField(1)] private HavenExpeditionKind _kind;
+    [SerializableField(2)] private int _rarity;
+    private void MigrateFrom(V0Content content) { _owner = content.Owner; _kind = content.Kind; }
     [Constructible]
     public HavenExpeditionPetClaim() : base(0x14F0) { Weight = 1; LootType = LootType.Blessed; Hue = 0x59B; }
-    public override string DefaultName => $"Companion pet claim: {HavenTamingMissions.PetName(Kind)}";
+    public override string DefaultName => $"{HavenPetRarity.RarityName(Rarity)} pet claim: {HavenTamingMissions.PetName(Kind)}";
     public override void OnDoubleClick(Mobile from) => Claim(from);
     internal bool Claim(Mobile from)
     {
@@ -61,6 +73,7 @@ public partial class HavenExpeditionPetClaim : Item
         }
         AnimalTaming.ScaleSkills(pet, pet is GreaterDragon ? 0.72 : 0.90);
         if (pet.StatLossAfterTame) { AnimalTaming.ScaleStats(pet, 0.50); }
+        HavenPetRarity.Apply(pet, Rarity);
         pet.Owners.Add(from);
         pet.Loyalty = BaseCreature.MaxLoyalty;
         pet.ControlTarget = from;
