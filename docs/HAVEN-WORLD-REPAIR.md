@@ -2,7 +2,7 @@
 
 ## New Haven recovery
 
-`[bank` is now available to players and teleports living characters and ghosts
+`[bank` (also `[ohshit`) is now available to players and teleports living characters and ghosts
 to New Haven bank. The former GM bank-inspection command is `[BankBox`.
 An invulnerable resurrection healer and corpse summoner remain beside the bank.
 Double-click the healer for free resurrection, or the summoner to confirm free
