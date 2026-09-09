@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ModernUO.Serialization;
 using Server.Engines.Spawners;
+using Server.Gumps;
 using Server.Items;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
@@ -166,7 +167,8 @@ public partial class StarterSupplyStone : Item
             return;
         }
 
-        from.SendMenu(new StarterSupplyMenu());
+        from.CloseGump<HavenListGump>();
+        from.SendGump(new HavenListGump(this, new StarterSupplyMenu()));
     }
 
     private sealed class StarterSupplyMenu : ItemListMenu
@@ -276,7 +278,18 @@ public partial class HavenUpgradeStone : Item
 
     public override void OnDoubleClick(Mobile from)
     {
-        if (!from.InRange(GetWorldLocation(), 3))
+        if (from.Map != Map || !from.InRange(GetWorldLocation(), 3))
+        {
+            from.SendMessage("You are too far away to use the upgrade stone.");
+            return;
+        }
+        from.CloseGump<HavenUpgradeGump>();
+        from.SendGump(new HavenUpgradeGump(this, from));
+    }
+
+    internal void ApplyUpgrade(Mobile from, int expectedTier)
+    {
+        if (Deleted || from.Map != Map || !from.InRange(GetWorldLocation(), 3))
         {
             from.SendMessage("You are too far away to use the upgrade stone.");
             return;
@@ -300,6 +313,13 @@ public partial class HavenUpgradeStone : Item
         if (robe.UpgradeTier >= robe.MaxUpgradeTier)
         {
             from.SendMessage("That starter robe is already fully upgraded.");
+            return;
+        }
+
+        if (robe.UpgradeTier != expectedTier)
+        {
+            from.SendMessage("The upgrade price has changed. Review the updated cost first.");
+            OnDoubleClick(from);
             return;
         }
 
@@ -342,7 +362,8 @@ public partial class SpecialRewardStone : Item
             return;
         }
 
-        from.SendMenu(new RewardMenu());
+        from.CloseGump<HavenListGump>();
+        from.SendGump(new HavenListGump(this, new RewardMenu()));
     }
 
     private sealed class RewardMenu : ItemListMenu
@@ -511,7 +532,7 @@ public static class HavenContentBootstrap
     public static void Initialize() =>
         Timer.DelayCall(TimeSpan.FromSeconds(15), EnsureContent);
 
-    private static void EnsureContent()
+    public static void EnsureContent()
     {
         RemoveBrokenNewHavenDungeonPortal();
 
@@ -532,6 +553,55 @@ public static class HavenContentBootstrap
         EnsureItem<FreePetHitchingPost>(Map.Felucca, BritainHitchingPost);
         EnsureItem<UOOfflineDungeonPortal>(Map.Felucca, BritainDungeonPortal);
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
+    }
+
+    public static void EnsureBankServices(Map map, Point3D bank)
+    {
+        EnsureBankItem<StarterSupplyStone>(map, bank, -4, 3);
+        EnsureBankItem<HavenUpgradeStone>(map, bank, -2, 3);
+        EnsureBankItem<SpecialRewardStone>(map, bank, 0, 3);
+        EnsureBankItem<FreePetHitchingPost>(map, bank, 2, 3);
+        EnsureBankItem<UOOfflineDungeonPortal>(map, bank, 4, 3);
+    }
+
+    private static void EnsureBankItem<T>(Map map, Point3D bank, int dx, int dy) where T : Item, new()
+    {
+        foreach (var existing in map.GetItemsInRange<T>(bank, 18))
+        {
+            if (!existing.Deleted)
+            {
+                return;
+            }
+        }
+        var preferred = new Point3D(bank.X + dx, bank.Y + dy, bank.Z);
+        for (var radius = 0; radius <= 8; radius++)
+        {
+            for (var x = -radius; x <= radius; x++)
+            {
+                for (var y = -radius; y <= radius; y++)
+                {
+                    if (Math.Max(Math.Abs(x), Math.Abs(y)) != radius)
+                    {
+                        continue;
+                    }
+                    var px = preferred.X + x;
+                    var py = preferred.Y + y;
+                    var z = preferred.Z;
+                    if (!map.CanSpawnMobile(px, py, z))
+                    {
+                        z = map.GetAverageZ(px, py);
+                        if (!map.CanSpawnMobile(px, py, z))
+                        {
+                            continue;
+                        }
+                    }
+                    var item = new T { Movable = false };
+                    item.MoveToWorld(new Point3D(px, py, z), map);
+                    return;
+                }
+            }
+        }
+        throw new InvalidOperationException($"No walkable location for {typeof(T).Name} near {map} bank {bank}.");
     }
 
     private static void RemoveBrokenNewHavenDungeonPortal()

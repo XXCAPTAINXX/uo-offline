@@ -323,46 +323,8 @@ namespace Server.CustomBots
         // New Haven / Peerless / ML world this shard now targets.
         public static void GenerateWorldSpawners(Mobile from)
         {
-            var folder = Core.SA ? "post-uoml" : "uoml";
-            var availableMaps = ExpansionInfo.CoreExpansion.MapSelectionFlags;
-
-            if (Core.SA && availableMaps.Includes(MapSelectionFlags.TerMur))
-            {
-                RunCommand(from, "GenerateSpawners Data/Spawns/post-uoml/termur/**.json");
-                RunCommand(from, "GenerateSpawners Data/Spawns/shared/termur/**.json");
-            }
-
-            if (availableMaps.Includes(MapSelectionFlags.Malas))
-            {
-                RunCommand(from, $"GenerateSpawners Data/Spawns/{folder}/malas/**.json");
-                RunCommand(from, "GenerateSpawners Data/Spawns/shared/malas/**.json");
-            }
-
-            if (availableMaps.Includes(MapSelectionFlags.Tokuno))
-            {
-                RunCommand(from, $"GenerateSpawners Data/Spawns/{folder}/tokuno/**.json");
-                RunCommand(from, "GenerateSpawners Data/Spawns/shared/tokuno/**.json");
-            }
-
-            if (availableMaps.Includes(MapSelectionFlags.Ilshenar))
-            {
-                RunCommand(from, $"GenerateSpawners Data/Spawns/{folder}/ilshenar/**.json");
-                RunCommand(from, "GenerateSpawners Data/Spawns/shared/ilshenar/**.json");
-            }
-
-            if (availableMaps.Includes(MapSelectionFlags.Trammel))
-            {
-                RunCommand(from, $"GenerateSpawners Data/Spawns/{folder}/trammel/**.json");
-                RunCommand(from, "GenerateSpawners Data/Spawns/shared/trammel/**.json");
-            }
-
-            if (availableMaps.Includes(MapSelectionFlags.Felucca))
-            {
-                RunCommand(from, $"GenerateSpawners Data/Spawns/{folder}/felucca/**.json");
-                RunCommand(from, "GenerateSpawners Data/Spawns/shared/felucca/**.json");
-            }
-
-            BotPanelState.Log(from, "Generated expansion-aware ModernUO world spawners.");
+            Server.UOOffline.HavenWorldPopulation.Start(from);
+            BotPanelState.Log(from, "World population queued; use Refresh progress to check completion.");
         }
 
         // ---- Run-a-command helper ----

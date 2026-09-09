@@ -1,5 +1,6 @@
 using System;
 using ModernUO.Serialization;
+using Server.Gumps;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
 using Server.Network;
@@ -32,7 +33,8 @@ public partial class UOOfflineDungeonPortal : Item
             return;
         }
 
-        from.SendMenu(new DungeonMenu(this));
+        from.CloseGump<HavenListGump>();
+        from.SendGump(new HavenListGump(this, new DungeonMenu(this), reopen: false));
     }
 
     private sealed class DungeonDestination
