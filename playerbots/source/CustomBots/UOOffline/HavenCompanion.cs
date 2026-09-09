@@ -465,5 +465,5 @@ public partial class HavenCompanionPack : Backpack
     public override int DefaultMaxWeight => 50000;
     public override bool CheckContentDisplay(Mobile from) =>
         Parent is HavenCompanion companion && companion.BoundOwner == from && from.Map == companion.Map && from.InRange(companion, 3);
-    public override void OnSnoop(Mobile from) { }
+    public override void OnSnoop(Mobile from) => HavenCompanionInventory.Open(this, from);
 }
