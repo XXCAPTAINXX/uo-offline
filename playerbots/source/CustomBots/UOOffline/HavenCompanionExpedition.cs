@@ -86,11 +86,22 @@ public partial class HavenCompanionExpedition : Item
         companion.ControlTarget = owner; companion.ControlOrder = OrderType.Follow;
         if (minutes > 0)
         {
-            var loot = CreateLoot(Kind, minutes, owner, tamingRoll);
-            if (idleTrip) { companion.Backpack.DropItem(loot); owner.SendMessage("Idle expedition rewards are in your companion's pack."); }
-            else if (companion.Backpack.TryDropItem(companion, loot, false)) { owner.SendMessage("Expedition loot is in your companion's pack."); }
-            else if (owner.Backpack?.TryDropItem(owner, loot, false) == true) { owner.SendMessage("The shared pack is full; expedition loot is in your backpack."); }
-            else { loot.MoveToWorld(owner.Location, owner.Map); owner.SendMessage("Both packs are full; expedition supplies are at your feet."); }
+            var loot = CreateLoot(Kind, minutes, owner, tamingRoll, companion);
+            var overflow = false; var ground = false;
+            foreach (var item in loot.Items.ToArray())
+            {
+                if (idleTrip) { companion.Backpack.DropItem(item); }
+                else if (!companion.Backpack.TryDropItem(companion, item, false))
+                {
+                    overflow = true;
+                    if (owner.Backpack?.TryDropItem(owner, item, false) != true)
+                    { item.MoveToWorld(owner.Location, owner.Map); ground = true; }
+                }
+            }
+            loot.Delete();
+            owner.SendMessage(ground ? "Some mission rewards are at your feet because both packs are full." :
+                overflow ? "Mission rewards are in the shared pack, with overflow in your backpack." :
+                "Mission rewards are directly in your companion's pack.");
             owner.SendMessage($"Your companion returned with {Kind} rewards, skill training, +{minutes} Str/Dex/Int and {minutes * 10} gear experience.");
         }
         else { owner.SendMessage("Your companion returned. Expeditions earn rewards for each full minute away."); }
@@ -99,7 +110,7 @@ public partial class HavenCompanionExpedition : Item
         if (!stillIdle && owner.NetState != null) { HavenCompanionGump.DisplayTo(owner, companion); }
         return true;
     }
-    internal static Bag CreateLoot(HavenExpeditionKind kind, int minutes, Mobile owner = null, double? tamingRoll = null)
+    internal static Bag CreateLoot(HavenExpeditionKind kind, int minutes, Mobile owner = null, double? tamingRoll = null, HavenCompanion companion = null)
     {
         var bag = new Bag { Name = $"{kind} expedition supplies" };
         if (HavenTamingMissions.IsTaming(kind))
@@ -117,9 +128,10 @@ public partial class HavenCompanionExpedition : Item
         }
         switch (kind)
         {
-            case HavenExpeditionKind.Ore: bag.DropItem(Deed(new IronIngot(minutes * 20))); break;
-            case HavenExpeditionKind.Wood: bag.DropItem(Deed(new Log(minutes * 40))); break;
-            case HavenExpeditionKind.Leather: bag.DropItem(Deed(new Leather(minutes * 20))); break;
+            case HavenExpeditionKind.Ore:
+            case HavenExpeditionKind.Wood:
+            case HavenExpeditionKind.Leather:
+                HavenMissionResources.Add(bag, kind, minutes, HavenMissionResources.Skill(companion, kind)); break;
             case HavenExpeditionKind.Reagents:
                 var reagents = new BagOfReagents(minutes * 10);
                 foreach (var item in reagents.Items.ToArray()) { bag.DropItem(Deed(item)); }
