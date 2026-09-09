@@ -2235,9 +2235,10 @@ public class HavenWorldTests
         }
         finally { companion.Delete(); owner.Delete(); other.Delete(); }
     }
-    [Fact]
+    [SkippableFact]
     public void OrdinaryGearEvolvesOnlyForCompanionsAndCasterUsesBook()
     {
+        TileDataRequirement.SkipIfMissing();
         var player = new PlayerMobile();
         var companion = new HavenCompanion { BoundOwner = player };
         var armor = new LeatherChest();
