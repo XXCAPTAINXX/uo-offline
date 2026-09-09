@@ -7,6 +7,8 @@ using Server.CustomBots;
 using Server.Engines.Spawners;
 using Server.Gumps;
 using Server.Json;
+using Server.Items;
+using Server.Multis.Deeds;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
 using Server.Tests;
@@ -29,6 +31,76 @@ public class HavenWorldTests
         }
     }
     private static string SpawnRoot => Environment.GetEnvironmentVariable("HAVEN_WORLD_DATA") ?? Core.BaseDirectory;
+
+    [Theory]
+    [InlineData(AccessLevel.Player, SkillName.Swords, typeof(ApprenticeBlade))]
+    [InlineData(AccessLevel.Owner, SkillName.Archery, typeof(ApprenticeBow))]
+    [InlineData(AccessLevel.Player, SkillName.Fencing, typeof(ApprenticeFencer))]
+    [InlineData(AccessLevel.Player, SkillName.Macing, typeof(ApprenticeMace))]
+    public void StarterKitIncludesBoundEquipmentAndSupplies(AccessLevel access, SkillName skill, Type weaponType)
+    {
+        var player = new PlayerMobile { Player = true, AccessLevel = access };
+        player.AddItem(new Backpack());
+        try
+        {
+            player.Skills[skill].Base = 50;
+            StarterProvisioner.Provision(player);
+            var pack = player.Backpack;
+            var robe = Assert.Single(pack.Items.OfType<NewHavenAdventurersRobe>());
+            var book = Assert.Single(pack.Items.OfType<ApprenticeGrimoire>());
+            Assert.Same(player, robe.BoundTo);
+            Assert.Same(player, book.BoundTo);
+            Assert.Equal(ulong.MaxValue, book.Content);
+            Assert.Equal(LootType.Blessed, robe.LootType);
+            Assert.Equal(weaponType, Assert.Single(pack.Items.OfType<BaseWeapon>()).GetType());
+            Assert.Single(pack.Items.OfType<AdventurersWallet>());
+            Assert.Single(pack.Items.OfType<CleanupTrashBag>());
+            Assert.Single(pack.Items.OfType<SmallBrickHouseDeed>());
+            Assert.Equal(50, Assert.Single(pack.Items.OfType<Bandage>()).Amount);
+            if (skill == SkillName.Archery)
+            {
+                Assert.Equal(100, Assert.Single(pack.Items.OfType<Arrow>()).Amount);
+            }
+            StarterProvisioner.Provision(player);
+            Assert.Single(pack.Items.OfType<SmallBrickHouseDeed>());
+            for (var i = 0; i < 4; i++)
+            {
+                Assert.True(robe.TryUpgrade(player));
+            }
+            Assert.False(robe.TryUpgrade(player));
+            Assert.Equal(150, robe.Attributes.Luck);
+        }
+        finally { player.Delete(); }
+    }
+
+    [Fact]
+    public void BackpackGrimoireLevelsOnlyOneOwnedBook()
+    {
+        var player = new PlayerMobile { Player = true };
+        var other = new PlayerMobile { Player = true };
+        player.AddItem(new Backpack());
+        try
+        {
+            var foreign = new ApprenticeGrimoire();
+            foreign.BindTo(other);
+            player.Backpack.DropItem(foreign);
+            var book = new ApprenticeGrimoire();
+            book.BindTo(player);
+            player.Backpack.DropItem(book);
+            var spare = new ApprenticeGrimoire();
+            spare.BindTo(player);
+            player.Backpack.DropItem(spare);
+            for (var i = 0; i < 30; i++)
+            {
+                StarterProgression.OnSuccessfulSpellCast(player);
+            }
+            Assert.Equal(1, foreign.Level);
+            Assert.Equal(0, foreign.Experience);
+            Assert.Equal(3, book.Level + spare.Level);
+            Assert.Equal(0, book.Experience + spare.Experience);
+        }
+        finally { player.Delete(); other.Delete(); }
+    }
 
     [Fact]
     public void MlPopulationUsesNewHavenAndEveryEnabledFacet()
@@ -225,3 +297,4 @@ public class HavenWorldTests
         }
     }
 }
+

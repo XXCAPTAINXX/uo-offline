@@ -456,10 +456,24 @@ public static class HavenEconomy
 
 public static class StarterProvisioner
 {
+    public static void Configure() =>
+        CommandSystem.Register("StarterKit", AccessLevel.GameMaster, e => Provision(e.Mobile));
+
     public static void Provision(Mobile mobile)
     {
-        if (mobile?.Backpack == null || mobile.AccessLevel != AccessLevel.Player)
+        if (mobile?.Backpack == null || !mobile.Player)
         {
+            return;
+        }
+
+        // Recovery for staff characters skipped by older releases. Never replace
+        // existing progression items or repeatedly hand out starter house deeds.
+        if (mobile.Backpack.FindItemByType<NewHavenAdventurersRobe>() != null ||
+            mobile.FindItemOnLayer(Layer.OuterTorso) is NewHavenAdventurersRobe ||
+            mobile.Backpack.FindItemByType<ApprenticeGrimoire>() != null ||
+            mobile.FindItemOnLayer(Layer.OneHanded) is ApprenticeGrimoire)
+        {
+            mobile.SendMessage("You already have starter progression equipment. Use a supply stone for replacements.");
             return;
         }
 
@@ -484,6 +498,11 @@ public static class StarterProvisioner
         mobile.Backpack.DropItem(new CleanupTrashBag());
         mobile.Backpack.DropItem(house);
         mobile.Backpack.DropItem(new Bandage(50));
+        if (weapon is ApprenticeBow)
+        {
+            mobile.Backpack.DropItem(new Arrow(100));
+        }
+        mobile.SendMessage("Your Haven starter equipment is in your backpack.");
     }
 
     private static Item SelectStarterWeapon(Mobile mobile)

@@ -247,9 +247,25 @@ public static class StarterProgression
 {
     public static void OnSuccessfulSpellCast(Mobile caster)
     {
-        if (caster?.FindItemOnLayer(Layer.OneHanded) is ApprenticeGrimoire grimoire)
+        if (caster == null)
+        {
+            return;
+        }
+        if (caster.FindItemOnLayer(Layer.OneHanded) is ApprenticeGrimoire grimoire && grimoire.BoundTo == caster)
         {
             grimoire.GainCastExperience(caster);
+            return;
+        }
+        if (caster.Backpack != null)
+        {
+            foreach (var book in caster.Backpack.FindItemsByType<ApprenticeGrimoire>())
+            {
+                if (book.BoundTo == caster)
+                {
+                    book.GainCastExperience(caster);
+                    return;
+                }
+            }
         }
     }
 }

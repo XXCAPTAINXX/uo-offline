@@ -2,6 +2,25 @@
 
 This is the implementation checklist for the September 8, 2026 starter/QOL redesign.
 
+## Starter-kit verification (September 8 follow-up)
+
+The current kit contains a character-bound blessed robe, a full evolving Magery
+grimoire, a bound weapon selected from combat skills, a wallet, cleanup bag,
+small brick house deed, and 50 bandages. Archer kits also include 100 arrows.
+Owner/GM characters now receive the kit at creation. Existing staff characters
+who were skipped can use `[StarterKit`; the command refuses when starter robes
+or grimoires are already equipped or in the backpack. It is not a general item
+recovery system and does not replace progressed equipment.
+
+Successful spell checks advance one owned grimoire, including books in the
+backpack. Foreign-owned books gain no experience. Tests cover kit contents,
+combat-skill weapon selection, repeated provisioning, robe upgrade limits,
+and backpack spellbook progression.
+
+The checklist below also contains broader design work: milestone choices,
+specialization paths, permanent lost-item recovery and comprehensive anti-farming
+protections are not completed by this starter-kit fix.
+
 ## Completed
 
 - [x] Five veteran years of starting credit (`patches/0008-veteran-rewards-five-year-headstart.patch`)
