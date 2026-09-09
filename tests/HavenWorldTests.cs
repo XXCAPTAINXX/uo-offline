@@ -34,6 +34,223 @@ public class HavenWorldTests
     }
     private static string SpawnRoot => Environment.GetEnvironmentVariable("HAVEN_WORLD_DATA") ?? Core.BaseDirectory;
 
+    [Fact]
+    public void WalletWithdrawalsPreserveGoldAndRejectFullOrForeignPacks()
+    {
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        player.AddItem(new Backpack());
+        other.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { Balance = 5000 };
+        player.Backpack.DropItem(wallet);
+        try
+        {
+            Assert.False(wallet.Withdraw(other, 100));
+            Assert.False(wallet.Withdraw(player, -1));
+            Assert.False(wallet.Withdraw(player, 5001));
+            player.Backpack.MaxItems = 1;
+            Assert.False(wallet.Withdraw(player, 100));
+            Assert.Equal(5000, wallet.Balance);
+            player.Backpack.MaxItems = 125;
+            Assert.True(wallet.Withdraw(player, 1000));
+            Assert.Equal(4000, wallet.Balance);
+            Assert.Equal(1000, player.Backpack.GetAmount(typeof(Gold)));
+            wallet.DepositBackpackGold(player);
+            Assert.Equal(5000, wallet.Balance);
+            Assert.Equal(0, player.Backpack.GetAmount(typeof(Gold)));
+        }
+        finally { player.Delete(); other.Delete(); }
+    }
+
+    [SkippableFact]
+    public void RepairBenchRestoresOwnedDurabilityWithoutChangingProperties()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        player.AddItem(new Backpack());
+        var bench = new HavenRepairBench();
+        var sword = new Longsword { MaxHitPoints = 50, HitPoints = 5 };
+        sword.Attributes.WeaponDamage = 30;
+        player.Backpack.DropItem(sword);
+        try
+        {
+            foreach (var mobile in new Mobile[] { player, other }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            bench.MoveToWorld(player.Location, player.Map);
+            Assert.False(bench.Repair(other, sword));
+            Assert.True(bench.Repair(player, sword));
+            Assert.Equal(50, sword.HitPoints);
+            Assert.Equal(50, sword.MaxHitPoints);
+            Assert.Equal(30, sword.Attributes.WeaponDamage);
+            Assert.False(bench.Repair(player, sword));
+            sword.HitPoints = 10;
+            player.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
+            Assert.False(bench.Repair(player, sword));
+            Assert.Equal(10, sword.HitPoints);
+        }
+        finally { bench.Delete(); player.Delete(); other.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionRecallPreservesIdentityInventoryAndOwnership()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var account = CreateTestAccount();
+        var player = new PlayerMobile { Player = true, Body = 0x190, Account = account };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        HavenCompanion companion = null;
+        try
+        {
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            other.MoveToWorld(player.Location, player.Map);
+            companion = HavenCompanions.ClaimOrRecall(player);
+            Assert.NotNull(companion);
+            Assert.Same(player, companion.ControlMaster);
+            Assert.True(companion.IsBonded);
+            Assert.IsType<HavenCompanionPack>(companion.Backpack);
+            Assert.Equal(1000, companion.Backpack.MaxItems);
+            Assert.Equal(50000, companion.Backpack.MaxWeight);
+            var gold = new Gold(777);
+            companion.Backpack.DropItem(gold);
+            Assert.Same(companion, HavenCompanions.ClaimOrRecall(player));
+            Assert.Equal(777, companion.Backpack.GetAmount(typeof(Gold)));
+            Assert.True(companion.CheckNonlocalLift(player, gold));
+            Assert.False(companion.CheckNonlocalLift(other, gold));
+            Assert.False(companion.Backpack.CheckContentDisplay(other));
+            Assert.False(companion.CanBeControlledBy(other));
+            companion.JoinParty(player);
+            Assert.True(Server.Engines.PartySystem.Party.Get(player).Contains(companion));
+            companion.IsStabled = true;
+            companion.Internalize();
+            Assert.Null(HavenCompanions.ClaimOrRecall(player));
+            Assert.Equal(777, companion.Backpack.GetAmount(typeof(Gold)));
+        }
+        finally { companion?.Delete(); player.Delete(); other.Delete(); account.Delete(); }
+    }
+
+    [Fact]
+    public void CompanionOfflineTrainingIsCountedOnceAndGrowsBeyondNativeSkills()
+    {
+        var companion = new HavenCompanion();
+        try
+        {
+            var start = companion.LastTraining;
+            companion.UpdateTraining(start.AddDays(1));
+            Assert.Equal(1440, companion.TrainingMinutes, 5);
+            var mastery = companion.Mastery;
+            companion.UpdateTraining(start.AddDays(1));
+            companion.UpdateTraining(start);
+            Assert.Equal(1440, companion.TrainingMinutes, 5);
+            Assert.Equal(mastery, companion.Mastery);
+            var damage = companion.DamageMax;
+            companion.TrainingMinutes = 1000000000;
+            companion.UpdateTraining(start.AddDays(2));
+            Assert.True(companion.Mastery > 6553.5);
+            Assert.Equal(6553.5, companion.Skills.Swords.Base);
+            Assert.True(companion.DamageMax > damage);
+        }
+        finally { companion.Delete(); }
+    }
+
+    [Fact]
+    public void CompanionTrainingRoleAndOwnerSurviveSerialization()
+    {
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var companion = new HavenCompanion { BoundOwner = player, Role = HavenCompanionRole.Bard, TrainingMinutes = 1440 };
+        HavenCompanion copy = null;
+        try
+        {
+            var writer = new BufferWriter(true);
+            companion.Serialize(writer);
+            var data = writer.Buffer.AsSpan(0, (int)writer.Position).ToArray();
+            copy = new HavenCompanion(World.NewMobile);
+            var reader = new BufferReader(data);
+            copy.Deserialize(reader);
+            Assert.Equal(data.Length, reader.Position);
+            Assert.Same(player, copy.BoundOwner);
+            Assert.Equal(HavenCompanionRole.Bard, copy.Role);
+            Assert.Equal(companion.TrainingMinutes, copy.TrainingMinutes);
+            Assert.Equal(companion.LastTraining, copy.LastTraining);
+        }
+        finally { copy?.Delete(); companion.Delete(); player.Delete(); }
+    }
+
+    [SkippableFact]
+    public void PetResurrectionWorksAtStableAndBankButChecksOwnerAndDistance()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        var trainer = new AnimalTrainer();
+        var vet = new HavenPetHealer();
+        var pet = new Horse { IsBonded = true, IsDeadPet = true };
+        try
+        {
+            Assert.True(HavenRecovery.FindLocation(HavenRecovery.BankLocation, out var location));
+            foreach (var mobile in new Mobile[] { player, other, trainer, vet, pet }) { mobile.MoveToWorld(location, Map.Trammel); }
+            pet.SetControlMaster(player);
+            Assert.True(pet.Controlled);
+            Assert.True(pet.Map.CanFit(pet.Location, 16, false, false));
+            pet.Skills.Wrestling.Base = 80;
+            Assert.False(HavenPetRecovery.Resurrect(other, trainer, pet));
+            Assert.True(HavenPetRecovery.Resurrect(player, trainer, pet));
+            Assert.False(pet.IsDeadPet);
+            Assert.Equal(80, pet.Skills.Wrestling.Base);
+            Assert.False(HavenPetRecovery.Resurrect(player, trainer, pet));
+            pet.IsDeadPet = true;
+            pet.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
+            Assert.False(HavenPetRecovery.Resurrect(player, vet, pet));
+            pet.MoveToWorld(player.Location, player.Map);
+            Assert.True(HavenPetRecovery.Resurrect(player, vet, pet));
+        }
+        finally { pet.Delete(); vet.Delete(); trainer.Delete(); player.Delete(); other.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionHealingChecksRangeAndOwner()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var other = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var companion = new HavenCompanion { BoundOwner = player, Role = HavenCompanionRole.Healer };
+        try
+        {
+            foreach (var mobile in new Mobile[] { player, other, companion }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            player.Hits = other.Hits = 10;
+            Assert.False(companion.Support(other));
+            Assert.True(companion.Support(player));
+            Assert.True(player.Hits > 10);
+            Assert.False(companion.Support(player));
+            Assert.Equal(10, other.Hits);
+        }
+        finally { companion.Delete(); player.Delete(); other.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionOffersResurrectionWithoutForcingItAndBardSongsDoNotStack()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x192, Str = 100, Dex = 80, Int = 60 };
+        var companion = new HavenCompanion { BoundOwner = player, Role = HavenCompanionRole.Bard };
+        try
+        {
+            Assert.True(HavenRecovery.FindLocation(HavenRecovery.BankLocation, out var location));
+            player.MoveToWorld(location, Map.Trammel);
+            companion.MoveToWorld(location, Map.Trammel);
+            Assert.True(companion.Support(player));
+            Assert.False(player.Alive);
+            Assert.False(companion.Support(player));
+            player.Body = 0x190;
+            companion.BardSupport(player);
+            Assert.Equal(105, player.Str);
+            Assert.Equal(85, player.Dex);
+            Assert.Equal(65, player.Int);
+            companion.BardSupport(player);
+            Assert.Equal(105, player.Str);
+        }
+        finally { companion.Delete(); player.Delete(); }
+    }
+
     [SkippableTheory]
     [InlineData(0x190)]
     [InlineData(0x192)]
@@ -48,6 +265,10 @@ public class HavenWorldTests
             HavenRecovery.GoToBank(player);
             Assert.Same(Map.Trammel, player.Map);
             Assert.True(player.InRange(HavenRecovery.BankLocation, 5));
+            var healers = new List<HavenBankHealer>();
+            foreach (var npc in Map.Trammel.GetMobilesInRange<HavenBankHealer>(player.Location, 2)) { healers.Add(npc); }
+            var healer = Assert.Single(healers);
+            Assert.Equal("Elias Thorne", healer.Name);
             Assert.Equal(alive, player.Alive);
         }
         finally { player.Delete(); }
@@ -64,12 +285,39 @@ public class HavenWorldTests
             HavenRecovery.EnsureServices();
             foreach (var npc in Map.Trammel.GetMobilesInRange<BaseCreature>(HavenRecovery.BankLocation, 15))
             {
-                if (npc is HavenBankHealer or HavenCorpseSummoner) { npcs.Add(npc); }
+                if (npc is HavenBankHealer or HavenCorpseSummoner or HavenPetHealer) { npcs.Add(npc); }
             }
             Assert.Single(npcs.OfType<HavenBankHealer>());
             Assert.Single(npcs.OfType<HavenCorpseSummoner>());
+            Assert.Single(npcs.OfType<HavenPetHealer>());
         }
         finally { foreach (var npc in npcs) { npc.Delete(); } }
+    }
+
+    [SkippableFact]
+    public void HavenPlazaMovesPortalAwayFromArrivalAndDoesNotDuplicateServices()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var items = new List<Item>();
+        var oldPortal = new UOOfflineDungeonPortal();
+        oldPortal.MoveToWorld(new Point3D(3489, 2582, 20), Map.Trammel);
+        try
+        {
+            HavenContentBootstrap.EnsureHavenPlaza();
+            HavenContentBootstrap.EnsureBankServices(Map.Trammel, new Point3D(3483, 2575, 20));
+            foreach (var item in Map.Trammel.GetItemsInRange<Item>(HavenRecovery.BankLocation, 20))
+            {
+                if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal or HavenRepairBench || item.Name == "Haven welcome garden") { items.Add(item); }
+            }
+            Assert.Same(oldPortal, Assert.Single(items.OfType<UOOfflineDungeonPortal>()));
+            Assert.False(oldPortal.InRange(HavenRecovery.BankLocation, 6));
+            Assert.Single(items.OfType<StarterSupplyStone>());
+            Assert.Single(items.OfType<HavenUpgradeStone>());
+            Assert.Single(items.OfType<SpecialRewardStone>());
+            Assert.Single(items.OfType<FreePetHitchingPost>());
+            Assert.Equal(3, items.Count(i => i.Name == "Haven welcome garden"));
+        }
+        finally { foreach (var item in items) { item.Delete(); } oldPortal.Delete(); }
     }
 
     [SkippableFact]
@@ -401,6 +649,7 @@ public class HavenWorldTests
                     Assert.Contains(before, i => i is SpecialRewardStone);
                     Assert.Contains(before, i => i is FreePetHitchingPost);
                     Assert.Contains(before, i => i is UOOfflineDungeonPortal);
+                    Assert.Contains(before, i => i is HavenRepairBench);
                     HavenContentBootstrap.EnsureBankServices(dto.Map, dto.Location);
                     Assert.Equal(before.Count, Services(dto.Map, dto.Location).Count);
                 }
@@ -419,7 +668,7 @@ public class HavenWorldTests
         var result = new List<Item>();
         foreach (var item in map.GetItemsInRange<Item>(location, 18))
         {
-            if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal)
+            if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal or HavenRepairBench)
             {
                 result.Add(item);
             }

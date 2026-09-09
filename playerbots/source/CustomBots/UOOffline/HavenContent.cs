@@ -544,10 +544,10 @@ public static class StarterProvisioner
 public static class HavenContentBootstrap
 {
     private static readonly Point2D NewHavenSupply = new(3481, 2582);
-    private static readonly Point2D NewHavenUpgrade = new(3483, 2582);
-    private static readonly Point2D NewHavenRewards = new(3485, 2582);
-    private static readonly Point2D NewHavenHitchingPost = new(3487, 2582);
-    private static readonly Point2D NewHavenDungeonPortal = new(3489, 2582);
+    private static readonly Point2D NewHavenUpgrade = new(3484, 2582);
+    private static readonly Point2D NewHavenRewards = new(3487, 2582);
+    private static readonly Point2D NewHavenHitchingPost = new(3499, 2582);
+    private static readonly Point2D NewHavenDungeonPortal = new(3501, 2585);
     private static readonly Point2D OldHavenBoss = new(3670, 2587);
     private static readonly Point2D OldHavenSteed = new(3690, 2525);
 
@@ -567,16 +567,11 @@ public static class HavenContentBootstrap
         RemoveBrokenNewHavenDungeonPortal();
 
         // Intended ML-era hub.
-        EnsureItem<StarterSupplyStone>(Map.Trammel, NewHavenSupply);
-        EnsureItem<HavenUpgradeStone>(Map.Trammel, NewHavenUpgrade);
-        EnsureItem<SpecialRewardStone>(Map.Trammel, NewHavenRewards);
-        EnsureItem<FreePetHitchingPost>(Map.Trammel, NewHavenHitchingPost);
-        EnsureItem<UOOfflineDungeonPortal>(Map.Trammel, NewHavenDungeonPortal);
+        EnsureHavenPlaza();
         EnsureSpawner<OldHavenBossSpawner>(Map.Trammel, OldHavenBoss);
         EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, OldHavenSteed);
 
-        // The current installer is Felucca-only. These fallbacks guarantee
-        // every custom reward remains obtainable on a completely fresh install.
+        // Also retain the established Felucca bank services.
         EnsureItem<StarterSupplyStone>(Map.Felucca, BritainSupply);
         EnsureItem<HavenUpgradeStone>(Map.Felucca, BritainUpgrade);
         EnsureItem<SpecialRewardStone>(Map.Felucca, BritainRewards);
@@ -585,13 +580,60 @@ public static class HavenContentBootstrap
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
     }
 
+    internal static void EnsureHavenPlaza()
+    {
+        ArrangeHavenItem<StarterSupplyStone>(NewHavenSupply);
+        ArrangeHavenItem<HavenUpgradeStone>(NewHavenUpgrade);
+        ArrangeHavenItem<SpecialRewardStone>(NewHavenRewards);
+        ArrangeHavenItem<FreePetHitchingPost>(NewHavenHitchingPost);
+        ArrangeHavenItem<UOOfflineDungeonPortal>(NewHavenDungeonPortal);
+        ArrangeHavenItem<HavenRepairBench>(new Point2D(3484, 2585));
+        EnsureHavenDecoration(new Point3D(3479, 2582, 20), true);
+        EnsureHavenDecoration(new Point3D(3501, 2582, 20), true);
+        EnsureHavenDecoration(new Point3D(3489, 2582, 20), false);
+    }
+
     public static void EnsureBankServices(Map map, Point3D bank)
     {
+        if (map == Map.Trammel && Utility.InRange(bank, new Point3D(3490, 2582, 20), 20))
+        {
+            EnsureHavenPlaza();
+            return;
+        }
         EnsureBankItem<StarterSupplyStone>(map, bank, -4, 3);
         EnsureBankItem<HavenUpgradeStone>(map, bank, -2, 3);
         EnsureBankItem<SpecialRewardStone>(map, bank, 0, 3);
         EnsureBankItem<FreePetHitchingPost>(map, bank, 2, 3);
         EnsureBankItem<UOOfflineDungeonPortal>(map, bank, 4, 3);
+        EnsureBankItem<HavenRepairBench>(map, bank, -2, 5);
+    }
+
+    private static void ArrangeHavenItem<T>(Point2D position) where T : Item, new()
+    {
+        var preferred = new Point3D(position.X, position.Y, 20);
+        var found = new List<T>();
+        foreach (var item in Map.Trammel.GetItemsInRange<T>(new Point3D(3490, 2582, 20), 18))
+        {
+            if (!item.Deleted) { found.Add(item); }
+        }
+        if (found.Count > 0 && found[0].X == position.X && found[0].Y == position.Y) { return; }
+        if (!HavenRecovery.FindLocation(preferred, out var location, 1)) { return; }
+        var service = found.Count == 0 ? new T() : found[0];
+        service.Movable = false;
+        service.MoveToWorld(location, Map.Trammel);
+    }
+
+    private static void EnsureHavenDecoration(Point3D preferred, bool lamp)
+    {
+        foreach (var item in Map.Trammel.GetItemsInRange<Item>(preferred, 1))
+        {
+            if (item.Name == "Haven welcome garden") { return; }
+        }
+        if (!HavenRecovery.FindLocation(preferred, out var location, 1)) { return; }
+        Item decoration = lamp ? new LampPost1 { Burning = true } : new PottedPlant1();
+        decoration.Name = "Haven welcome garden";
+        decoration.Movable = false;
+        decoration.MoveToWorld(location, Map.Trammel);
     }
 
     private static void EnsureBankItem<T>(Map map, Point3D bank, int dx, int dy) where T : Item, new()

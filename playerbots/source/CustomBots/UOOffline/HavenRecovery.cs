@@ -9,17 +9,24 @@ namespace Server.UOOffline;
 
 public static class HavenRecovery
 {
-    public static readonly Point3D BankLocation = new(3488, 2578, 20);
+    public static readonly Point3D BankLocation = new(3491, 2584, 20);
+    public static readonly Point3D HealerLocation = new(3491, 2582, 20);
 
     public static void GoToBank(Mobile from)
     {
         if (from == null || from.Deleted || !from.Player) { return; }
-        if (!FindLocation(BankLocation, out var destination))
+        EnsureServices();
+        HavenBankHealer healer = null;
+        foreach (var candidate in Map.Trammel.GetMobilesInRange<HavenBankHealer>(HealerLocation, 8))
+        {
+            if (!candidate.Deleted) { healer = candidate; break; }
+        }
+        if (healer == null || !FindLocation(new Point3D(healer.X, healer.Y + 1, healer.Z), out var destination, 1))
         {
             from.SendMessage("The bank arrival area is blocked. Please try again.");
             return;
         }
-        if (from.Alive) { BaseCreature.TeleportPets(from, destination, Map.Trammel); }
+        BaseCreature.TeleportPets(from, destination, Map.Trammel);
         from.MoveToWorld(destination, Map.Trammel);
         from.PlaySound(0x1FE);
         from.SendMessage("Welcome to New Haven bank. The healer and corpse summoner are beside the bank.");
@@ -27,15 +34,25 @@ public static class HavenRecovery
 
     public static void EnsureServices()
     {
-        EnsureNpc<HavenBankHealer>(new Point3D(3491, 2580, 20));
-        EnsureNpc<HavenCorpseSummoner>(new Point3D(3491, 2583, 20));
+        EnsureNpc<HavenBankHealer>(HealerLocation, "Elias Thorne", "the healer - free resurrection");
+        EnsureNpc<HavenCorpseSummoner>(new Point3D(3494, 2582, 20), "Silas Grey", "the spirit guide - free corpse recovery");
+        EnsureNpc<HavenPetHealer>(new Point3D(3497, 2582, 20), "Mira Willow", "the veterinarian - free pet resurrection");
     }
 
-    private static void EnsureNpc<T>(Point3D preferred) where T : BaseCreature, new()
+    private static void EnsureNpc<T>(Point3D preferred, string name, string title) where T : BaseCreature, new()
     {
         foreach (var npc in Map.Trammel.GetMobilesInRange<T>(preferred, 8))
         {
-            if (!npc.Deleted) { return; }
+            if (!npc.Deleted)
+            {
+                npc.Name = name;
+                npc.Title = title;
+                npc.Female = npc is HavenPetHealer;
+                npc.Body = npc.Female ? 0x191 : 0x190;
+                if (npc.HairItemID == 0) { npc.HairItemID = npc.Female ? 0x203C : 0x203B; npc.HairHue = 0x455; }
+                if (npc.Location != preferred && FindLocation(preferred, out var moved)) { npc.MoveToWorld(moved, Map.Trammel); }
+                return;
+            }
         }
         if (!FindLocation(preferred, out var location))
         {
@@ -44,13 +61,19 @@ public static class HavenRecovery
             return;
         }
         var healer = new T();
+        healer.Name = name;
+        healer.Title = title;
+        healer.Female = healer is HavenPetHealer;
+        healer.Body = healer.Female ? 0x191 : 0x190;
+        healer.HairItemID = healer.Female ? 0x203C : 0x203B;
+        healer.HairHue = 0x455;
         healer.MoveToWorld(location, Map.Trammel);
     }
 
-    internal static bool FindLocation(Point3D preferred, out Point3D location)
+    internal static bool FindLocation(Point3D preferred, out Point3D location, int maxRadius = 5)
     {
         var map = Map.Trammel;
-        for (var radius = 0; radius <= 5; radius++)
+        for (var radius = 0; radius <= maxRadius; radius++)
         {
             for (var x = -radius; x <= radius; x++)
             {
@@ -104,15 +127,22 @@ public static class HavenRecovery
 [SerializationGenerator(0)]
 public partial class HavenBankHealer : Healer
 {
+    private DateTime _nextSpeech = Core.Now + TimeSpan.FromSeconds(Utility.RandomMinMax(30, 75));
     [Constructible]
     public HavenBankHealer()
     {
-        Name = "New Haven resurrection healer";
-        Title = "free resurrection";
+        Name = "Elias Thorne";
+        Title = "the healer - free resurrection";
         CantWalk = true;
     }
 
     public override bool CheckResurrect(Mobile m) => true;
+
+    public override void OnThink()
+    {
+        base.OnThink();
+        HavenServiceSpeech.TrySpeak(this, ref _nextSpeech, "Rest a moment, traveler. You are safe here.", "If your spirit needs a body, come closer. There is no charge.", "Silas can bring back what you left behind. I will help with the rest.");
+    }
 
     public override void OnDoubleClick(Mobile from)
     {
@@ -133,18 +163,25 @@ public partial class HavenBankHealer : Healer
 [SerializationGenerator(0)]
 public partial class HavenCorpseSummoner : BaseCreature
 {
+    private DateTime _nextSpeech = Core.Now + TimeSpan.FromSeconds(Utility.RandomMinMax(50, 100));
     [Constructible]
     public HavenCorpseSummoner() : base(AIType.AI_Animal)
     {
         FightMode = FightMode.None;
-        Name = "New Haven corpse summoner";
-        Title = "free corpse recovery";
+        Name = "Silas Grey";
+        Title = "the spirit guide - free corpse recovery";
         Body = 0x190;
         Hue = 0x83EA;
         CantWalk = true;
         Blessed = true;
         AddItem(new Robe(0x482));
         AddItem(new Sandals());
+    }
+
+    public override void OnThink()
+    {
+        base.OnThink();
+        HavenServiceSpeech.TrySpeak(this, ref _nextSpeech, "Lost your way back to your body? I can help.", "Elias handles the living. I keep an eye on what they leave behind.", "The spirits travel light. Adventurers rarely do.");
     }
 
     public override void OnDoubleClick(Mobile from)

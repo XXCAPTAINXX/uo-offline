@@ -1,0 +1,17 @@
+diff --git a/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs b/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs
+index 847209869..600588410 100644
+--- a/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs
++++ b/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs
+@@ -52,9 +52,12 @@ public override void AddCustomContextEntries(Mobile from, ref PooledRefList<Cont
+                 }
+             }
+ 
++            list.Add(new Server.UOOffline.HavenPetResurrectionEntry());
+             base.AddCustomContextEntries(from, ref list);
+         }
+ 
++        public override void OnDoubleClick(Mobile from) => Server.UOOffline.HavenPetRecovery.Begin(from, this);
++
+         public static int GetMaxStabled(Mobile from)
+         {
+             var taming = from.Skills.AnimalTaming.Value;

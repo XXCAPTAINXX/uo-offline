@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ModernUO.Serialization;
 using Server.Items;
+using Server.Gumps;
 
 namespace Server.UOOffline;
 
@@ -176,6 +177,17 @@ public partial class AdventurersWallet : Item
 
     public override void OnDoubleClick(Mobile from)
     {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack))
+        {
+            from.SendMessage("Keep the wallet in your backpack to use it.");
+            return;
+        }
+        from.CloseGump<HavenWalletGump>();
+        from.SendGump(new HavenWalletGump(this));
+    }
+
+    public void DepositBackpackGold(Mobile from)
+    {
         var pack = from.Backpack;
 
         if (pack == null || !IsChildOf(pack))
@@ -195,9 +207,14 @@ public partial class AdventurersWallet : Item
         }
 
         long deposited = 0;
+        foreach (var gold in coins) { deposited += gold.Amount; }
+        if (deposited > long.MaxValue - Balance)
+        {
+            from.SendMessage("Your wallet cannot hold that much gold.");
+            return;
+        }
         foreach (var gold in coins)
         {
-            deposited += gold.Amount;
             gold.Delete();
         }
 
@@ -210,6 +227,25 @@ public partial class AdventurersWallet : Item
         Balance += deposited;
         InvalidateProperties();
         from.SendMessage($"{deposited:N0} gold deposited into your wallet. Balance: {Balance:N0}.");
+    }
+
+    internal bool Withdraw(Mobile from, int amount)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack) || amount < 1 || amount > 60000 || Balance < amount)
+        {
+            from.SendMessage("Enter 1 to 60,000 gold, within your wallet balance, and keep the wallet in your backpack.");
+            return false;
+        }
+        var gold = new Gold(amount);
+        if (!from.Backpack.TryDropItem(from, gold, false))
+        {
+            gold.Delete();
+            from.SendMessage("Your backpack needs more room or weight capacity. Your wallet was not charged.");
+            return false;
+        }
+        Balance -= amount;
+        from.SendMessage($"{amount:N0} gold withdrawn to your backpack.");
+        return true;
     }
 
     public bool TrySpend(long amount)
@@ -238,8 +274,8 @@ public partial class AdventurersWallet : Item
     public override void GetProperties(IPropertyList list)
     {
         base.GetProperties(list);
-        list.Add($"Stored gold: {Balance:N0}");
-        list.Add("Double-click to deposit backpack gold");
+        list.Add($"{"Stored gold:"} {Balance:N0}");
+        list.Add("Double-click to deposit or withdraw gold");
     }
 }
 

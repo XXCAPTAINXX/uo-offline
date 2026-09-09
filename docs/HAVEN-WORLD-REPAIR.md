@@ -4,12 +4,12 @@
 
 `[bank` (also `[ohshit`) is now available to players and teleports living characters and ghosts
 to New Haven bank. The former GM bank-inspection command is `[BankBox`.
-An invulnerable resurrection healer and corpse summoner remain beside the bank.
+Arrival is within two tiles of Elias Thorne, the free resurrection healer. Silas Grey recovers corpses and Mira Willow resurrects bonded pets. All three remain beside the bank and occasionally speak when a player is nearby.
 Double-click the healer for free resurrection, or the summoner to confirm free
 recovery of the character's most recent surviving corpse. The original corpse
 and remaining loot are moved; decayed bodies and removed items are not recreated,
 and another player's corpse cannot be claimed. Repeating setup does not duplicate
-the NPCs. Native command changes are reproduced by patch 0013.
+the NPCs. The service row has wider spacing, lamps and a planter, with the portal away from the arrival point. Every animal trainer also provides free pet resurrection: double-click them or choose Resurrect from their context menu and target your nearby dead bonded pet. No pet skills are lost. Native changes are reproduced by patches 0013 and 0014.
 
 ## Reduced bot density
 
@@ -42,7 +42,7 @@ the world to the separate `modern-evolution` development line.
   **Refresh progress** displays the current counts and errors.
 - `[WorldStatus` displays progress. `[RepairWorld` is the GM command equivalent
   of the repair button. World repair runs automatically without either command.
-- Supplies, rewards and dungeon travel use six readable rows per page with
+- Stone purchases use four illustrated rows per page with
   Previous, Next and Close controls. Purchase menus remain open after buying.
   Upgrades display the next tier and cost before the player chooses to buy.
 
@@ -54,12 +54,12 @@ status and detailed in the server log. The normal world save persists changes.
 
 Built against the pinned ModernUO commit
 `e7f85d404d52e0def1fb342b3dc185894a57017d` with all Haven patches.
-Nine regression tests pass locally, including native map placement using the
+The regression suite passes locally, including native map placement using the
 installed 7.0.23.1 client data. The tests check bank service coverage and repeat
 placement, a live banker surviving repeat repair, living Haven instructors and
 training creatures, expansion selection, tab bounds and long-menu navigation.
 
-CI runs the same suite. The three tests requiring copyrighted client map data
+CI runs the same suite. Tests requiring copyrighted client map data
 are skipped when that data is unavailable. Set `MODERNUO_TEST_DATA_DIR` to a
 client data folder to run them locally. The suite also needs
 `HAVEN_WORLD_DATA` pointing at ModernUO's Distribution directory and the
@@ -68,3 +68,21 @@ client data folder to run them locally. The suite also needs
 In-game acceptance: wait for `[WorldStatus` to finish, visit New Haven and a bank
 on another enabled facet, buy supplies, inspect the upgrade cost, browse dungeon
 destinations, and verify that repeating Repair World preserves existing NPCs.
+
+## Permanent companion
+
+Use `[companion` to claim Alden Ashford, recall the same follower, and open the companion menu. Double-click the companion to open the menu without recalling. One companion is linked to each character and uses one follower slot. Recall preserves the companion and shared inventory, including when claimed from the owner's stable record.
+
+The menu provides Follow, Guard, Stay, Attack, Heal/Resurrect, Shared Pack, Join/Leave Party, and Fighter/Healer/Bard roles. Standard pet speech orders also work. This is game AI with buttons and orders, not a free-text chatbot. Companions assist against monsters, never players or their controlled pets. All roles can heal and offer a resurrection confirmation; healers act faster and bards maintain temporary strength, dexterity and intelligence songs for nearby party members. Support requires proximity, mana and cooldowns. Bard songs expire and do not stack with another companion's song.
+
+Training earns one mastery minute per elapsed minute, including offline time and server downtime; successful combat gives additional practice at most once per ten seconds. Saved timestamps prevent double credit. Mastery and level continue growing without a configured gameplay cap. Native skill storage tops out at 6,553.5; separate mastery continues improving combat and support after that display ceiling. Offline growth represents training, not unsupervised monster kills or generated loot.
+
+The companion is bonded, takes no wages, retains equipment on death, and can be resurrected by Mira or a stable master. The owner can deposit and retrieve items through the shared pack (1,000 items and 50,000 stones). Storage access requires being within three tiles. Ownership, role, training and inventory persist in world saves.
+
+## Wallet cash withdrawals
+
+Double-click the wallet in your backpack. Choose Deposit to store carried gold, or enter an amount and choose Withdraw to receive physical gold. Withdrawals accept 1–60,000 coins per transaction and respect backpack capacity. Invalid amounts, insufficient funds, a foreign wallet or a full backpack leave the balance unchanged. Stone purchases continue to use wallet funds first.
+
+## Repair benches
+
+A labeled repair bench is placed beside the New Haven stones and supplied at other town banks. Double-click it, then select your carried or worn weapon, armor, shield or clothing. Repairs are free and restore current durability to the item's existing maximum; attributes and maximum durability remain unchanged. The bench checks ownership and distance again when the target is chosen.
