@@ -602,6 +602,18 @@ namespace Server.CustomBots
                 }
             }
 
+            // Old Haven is reserved as a PLAYER training field. Ambient
+            // bots may pass through it, but pure hunting Adventurers must
+            // not patrol it or consume the beginner spawns. A bot already
+            // under attack can still finish defending itself; once safe it
+            // resumes ordinary travel out of the area.
+            if (GetType() == typeof(AdventurerBehavior) &&
+                NewbiePlayability.IsInOldHavenTraining(bot))
+            {
+                bot.Behavior = new TravelerBehavior();
+                return;
+            }
+
             // -- 2. Look for an enemy --
             var target = FindNearbyEnemy(bot, out bool overwhelming);
 
