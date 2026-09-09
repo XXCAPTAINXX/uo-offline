@@ -253,8 +253,35 @@ namespace Server.CustomBots
                 m.SendMessage("A Britannia Cleanup Bag has been placed in your backpack.");
             }
 
+            UpgradeLegacyStarterHome(m);
             GiveStarterHomeOnce(m);
             GiveStarterEarringsOnce(m);
+        }
+
+        private static void UpgradeLegacyStarterHome(Mobile m)
+        {
+            var oldDeed = m?.Backpack?.FindItemByType<SmallBrickHouseDeed>(
+                true,
+                deed => string.Equals(deed.Name, "Starter Small House Deed", StringComparison.OrdinalIgnoreCase)
+            );
+
+            if (oldDeed?.Parent is not Container parent)
+            {
+                return;
+            }
+
+            var villa = new VillaDeed
+            {
+                Name = "Starter Two-Story Villa Deed"
+            };
+
+            parent.DropItem(villa);
+            oldDeed.Delete();
+
+            m.SendMessage(
+                0x35,
+                "Your original tiny starter-house deed has been upgraded to a Two-Story Villa deed."
+            );
         }
 
         private static void GiveStarterHomeOnce(Mobile m)
