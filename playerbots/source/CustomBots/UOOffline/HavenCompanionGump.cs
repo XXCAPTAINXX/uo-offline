@@ -2,59 +2,95 @@ using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
 using Server.Targeting;
+using CompanionParty = Server.Engines.PartySystem.Party;
 
 namespace Server.UOOffline;
 
 public sealed class HavenCompanionGump : Gump
 {
     private readonly HavenCompanion _companion;
+    private readonly int _tab;
 
-    public static void DisplayTo(Mobile from, HavenCompanion companion)
+    public static void DisplayTo(Mobile from, HavenCompanion companion, int tab = 0)
     {
-        if (from?.Deleted != false || companion?.Deleted != false || companion.BoundOwner != from ||
-            from.Map != companion.Map || !from.InRange(companion, 12)) { return; }
+        if (from?.Deleted != false || companion?.Deleted != false || companion.BoundOwner != from) { return; }
         companion.UpdateTraining(Core.Now);
         from.CloseGump<HavenCompanionGump>();
-        from.SendGump(new HavenCompanionGump(companion));
+        from.SendGump(new HavenCompanionGump(companion, tab));
     }
 
-    private HavenCompanionGump(HavenCompanion companion) : base(30, 30)
+    internal HavenCompanionGump(HavenCompanion companion, int tab = 0) : base(20, 60)
     {
         _companion = companion;
-        AddBackground(0, 0, 600, 565, 5054);
-        AddBackground(14, 14, 572, 537, 3000);
-        AddHtml(32, 28, 530, 30, "<B>Your adventuring companion</B>");
-        AddLabel(32, 65, 0, $"{companion.Name}  |  {companion.Role}  |  Level {companion.TrainingLevel:N0}");
-        AddLabel(32, 90, 0, $"Mastery {companion.Mastery:N1}  |  Health {companion.Hits}/{companion.HitsMax}  |  Mana {companion.Mana}/{companion.ManaMax}");
-        AddHtml(32, 120, 530, 55, "Training continues while you are away, including server downtime. Combat adds practice. Mastery has no gameplay cap.");
-        Button(32, 190, 1, "Follow me");
-        Button(310, 190, 2, "Guard me");
-        Button(32, 235, 3, "Stay here");
-        Button(310, 235, 4, "Attack a monster...");
-        Button(32, 280, 5, "Heal / resurrect me");
-        Button(310, 280, 6, "Open shared pack");
-        Button(32, 325, 7, "Join my party");
-        Button(310, 325, 8, "Leave party");
-        AddHtml(32, 375, 530, 25, "<B>Choose a role — progress and equipment are kept</B>");
-        Button(32, 410, 10, "Fighter");
-        Button(220, 410, 11, "Healer");
-        Button(408, 410, 12, "Bard");
-        AddHtml(32, 460, 530, 55, "Healers mend wounds faster. Bards strengthen nearby allies. All roles can fight, heal and offer resurrection. Pack: 1,000 items / 50,000 stones; stand within 3 tiles.");
-        Button(445, 520, 0, "Close");
+        _tab = tab;
+        AddBackground(0, 0, 370, 370, 5054);
+        AddBackground(10, 10, 350, 350, 3000);
+        AddLabel(20, 20, 0, companion.Name);
+        AddLabel(20, 43, 0, $"{companion.Role} | Level {companion.TrainingLevel:N0} | {companion.ControlOrder}");
+        AddLabel(20, 65, 0, $"HP {companion.Hits}/{companion.HitsMax}  Mana {companion.Mana}/{companion.ManaMax}");
+        Button(20, 95, 100, "Orders");
+        Button(130, 95, 101, "Stats");
+        Button(240, 95, 102, "Role");
+        switch (tab)
+        {
+            case 1:
+                AddLabel(20, 130, 0, $"Str {companion.Str}  Dex {companion.Dex}  Int {companion.Int}");
+                AddLabel(20, 152, 0, $"Stamina {companion.Stam}/{companion.StamMax}  Damage {companion.DamageMin}-{companion.DamageMax}");
+                AddLabel(20, 174, 0, $"Resists P/F/C/P/E: {companion.PhysicalResistance}/{companion.FireResistance}/{companion.ColdResistance}/{companion.PoisonResistance}/{companion.EnergyResistance}");
+                AddLabel(20, 196, 0, $"Swords {companion.Skills.Swords.Value:F1}  Tactics {companion.Skills.Tactics.Value:F1}");
+                AddLabel(20, 218, 0, $"Healing {companion.Skills.Healing.Value:F1}  Resist {companion.Skills.MagicResist.Value:F1}");
+                AddLabel(20, 240, 0, $"Music {companion.Skills.Musicianship.Value:F1}  Discord {companion.Skills.Discordance.Value:F1}");
+                AddLabel(20, 262, 0, $"Peacemaking {companion.Skills.Peacemaking.Value:F1}  Mastery {companion.Mastery:F1}");
+                AddLabel(20, 284, 0, $"Pack: {companion.Backpack.TotalItems}/1000 items");
+                break;
+            case 2:
+                Button(20, 133, 10, "Fighter - melee support");
+                Button(20, 170, 11, "Healer - faster healing");
+                Button(20, 207, 12, "Bard - discord and songs");
+                AddHtml(20, 248, 330, 68, "Discord: 60 Music + Discordance.<BR>Stat buffs: 80 Music + Peacemaking.<BR>Higher skills strengthen songs.");
+                break;
+            default:
+                Button(20, 133, 1, "Follow");
+                Button(195, 133, 2, "Guard");
+                Button(20, 170, 3, "Stay");
+                Button(195, 170, 4, "Attack...");
+                Button(20, 207, 5, "Heal / rez");
+                Button(195, 207, 6, "Pack");
+                Button(20, 244, 9, "Recall");
+                Button(195, 244, 7, CompanionParty.Get(companion)?.Contains(companion.BoundOwner) == true ? "Leave party" : "Join party");
+                AddHtml(20, 286, 330, 30, "All roles auto-heal you when able.");
+                break;
+        }
+        Button(20, 332, 110, "Refresh");
+        Button(240, 332, 0, "Close");
     }
 
     private void Button(int x, int y, int id, string text)
     {
         AddButton(x, y, 4005, 4007, id);
-        AddLabel(x + 36, y + 2, 0, text);
+        AddLabel(x + 32, y + 2, 0, text);
     }
 
-    public override void OnResponse(NetState sender, in RelayInfo info)
+    public override void OnResponse(NetState sender, in RelayInfo info) => HandleCommand(sender.Mobile, info.ButtonID);
+
+    internal void HandleCommand(Mobile from, int button)
     {
-        var from = sender.Mobile;
-        if (info.ButtonID == 0 || _companion.Deleted || _companion.BoundOwner != from ||
-            _companion.Map != from.Map || !from.InRange(_companion, 12)) { return; }
-        switch (info.ButtonID)
+        if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
+        if (button is >= 100 and <= 102) { DisplayTo(from, _companion, button - 100); return; }
+        if (button == 110) { DisplayTo(from, _companion, _tab); return; }
+        if (button == 9)
+        {
+            HavenCompanions.ClaimOrRecall(from);
+            DisplayTo(from, _companion, _tab);
+            return;
+        }
+        if (_companion.Map != from.Map || !from.InRange(_companion, 18))
+        {
+            from.SendMessage("Your companion is out of reach. Use Recall to bring them back.");
+            DisplayTo(from, _companion, _tab);
+            return;
+        }
+        switch (button)
         {
             case 1:
                 _companion.Combatant = null;
@@ -72,28 +108,26 @@ public sealed class HavenCompanionGump : Gump
                 break;
             case 4:
                 from.Target = new CompanionAttackTarget(_companion);
-                from.SendMessage("Choose the monster you want your companion to attack.");
-                return;
+                from.SendMessage("Choose a monster for your companion to attack.");
+                break;
             case 5:
-                if (!_companion.Support(from)) { from.SendMessage("Stand within 3 tiles. Your companion needs mana and time to recover between heals, and must be alive."); }
+                if (!_companion.Support(from)) { from.SendMessage("Stand within 3 tiles. Your companion needs mana, a ready heal and must be alive."); }
                 break;
             case 6:
                 if (_companion.Backpack.CheckContentDisplay(from)) { _companion.Backpack.DisplayTo(from); }
-                else { from.SendMessage("Stand within 3 tiles to open your companion's pack."); }
-                return;
-            case 7:
-                _companion.JoinParty(from);
+                else { from.SendMessage("Stand within 3 tiles to open the pack."); }
                 break;
-            case 8:
-                Server.Engines.PartySystem.Party.Get(_companion)?.Remove(_companion);
+            case 7:
+                if (CompanionParty.Get(_companion)?.Contains(from) == true) { CompanionParty.Get(_companion).Remove(_companion); }
+                else { _companion.JoinParty(from); }
                 break;
             case 10:
             case 11:
             case 12:
-                _companion.Role = (HavenCompanionRole)(info.ButtonID - 10);
+                _companion.Role = (HavenCompanionRole)(button - 10);
                 break;
         }
-        DisplayTo(from, _companion);
+        DisplayTo(from, _companion, _tab);
     }
 
     private sealed class CompanionAttackTarget : Target
@@ -103,7 +137,7 @@ public sealed class HavenCompanionGump : Gump
         protected override void OnTarget(Mobile from, object targeted)
         {
             if (_companion.Deleted || _companion.IsDeadPet || _companion.BoundOwner != from ||
-                from.Map != _companion.Map || !from.InRange(_companion, 12) || targeted is not Mobile enemy ||
+                from.Map != _companion.Map || !from.InRange(_companion, 18) || targeted is not Mobile enemy ||
                 enemy.Deleted || !enemy.Alive || enemy.Map != _companion.Map || !_companion.InRange(enemy, 10) ||
                 !_companion.CanBeHarmful(enemy, false) || !_companion.InLOS(enemy)) { return; }
             _companion.ControlTarget = enemy;

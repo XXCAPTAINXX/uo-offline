@@ -1,0 +1,39 @@
+diff --git a/Projects/UOContent/Items/Armor/BaseArmor.cs b/Projects/UOContent/Items/Armor/BaseArmor.cs
+index f4062326d..23ccd7d16 100644
+--- a/Projects/UOContent/Items/Armor/BaseArmor.cs
++++ b/Projects/UOContent/Items/Armor/BaseArmor.cs
+@@ -729,7 +729,7 @@ public virtual int OnHit(BaseWeapon weapon, int damageTaken)
+             damageTaken = Math.Max(0, damageTaken - absorbed);
+ 
+             // 25% chance to lower durability
+-            if (Utility.Random(4) == 0)
++            if (Parent is not Server.UOOffline.HavenCompanion && Utility.Random(4) == 0)
+             {
+                 if (Core.AOS && ArmorAttributes.SelfRepair > Utility.Random(10))
+                 {
+diff --git a/Projects/UOContent/Items/Clothing/BaseClothing.cs b/Projects/UOContent/Items/Clothing/BaseClothing.cs
+index 983568d2d..6af08323f 100644
+--- a/Projects/UOContent/Items/Clothing/BaseClothing.cs
++++ b/Projects/UOContent/Items/Clothing/BaseClothing.cs
+@@ -329,7 +329,7 @@ public virtual int OnHit(BaseWeapon weapon, int damageTaken)
+             // Don't go below zero
+             damageTaken = Math.Min(absorbed, damageTaken);
+ 
+-            if (Utility.Random(100) < 25) // 25% chance to lower durability
++            if (Parent is not Server.UOOffline.HavenCompanion && Utility.Random(100) < 25) // 25% chance to lower durability
+             {
+                 if (Core.AOS && ClothingAttributes.SelfRepair > Utility.Random(10))
+                 {
+diff --git a/Projects/UOContent/Items/Weapons/BaseWeapon.cs b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+index d48824670..3ddcc82ff 100644
+--- a/Projects/UOContent/Items/Weapons/BaseWeapon.cs
++++ b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+@@ -2067,7 +2067,7 @@ this is BaseRanged
+                 defender is Slime or AcidElemental;
+ 
+             // Stratics says 50% chance, seems more like 4%..
+-            if (isAcidMonster || Utility.Random(25) == 0)
++            if (attacker is not Server.UOOffline.HavenCompanion && (isAcidMonster || Utility.Random(25) == 0))
+             {
+                 if (isAcidMonster)
+                 {

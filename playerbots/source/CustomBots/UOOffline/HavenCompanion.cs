@@ -5,6 +5,7 @@ using Server.Commands;
 using Server.Items;
 using Server.Mobiles;
 using Server.Gumps;
+using Server.SkillHandlers;
 using CompanionParty = Server.Engines.PartySystem.Party;
 
 namespace Server.UOOffline;
@@ -108,6 +109,11 @@ public partial class HavenCompanion : BaseCreature
     private DateTime _nextTraining = Core.Now;
     private DateTime _nextCombatTraining = Core.Now;
     private DateTime _nextBuff = Core.Now;
+    private DateTime _nextDiscord = Core.Now;
+    private bool _configured;
+
+    public bool SongUnlocked => Skills.Musicianship.Value >= 80 && Skills.Peacemaking.Value >= 80;
+    public bool DiscordUnlocked => Skills.Musicianship.Value >= 60 && Skills.Discordance.Value >= 60;
 
     public double Mastery => 75.0 + Math.Sqrt(Math.Max(0, TrainingMinutes)) / 2.0;
     public double TrainingLevel => 1.0 + Math.Floor(Math.Sqrt(Math.Max(0, TrainingMinutes) / 60.0));
@@ -144,6 +150,33 @@ public partial class HavenCompanion : BaseCreature
         AddItem(new MetalShield { Movable = false });
         AddItem(new Cloak(0x59B) { Movable = false });
         AddItem(new HavenCompanionPack());
+        ConfigureCompanion();
+    }
+
+    internal void ConfigureCompanion()
+    {
+        SetSpeed(0.1, 0.1);
+        SetMoveSpeed(0.1, 0.1);
+        SkillsCap = int.MaxValue;
+        Skills.Musicianship.Base = Math.Max(Skills.Musicianship.Base, Math.Min(6553.5, Mastery));
+        Skills.Discordance.Base = Math.Max(Skills.Discordance.Base, Math.Min(6553.5, Mastery));
+        Skills.Peacemaking.Base = Math.Max(Skills.Peacemaking.Base, Math.Min(6553.5, Mastery));
+        Skills.Healing.Base = Math.Max(Skills.Healing.Base, Math.Min(6553.5, Mastery));
+        Skills.Meditation.Base = Math.Max(Skills.Meditation.Base, Math.Min(6553.5, Mastery));
+        if (Backpack?.FindItemByType<HavenCompanionLute>() == null && Backpack != null)
+        {
+            Backpack.DropItem(new HavenCompanionLute());
+        }
+        foreach (var item in Items)
+        {
+            switch (item)
+            {
+                case BaseWeapon weapon: weapon.HitPoints = weapon.MaxHitPoints; break;
+                case BaseArmor armor: armor.HitPoints = armor.MaxHitPoints; break;
+                case BaseClothing clothing: clothing.HitPoints = clothing.MaxHitPoints; break;
+            }
+        }
+        _configured = true;
     }
 
     internal void UpdateTraining(DateTime now)
@@ -241,14 +274,32 @@ public partial class HavenCompanion : BaseCreature
 
     internal void BardSupport(Mobile patient)
     {
-        if (!patient.Alive || patient.Map != Map || !InRange(patient, 8) || !InLOS(patient)) { return; }
-        var amount = 5 + (int)Math.Log2(1 + Math.Max(0, TrainingMinutes) / 60);
+        if (Role != HavenCompanionRole.Bard || !SongUnlocked || IsDeadPet || !patient.Alive || patient.Map != Map ||
+            !InRange(patient, 8) || !InLOS(patient)) { return; }
+        var skill = Math.Min(Skills.Musicianship.Value, Skills.Peacemaking.Value);
+        var amount = 3 + (int)((skill - 80) / 10) + (int)Math.Log2(1 + Math.Max(0, TrainingMinutes) / 60);
         patient.RemoveStatMod("HavenCompanionSongStr");
         patient.RemoveStatMod("HavenCompanionSongDex");
         patient.RemoveStatMod("HavenCompanionSongInt");
         patient.AddStatMod(new StatMod(StatType.Str, "HavenCompanionSongStr", amount, TimeSpan.FromSeconds(20)));
         patient.AddStatMod(new StatMod(StatType.Dex, "HavenCompanionSongDex", amount, TimeSpan.FromSeconds(20)));
         patient.AddStatMod(new StatMod(StatType.Int, "HavenCompanionSongInt", amount, TimeSpan.FromSeconds(20)));
+    }
+
+    internal bool TryDiscord(Mobile enemy)
+    {
+        if (Role != HavenCompanionRole.Bard || !DiscordUnlocked || IsDeadPet || !Alive ||
+            enemy is not BaseCreature creature || creature.Deleted || !creature.Alive || creature.IsDeadPet ||
+            creature.BardImmune || enemy.Map != Map || !InRange(enemy, 10) || !InLOS(enemy) ||
+            !CanBeHarmful(enemy, false) || Core.Now < _nextDiscord) { return false; }
+        var effect = 0;
+        if (Discordance.GetEffect(enemy, ref effect)) { return false; }
+        var instrument = Backpack?.FindItemByType<HavenCompanionLute>();
+        if (instrument == null) { return false; }
+        _nextDiscord = Core.Now + TimeSpan.FromSeconds(12);
+        instrument.UsesRemaining = 100;
+        new Discordance.DiscordanceTarget(this, instrument).Invoke(this, enemy);
+        return Discordance.GetEffect(enemy, ref effect);
     }
 
     public override bool KeepsItemsOnDeath => true;
@@ -265,6 +316,7 @@ public partial class HavenCompanion : BaseCreature
 
     public override void OnThink()
     {
+        if (!_configured) { ConfigureCompanion(); }
         base.OnThink();
         if (Controlled) { Loyalty = MaxLoyalty; }
         if (Core.Now >= _nextTraining)
@@ -295,7 +347,11 @@ public partial class HavenCompanion : BaseCreature
                 if (member.Mobile.Player) { Support(member.Mobile); }
             }
         }
-        if (Role == HavenCompanionRole.Bard && Core.Now >= _nextBuff && Mana >= 5)
+        if (Role == HavenCompanionRole.Bard)
+        {
+            TryDiscord(Combatant as Mobile ?? BoundOwner.Combatant as Mobile);
+        }
+        if (Role == HavenCompanionRole.Bard && SongUnlocked && Core.Now >= _nextBuff && Mana >= 5)
         {
             _nextBuff = Core.Now + TimeSpan.FromSeconds(10);
             Mana -= 5;
@@ -316,6 +372,18 @@ public partial class HavenCompanion : BaseCreature
         CompanionParty.Get(this)?.Remove(this);
         BoundOwner = null;
         base.OnDelete();
+    }
+}
+
+[SerializationGenerator(0)]
+public partial class HavenCompanionLute : Lute
+{
+    [Constructible]
+    public HavenCompanionLute()
+    {
+        Name = "Companion's lute";
+        Movable = false;
+        LootType = LootType.Blessed;
     }
 }
 

@@ -90,3 +90,13 @@ A labeled repair bench is placed beside the New Haven stones and supplied at oth
 Restore costs 250 gold and raises maximum durability to the item type's normal maximum, including existing durability bonuses, then fully repairs it. It never reduces a higher custom maximum, changes bonuses, or repeatedly increases maximum durability. Items already at their type maximum are not charged.
 
 Starter progression equipment (including upgraded starter weapons and the Haven robe) is exempt from both repair and restoration fees. Its progression and bonuses are preserved.
+
+## Companion control and bard update
+
+The companion panel is now 370 x 370 with Orders, Stats and Role tabs. Attack, Pack and out-of-range commands redisplay the controls; Recall brings the existing companion back. Stats show health, mana, stamina, attributes, damage, resistances, relevant skills, mastery and pack usage.
+
+Companions use a 0.1-second decision and movement interval to keep up while following. Existing companions initialize the new speed and bard/support skills on their next AI tick. Worn equipment is repaired during setup and does not lose combat durability while worn by a companion (patch 0015). Player equipment retains normal wear.
+
+Bards attempt the native Discordance skill against their current hostile monster every 12 seconds, requiring 60 Musicianship and Discordance. Attempts respect native difficulty, immunity, range, visibility and existing Discordance effects; the companion carries its own instrument. Stat songs require 80 Musicianship and Peacemaking. Higher skill and mastery strengthen buffs; songs expire after 20 seconds and refresh without stacking.
+
+Every role automatically heals or cures the owner before supporting party members, within three tiles and line of sight, with 10 mana available. Healers act every 8 seconds; Fighters and Bards every 20 seconds. Native Discordance also expires after the companion dies or leaves the Bard role (patch 0016).

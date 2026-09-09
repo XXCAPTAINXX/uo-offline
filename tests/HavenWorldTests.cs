@@ -250,13 +250,16 @@ public class HavenWorldTests
         finally { pet.Delete(); vet.Delete(); trainer.Delete(); player.Delete(); other.Delete(); }
     }
 
-    [SkippableFact]
-    public void CompanionHealingChecksRangeAndOwner()
+    [SkippableTheory]
+    [InlineData(HavenCompanionRole.Fighter)]
+    [InlineData(HavenCompanionRole.Healer)]
+    [InlineData(HavenCompanionRole.Bard)]
+    public void CompanionHealingChecksRangeAndOwner(HavenCompanionRole role)
     {
         TileDataRequirement.SkipIfMissing();
         var player = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
         var other = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
-        var companion = new HavenCompanion { BoundOwner = player, Role = HavenCompanionRole.Healer };
+        var companion = new HavenCompanion { BoundOwner = player, Role = role };
         try
         {
             foreach (var mobile in new Mobile[] { player, other, companion }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
@@ -286,13 +289,97 @@ public class HavenWorldTests
             Assert.False(companion.Support(player));
             player.Body = 0x190;
             companion.BardSupport(player);
-            Assert.Equal(105, player.Str);
-            Assert.Equal(85, player.Dex);
-            Assert.Equal(65, player.Int);
+            Assert.Equal(100, player.Str);
+            companion.Skills.Musicianship.Base = 80;
+            companion.Skills.Peacemaking.Base = 80;
             companion.BardSupport(player);
-            Assert.Equal(105, player.Str);
+            Assert.Equal(103, player.Str);
+            Assert.Equal(83, player.Dex);
+            Assert.Equal(63, player.Int);
+            companion.BardSupport(player);
+            Assert.Equal(103, player.Str);
         }
         finally { companion.Delete(); player.Delete(); }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void CompanionTabsAreCompactAndContainNavigation(int tab)
+    {
+        var companion = new HavenCompanion();
+        try
+        {
+            var menu = new HavenCompanionGump(companion, tab);
+            CheckBounds(menu, 370, 370);
+            foreach (var id in new[] { 100, 101, 102, 110, 0 })
+            {
+                Assert.Contains(menu.Entries.OfType<GumpButton>(), b => b.ButtonID == id);
+            }
+            Assert.Equal(0.1, companion.ActiveMoveSpeed);
+            Assert.Equal(0.1, companion.PassiveMoveSpeed);
+        }
+        finally { companion.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionBardUsesNativeDiscordanceAndDoesNotTargetPlayers()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var oldHandler = Mobile.SkillCheckTargetHandler;
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var companion = new HavenCompanion { BoundOwner = player, Role = HavenCompanionRole.Bard };
+        var rat = new Rat();
+        try
+        {
+            Mobile.SkillCheckTargetHandler = Server.Misc.SkillCheck.Mobile_SkillCheckTarget;
+            Assert.True(HavenRecovery.FindLocation(HavenRecovery.BankLocation, out var location));
+            foreach (var mobile in new Mobile[] { player, companion, rat }) { mobile.MoveToWorld(location, Map.Trammel); }
+            companion.Skills.Musicianship.Cap = companion.Skills.Discordance.Cap = 120;
+            companion.Skills.Musicianship.Base = companion.Skills.Discordance.Base = 120;
+            rat.SetResistance(ResistanceType.Physical, 50);
+            Assert.False(companion.TryDiscord(player));
+            Assert.True(companion.TryDiscord(rat));
+            var effect = 0;
+            Assert.True(Server.SkillHandlers.Discordance.GetEffect(rat, ref effect));
+            Assert.True(effect > 0);
+            Assert.False(companion.TryDiscord(rat));
+        }
+        finally { Mobile.SkillCheckTargetHandler = oldHandler; companion.Delete(); rat.Delete(); player.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionEquipmentDoesNotWearDuringCombat()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var companion = new HavenCompanion();
+        var slime = new Slime();
+        var weapon = (BaseWeapon)companion.FindItemOnLayer(Layer.OneHanded);
+        var armor = (BaseArmor)companion.FindItemOnLayer(Layer.InnerTorso);
+        var cloak = (BaseClothing)companion.FindItemOnLayer(Layer.Cloak);
+        try
+        {
+            Assert.True(HavenRecovery.FindLocation(HavenRecovery.BankLocation, out var location));
+            companion.MoveToWorld(location, Map.Trammel);
+            slime.MoveToWorld(location, Map.Trammel);
+            weapon.MaxHitPoints = 1; weapon.HitPoints = 1;
+            armor.MaxHitPoints = 1; armor.HitPoints = 1;
+            cloak.MaxHitPoints = 1; cloak.HitPoints = 1;
+            for (var i = 0; i < 100; i++)
+            {
+                armor.OnHit(weapon, 10);
+                cloak.OnHit(weapon, 10);
+            }
+            weapon.OnHit(companion, slime);
+            Assert.False(weapon.Deleted);
+            Assert.False(armor.Deleted);
+            Assert.False(cloak.Deleted);
+            Assert.Equal(1, weapon.HitPoints);
+            Assert.Equal(1, armor.HitPoints);
+            Assert.Equal(1, cloak.HitPoints);
+        }
+        finally { companion.Delete(); slime.Delete(); }
     }
 
     [SkippableTheory]
