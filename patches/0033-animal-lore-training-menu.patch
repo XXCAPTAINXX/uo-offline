@@ -1,0 +1,28 @@
+diff --git a/Projects/UOContent/Skills/AnimalLore.cs b/Projects/UOContent/Skills/AnimalLore.cs
+index a55ba11..4a6150b 100644
+--- a/Projects/UOContent/Skills/AnimalLore.cs
++++ b/Projects/UOContent/Skills/AnimalLore.cs
+@@ -74,6 +74,11 @@ protected override void OnTarget(Mobile from, object targeted)
+ 
+     public class AnimalLoreGump : DynamicGump
+     {
++        public override void OnResponse(Server.Network.NetState sender, in RelayInfo info)
++        {
++            if (info.ButtonID == 100) { Server.UOOffline.HavenPetTrainingGump.DisplayTo(sender.Mobile, _creature); }
++        }
++
+         private const int LabelColor = 0x24E5;
+ 
+         private readonly BaseCreature _creature;
+@@ -97,6 +102,11 @@ protected override void BuildLayout(ref DynamicGumpBuilder builder)
+             var c = _creature;
+ 
+             builder.AddPage(0);
++            if (c.Controlled && c is not Server.UOOffline.HavenCompanion && !c.IsDeadPet)
++            {
++                builder.AddButton(130, 415, 4005, 4007, 100);
++                builder.AddLabel(165, 417, 0, "Animal Training");
++            }
+ 
+             builder.AddImage(100, 100, 2080);
+             builder.AddImage(118, 137, 2081);

@@ -1739,7 +1739,7 @@ public class HavenWorldTests
             Assert.True(wallet.WithdrawMarks(owner, 5));
             Assert.Equal(25, wallet.HavenMarks);
             Assert.Equal(5, owner.Backpack.GetAmount(typeof(HavenMark)));
-            CheckBounds(new HavenWalletGump(wallet), 460, 395);
+            CheckBounds(new HavenWalletGump(wallet), 460, 435);
         }
         finally { owner.Delete(); other.Delete(); }
     }

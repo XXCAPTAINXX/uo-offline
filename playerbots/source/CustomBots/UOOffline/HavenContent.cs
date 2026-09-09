@@ -463,6 +463,20 @@ public static class HavenEconomy
         if (walletMarks > 0) { wallet.HavenMarks -= walletMarks; }
         return true;
     }
+    public static bool CanPay(Mobile from, int amount)
+    {
+        if (from?.Backpack == null || amount <= 0) { return false; }
+        var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
+        var remaining = amount - (int)Math.Min(amount, Math.Max(0, wallet?.Balance ?? 0));
+        remaining -= Math.Min(remaining, from.Backpack.GetAmount(typeof(Gold)));
+        return remaining <= 0 || Banker.GetBalance(from) >= remaining;
+    }
+    public static bool HasStableCargo(BaseCreature pet)
+    {
+        if (pet.Backpack == null) { return false; }
+        foreach (var item in pet.Backpack.Items) { if (!item.IsVirtualItem) { return true; } }
+        return false;
+    }
     public static bool TryPay(Mobile from, int amount)
     {
         if (from?.Backpack == null || amount <= 0)
