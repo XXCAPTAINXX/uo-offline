@@ -36,6 +36,7 @@ public partial class HavenCompanionExpedition : Item
         companion.PrepareForExpedition();
         companion.Internalize();
         trip.Schedule();
+        owner.CloseGump<HavenCompanionGump>();
         owner.SendMessage("Your companion left on a five-minute expedition. Use [companion and Tasks to check progress or return early.");
         return true;
     }
@@ -77,6 +78,7 @@ public partial class HavenCompanionExpedition : Item
         }
         else { owner.SendMessage("Your companion returned. Expeditions earn rewards for each full minute away."); }
         Delete();
+        if (owner.NetState != null) { HavenCompanionGump.DisplayTo(owner, companion); }
         return true;
     }
     internal static Bag CreateLoot(HavenExpeditionKind kind, int minutes, Mobile owner = null, double? tamingRoll = null)

@@ -123,7 +123,7 @@ public sealed class HavenCompanionGump : Gump
         if (button == 26) { DisplayTo(from, _companion, 5); return; }
         if (button == 27) { DisplayTo(from, _companion, 6); return; }
         if (button == 25 || button == 9 && _companion.Expedition != null)
-        { _companion.Expedition?.Return(from, Core.Now); DisplayTo(from, _companion, 4); return; }
+        { if (_companion.Expedition?.Return(from, Core.Now) != true) { DisplayTo(from, _companion, 4); } return; }
         if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab); return; }
         if (button == 9)
         {
@@ -140,7 +140,8 @@ public sealed class HavenCompanionGump : Gump
         if (button is >= 20 and <= 24 or >= 30 and <= 41)
         {
             var kind = (HavenExpeditionKind)(button >= 30 ? button - 25 : button - 20);
-            if (!HavenCompanionExpedition.Start(_companion, from, kind)) { from.SendMessage("Your companion must meet the mission skills and be alive, nearby and ready."); }
+            if (HavenCompanionExpedition.Start(_companion, from, kind)) { return; }
+            from.SendMessage("Your companion must meet the mission skills and be alive, nearby and ready.");
             DisplayTo(from, _companion, 4); return;
         }
         switch (button)

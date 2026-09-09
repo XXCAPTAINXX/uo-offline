@@ -92,3 +92,5 @@ Use [tithe 1000 to convert 1,000 wallet gold into Chivalry tithing points, or en
 References for the training model: https://uo.com/wiki/ultima-online-wiki/skills/animal-taming/animal-training/ and the ServUO pub57 Pet Training implementation. No later-era spell or mastery ability is advertised unless implemented in this shard.
 
 Stable fees use wallet gold first, then loose backpack gold and bank funds. The existing 30-gold charge is unchanged. Hidden pet training and rarity records do not count as cargo; actual items must still be unloaded from pack pets before stabling. This build does not charge a separate pet retrieval fee.
+
+Sending a companion on a mission closes its control menu. A successful return reopens Orders for an online owner, including automatic timed returns and Return now. Failed dispatches keep Tasks open, and [c remains available to check an active trip.
