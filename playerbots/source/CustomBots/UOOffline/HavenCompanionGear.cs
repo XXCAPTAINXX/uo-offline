@@ -8,7 +8,7 @@ public partial class HavenCompanion
     internal bool EquipFromOwner(Mobile from, Item item)
     {
         if (from != BoundOwner || Deleted || IsDeadPet || Map != from.Map || !from.InRange(this, 3) ||
-            item?.Deleted != false || item is not (BaseWeapon or BaseArmor or BaseClothing or BaseJewel) ||
+            item?.Deleted != false || item is not (BaseWeapon or BaseArmor or BaseClothing or BaseJewel or BaseTalisman) ||
             !(from.Backpack != null && item.IsChildOf(from.Backpack) || Backpack != null && item.IsChildOf(Backpack))) { return false; }
         if (!EquipSafely(item)) { from.SendMessage("Your companion cannot equip that item, or their pack is full."); return false; }        from.SendMessage($"Your companion equipped {item.Name ?? item.DefaultName}. Replaced gear is in their pack.");
         return true;

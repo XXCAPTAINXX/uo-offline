@@ -381,17 +381,29 @@ public partial class SpecialRewardStone : Item
             new("Fortune bracelet", 0x1086, 0x8A5),
             new("Guardian bracelet", 0x1086, 0x497),
             new("Night bracelet", 0x1086, 0x455),
-            new("Champion pendant - 250 Haven marks only", 0x1088, 0x489)
+            new("Champion pendant - 250 Haven marks only", 0x1088, 0x489),
+            new("Vanguard ring - 30 Haven marks", 0x108A, 0x972),
+            new("Arcane Focus ring - 30 Haven marks", 0x108A, 0x482),
+            new("Wind ring - 30 Haven marks", 0x108A, 0x47F),
+            new("Beastmaster ring - 30 Haven marks", 0x108A, 0x59B),
+            new("Virtuoso ring - 30 Haven marks", 0x108A, 0x489),
+            new("Artisan ring - 30 Haven marks", 0x108A, 0x96D),
+            new("Fortune ring - 30 Haven marks", 0x108A, 0x8A5),
+            new("Guardian ring - 30 Haven marks", 0x108A, 0x497),
+            new("Night ring - 30 Haven marks", 0x108A, 0x455),
+            new("Concord talisman - 150 Haven marks", 0x2F5A, 0x489)
         ];
 
         public RewardMenu() : base(
-            $"Bracelets: {MarkCost} marks / {GoldFallbackCost:N0} gold. Pendant: 250 marks.",
+            "Haven rewards: bracelets, matching rings and treasures",
             MenuEntries
         )
         {
         }
 
-        public Item CreateItem(int index) => index == 9 ? new HavenChampionPendant() : SpecialBraceletFactory.Create(index);
+        public Item CreateItem(int index) => CreateReward(index);
+        internal static Item CreateReward(int index) => index switch
+        { 9 => new HavenChampionPendant(), >= 10 and <= 18 => new HavenSetRing(index - 10), 19 => new HavenConcordTalisman(), _ => SpecialBraceletFactory.Create(index) };
 
         public override void OnResponse(NetState state, int index) => Buy(state.Mobile, index);
 
@@ -404,15 +416,15 @@ public partial class SpecialRewardStone : Item
                 return;
             }
 
-            var reward = index == 9 ? new HavenChampionPendant() : SpecialBraceletFactory.Create(index);
+            var reward = CreateReward(index);
             if (reward == null) { return; }
             if (!pack.CheckHold(from, reward, false)) { reward.Delete(); from.SendMessage("Make room in your backpack."); return; }
-            var markCost = index == 9 ? 250 : MarkCost;
+            var markCost = index switch { 9 => 250, 19 => 150, >= 10 and <= 18 => 30, _ => MarkCost };
             var paidWithMarks = HavenEconomy.TryPayMarks(from, markCost);
-            if (!paidWithMarks && (index == 9 || !HavenEconomy.TryPay(from, GoldFallbackCost)))
+            if (!paidWithMarks && (index >= 9 || !HavenEconomy.TryPay(from, GoldFallbackCost)))
             {
                 reward.Delete();
-                from.SendMessage(index == 9 ? "The champion pendant costs 250 Haven marks; gold cannot buy it." : "You need 15 Haven marks or 25,000 gold for a bracelet.");
+                from.SendMessage($"You need {markCost} Haven marks for this reward. Bracelets also accept 25,000 gold.");
                 return;
             }
             pack.DropItem(reward);

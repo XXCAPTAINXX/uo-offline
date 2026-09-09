@@ -40,6 +40,8 @@ public partial class HavenGearExperience : Item
     public static void AddProperties(Item gear, IPropertyList list)
     {
         var progress = Find(gear);
+        if (gear is BaseWeapon evolved && HavenCompanionWeaponEvolution.Level(evolved) >= 20)
+        { list.Add($"{"Companion unlock:"} {"all-monster slayer while wielded by your companion"}"); }
         if (progress == null) { return; }
         list.Add($"{"Gear level:"} {progress.Level}/20");
         list.Add($"{"Shared experience:"} {progress.Experience:N0} / 1,900");
@@ -54,7 +56,8 @@ public partial class HavenGearExperience : Item
                 StarterWeaponProgression.GainSharedExperience(weapon, equipment, owner, amount);
             }
             else if (item is ApprenticeGrimoire grimoire) { grimoire.GainCastExperience(owner); }
-            else if (item is BaseWeapon or BaseArmor or BaseClothing or BaseJewel or Spellbook) { Gain(item, amount); }
+            else if (item is BaseWeapon or BaseArmor or BaseClothing or BaseJewel or Spellbook or BaseTalisman) { Gain(item, amount); }
+            if (owner is HavenCompanion && item is BaseWeapon evolving) { HavenCompanionWeaponEvolution.Apply(evolving); }
         }
     }
     public static void OnMonsterKilled(BaseCreature creature, Mobile player)

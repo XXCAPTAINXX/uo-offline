@@ -45,3 +45,9 @@ Bard companions offer Tame assist from Orders. Select a nearby wild tamable anim
 Haven housing: players may place houses on suitable clear land in New Haven and the island. Normal terrain, road, obstruction and neighboring-house checks still apply. Shops, the service square, moongate and Warden encounter area remain protected. Other towns retain their housing rules.
 
 The Warden drops 3–6 Haven marks per kill and its spawner checks every 2–3 minutes. Vampiric steed spawners check every 30–60 seconds, still limited to one wild spawn per spawner. Existing saved spawners receive these timers at startup without replacing their living creatures or tamed pets.
+
+Matching Haven sets: nine themed rings cost 30 Haven marks each, copying their bracelet's base bonuses and gaining shared gear experience. Wearing the corresponding bracelet activates the set bonus described in the ring's tooltip and shop preview. Bonuses are computed from equipped pieces, so removing/swapping gear cannot leave permanent stacked bonuses.
+
+The Haven talisman of concord costs 150 marks, grants 300 Luck, +10 all stats, +3 all regens, +20% weapon/spell damage, 5% lower mana cost and 20% lower reagent cost, and evolves with shared experience. With a matching ring/bracelet pair it adds +250 Luck and +10% weapon/spell damage. Companions can equip it through Gear.
+
+Companion weapon evolution adds Hit Energy Area at level 5/10/15/20 with 10/20/30/40% chances, preserving stronger existing area attributes. At level 20, the native slayer bonus applies to all eligible wild monsters while the weapon is wielded by a companion; it does not stack multiple slayer multipliers. Owner/player/pet protections and Tame assist still suppress harmful actions. Existing weapon levels qualify on the next shared experience gain.

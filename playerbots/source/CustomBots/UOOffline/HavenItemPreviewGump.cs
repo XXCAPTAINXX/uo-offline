@@ -94,6 +94,8 @@ public sealed class HavenItemPreviewGump : Gump
         }
         lines.Add(item switch
         {
+            HavenSetRing ring => $"Matching bracelet bonus: {HavenJewelrySets.Descriptions[ring.Theme]}. Add the Concord talisman for +250 Luck and +10% weapon/spell damage. This ring levels with shared experience.",
+            HavenConcordTalisman => "With any matching Haven ring/bracelet pair: +250 Luck and +10% weapon/spell damage. Levels with shared experience.",
             NewHavenAdventurersRobe => "Binds to the buyer. Four upgrade tiers, purchased with Haven marks or gold.",
             ApprenticeGrimoire => "All 64 Magery spells. Binds to the buyer; evolves through spellcasting to level 20.",
             CleanupTrashBag => "Accepts eligible unwanted items; removes them after 3 minutes and awards cleanup points.",

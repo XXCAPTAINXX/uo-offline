@@ -1958,6 +1958,99 @@ public class HavenWorldTests
         }
         finally { boss.Delete(); steeds.Delete(); warden.Delete(); }
     }
+    [SkippableFact]
+    public void MatchingJewelryBonusesRequireEquippedPairAndDoNotAccumulate()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var wearer = new PlayerMobile { Player = true };
+        wearer.AddItem(new Backpack());
+        var ring = new HavenSetRing(6);
+        var bracelet = new BraceletOfFortune();
+        var talisman = new HavenConcordTalisman();
+        try
+        {
+            wearer.AddItem(ring); wearer.AddItem(bracelet);
+            Assert.Equal(650, AosAttributes.GetValue(wearer, AosAttribute.Luck));
+            wearer.AddItem(talisman);
+            Assert.Equal(1200, AosAttributes.GetValue(wearer, AosAttribute.Luck));
+            wearer.Backpack.DropItem(bracelet);
+            Assert.Equal(450, AosAttributes.GetValue(wearer, AosAttribute.Luck));
+            wearer.AddItem(bracelet);
+            Assert.Equal(1200, AosAttributes.GetValue(wearer, AosAttribute.Luck));
+            wearer.Backpack.DropItem(talisman);
+            Assert.Equal(650, AosAttributes.GetValue(wearer, AosAttribute.Luck));
+            for (var i = 0; i < 9; i++)
+            {
+                var preview = new HavenSetRing(i);
+                try { Assert.Contains(HavenJewelrySets.Descriptions[i], HavenItemPreviewGump.Describe(preview)); }
+                finally { preview.Delete(); }
+            }
+        }
+        finally { wearer.Delete(); ring.Delete(); bracelet.Delete(); talisman.Delete(); }
+    }
+
+    [SkippableFact]
+    public void RingAndTalismanPurchasesUseMarksAndBothEvolve()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true };
+        owner.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { HavenMarks = 180, Balance = 1000000 };
+        try
+        {
+            owner.Backpack.DropItem(wallet);
+            SpecialRewardStone.RewardMenu.Buy(owner, 10);
+            SpecialRewardStone.RewardMenu.Buy(owner, 19);
+            Assert.Equal(0, wallet.HavenMarks);
+            Assert.Equal(1000000, wallet.Balance);
+            var ring = owner.Backpack.FindItemByType<HavenSetRing>();
+            var talisman = owner.Backpack.FindItemByType<HavenConcordTalisman>();
+            Assert.NotNull(ring); Assert.NotNull(talisman);
+            owner.AddItem(ring); owner.AddItem(talisman);
+            HavenGearExperience.GainEquipped(owner, 400);
+            Assert.Equal(5, HavenGearExperience.Find(ring).Level);
+            Assert.Equal(5, HavenGearExperience.Find(talisman).Level);
+            SpecialRewardStone.RewardMenu.Buy(owner, 11);
+            Assert.Null(owner.Backpack.FindItemByType<HavenSetRing>());
+            Assert.Equal(1000000, wallet.Balance);
+        }
+        finally { owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionWeaponsUnlockAreaAndUniversalSlayerWithoutHarmingOwnerOrPets()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var companion = new HavenCompanion { BoundOwner = owner };
+        var enemy = new Rat { Karma = -1000, Str = 100 };
+        var secondary = new Rat { Karma = -1000, Str = 100 };
+        var pet = new Horse { Controlled = true, ControlMaster = owner };
+        var weapon = new Longsword();
+        try
+        {
+            foreach (var mobile in new Mobile[] { owner, companion, enemy, secondary, pet })
+            { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); mobile.Hits = mobile.HitsMax; }
+            (companion.Weapon as BaseWeapon)?.Delete(); companion.AddItem(weapon);
+            HavenGearExperience.GainEquipped(companion, 300);
+            Assert.Equal(0, weapon.WeaponAttributes.HitEnergyArea);
+            HavenGearExperience.GainEquipped(companion, 100);
+            Assert.Equal(10, weapon.WeaponAttributes.HitEnergyArea);
+            HavenGearExperience.GainEquipped(companion, 1500);
+            Assert.Equal(40, weapon.WeaponAttributes.HitEnergyArea);
+            Assert.Equal(CheckSlayerResult.Slayer, weapon.CheckSlayers(companion, enemy));
+            Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, owner, enemy));
+            Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, companion, pet));
+            var ownerHits = owner.Hits; var petHits = pet.Hits; var enemyHits = secondary.Hits;
+            weapon.DoAreaAttack(companion, enemy, 0x1F1, 120, 0, 0, 0, 0, 100);
+            Assert.True(secondary.Hits < enemyHits);
+            Assert.Equal(ownerHits, owner.Hits); Assert.Equal(petHits, pet.Hits);
+            companion.Role = HavenCompanionRole.Bard;
+            Assert.True(companion.StartTamingAssist(owner, enemy));
+            Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, companion, enemy));
+        }
+        finally { companion.Delete(); owner.Delete(); enemy.Delete(); secondary.Delete(); pet.Delete(); weapon.Delete(); }
+    }
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())
