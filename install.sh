@@ -75,7 +75,7 @@ MODERNUO_REPO="https://github.com/modernuo/ModernUO.git"
 # is the old behaviour and the old lottery.
 MODERNUO_COMMIT="e7f85d404d52e0def1fb342b3dc185894a57017d"
 UO_OFFLINE_UPDATE_REPO="XXCAPTAINXX/uo-offline"
-UO_OFFLINE_UPDATE_BRANCH="haven-rc3"
+UO_OFFLINE_UPDATE_BRANCH="haven-rc4"
 MODERNUO_DIR="${INSTALL_ROOT}/ModernUO"
 DIST_DIR="${MODERNUO_DIR}/Distribution"
 CFG_DIR="${DIST_DIR}/Configuration"
@@ -256,6 +256,39 @@ fetch_modernuo() {
   fi
 
   ok "ModernUO source at ${MODERNUO_DIR}"
+}
+
+# ---------------------------------------------------------------------------
+# Legacy custom-source quarantine
+# ---------------------------------------------------------------------------
+quarantine_legacy_custom_source() {
+  banner "Checking legacy custom source"
+
+  local legacy="${MODERNUO_DIR}/Projects/UOContent/Custom"
+  if [[ ! -d "${legacy}" ]]; then
+    say "No legacy Projects/UOContent/Custom source found."
+    return 0
+  fi
+
+  local backup_root="${INSTALL_ROOT}/legacy-custom-source-backup"
+  mkdir -p "${backup_root}"
+
+  local stamp dest_root dest suffix=1
+  stamp="$(date +%Y%m%d-%H%M%S)"
+  dest_root="${backup_root}/${stamp}"
+  dest="${dest_root}/Custom"
+
+  while [[ -e "${dest_root}" ]]; do
+    dest_root="${backup_root}/${stamp}-${suffix}"
+    dest="${dest_root}/Custom"
+    suffix=$((suffix + 1))
+  done
+
+  mkdir -p "${dest_root}"
+  mv "${legacy}" "${dest}"     || die "Could not quarantine legacy custom source at ${legacy}."
+
+  ok "Quarantined legacy custom source -> ${dest}"
+  say "It is preserved for reference, but will not be compiled into this RC."
 }
 
 # ---------------------------------------------------------------------------
@@ -1420,6 +1453,7 @@ main() {
   preflight
   install_deps
   fetch_modernuo
+  quarantine_legacy_custom_source
   bootstrap_dotnet
   apply_engine_patches
   install_playerbots

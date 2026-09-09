@@ -54,6 +54,32 @@ jobs:
             }
           }
 
+      - name: Verify legacy Custom source quarantine (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $legacy = Join-Path $PWD 'ModernUO\Projects\UOContent\Custom\UORespawnServer\Timers'
+          New-Item -ItemType Directory -Force -Path $legacy | Out-Null
+          @'
+          namespace UORespawnServer.Timers;
+          public class SearchTimer
+          {
+              private Server.CustomBots.NewbiePlayability _missing;
+          }
+          '@ | Set-Content (Join-Path $legacy 'SearchTimer.cs')
+
+          . .\install.ps1 -NoRun -InstallPath $PWD
+          QuarantineLegacyCustomSource
+
+          if (Test-Path (Join-Path $PWD 'ModernUO\Projects\UOContent\Custom')) {
+            throw 'Legacy Custom source remained in the ModernUO compile tree.'
+          }
+
+          $backup = Get-ChildItem (Join-Path $PWD 'legacy-custom-source-backup') -Recurse -Filter SearchTimer.cs -ErrorAction SilentlyContinue
+          if (-not $backup) {
+            throw 'Legacy source was removed but not preserved in quarantine.'
+          }
+
       - name: Apply engine patches (Linux)
         if: runner.os == 'Linux'
         shell: bash

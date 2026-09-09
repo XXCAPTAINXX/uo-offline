@@ -49,7 +49,7 @@ $ModernUOCommit = "e7f85d404d52e0def1fb342b3dc185894a57017d"
 # UO Offline update channel. Never use the upstream/original fork's updater:
 # our launcher may only fetch code from this repository and RC channel.
 $UOOfflineUpdateRepo   = "XXCAPTAINXX/uo-offline"
-$UOOfflineUpdateBranch = "haven-rc3"
+$UOOfflineUpdateBranch = "haven-rc4"
 
 # Only consulted when $ModernUOCommit is "". A checkout that has built once is
 # known-good; pulling upstream mid-install can drag in months of engine
@@ -441,6 +441,52 @@ function SetModernUOCommit {
   } finally {
     Pop-Location
   }
+}
+
+# ---------------------------------------------------------------------------
+# Legacy custom-source quarantine
+# ---------------------------------------------------------------------------
+function QuarantineLegacyCustomSource {
+  Banner "Checking legacy custom source"
+
+  # Older UO Offline test installs (and some third-party packages) dropped
+  # C# directly under Projects\UOContent\Custom. That directory is NOT part
+  # of the pinned ModernUO commit, so git reset --hard cannot remove it.
+  # Because UOContent compiles every .cs under its project tree, one stale
+  # file can poison an otherwise clean RC build. Preserve it outside the
+  # source tree rather than deleting the user's files.
+  $legacyDir = Join-Path $ModernUODir "Projects\UOContent\Custom"
+
+  if (-not (Test-Path $legacyDir)) {
+    Say "No legacy Projects\UOContent\Custom source found."
+    return
+  }
+
+  $backupRoot = Join-Path $InstallRoot "legacy-custom-source-backup"
+  New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+
+  $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $destRoot = Join-Path $backupRoot $stamp
+  $dest = Join-Path $destRoot "Custom"
+
+  # Avoid a collision if the installer is launched twice in the same second.
+  $suffix = 1
+  while (Test-Path $destRoot) {
+    $destRoot = Join-Path $backupRoot ("{0}-{1}" -f $stamp, $suffix)
+    $dest = Join-Path $destRoot "Custom"
+    $suffix++
+  }
+
+  New-Item -ItemType Directory -Force -Path $destRoot | Out-Null
+
+  try {
+    Move-Item -Path $legacyDir -Destination $dest -Force -ErrorAction Stop
+  } catch {
+    Die "Could not quarantine legacy custom source at '$legacyDir': $($_.Exception.Message)"
+  }
+
+  Ok "Quarantined legacy custom source -> $dest"
+  Say "It is preserved for reference, but will not be compiled into this RC."
 }
 
 # ---------------------------------------------------------------------------
@@ -1527,6 +1573,7 @@ $script:InstallSteps = @(
   @{ Name = "Install git (no admin)";      Run = { BootstrapGit } },
   @{ Name = "Install .NET (no admin)";      Run = { BootstrapDotnet } },
   @{ Name = "Download the ModernUO server"; Run = { FetchModernUO } },
+  @{ Name = "Quarantine old custom source";  Run = { QuarantineLegacyCustomSource } },
   @{ Name = "Patch the engine";            Run = { ApplyEnginePatches } },
   @{ Name = "Add the PlayerBots";           Run = { InstallPlayerBots } },
   @{ Name = "Build the server";             Run = { BuildModernUO } },

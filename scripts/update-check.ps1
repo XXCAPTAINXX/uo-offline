@@ -30,7 +30,7 @@ $LockPath    = Join-Path $InstallRoot "uo-offline-update.lock"
 # Safety boundary: this launcher is allowed to update ONLY our customized
 # UO Offline RC channel. A stale stamp from the original fork is ignored.
 $AllowedRepo   = "XXCAPTAINXX/uo-offline"
-$AllowedBranch = "haven-rc3"
+$AllowedBranch = "haven-rc4"
 
 # How long we are willing to make the player wait on the network before
 # giving up and just starting the game.
