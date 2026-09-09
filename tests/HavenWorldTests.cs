@@ -2083,6 +2083,39 @@ public class HavenWorldTests
         }
         finally { warden.Delete(); spawner.Delete(); walker.Delete(); }
     }
+    [SkippableFact]
+    public void RepairAllIncludesEquippedAndNestedGearWithAtomicWalletPayment()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack());
+        var bench = new HavenRepairBench();
+        var wallet = new AdventurersWallet { Balance = 99 };
+        var weapon = new Longsword { MaxHitPoints = 40, HitPoints = 1 };
+        var armor = new LeatherChest { MaxHitPoints = 40, HitPoints = 1 };
+        var starter = new ApprenticeBlade { MaxHitPoints = 40, HitPoints = 1 };
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); bench.MoveToWorld(owner.Location, owner.Map);
+            owner.Backpack.DropItem(wallet); owner.AddItem(weapon);
+            var bag = new Bag(); owner.Backpack.DropItem(bag); bag.DropItem(armor); bag.DropItem(starter);
+            Assert.False(bench.RepairAll(owner));
+            Assert.Equal(99, wallet.Balance); Assert.Equal(1, weapon.HitPoints); Assert.Equal(1, armor.HitPoints);
+            wallet.Balance = 100;
+            Assert.True(bench.RepairAll(owner));
+            Assert.Equal(0, wallet.Balance);
+            Assert.Equal(40, weapon.HitPoints); Assert.Equal(40, armor.HitPoints); Assert.Equal(40, starter.HitPoints);
+            Assert.Equal(40, weapon.MaxHitPoints);
+            Assert.Null(owner.Target);
+            Assert.False(bench.RepairAll(owner));
+            weapon.MaxHitPoints = 1; weapon.HitPoints = 1; wallet.Balance = 1000;
+            Assert.True(bench.RepairAll(owner, true));
+            Assert.Equal(weapon.MaxHitPoints, weapon.HitPoints);
+            Assert.True(weapon.MaxHitPoints > 1);
+            Assert.Null(owner.Target);
+        }
+        finally { owner.Delete(); bench.Delete(); weapon.Delete(); armor.Delete(); starter.Delete(); }
+    }
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())

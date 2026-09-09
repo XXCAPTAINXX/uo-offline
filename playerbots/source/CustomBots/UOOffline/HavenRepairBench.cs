@@ -1,6 +1,6 @@
 using ModernUO.Serialization;
 using Server.Items;
-using Server.Targeting;
+
 using Server.Gumps;
 using Server.Network;
 
@@ -124,22 +124,6 @@ public partial class HavenRepairBench : WoodenBench
         return true;
     }
 
-    private sealed class RepairTarget : Target
-    {
-        private readonly HavenRepairBench _bench;
-        private readonly bool _restore;
-        public RepairTarget(HavenRepairBench bench, bool restore) : base(3, false, TargetFlags.None)
-        {
-            _bench = bench;
-            _restore = restore;
-        }
-        protected override void OnTarget(Mobile from, object targeted)
-        {
-            if (_restore) { _bench.Restore(from, targeted as Item); }
-            else { _bench.Repair(from, targeted as Item); }
-        }
-    }
-
     private sealed class RepairBenchGump : Gump
     {
         private readonly HavenRepairBench _bench;
@@ -150,10 +134,10 @@ public partial class HavenRepairBench : WoodenBench
             AddBackground(12, 12, 496, 316, 3000);
             AddHtml(30, 25, 460, 30, "<B>Adventurer's repair bench</B>");
             AddButton(30, 75, 4005, 4007, 1);
-            AddLabel(68, 77, 0, "Repair an item - 50 gold");
-            AddHtml(68, 110, 400, 50, "Starter gear is free. Refill current durability with no maximum durability loss.");
+            AddLabel(68, 77, 0, "Repair ALL gear - 50 gold per item");
+            AddHtml(68, 110, 400, 50, "Repairs equipped gear and everything inside your backpack. Starter gear is free. No maximum durability loss.");
             AddButton(30, 170, 4005, 4007, 2);
-            AddLabel(68, 172, 0, "Restore maximum durability - 250 gold");
+            AddLabel(68, 172, 0, "Restore ALL maximums - 250 gold per item");
             AddHtml(68, 205, 400, 70, "Starter gear is free. Restore the item's normal type maximum, including durability bonuses, and fully repair it. Wallet funds are used first.");
             AddButton(370, 290, 4005, 4007, 0);
             AddLabel(408, 292, 0, "Close");
@@ -163,8 +147,9 @@ public partial class HavenRepairBench : WoodenBench
         {
             var from = sender.Mobile;
             if (info.ButtonID is not (1 or 2) || _bench.Deleted || from.Map != _bench.Map || !from.InRange(_bench, 3)) { return; }
-            from.SendMessage(info.ButtonID == 2 ? "Choose your item to restore: starter gear free, other gear 250 gold." : "Choose your item to repair: starter gear free, other gear 50 gold.");
-            from.Target = new RepairTarget(_bench, info.ButtonID == 2);
+
+            _bench.RepairAll(from, info.ButtonID == 2);
+            _bench.OnDoubleClick(from);
         }
     }
 }
