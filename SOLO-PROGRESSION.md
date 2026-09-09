@@ -27,3 +27,7 @@ Companion base Strength, Dexterity and Intelligence gain two points per training
 Companion direct healing, cures and resurrection support reach 12 tiles with line of sight. Gear/pack interactions retain their short range.
 
 Haven Island now grants +1,000 Luck to players on Trammel, including New Haven and Old Haven. It stacks with equipment luck and is computed from location, so it cannot accumulate across movement or reloads. Outside the island it stops applying. Use [havenluck to see total and area bonus.
+
+Player skills train faster below 100 on Haven Island: five times normal gain chance and five times normal gain amount, stopping the larger increment at 100. Skill checks still need valid practice; individual caps, skill locks and the existing counted total cap remain enforced. Above 100 and outside Haven, normal training applies.
+
+The player total skill cap is now 1,000 points and applies automatically on login for new and existing characters. Animal Taming and Animal Lore remain excluded from this budget. Companion caps are unchanged.

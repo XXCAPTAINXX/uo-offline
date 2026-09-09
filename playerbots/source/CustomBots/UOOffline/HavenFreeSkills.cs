@@ -1,4 +1,5 @@
 using System;
+using ModernUO.CodeGeneratedEvents;
 using Server.Commands;
 using Server.Mobiles;
 
@@ -6,6 +7,11 @@ namespace Server.UOOffline;
 
 public static class HavenFreeSkills
 {
+    [OnEvent(nameof(PlayerMobile.PlayerLoginEvent))]
+    public static void ApplyPlayerCap(PlayerMobile player)
+    {
+        if (player is not Server.CustomBots.PlayerBot) { player.SkillsCap = 10000; }
+    }
     public static bool IsFree(Mobile mobile, Skill skill) => mobile is PlayerMobile && mobile is not Server.CustomBots.PlayerBot &&
         skill.SkillName is SkillName.AnimalTaming or SkillName.AnimalLore;
     public static int CountedTotal(Mobile mobile) => mobile is PlayerMobile && mobile is not Server.CustomBots.PlayerBot

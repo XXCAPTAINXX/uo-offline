@@ -1642,6 +1642,55 @@ public class HavenWorldTests
         }
         finally { player.Delete(); }
     }
+    [SkippableFact]
+    public void HavenTrainingAcceleratesToHundredOnlyAndRespectsLocks()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        try
+        {
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            var skill = player.Skills.AnimalLore;
+            skill.Cap = 120;
+            skill.Base = 50;
+            Assert.Equal(5.0, HavenNewcomerTraining.ChanceMultiplier(player, skill));
+            Server.Misc.SkillCheck.Gain(player, skill);
+            Assert.Equal(50.5, skill.Base);
+            skill.Base = 99.8;
+            Server.Misc.SkillCheck.Gain(player, skill);
+            Assert.Equal(100.0, skill.Base);
+            Assert.Equal(1.0, HavenNewcomerTraining.ChanceMultiplier(player, skill));
+            Server.Misc.SkillCheck.Gain(player, skill);
+            Assert.Equal(100.1, skill.Base);
+            skill.Base = 50;
+            skill.SetLockNoRelay(SkillLock.Locked);
+            Server.Misc.SkillCheck.Gain(player, skill);
+            Assert.Equal(50.0, skill.Base);
+            skill.SetLockNoRelay(SkillLock.Up);
+            player.MoveToWorld(new Point3D(1428, 1697, 0), Map.Trammel);
+            Server.Misc.SkillCheck.Gain(player, skill);
+            Assert.Equal(50.1, skill.Base);
+        }
+        finally { player.Delete(); }
+    }
+    [Fact]
+    public void PlayerLoginAppliesThousandPointBudgetWithoutCountingTamingAndLore()
+    {
+        var player = new PlayerMobile { Player = true, SkillsCap = 7200 };
+        try
+        {
+            player.Skills.AnimalTaming.Base = 100;
+            player.Skills.AnimalLore.Base = 100;
+            player.Skills.Swords.Base = 80;
+            HavenFreeSkills.ApplyPlayerCap(player);
+            Assert.Equal(10000, player.SkillsCap);
+            Assert.Equal(800, HavenFreeSkills.CountedTotal(player));
+            HavenFreeSkills.ApplyPlayerCap(player);
+            Assert.Equal(10000, player.SkillsCap);
+            Assert.Equal(100, player.Skills.AnimalTaming.Base);
+        }
+        finally { player.Delete(); }
+    }
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())
