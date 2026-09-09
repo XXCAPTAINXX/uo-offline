@@ -69,7 +69,16 @@ public sealed class HavenCompanionGump : Gump
                 Button(195, 207, 23, "Gather leather");
                 Button(20, 244, 24, "Gather reagents");
                 Button(195, 244, 25, "Return now");
-                AddHtml(20, 285, 330, 35, "Rewards go into the shared pack. Every full minute earns skills, stats and gear experience.");
+                Button(20, 280, 26, "Taming missions...");
+                break;
+            case 5:
+                AddLabel(20, 128, 0, $"Taming {companion.Skills.AnimalTaming.Base:F1} / Lore {companion.Skills.AnimalLore.Base:F1}");
+                for (var i = 0; i < 6; i++)
+                {
+                    var kind = (HavenExpeditionKind)(5 + i);
+                    Button(20, 155 + i * 25, 30 + i, $"{HavenTamingMissions.PetName(kind)} - {HavenTamingMissions.Requirement(kind):F1} both skills");
+                }
+                AddHtml(20, 308, 330, 20, "Full 5 minutes required; claim from shared pack.");
                 break;
             default:
                 Button(20, 133, 1, "Follow");
@@ -102,6 +111,7 @@ public sealed class HavenCompanionGump : Gump
         if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
         if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
         if (button == 17) { DisplayTo(from, _companion, 4); return; }
+        if (button == 26) { DisplayTo(from, _companion, 5); return; }
         if (button == 25 || button == 9 && _companion.Expedition != null)
         { _companion.Expedition?.Return(from, Core.Now); DisplayTo(from, _companion, 4); return; }
         if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab); return; }
@@ -117,9 +127,10 @@ public sealed class HavenCompanionGump : Gump
             DisplayTo(from, _companion, _tab);
             return;
         }
-        if (button is >= 20 and <= 24)
+        if (button is >= 20 and <= 24 or >= 30 and <= 35)
         {
-            if (!HavenCompanionExpedition.Start(_companion, from, (HavenExpeditionKind)(button - 20))) { from.SendMessage("Your companion must be alive, nearby and ready before starting an expedition."); }
+            var kind = (HavenExpeditionKind)(button >= 30 ? button - 25 : button - 20);
+            if (!HavenCompanionExpedition.Start(_companion, from, kind)) { from.SendMessage("Your companion must meet the mission skills and be alive, nearby and ready."); }
             DisplayTo(from, _companion, 4); return;
         }
         switch (button)

@@ -2289,6 +2289,51 @@ public class HavenWorldTests
         finally { sentinel.Delete(); player.Delete(); }
     }
 
+    [SkippableFact]
+    public void TamingMissionRequiresBothSkillsAndPetClaimPreservesFollowerLimits()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile();
+        owner.AddItem(new Backpack());
+        var companion = new HavenCompanion { BoundOwner = owner };
+        BaseCreature claimedPet = null;
+        Bag loot = null;
+        try
+        {
+            owner.MoveToWorld(new Point3D(3511, 2575, 14), Map.Trammel);
+            companion.MoveToWorld(owner.Location, owner.Map);
+            companion.Skills.AnimalTaming.Base = 100;
+            companion.Skills.AnimalLore.Base = 20;
+            Assert.False(HavenCompanionExpedition.Start(companion, owner, HavenExpeditionKind.TameDragon));
+            Assert.Null(companion.Expedition);
+            companion.Skills.AnimalLore.Base = 100;
+            Assert.True(HavenCompanionExpedition.Start(companion, owner, HavenExpeditionKind.TameDragon));
+            Assert.True(companion.Expedition.Return(owner, companion.Expedition.Due));
+            var voucher = companion.Backpack.FindItemByType<HavenExpeditionPetClaim>();
+            Assert.NotNull(voucher);
+            Assert.Equal(owner, voucher.Owner);
+            Assert.Equal(HavenExpeditionKind.TameDragon, voucher.Kind);
+            owner.Backpack.DropItem(voucher);
+            Assert.False(voucher.Claim(other));
+            owner.FollowersMax = 0;
+            Assert.False(voucher.Claim(owner));
+            Assert.False(voucher.Deleted);
+            owner.FollowersMax = 5;
+            Assert.True(voucher.Claim(owner));
+            Assert.True(voucher.Deleted);
+            Assert.False(voucher.Claim(owner));
+            foreach (var pet in owner.Map.GetMobilesInRange<Dragon>(owner.Location, 0))
+            { if (pet.ControlMaster == owner) { claimedPet = pet; break; } }
+            Assert.NotNull(claimedPet);
+            Assert.Equal(3, claimedPet.ControlSlots);
+            loot = HavenCompanionExpedition.CreateLoot(HavenExpeditionKind.TameHorse, 4, owner);
+            Assert.Null(loot.FindItemByType<HavenExpeditionPetClaim>());
+            CheckBounds(new HavenCompanionGump(companion, 5), 370, 370);
+        }
+        finally { claimedPet?.Delete(); loot?.Delete(); companion.Delete(); owner.Delete(); other.Delete(); }
+    }
+
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())

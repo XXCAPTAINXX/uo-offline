@@ -66,3 +66,5 @@ Use `[c` or `[companion`, then Tasks, to send a companion on a five-minute offsc
 
 The stationary Haven training sentinel at Trammel (3564, 2585), east of New Haven, has 30,000 HP, cannot harm anyone, and refills instead of dying. It provides a reusable combat/spell training target with no kill loot. Bard song stat bonuses already scale with Musicianship, Peacemaking and accumulated training time; the buff icon shows the active song's bonuses.
 Focus is also a free skill alongside Animal Taming and Animal Lore: it does not consume the 1,000-point budget. Individual skill caps still apply. Use [skillbudget to see the counted total.
+
+Tasks > Taming missions offers pack horse (11.1), horse/forest ostard/giant beetle (29.1), dragon (93.9) and white wyrm (96.3). Both companion base Taming and Lore must meet the listed value. A full five-minute mission returns an owner-bound pet claim in the shared pack; move it to your backpack and double-click with enough follower slots. Early returns award training but no pet. Native tame skill/stat reductions apply, pets are not automatically bonded, and the player's skills determine obedience.
