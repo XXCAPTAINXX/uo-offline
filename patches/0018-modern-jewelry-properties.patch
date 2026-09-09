@@ -1,0 +1,15 @@
+diff --git a/Projects/UOContent/Items/Jewels/BaseJewel.cs b/Projects/UOContent/Items/Jewels/BaseJewel.cs
+--- a/Projects/UOContent/Items/Jewels/BaseJewel.cs
++++ b/Projects/UOContent/Items/Jewels/BaseJewel.cs
+@@ -171,7 +171,10 @@ public abstract partial class BaseJewel : Item, ICraftable, IAosItem
+ 
+     public override void OnSingleClick(Mobile from)
+     {
+-        if (!Core.UOTD)
++        // UOTD is not a chronology flag in modern expansion definitions
++        // (Endless Journey intentionally reports UOTD=false).  Using it here
++        // incorrectly forces AOS/ML jewelry into the pre-AOS name-only path.
++        if (!Core.AOS)
+         {
+             OnSingleClickPreUOTD(from);
+             return;
