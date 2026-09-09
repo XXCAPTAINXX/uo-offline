@@ -1,18 +1,19 @@
 diff --git a/Projects/UOContent/Items/Special/Special Scrolls/ScrollofTranscendence.cs b/Projects/UOContent/Items/Special/Special Scrolls/ScrollofTranscendence.cs
 --- a/Projects/UOContent/Items/Special/Special Scrolls/ScrollofTranscendence.cs
 +++ b/Projects/UOContent/Items/Special/Special Scrolls/ScrollofTranscendence.cs
-@@ -82,13 +82,18 @@ public partial class ScrollofTranscendence : SpecialScroll
+@@ -91,15 +91,22 @@
+ 
          if (skillBase < skillCap && skill.Lock == SkillLock.Up)
          {
 -            if (from.SkillsTotal + newValue * 10 > from.SkillsCap)
 +            var freeSkill = Server.CustomBots.FreeSkillSystem.IsFree(from, skill);
 +
 +            if (freeSkill)
-+            {
+             {
 +                canGain = true;
 +            }
 +            else if (Server.CustomBots.FreeSkillSystem.CappedTotalFixed(from) + newValue * 10 > from.SkillsCap)
-             {
++            {
                  var ns = from.Skills.Length; // number of items in from.Skills[]
  
                  for (var i = 0; i < ns; i++)
