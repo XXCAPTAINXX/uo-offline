@@ -1776,9 +1776,9 @@ public class HavenWorldTests
             SpecialRewardStone.RewardMenu.Buy(owner, 9);
             var pendant = owner.Backpack.FindItemByType<HavenChampionPendant>();
             Assert.NotNull(pendant);
-            Assert.Equal(500, pendant.Attributes.Luck);
-            Assert.Equal(25, pendant.Attributes.SpellDamage);
-            Assert.Equal(25, pendant.Attributes.WeaponDamage);
+            Assert.Equal(1000, pendant.Attributes.Luck);
+            Assert.Equal(40, pendant.Attributes.SpellDamage);
+            Assert.Equal(40, pendant.Attributes.WeaponDamage);
             Assert.Equal(0, wallet.HavenMarks);
         }
         finally { owner.Delete(); }
@@ -1886,6 +1886,77 @@ public class HavenWorldTests
             Assert.False(companion.TamingAssistActive);
         }
         finally { Mobile.SkillCheckTargetHandler = oldHandler; companion.Delete(); animal.Delete(); stranger.Delete(); owner.Delete(); }
+    }
+    [SkippableFact]
+    public void HavenHousingAllowsClearLandButProtectsServicesAndOtherRegions()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var map = Map.Trammel;
+        var island = new Server.Regions.NoHousingRegion("Haven Island", map, 90, new Rectangle3D(3314, 2345, -128, 500, 750, 256));
+        var town = new Server.Regions.TownRegion("New Haven", map, island);
+        var shop = new Server.Regions.NoHousingRegion("the New Haven Bank", map, town);
+        var other = new Server.Regions.TownRegion("Britain", map, 50);
+        var owner = new PlayerMobile { Player = true };
+        try
+        {
+            island.Register();
+            var point = new Point3D(3400, 2500, 0);
+            Assert.True(HavenHousing.IsResidentialRegion(island, map, point));
+            Assert.True(HavenHousing.IsResidentialRegion(town, map, point));
+            Assert.False(HavenHousing.IsResidentialRegion(other, map, point));
+            Assert.False(HavenHousing.IsResidentialRegion(island, Map.Felucca, point));
+            Assert.True(HavenHousing.BlocksFootprint(shop, map, point));
+            Assert.True(HavenHousing.BlocksFootprint(island, map, HavenRecovery.BankLocation));
+            owner.MoveToWorld(point, map);
+            Assert.Equal(Server.Multis.HousePlacementResult.BadRegion,
+                Server.Multis.HousePlacement.Check(owner, 0x64, HavenRecovery.BankLocation, out _));
+            Point3D? clear = null;
+            for (var x = 3340; x < 3790 && clear == null; x += 5)
+            {
+                for (var y = 2490; y < 3070 && clear == null; y += 5)
+                {
+                    var candidate = new Point3D(x, y, map.GetAverageZ(x, y));
+                    if (Server.Multis.HousePlacement.Check(owner, 0x64, candidate, out _) == Server.Multis.HousePlacementResult.Valid) { clear = candidate; }
+                }
+            }
+            Assert.NotNull(clear);
+            var obstruction = new Static(0x6) { Movable = false };
+            try
+            {
+                obstruction.MoveToWorld(clear.Value, map);
+                Assert.NotEqual(Server.Multis.HousePlacementResult.Valid,
+                    Server.Multis.HousePlacement.Check(owner, 0x64, clear.Value, out _));
+            }
+            finally { obstruction.Delete(); }
+        }
+        finally { island.Unregister(); owner.Delete(); }
+    }
+    [SkippableFact]
+    public void HavenRewardsAndExistingSpawnerTimersUseFasterProgression()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var boss = new OldHavenBossSpawner();
+        var steeds = new VampiricSteedSpawner();
+        var warden = new OldHavenWarden();
+        try
+        {
+            boss.MinDelay = TimeSpan.FromMinutes(10); boss.MaxDelay = TimeSpan.FromMinutes(15);
+            steeds.MinDelay = TimeSpan.FromMinutes(25); steeds.MaxDelay = TimeSpan.FromMinutes(40);
+            boss.Running = steeds.Running = false;
+            boss.NextSpawn = steeds.NextSpawn = TimeSpan.FromMinutes(20);
+            HavenContentBootstrap.ApplyRespawnTiming(boss);
+            HavenContentBootstrap.ApplyRespawnTiming(steeds);
+            Assert.Equal(TimeSpan.FromMinutes(2), boss.MinDelay);
+            Assert.Equal(TimeSpan.FromMinutes(3), boss.MaxDelay);
+            Assert.True(boss.NextSpawn <= boss.MaxDelay);
+            Assert.Equal(TimeSpan.FromSeconds(30), steeds.MinDelay);
+            Assert.Equal(TimeSpan.FromSeconds(60), steeds.MaxDelay);
+            Assert.True(steeds.NextSpawn <= steeds.MaxDelay);
+            Assert.Equal(0, warden.Backpack.GetAmount(typeof(HavenMark)));
+            warden.GenerateLoot(false);
+            Assert.InRange(warden.Backpack.GetAmount(typeof(HavenMark)), 3, 6);
+        }
+        finally { boss.Delete(); steeds.Delete(); warden.Delete(); }
     }
     private static void CheckBounds(Gump gump, int width, int height)
     {

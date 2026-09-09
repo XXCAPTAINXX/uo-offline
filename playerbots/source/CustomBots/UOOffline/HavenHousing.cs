@@ -1,0 +1,20 @@
+using Server.Regions;
+
+namespace Server.UOOffline;
+
+public static class HavenHousing
+{
+    // Lift only Haven's blanket ban. Named shops, houses and special regions keep their restrictions.
+    public static bool IsResidentialRegion(Region region, Map map, Point3D point) =>
+        HavenNewcomerLuck.IsInArea(map, point) && !IsProtectedSite(point) &&
+        (region is NoHousingRegion && region.Name == "Haven Island" ||
+         region is TownRegion && region.Name == "New Haven");
+
+    public static bool IsProtectedSite(Point3D point) =>
+        point.X >= 3497 && point.X <= 3517 && point.Y >= 2568 && point.Y <= 2586 ||
+        point.X >= 3650 && point.X <= 3690 && point.Y >= 2567 && point.Y <= 2607;
+
+    public static bool BlocksFootprint(Region region, Map map, Point3D point) =>
+        HavenNewcomerLuck.IsInArea(map, point) &&
+        (IsProtectedSite(point) || !IsResidentialRegion(region, map, point) && region.IsPartOf<NoHousingRegion, NoHousingGuardedRegion>());
+}

@@ -72,7 +72,7 @@ public partial class OldHavenWarden : BaseCreature
     public override void GenerateLoot()
     {
         PackGold(500, 900);
-        PackItem(new HavenMark(Utility.RandomMinMax(1, 2)));
+        if (!m_Spawning) { PackItem(new HavenMark(Utility.RandomMinMax(3, 6))); }
         AddLoot(LootPack.Average);
 
         // The bracelets are a meaningful early chase reward without making
@@ -122,8 +122,8 @@ public partial class OldHavenBossSpawner : Spawner
     [Constructible]
     public OldHavenBossSpawner() : base(
         1,
-        TimeSpan.FromMinutes(10),
-        TimeSpan.FromMinutes(15),
+        TimeSpan.FromMinutes(2),
+        TimeSpan.FromMinutes(3),
         0,
         default,
         nameof(OldHavenWarden)
@@ -138,8 +138,8 @@ public partial class VampiricSteedSpawner : Spawner
     [Constructible]
     public VampiricSteedSpawner() : base(
         1,
-        TimeSpan.FromMinutes(25),
-        TimeSpan.FromMinutes(40),
+        TimeSpan.FromSeconds(30),
+        TimeSpan.FromSeconds(60),
         0,
         default,
         nameof(VampiricSteed)
@@ -779,6 +779,17 @@ public static class HavenContentBootstrap
         item.MoveToWorld(loc, map);
     }
 
+    internal static void ApplyRespawnTiming(Spawner spawner)
+    {
+        if (spawner is OldHavenBossSpawner)
+        { spawner.MinDelay = TimeSpan.FromMinutes(2); spawner.MaxDelay = TimeSpan.FromMinutes(3); }
+        else if (spawner is VampiricSteedSpawner)
+        { spawner.MinDelay = TimeSpan.FromSeconds(30); spawner.MaxDelay = TimeSpan.FromSeconds(60); }
+        else { return; }
+        if (spawner.NextSpawn > spawner.MaxDelay)
+        { spawner.Running = false; spawner.NextSpawn = spawner.MinDelay; }
+        spawner.Running = true;
+    }
     private static void EnsureSpawner<T>(Map map, Point2D p) where T : Spawner, new()
     {
         var loc = AtSurface(map, p);
@@ -786,6 +797,7 @@ public static class HavenContentBootstrap
         {
             if (!existing.Deleted && existing.GetType() == typeof(T))
             {
+                ApplyRespawnTiming(existing);
                 return;
             }
         }
