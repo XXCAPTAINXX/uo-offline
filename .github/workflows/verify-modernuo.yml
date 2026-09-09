@@ -162,7 +162,7 @@ jobs:
           $root = if ($IsWindows) { Join-Path $PWD 'UO Offline Space Test/ModernUO' } else { Join-Path $PWD 'ModernUO' }
           $target = Join-Path $root 'Projects/UOContent.Tests/Tests/Offline'
           New-Item -ItemType Directory -Force -Path $target | Out-Null
-          Copy-Item tests/HavenWorldTests.cs $target
+          Copy-Item tests/HavenWorldTests*.cs $target
           $env:HAVEN_WORLD_DATA = Join-Path $root 'Distribution'
           dotnet test "$root/Projects/UOContent.Tests/UOContent.Tests.csproj" -c Release "-p:SolutionDir=$root/" --filter FullyQualifiedName~HavenWorldTests
           if ($LASTEXITCODE -ne 0) { throw 'Haven regression tests failed.' }

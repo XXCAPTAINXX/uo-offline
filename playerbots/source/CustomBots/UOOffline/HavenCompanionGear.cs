@@ -1,3 +1,4 @@
+using System;
 using Server.Items;
 using Server.Targeting;
 
@@ -37,17 +38,29 @@ public partial class HavenCompanion
     }
 
     private HavenCompanionRole? _combatRole;
-    internal void ConfigureCombatRole()
+    private DateTime _nextEquipmentCheck;
+    private Serial _lastMelee;
+    private Serial _lastRanged;
+    private Serial _lastSpellbook;
+    internal void ConfigureCombatRole(DateTime? equipmentTime = null)
     {
-        if (_combatRole == Role) { return; }
-        _combatRole = Role;
-        AI = Role == HavenCompanionRole.Archer ? Server.Mobiles.AIType.AI_Archer : Server.Mobiles.AIType.AI_Melee;
-        RangeFight = Role is HavenCompanionRole.Archer or HavenCompanionRole.Caster ? 6 : 1;
+        if (Deleted || IsDeadPet || Backpack == null || Expedition != null) { return; }
+        var changed = _combatRole != Role;
+        RememberCombatArms();
+        var now = equipmentTime ?? Core.Now;
+        if (!changed && now < _nextEquipmentCheck) { return; }
+        _nextEquipmentCheck = now + TimeSpan.FromSeconds(2);
+        if (changed)
+        {
+            _combatRole = Role;
+            AI = Role == HavenCompanionRole.Archer ? Server.Mobiles.AIType.AI_Archer : Server.Mobiles.AIType.AI_Melee;
+            RangeFight = Role is HavenCompanionRole.Archer or HavenCompanionRole.Caster ? 6 : 1;
+        }
         if (Role == HavenCompanionRole.Archer)
         {
             if (Weapon is not BaseRanged)
             {
-                var bow = Backpack.FindItemByType<BaseRanged>();
+                var bow = StoredArm<BaseRanged>(_lastRanged) ?? Backpack.FindItemByType<BaseRanged>();
                 if (bow == null) { bow = new HavenCompanionBow(); Backpack.DropItem(bow); }
                 EquipSafely(bow);
             }
@@ -57,22 +70,46 @@ public partial class HavenCompanion
         {
             if (FindItemOnLayer(Layer.OneHanded) is not Spellbook)
             {
-                Spellbook book = null;
-                foreach (var candidate in Backpack.FindItemsByType<Spellbook>())
-                { if (candidate.CanEquip(this)) { book = candidate; break; } }
+                var book = StoredArm<Spellbook>(_lastSpellbook);
+                if (book == null)
+                {
+                    foreach (var candidate in Backpack.FindItemsByType<Spellbook>())
+                    { if (candidate.CanEquip(this)) { book = candidate; break; } }
+                }
                 if (book == null) { book = new ApprenticeGrimoire { BoundTo = this }; Backpack.DropItem(book); }
                 EquipSafely(book);
             }
         }
-        else if (Weapon is BaseRanged || FindItemOnLayer(Layer.OneHanded) is Spellbook)
+        else if (Weapon is BaseRanged || FindItemOnLayer(Layer.OneHanded) is Spellbook ||
+                 FindItemOnLayer(Layer.OneHanded) is not BaseWeapon && FindItemOnLayer(Layer.TwoHanded) is not BaseWeapon)
         {
-            BaseWeapon melee = null;
-            foreach (var candidate in Backpack.FindItemsByType<BaseWeapon>())
+            var melee = StoredArm<BaseWeapon>(_lastMelee);
+            if (melee == null)
             {
-                if (candidate is not BaseRanged) { melee = candidate; break; }
+                foreach (var candidate in Backpack.FindItemsByType<BaseWeapon>())
+                {
+                    if (candidate is not BaseRanged) { melee = candidate; break; }
+                }
             }
             if (melee == null) { melee = new HavenCompanionBlade(); Backpack.DropItem(melee); }
             EquipSafely(melee);
+        }
+        RememberCombatArms();
+    }
+    private T StoredArm<T>(Serial serial) where T : Item =>
+        World.FindItem(serial) is T item && !item.Deleted && item.IsChildOf(Backpack) ? item : null;
+    private void RememberCombatArms()
+    {
+        RememberCombatArm(FindItemOnLayer(Layer.OneHanded));
+        RememberCombatArm(FindItemOnLayer(Layer.TwoHanded));
+    }
+    private void RememberCombatArm(Item item)
+    {
+        switch (item)
+        {
+            case BaseRanged ranged: _lastRanged = ranged.Serial; break;
+            case BaseWeapon melee: _lastMelee = melee.Serial; break;
+            case Spellbook book: _lastSpellbook = book.Serial; break;
         }
     }
     internal void RequestEquipment(Mobile from)
