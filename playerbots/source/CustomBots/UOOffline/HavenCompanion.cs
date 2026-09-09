@@ -116,6 +116,8 @@ public partial class HavenCompanion : BaseCreature
     {
         if (Core.Now < _nextGearExperience || BoundOwner?.NetState == null || BoundOwner.Map != Map || !InRange(BoundOwner, 18)) { return; }
         _nextGearExperience = Core.Now + TimeSpan.FromSeconds(10);
+        TrainingMinutes += 1;
+        ApplyGrowth();
         HavenGearExperience.GainEquipped(BoundOwner, 1);
         HavenGearExperience.GainEquipped(this, 1);
     }
@@ -208,6 +210,10 @@ public partial class HavenCompanion : BaseCreature
             skill.Cap = 6553.5;
             skill.Base = Math.Min(6553.5, Mastery);
         }
+        var statGrowth = (int)Math.Min(100000000, Math.Max(0, TrainingLevel - 1) * 2);
+        RawStr = Math.Max(RawStr, 100 + statGrowth);
+        RawDex = Math.Max(RawDex, 80 + statGrowth);
+        RawInt = Math.Max(RawInt, 60 + statGrowth);
         var bonus = (int)Math.Min(100000000, TrainingLevel * 2);
         var currentHits = Hits;
         SetHits(180 + bonus * 2);
@@ -219,11 +225,7 @@ public partial class HavenCompanion : BaseCreature
     {
         base.OnGaveMeleeAttack(defender, damage);
         if (damage > 0) { AwardHelpfulAction(); }
-        if (damage > 0 && Core.Now >= _nextCombatTraining)
-        {
-            _nextCombatTraining = Core.Now + TimeSpan.FromSeconds(10);
-            TrainingMinutes += 1;
-        }
+
     }
 
     public override void OnDoubleClick(Mobile from) => HavenCompanionGump.DisplayTo(from, this);

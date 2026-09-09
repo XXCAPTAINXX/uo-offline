@@ -1568,6 +1568,29 @@ public class HavenWorldTests
         }
         finally { post.Delete(); pet.Delete(); owner.Delete(); }
     }
+    [SkippableFact]
+    public void CompanionBaseStatsGrowWithTrainingWithoutStackingOrRefilling()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var companion = new HavenCompanion();
+        try
+        {
+            companion.Hits = companion.Stam = companion.Mana = 1;
+            var time = companion.LastTraining.AddHours(4);
+            companion.UpdateTraining(time);
+            Assert.True(companion.RawStr > 100 && companion.RawDex > 80 && companion.RawInt > 60);
+            Assert.Equal(1, companion.Hits);
+            Assert.Equal(1, companion.Stam);
+            Assert.Equal(1, companion.Mana);
+            var strength = companion.RawStr;
+            companion.UpdateTraining(time);
+            Assert.Equal(strength, companion.RawStr);
+            companion.Role = HavenCompanionRole.Caster;
+            companion.UpdateTraining(time.AddSeconds(1));
+            Assert.Equal(strength, companion.RawStr);
+        }
+        finally { companion.Delete(); }
+    }
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())

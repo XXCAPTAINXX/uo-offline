@@ -44,6 +44,7 @@ public sealed class HavenCompanionGump : Gump
                 AddLabel(20, 240, 0, $"Music {companion.Skills.Musicianship.Value:F1}  Discord {companion.Skills.Discordance.Value:F1}");
                 AddLabel(20, 262, 0, $"Peacemaking {companion.Skills.Peacemaking.Value:F1}  Mastery {companion.Mastery:F1}");
                 AddLabel(20, 284, 0, $"Magery {companion.Skills.Magery.Value:F1}  Weaving {companion.Skills.Spellweaving.Value:F1}");
+                AddLabel(20, 306, 0, $"Base stats: {companion.RawStr} Str / {companion.RawDex} Dex / {companion.RawInt} Int");
                 break;
             case 2:
                 Button(20, 133, 10, "Fighter - melee support");
