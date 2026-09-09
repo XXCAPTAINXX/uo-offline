@@ -1,7 +1,7 @@
 diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
 --- a/Projects/UOContent/Mobiles/BaseCreature.cs
 +++ b/Projects/UOContent/Mobiles/BaseCreature.cs
-@@ -5927,7 +5927,11 @@ namespace Server.Mobiles
+@@ -4601,14 +4601,18 @@
                  return TeachResult.SkillNotRaisable;
              }
  
@@ -13,7 +13,6 @@ diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mob
              var freeablePoints = 0;
  
              for (var i = 0; freePoints + freeablePoints < pointsToLearn && i < m.Skills.Length; ++i)
-@@ -5935,7 +5939,8 @@ namespace Server.Mobiles
              {
                  var sk = m.Skills[i];
  
@@ -23,7 +22,7 @@ diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mob
                  {
                      continue;
                  }
-@@ -5960,7 +5965,8 @@ namespace Server.Mobiles
+@@ -4635,7 +4639,8 @@
                  {
                      var sk = m.Skills[i];
  
@@ -33,7 +32,7 @@ diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mob
                      {
                          continue;
                      }
-@@ -5978,7 +5984,9 @@ namespace Server.Mobiles
+@@ -4653,7 +4658,9 @@
                  }
  
                  if (baseToSet > theirSkill.CapFixedPoint ||
