@@ -182,50 +182,84 @@ public sealed class HavenPetTrainingGump : Gump
 {
     private readonly BaseCreature _pet;
     private readonly bool _confirmFinish;
-    public static void DisplayTo(Mobile owner, BaseCreature pet, bool confirmFinish = false)
+    private readonly int _category;
+    private static readonly string[] Categories = ["Stats", "Resists", "Magic skill caps", "Combat skill caps", "Abilities"];
+    public static void DisplayTo(Mobile owner, BaseCreature pet, bool confirmFinish = false, int category = 0)
     {
         if (!HavenPetTraining.Owned(owner, pet)) { return; }
-        owner.CloseGump<HavenPetTrainingGump>(); owner.SendGump(new HavenPetTrainingGump(pet, confirmFinish));
+        owner.CloseGump<HavenPetTrainingGump>(); owner.SendGump(new HavenPetTrainingGump(pet, confirmFinish, category));
     }
-    internal HavenPetTrainingGump(BaseCreature pet, bool confirmFinish = false) : base(30, 40)
+    internal HavenPetTrainingGump(BaseCreature pet, bool confirmFinish = false, int category = 0) : base(20, 30)
     {
-        _pet = pet; _confirmFinish = confirmFinish; var record = HavenPetTraining.Get(pet);
-        AddBackground(0, 0, 590, 535, 5054); AddBackground(10, 10, 570, 515, 3000);
-        AddLabel(22, 22, 0, $"Animal Training: {pet.Name}");
-        AddLabel(22, 47, 0, $"Slots {pet.ControlSlots}/{HavenPetTraining.MaxSlots(pet)} | Progress {record.Progress / 100.0:F1}% | Points {record.Points:F1}");
-        AddHtml(22, 74, 540, 42, "Train in combat to 100%, then buy upgrades. Your first purchase adds one follower slot. Changes are permanent.");
-        AddPage(0);
-        AddButton(22, 480, 4005, 4007, 900); AddLabel(55, 482, 0, "Begin training");
-        AddButton(195, 480, 4005, 4007, 901); AddLabel(228, 482, 0, confirmFinish ? "Confirm: discard leftover points" : "Finish stage");
-        AddButton(22, 507, 4005, 4007, 902); AddLabel(55, 509, 0, "Refresh");
-        AddButton(470, 507, 4005, 4007, 0); AddLabel(503, 509, 0, "Close");
-        AddPage(1);
-        AddLabel(22, 116, 0, "Attribute / current"); AddLabel(288, 116, 0, "+1"); AddLabel(410, 116, 0, "+10");
-        for (var i = 0; i < HavenPetTraining.Labels.Length; i++)
+        _pet = pet; _confirmFinish = confirmFinish; _category = Math.Clamp(category, 0, 4);
+        var record = HavenPetTraining.Get(pet);
+        AddBackground(0, 0, 700, 570, 5054); AddImageTiled(12, 12, 676, 546, 2624);
+        AddLabel(225, 24, 53, "ANIMAL TRAINING");
+        AddHtml(28, 53, 640, 24, $"<BASEFONT COLOR=#FFFFFF>{Utility.FixHtml(pet.Name)}</BASEFONT>");
+        AddLabel(28, 82, 1152, $"Slots {pet.ControlSlots}/{HavenPetTraining.MaxSlots(pet)}   Progress {record.Progress / 100.0:F1}%   Available points {record.Points:F1}");
+        AddAlphaRegion(24, 122, 184, 324); AddAlphaRegion(220, 122, 456, 324);
+        AddLabel(42, 136, 53, "CATEGORIES"); AddLabel(238, 136, 53, "SELECTIONS");
+        for (var i = 0; i < Categories.Length; i++)
         {
-            var y = 140 + i * 26;
-            AddLabel(22, y, 0, $"{HavenPetTraining.Labels[i]}: {HavenPetTraining.Value(pet, i)}");
-            AddButton(285, y, 4005, 4007, 100 + i); AddLabel(320, y + 2, 0, $"{HavenPetTraining.Weights[i] / 10.0:F1} pts");
-            AddButton(405, y, 4005, 4007, 200 + i); AddLabel(440, y + 2, 0, $"{HavenPetTraining.Weights[i]} pts");
+            AddButton(34, 173 + i * 42, 4005, 4007, 1000 + i);
+            AddLabel(67, 175 + i * 42, i == _category ? 53 : 1152, Categories[i]);
         }
-        AddButton(22, 447, 4005, 4007, 0, GumpButtonType.Page, 2); AddLabel(55, 449, 0, "Skills and Healing");
-        AddPage(2);
-        AddButton(22, 120, 4005, 4007, 910); AddLabel(55, 122, 0, "Learn Healing: 100 points (skill starts at 20)");
-        AddHtml(22, 153, 535, 42, "Skill upgrades consume a matching power scroll from your backpack. They raise caps; skills still train through use.");
-        for (var i = 0; i < HavenPetTraining.TrainableSkills.Length; i++)
+        if (_category is 0 or 1)
         {
-            var s = pet.Skills[HavenPetTraining.TrainableSkills[i]];
-            AddButton(22, 205 + i * 25, 4005, 4007, 300 + i);
-            AddLabel(55, 207 + i * 25, 0, $"{s.Name}: {s.Base:F1} / {s.Cap:F1} - apply next scroll");
+            AddLabel(440, 166, 53, "+1 / cost"); AddLabel(555, 166, 53, "+10 / cost");
+            var first = _category == 0 ? 0 : 6;
+            var end = _category == 0 ? 6 : 11;
+            for (var i = first; i < end; i++)
+            {
+                var y = 198 + (i - first) * 35;
+                AddLabel(238, y, 1152, HavenPetTraining.Labels[i]);
+                AddLabel(385, y, 1152, $"{HavenPetTraining.Value(pet, i)}");
+                AddButton(442, y, 4005, 4007, 100 + i); AddLabel(475, y + 2, 1152, $"{HavenPetTraining.Weights[i] / 10.0:F1}");
+                AddButton(555, y, 4005, 4007, 200 + i); AddLabel(588, y + 2, 1152, $"{HavenPetTraining.Weights[i]}");
+            }
         }
-        AddButton(22, 447, 4005, 4007, 0, GumpButtonType.Page, 1); AddLabel(55, 449, 0, "Stats and resists");
+        else if (_category is 2 or 3)
+        {
+            AddLabel(238, 169, 53, "Skill                    Current / cap");
+            var first = _category == 2 ? 5 : 0;
+            var end = _category == 2 ? HavenPetTraining.TrainableSkills.Length : 5;
+            for (var i = first; i < end; i++)
+            {
+                var skill = pet.Skills[HavenPetTraining.TrainableSkills[i]];
+                var y = 200 + (i - first) * 36;
+                AddButton(236, y, 4005, 4007, 300 + i);
+                AddLabel(270, y + 2, 1152, skill.Name);
+                AddLabel(460, y + 2, 1152, $"{skill.Base:F1} / {skill.Cap:F1}");
+                AddTooltip(1042971, "Apply the lowest matching power scroll in your backpack that raises this skill cap. Skill points still train through use.");
+            }
+            AddHtml(238, 391, 410, 42, "<BASEFONT COLOR=#FFFFFF>Consumes the matching scroll and training points. Select a skill to apply its next available scroll.</BASEFONT>");
+        }
+        else
+        {
+            AddButton(236, 194, 4005, 4007, 910); AddLabel(270, 196, 1152, "Learn Healing - 100 points");
+            AddHtml(238, 234, 410, 100, "<BASEFONT COLOR=#FFFFFF>Teaches your pet to heal itself and its owner. Healing and Anatomy start at a minimum of 20 and improve through use.</BASEFONT>");
+            AddLabel(238, 342, 53, record.Healing > 0 ? "Healing learned" : "Healing not yet learned");
+        }
+        AddHtml(28, 456, 644, 36, "<BASEFONT COLOR=#FFFFFF>Train through combat to 100%, then spend points. The first purchase adds one follower slot. Purchases apply immediately.</BASEFONT>");
+        Button(28, 501, 900, "Begin training"); Button(228, 501, 901, confirmFinish ? "Confirm finish" : "Finish stage");
+        Button(442, 501, 903, "Info"); Button(557, 501, 0, "Close");
+        Button(28, 535, 904, "Animal Lore"); Button(228, 535, 902, "Refresh");
+        if (confirmFinish) { AddLabel(380, 537, 53, "Finishing discards leftover points."); }
     }
+    private void Button(int x, int y, int id, string text) { AddButton(x, y, 4005, 4007, id); AddLabel(x + 33, y + 2, 1152, text); }
     public override void OnResponse(NetState sender, in RelayInfo info)
     {
         var owner = sender.Mobile; var button = info.ButtonID;
         if (button == 0 || !HavenPetTraining.Owned(owner, _pet)) { return; }
+        if (button is >= 1000 and <= 1004) { DisplayTo(owner, _pet, category: button - 1000); return; }
+        if (button == 904) { HavenAnimalLoreGump.DisplayTo(owner, _pet); return; }
+        if (button == 903)
+        {
+            owner.SendMessage("Begin a stage, train through combat to 100%, then spend the available points. Your first upgrade requires one spare follower slot. Finish discards leftover points. Skill upgrades require matching scrolls.");
+            DisplayTo(owner, _pet, category: _category); return;
+        }
         var record = HavenPetTraining.Get(_pet); var success = false;
-        if (button == 901 && !_confirmFinish) { DisplayTo(owner, _pet, true); return; }
+        if (button == 901 && !_confirmFinish) { DisplayTo(owner, _pet, true, _category); return; }
         if (button == 900) { success = record.Begin(owner, _pet); }
         else if (button == 901) { success = record.Finish(owner, _pet); }
         else if (button == 910) { success = record.LearnHealing(owner, _pet); }
@@ -244,6 +278,6 @@ public sealed class HavenPetTrainingGump : Gump
         }
         else if (button == 902) { success = true; }
         if (!success) { owner.SendMessage("No change: check progress, points, stat limits, matching scrolls, and room for the extra follower slot."); }
-        DisplayTo(owner, _pet);
+        DisplayTo(owner, _pet, category: _category);
     }
 }
