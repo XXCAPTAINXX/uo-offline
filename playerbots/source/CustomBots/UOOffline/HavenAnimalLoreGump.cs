@@ -27,7 +27,7 @@ public sealed class HavenAnimalLoreGump : Gump
         AddAlphaRegion(330, 128, 308, 498);
         AddLabel(28, 24, 53, "ANIMAL LORE");
         AddHtml(28, 49, 280, 44, $"<BASEFONT COLOR=#FFFFFF>{Utility.FixHtml(pet.Name)}</BASEFONT>");
-        AddLabel(28, 99, 1152, pet.IsBonded ? "Bonded" : pet.Controlled ? "Tamed - not bonded" : "Wild creature / ticket preview");
+        AddLabel(28, 99, 1152, pet.IsBonded ? "Bonded" : pet.Map == Map.Internal ? "Stored pet / ticket preview" : pet.Controlled ? "Tamed - not bonded" : "Wild creature");
         Bar(350, 28, "Loyalty", pet.Loyalty, BaseCreature.MaxLoyalty, pet.Controlled);
         Bar(350, 75, "Training", training?.Progress ?? 0, 10000, training != null);
         AddLabel(28, 136, 53, "Attribute"); AddLabel(143, 136, 53, "Current / max"); AddLabel(259, 136, 53, "Regen");
@@ -80,7 +80,7 @@ public sealed class HavenAnimalLoreGump : Gump
             AddLabel(535, y + 24 + i * 20, 1152, $"{skill.Base:F1}/{skill.Cap:F1}");
         }
     }
-    private bool CanRefresh(Mobile owner)
+    internal bool CanRefresh(Mobile owner)
     {
         if (_pet.Deleted || !owner.Alive) { return false; }
         if (_pet.Map == owner.Map && owner.InRange(_pet, 12) && owner.InLOS(_pet)) { return true; }
@@ -89,6 +89,10 @@ public sealed class HavenAnimalLoreGump : Gump
             foreach (var ticket in owner.Backpack.FindItemsByType<HavenExpeditionPetClaim>())
             {
                 if (ticket.Owner == owner && ticket.ReservedPet == _pet) { return true; }
+            }
+            foreach (var token in owner.Backpack.FindItemsByType<ShrunkenPet>())
+            {
+                if (token.Inspect(owner) == _pet) { return true; }
             }
         }
         return false;

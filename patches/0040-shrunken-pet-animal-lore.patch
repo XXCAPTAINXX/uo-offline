@@ -1,0 +1,15 @@
+diff --git a/Projects/UOContent/Skills/AnimalLore.cs b/Projects/UOContent/Skills/AnimalLore.cs
+index 72092ee82..453111ec2 100644
+--- a/Projects/UOContent/Skills/AnimalLore.cs
++++ b/Projects/UOContent/Skills/AnimalLore.cs
+@@ -38,6 +38,10 @@ protected override void OnTarget(Mobile from, object targeted)
+                 {
+                     claim.InspectWithAnimalLore(from);
+                 }
++                else if (targeted is Server.UOOffline.ShrunkenPet shrunken)
++                {
++                    shrunken.InspectWithAnimalLore(from);
++                }
+                 else if (targeted is not BaseCreature c)
+                 {
+                     from.SendLocalizedMessage(500329); // That's not an animal!

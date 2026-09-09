@@ -30,6 +30,16 @@ public partial class ShrunkenPet : Item
         Hue = pet?.Hue ?? 0;
     }
 
+    internal BaseCreature Inspect(Mobile from) => !Deleted && Pet?.Deleted == false && from?.Deleted == false &&
+        from.Alive && from.Backpack != null && IsChildOf(from.Backpack) && (Owner == null || Owner == from) ? Pet : null;
+
+    public void InspectWithAnimalLore(Mobile from)
+    {
+        var pet = Inspect(from);
+        if (pet == null) { from.SendMessage("Keep your own shrunken pet in your backpack to inspect it."); return; }
+        HavenAnimalLoreGump.DisplayTo(from, pet);
+    }
+
     public override void OnDoubleClick(Mobile from)
     {
         if (!IsChildOf(from.Backpack))
@@ -122,17 +132,18 @@ public partial class ShrunkenPet : Item
 
         if (Pet?.Deleted == false)
         {
-            list.Add($"Pet: {Pet.Name}");
-            list.Add($"Control slots: {Pet.ControlSlots}");
+            list.Add($"{"Pet:"} {Pet.Name}");
+            list.Add($"{"Control slots:"} {Pet.ControlSlots}");
             list.Add(Pet.IsBonded ? "Bonded" : "Not bonded");
         }
 
         if (Owner != null)
         {
-            list.Add($"Owner: {Owner.Name}");
+            list.Add($"{"Owner:"} {Owner.Name}");
         }
 
         list.Add("Double-click to restore the pet");
+        list.Add($"{"Use Animal Lore on this token to inspect the stored pet."}");
     }
 }
 
