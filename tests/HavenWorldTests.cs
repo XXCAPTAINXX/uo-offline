@@ -1591,6 +1591,57 @@ public class HavenWorldTests
         }
         finally { companion.Delete(); }
     }
+    [SkippableFact]
+    public void CompanionSupportReachesTwelveTilesButNotThirteen()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var companion = new HavenCompanion { BoundOwner = owner };
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            owner.Hits = 1;
+            companion.MoveToWorld(new Point3D(owner.X + 13, owner.Y, owner.Z), owner.Map);
+            Assert.False(companion.Support(owner));
+            var found = false;
+            for (var x = -12; x <= 12 && !found; x++)
+            {
+                for (var y = -12; y <= 12 && !found; y++)
+                {
+                    if (Math.Max(Math.Abs(x), Math.Abs(y)) != 12) { continue; }
+                    var point = new Point3D(owner.X + x, owner.Y + y, owner.Map.GetAverageZ(owner.X + x, owner.Y + y));
+                    if (!owner.Map.CanSpawnMobile(point)) { continue; }
+                    companion.MoveToWorld(point, owner.Map);
+                    if (!companion.InLOS(owner)) { continue; }
+                    Assert.True(companion.Support(owner));
+                    found = true;
+                }
+            }
+            Assert.True(found);
+            Assert.True(owner.Hits > 1);
+        }
+        finally { companion.Delete(); owner.Delete(); }
+    }
+    [SkippableFact]
+    public void HavenLuckStacksWithGearAndEndsOutsideIsland()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var earrings = new StarterFortuneEarrings();
+        try
+        {
+            player.AddItem(earrings);
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            Assert.Equal(1200, player.Luck);
+            player.MoveToWorld(new Point3D(3670, 2587, 0), Map.Trammel);
+            Assert.Equal(1200, player.Luck);
+            player.MoveToWorld(new Point3D(1428, 1697, 0), Map.Trammel);
+            Assert.Equal(200, player.Luck);
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Felucca);
+            Assert.Equal(200, player.Luck);
+        }
+        finally { player.Delete(); }
+    }
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())

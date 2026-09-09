@@ -69,7 +69,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(195, 207, 6, "Pack");
                 Button(20, 244, 9, "Recall");
                 Button(195, 244, 7, CompanionParty.Get(companion)?.Contains(companion.BoundOwner) == true ? "Leave party" : "Join party");
-                AddHtml(20, 286, 330, 30, "All roles auto-heal you when able.");
+                AddHtml(20, 286, 330, 30, "All roles auto-heal within 12 tiles and sight.");
                 break;
         }
         Button(20, 332, 110, "Refresh");
@@ -122,7 +122,7 @@ public sealed class HavenCompanionGump : Gump
                 from.SendMessage("Choose a monster for your companion to attack.");
                 break;
             case 5:
-                if (!_companion.Support(from)) { from.SendMessage("Stand within 3 tiles. Your companion needs mana, a ready heal and must be alive."); }
+                if (!_companion.Support(from)) { from.SendMessage("Stand within 12 tiles and in sight. Your companion needs mana, a ready heal and must be alive."); }
                 break;
             case 6:
                 if (_companion.Backpack.CheckContentDisplay(from)) { _companion.Backpack.DisplayTo(from); }

@@ -241,7 +241,7 @@ public partial class HavenCompanion : BaseCreature
 
     internal bool Support(Mobile patient)
     {
-        if (IsDeadPet || !Alive || patient?.Deleted != false || patient.Map != Map || !InRange(patient, 3) ||
+        if (IsDeadPet || !Alive || patient?.Deleted != false || patient.Map != Map || !InRange(patient, 12) ||
             !InLOS(patient) || Core.Now < _nextSupport || Mana < 10) { return false; }
         if (patient != BoundOwner && (CompanionParty.Get(BoundOwner)?.Contains(patient) != true || !patient.Player)) { return false; }
         if (!patient.Alive)

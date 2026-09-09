@@ -14,7 +14,7 @@ Travel menus display twelve compact destinations per page. Shops show item stats
 
 Dead companions resurrect automatically after five seconds near their online owner. Refresh resurrects immediately when nearby, preserving their identity and gear.
 
-Animal Taming and Animal Lore do not count against a player's existing total skill cap. They still require training and obey individual skill caps and locks. Natural gains and NPC training use the same exemption. Use [skillbudget to see the counted total; the standard client skill total still includes all skills. The requested 1,000-point total cap was cancelled.
+Animal Taming and Animal Lore do not count against a player's existing total skill cap. They still require training and obey individual skill caps and locks. Natural gains and NPC training use the same exemption. Use [skillbudget to see the counted total; the standard client skill total still includes all skills.
 
 Training Supplies now opens Combat, Magic, Bards/Tamers, Crafting, and Pet Supplies categories. Shop entries show short inline bonuses plus full single-argument hover text, avoiding client newline truncation.
 
@@ -23,3 +23,7 @@ Pet supplies include six-scroll 105 bundles (15,000 gold), six-scroll 110 bundle
 House posts must be placed in a house the user owns or co-owns and can be locked down. Leashes reuse the town shrinking rules. Bonding potions consume only after successfully bonding an eligible owned pet. The new Arcane and Training stones move to 3504,2583 and 3508,2583 around the south side of the monument, clearing their former east-side locations.
 
 Companion base Strength, Dexterity and Intelligence gain two points per training level beyond level one. Helpful actions contribute training as well as gear experience, with a ten-second cooldown. Offline training counts too. Growth never lowers existing base stats, stacks again on refresh, or refills current resources. The Stats tab shows base stats separately.
+
+Companion direct healing, cures and resurrection support reach 12 tiles with line of sight. Gear/pack interactions retain their short range.
+
+Haven Island now grants +1,000 Luck to players on Trammel, including New Haven and Old Haven. It stacks with equipment luck and is computed from location, so it cannot accumulate across movement or reloads. Outside the island it stops applying. Use [havenluck to see total and area bonus.
