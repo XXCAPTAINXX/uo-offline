@@ -54,14 +54,26 @@ public partial class HavenCompanionExpedition : Item
     private void CheckReturn()
     {
         if (Companion?.Deleted != false || Companion.BoundOwner?.Deleted != false) { Delete(); return; }
+        var now = Core.Now;
+        if (now < Due)
+        {
+            Schedule();
+            return;
+        }
         var owner = Companion.BoundOwner;
-        if (owner.NetState != null && Return(owner, Core.Now)) { return; }
+        if (owner.NetState != null && Return(owner, now, automatic: true)) { return; }
         _timer = Timer.DelayCall(TimeSpan.FromSeconds(30), CheckReturn);
     }
-    internal bool Return(Mobile owner, DateTime now, double? tamingRoll = null)
+    internal bool Return(Mobile owner, DateTime now, double? tamingRoll = null, bool automatic = false)
     {
         if (Deleted || Claimed || Companion?.Deleted != false || owner?.Deleted != false || Companion.BoundOwner != owner ||
             owner.Map == null || owner.Map == Map.Internal) { return false; }
+        // Timer-wheel callbacks can arrive before the wall-clock deadline. Never
+        // turn an automatic completion into an early return with no pet reward.
+        if (automatic && now < Due)
+        {
+            return false;
+        }
         var minutes = Math.Clamp((int)(now - Started).TotalMinutes, 0, 5);
         var companion = Companion;
         Claimed = true;
