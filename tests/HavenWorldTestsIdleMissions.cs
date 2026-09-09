@@ -80,7 +80,7 @@ public class HavenWorldTestsIdleMissions
     }
 
     [SkippableFact]
-    public void AfkStartsImmediatelyButCombatDisconnectAndMovementCancelIt()
+    public void ManualAfkSurvivesActivityAndDisconnectUntilExplicitlyDisabled()
     {
         TileDataRequirement.SkipIfMissing();
         var owner = new PlayerMobile { Player = true, Body = 0x190 };
@@ -92,9 +92,34 @@ public class HavenWorldTestsIdleMissions
             var record = HavenCompanionIdleMissions.Ensure(companion);
             record.Tick(Core.Now, true); record.Afk = true; record.Tick(Core.Now, true);
             Assert.NotNull(record.ActiveTrip);
+            var trip = record.ActiveTrip;
+            owner.LastMoveTime++; owner.NextActionTime++; owner.NextSkillTime++;
             owner.Warmode = true; record.Tick(Core.Now, true);
-            Assert.False(record.Afk); Assert.Null(companion.Expedition);
-            owner.Warmode = false; record.Afk = true; record.Tick(Core.Now, false);
+            Assert.True(record.Afk); Assert.Same(trip, companion.Expedition);
+            record.Tick(Core.Now, false);
+            Assert.True(record.Afk); Assert.Same(trip, companion.Expedition);
+            record.Tick(Core.Now, true);
+            Assert.True(record.Afk); Assert.Same(trip, companion.Expedition);
+            var writer = new BufferWriter(true); record.Serialize(writer);
+            var copy = new HavenCompanionIdleMissions(World.NewItem);
+            try
+            {
+                copy.Deserialize(new BufferReader(writer.Buffer.AsSpan(0, (int)writer.Position).ToArray()));
+                Assert.True(copy.Afk); Assert.Same(trip, copy.ActiveTrip);
+            }
+            finally { copy.Delete(); }
+            Assert.True(trip.Return(owner, trip.Due, automatic: true));
+            companion.Hits = companion.HitsMax;
+            var enemy = new Dragon();
+            try
+            {
+                enemy.MoveToWorld(owner.Location, owner.Map); companion.Combatant = enemy;
+                record.Tick(trip.Due, true);
+                Assert.NotNull(record.ActiveTrip); Assert.NotSame(trip, record.ActiveTrip);
+                Assert.Equal(HavenExpeditionKind.Ore, record.ActiveTrip.Kind);
+            }
+            finally { enemy.Delete(); }
+            record.SetAfk(false); record.Tick(Core.Now, true);
             Assert.False(record.Afk); Assert.Null(companion.Expedition);
         }
         finally { companion.Delete(); owner.Delete(); }

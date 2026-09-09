@@ -71,19 +71,24 @@ public class HavenWorldTestsIslandTrial
             Assert.Equal(4, trial.Stage); trial.Tick(); Assert.Single(trial.Creatures);
             var boss = trial.Creatures[0];
             boss.DamageEntries.Add(new DamageEntry(owner) { DamageGiven = 450, LastDamage = Core.Now });
+            owner.Backpack.DropItem(new AstralShard(1)); // Unrelated shard drops must not be mistaken for the reward bundle.
             boss.Kill();
             Assert.Equal(0, trial.Stage); Assert.Empty(trial.Creatures);
-            Assert.Equal(5, owner.Backpack.FindItemByType<AstralShard>().Amount);
-            Assert.Equal(5, helper.Backpack.FindItemByType<AstralShard>().Amount);
+            Bag rewards = null; Bag helperRewards = null;
+            foreach (var item in owner.Backpack.Items) { if (item is Bag bag && bag.Name == "island trial rewards") { rewards = bag; } }
+            foreach (var item in helper.Backpack.Items) { if (item is Bag bag && bag.Name == "island trial rewards") { helperRewards = bag; } }
+            Assert.NotNull(rewards); Assert.NotNull(helperRewards);
+            Assert.Equal(5, rewards.FindItemByType<AstralShard>().Amount);
+            Assert.Equal(5, helperRewards.FindItemByType<AstralShard>().Amount);
             var corpse = Assert.IsAssignableFrom<Container>(boss.Corpse);
-            var count = 0; foreach (var scroll in owner.Backpack.FindItemsByType<PowerScroll>()) { count++; Assert.InRange(scroll.Value, 105, 110); } Assert.Equal(5, count);
+            var count = 0; foreach (var scroll in rewards.FindItemsByType<PowerScroll>()) { count++; Assert.InRange(scroll.Value, 105, 110); } Assert.Equal(5, count);
             Assert.Null(corpse.FindItemByType<PowerScroll>());
-            Assert.Equal(20, owner.Backpack.FindItemByType<HavenMark>().Amount);
-            Assert.NotNull(owner.Backpack.FindItemByType<ScrollofAlacrity>());
-            Assert.InRange(owner.Backpack.FindItemByType<ScrollofTranscendence>().Value, 0.5, 2.0);
-            Assert.NotNull(helper.Backpack.FindItemByType<ScrollofAlacrity>());
-            Assert.InRange(owner.Backpack.FindItemByType<Gold>().Amount, 25000, 40000);
-            trial.Defeated(boss); Assert.Equal(5, owner.Backpack.FindItemByType<AstralShard>().Amount);
+            Assert.Equal(20, rewards.FindItemByType<HavenMark>().Amount);
+            Assert.NotNull(rewards.FindItemByType<ScrollofAlacrity>());
+            Assert.InRange(rewards.FindItemByType<ScrollofTranscendence>().Value, 0.5, 2.0);
+            Assert.NotNull(helperRewards.FindItemByType<ScrollofAlacrity>());
+            Assert.InRange(rewards.FindItemByType<Gold>().Amount, 25000, 40000);
+            trial.Defeated(boss); Assert.Equal(5, rewards.FindItemByType<AstralShard>().Amount);
             trial.OnDoubleClick(owner); Assert.Equal(0, trial.Stage); corpse.Delete();
         }
         finally { Mobile.CreateCorpseHandler = previous; trial.Delete(); owner.Delete(); helper.Delete(); }

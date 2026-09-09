@@ -37,11 +37,11 @@ public partial class HavenCompanionIdleMissions : Item
             if (record == null) { return; }
             var option = e.ArgString.Trim();
             if (option.Equals("on", StringComparison.OrdinalIgnoreCase)) { record.Enabled = true; }
-            else if (option.Equals("off", StringComparison.OrdinalIgnoreCase)) { record.Enabled = false; }
+            else if (option.Equals("off", StringComparison.OrdinalIgnoreCase)) { record.Enabled = false; record.Afk = false; }
             record.NoteActivity(Core.Now);
             record.Tick(Core.Now);
             e.Mobile.SendGump(new HavenCompanionAfkGump(record));
-            e.Mobile.SendMessage($"Idle missions: {(record.Enabled ? "ON" : "OFF")}. Five idle minutes starts the cycle; moving returns your helper. Use [companionauto on or off.");
+            e.Mobile.SendMessage($"Idle missions: {(record.Enabled ? "ON" : "OFF")}. Manual AFK stays on until you turn it off. Use [companionauto on or off.");
         });
     }
 
@@ -62,10 +62,10 @@ public partial class HavenCompanionIdleMissions : Item
     }
     private void Pulse()
     { Tick(Core.Now); Schedule(); }
-    internal void NoteActivity(DateTime now) { _lastActivity = now; Afk = false; }
+    internal void NoteActivity(DateTime now) { _lastActivity = now; }
     internal void SetAfk(bool value)
     {
-        NoteActivity(Core.Now); Tick(Core.Now);
+        NoteActivity(Core.Now);
         Afk = value;
         if (value) { Enabled = true; }
         Tick(Core.Now);
@@ -107,7 +107,9 @@ public partial class HavenCompanionIdleMissions : Item
             { ActiveTrip.Return(owner, now, automatic: now >= ActiveTrip.Due); }
             return;
         }
-        if (!idle || Companion.Expedition != null || Companion.IsDeadPet || Companion.IsStabled ||
+        if (connected && Enabled && Afk && Companion.Expedition == null && !Companion.IsStabled)
+        { Companion.PrepareForExpedition(); }
+        if (!connected || !idle || Companion.Expedition != null || Companion.IsDeadPet || Companion.IsStabled ||
             Companion.Combatant != null || Companion.Hits < Companion.HitsMax ||
             Companion.Backpack.TotalItems >= Companion.Backpack.MaxItems - 15 ||
             Companion.Backpack.TotalWeight >= Companion.Backpack.MaxWeight - 50) { return; }
@@ -132,7 +134,7 @@ public class HavenCompanionAfkGump : Gump
         _record = record;
         AddBackground(0, 0, 390, 255, 9270);
         AddLabel(20, 20, 0, "Companion AFK missions");
-        AddHtml(20, 52, 350, 70, "Cycle: loot, ore, wood, leather, reagents, best eligible pet.<BR>Moving or fighting brings your companion back.<BR>Gathered materials arrive as commodity deeds.");
+        AddHtml(20, 52, 350, 70, "Cycle: loot, gathering, best eligible pet.<BR>Manual AFK stays on until you turn it off.<BR>Activity ends automatic idle missions only.");
         AddButton(20, 135, 4005, 4007, 1);
         AddLabel(55, 137, 0, record.Afk || record.ActiveTrip != null ? "Leave AFK / return now" : "Enter AFK now");
         AddButton(20, 172, 4005, 4007, 2);

@@ -1,6 +1,6 @@
 # Companion AFK missions
 
-Open [c, Tasks, AFK / auto, then Enter AFK now. Walking, fighting, damage, spells, skill use, or item actions end AFK and return an automatic expedition within five seconds. Five minutes without tracked activity also starts the cycle when automatic idle missions are enabled (default). [companionauto opens the same panel; [companionauto off disables the cycle. Manual expeditions are not interrupted by idle controls.
+Open [c, Tasks, AFK / auto, then Enter AFK now. Manual AFK stays enabled across movement, combat, item/skill use, reconnects and saves until explicitly turned off. Those activities cancel only missions triggered by the automatic idle timer. Five minutes without tracked activity also starts the cycle when automatic idle missions are enabled (default). [companionauto opens the same panel; [companionauto off disables the cycle. Manual expeditions are not interrupted by idle controls.
 
 The connected-player cycle is grind, ore, wood, leather, reagents, and the highest-requirement pet mission allowed by BOTH base Taming and Lore. Existing gathering/grind missions have no higher skill tiers. Each mission takes five minutes and retains normal rewards and rarity rolls. The companion recovers before leaving again; nearly full packs pause departures. Idle rewards stay in its pack without spilling to the ground. Offline training remains separate; this cycle requires a connected player.
 
