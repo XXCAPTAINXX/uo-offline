@@ -54,7 +54,7 @@ namespace Server.CustomBots
 
         public static void Configure()
         {
-            CommandSystem.Register("NewbieSetup", AccessLevel.GameMaster, NewbieSetup_OnCommand);
+            CommandSystem.Register("NewbieSetup", AccessLevel.Player, NewbieSetup_OnCommand);
             CommandSystem.Register("NewbieStatus", AccessLevel.Player, NewbieStatus_OnCommand);
             CommandSystem.Register("TravelBook", AccessLevel.Player, TravelBook_OnCommand);
 
