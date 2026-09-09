@@ -56,7 +56,7 @@ public partial class HavenTrialParticipants : Item
             for (var i = 0; i < 5; i++) { bag.DropItem(PowerScroll.CreateRandomNoCraft(5, 10)); }
             bag.DropItem(new ScrollofAlacrity(SkillsInfo.RandomSkill()));
             bag.DropItem(ScrollofTranscendence.CreateRandom(5, 20));
-            bag.DropItem(HavenTrialTheme.Resource(theme, true));
+            bag.DropItem(HavenTrialTheme.ResourceDeed(theme, true));
             if (player.Backpack == null) { player.AddItem(new Backpack()); }
             // Earned event rewards must not disappear or spill onto the ground when a pack is full.
             player.Backpack.DropItem(bag);

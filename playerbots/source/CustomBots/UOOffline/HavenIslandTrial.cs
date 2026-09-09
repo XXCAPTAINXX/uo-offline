@@ -139,7 +139,7 @@ public partial class HavenTrialCreature : BaseCreature
     {
         if (m_Spawning || TrialStage == 4) { return; }
         PackGold(30, 60);
-        PackItem(HavenTrialTheme.Resource(HavenTrialTheme.Get(this), TrialStage == 4));
+        PackItem(HavenTrialTheme.ResourceDeed(HavenTrialTheme.Get(this), TrialStage == 4));
     }
     public override void OnDeath(Container corpse)
     {

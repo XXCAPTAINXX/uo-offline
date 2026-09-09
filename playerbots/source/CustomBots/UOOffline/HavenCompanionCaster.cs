@@ -1,6 +1,7 @@
 using System;
 using Server.Spells;
 using Server.Spells.First;
+using Server.Spells.Necromancy;
 using Server.Spells.Fourth;
 using Server.Spells.Sixth;
 using Server.Spells.Second;
@@ -14,6 +15,7 @@ public partial class HavenCompanion
     private DateTime _nextCasterSpell = Core.Now;
     private DateTime _nextResourceRecovery = Core.Now;
     private DateTime _nextLifeGift = Core.Now;
+    private DateTime _nextManaForm = Core.Now;
     private Spell _companionSpell;
     private Mobile _companionSpellTarget;
     private bool _beneficialSpell;
@@ -58,6 +60,16 @@ public partial class HavenCompanion
         return null;
     }
 
+    internal Spell ChooseManaForm() => Role == HavenCompanionRole.Caster && Alive && !IsDeadPet &&
+        Skills.Necromancy.Value >= 20 && Mana >= 17 &&
+        !TransformationSpellHelper.UnderTransformation(this) ? new WraithFormSpell(this) : null;
+
+    internal void ClearCasterForm()
+    {
+        if (TransformationSpellHelper.UnderTransformation(this, typeof(WraithFormSpell)))
+        { TransformationSpellHelper.RemoveContext(this, true); }
+    }
+
     private bool BeginCompanionSpell(Spell spell, Mobile target, bool beneficial)
     {
         if (spell == null || Spell != null || Target != null || !CanCastAt(target, beneficial) || !spell.Cast()) { return false; }
@@ -70,6 +82,7 @@ public partial class HavenCompanion
 
     private void ProcessCompanionSpell()
     {
+        if (Role != HavenCompanionRole.Caster || IsDeadPet || !Alive) { ClearCasterForm(); }
         if (_companionSpell == null) { return; }
         if (BoundOwner?.NetState == null || !CanCastAt(_companionSpellTarget, _beneficialSpell))
         {
@@ -92,6 +105,7 @@ public partial class HavenCompanion
 
     private void CancelCompanionSpell()
     {
+        ClearCasterForm();
         if (_companionSpell != null)
         {
             Target?.Cancel(this, TargetCancelType.Canceled);
@@ -117,6 +131,11 @@ public partial class HavenCompanion
         if (Spell != null || Target != null || Core.Now < _nextCasterSpell || Core.TickCount - NextSpellTime < 0) { return; }
         var emergency = ChooseEmergencySpell(out var patient);
         if (emergency != null && BeginCompanionSpell(emergency, patient, true)) { return; }
+        if (Core.Now >= _nextManaForm && ChooseManaForm() is { } form)
+        {
+            _nextManaForm = Core.Now + TimeSpan.FromSeconds(10);
+            if (BeginCompanionSpell(form, this, true)) { return; }
+        }
         if (BoundOwner.Alive && BoundOwner.Hits < BoundOwner.HitsMax * 0.85 && Mana >= 34 &&
             CanBeginAction<GiftOfRenewalSpell>() && BeginCompanionSpell(new GiftOfRenewalSpell(this), BoundOwner, true)) { return; }
         if (BoundOwner.Alive && BoundOwner.Combatant == null && Skills.Spellweaving.Value >= 80 &&

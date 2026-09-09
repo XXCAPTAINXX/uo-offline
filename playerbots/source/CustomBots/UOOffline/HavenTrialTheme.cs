@@ -46,9 +46,17 @@ public partial class HavenTrialTheme : Item
             creature.Hue = 0;
         }
     }
+    internal static CommodityDeed ResourceDeed(int theme, bool boss)
+    {
+        var deed = new CommodityDeed();
+        var resource = Resource(theme, boss);
+        if (!deed.SetCommodity(resource))
+        { resource.Delete(); deed.Delete(); throw new InvalidOperationException("Trial resource must be deedable."); }
+        return deed;
+    }
     internal static Item Resource(int theme, bool boss) => theme switch
     {
-        1 => boss ? new IronIngot(Utility.RandomMinMax(200, 350)) : new IronOre(Utility.RandomMinMax(1, 3)),
+        1 => boss ? new IronIngot(Utility.RandomMinMax(200, 350)) : new IronIngot(Utility.RandomMinMax(1, 3)),
         2 => new Hides(boss ? Utility.RandomMinMax(150, 250) : Utility.RandomMinMax(5, 12)),
         _ => boss ? new Board(Utility.RandomMinMax(200, 350)) : new Log(Utility.RandomMinMax(5, 12))
     };
