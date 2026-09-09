@@ -88,6 +88,7 @@ public partial class HavenExpeditionPetClaim : Item
             HavenPetRarity.Apply(_reservedPet, Rarity);
             _reservedPet.Internalize();
         }
+        if (Rarity == 3 && HavenTamingMissions.IsCustomPet(_reservedPet)) { _reservedPet.ControlSlots = 1; }
         return _reservedPet;
     }
     public void InspectWithAnimalLore(Mobile from)

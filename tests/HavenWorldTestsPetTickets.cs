@@ -25,6 +25,7 @@ public class HavenWorldTestsPetTickets
             Assert.Null(ticket.Inspect(stranger));
             pet = ticket.Inspect(owner);
             Assert.NotNull(pet); Assert.Equal(Map.Internal, pet.Map);
+            Assert.Equal(1, pet.ControlSlots);
             var strength = pet.RawStr; var skill = pet.Skills.Wrestling.Base;
             owner.FollowersMax = 0;
             Assert.False(ticket.Claim(owner)); Assert.False(pet.Deleted);
@@ -32,6 +33,7 @@ public class HavenWorldTestsPetTickets
             owner.FollowersMax = 5;
             Assert.True(ticket.Claim(owner)); Assert.True(ticket.Deleted);
             Assert.False(pet.Deleted); Assert.Same(owner, pet.ControlMaster);
+            Assert.Equal(1, pet.ControlSlots); Assert.Equal(1, owner.Followers);
             Assert.Equal(strength, pet.RawStr); Assert.Equal(skill, pet.Skills.Wrestling.Base);
             Assert.Equal(owner.Map, pet.Map);
             BaseCreature.Configure();

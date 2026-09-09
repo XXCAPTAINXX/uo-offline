@@ -18,7 +18,7 @@ public partial class HavenPetRarity : Item
     {
         1 => "+10% starting stats/HP; +5 combat skills, minimum 105 caps; innate fire strike (12s, no training cost)",
         2 => "+20% starting stats/HP; +10 combat skills, minimum 110 caps; innate fire strike + self/owner healing (12s, no training cost)",
-        3 => "+30% starting stats/HP; +15 combat skills, minimum 120 caps; innate fire strike + healing + energy strike + owner mana (12s, no training cost)",
+        3 => "Found with 1 follower slot; +30% starting stats/HP; +15 combat skills, minimum 120 caps; innate fire strike + healing + energy strike + owner mana (12s, no training cost)",
         _ => "Standard species stats and abilities"
     };
     public static void AddProperties(BaseCreature pet, IPropertyList list)
@@ -33,6 +33,7 @@ public partial class HavenPetRarity : Item
         if (tier == 0 || pet.Backpack?.FindItemByType<HavenPetRarity>() != null) { return; }
         if (pet.Backpack == null) { pet.AddItem(new Backpack()); }
         pet.Backpack.DropItem(new HavenPetRarity { Tier = tier });
+        if (tier == 3 && !pet.Controlled) { pet.ControlSlots = 1; }
         pet.Name = $"{RarityName(tier)} {pet.Name}";
         pet.RawStr += pet.RawStr * tier / 10;
         pet.RawDex += pet.RawDex * tier / 10;

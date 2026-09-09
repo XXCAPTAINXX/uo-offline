@@ -13,3 +13,5 @@ Finishing pet training no longer increases player follower capacity. A level-20 
 Custom pet mission odds: Common 40%, Rare 35%, Epic 20%, Legendary 5%. Ordinary species remain unmodified.
 
 Ticket redemption now completes the bonding wait; feed appropriate food after meeting the normal taming requirement. Rarity powers are cumulative, independent of training points: Rare fire strike; Epic also heals pet/owner; Legendary also adds energy damage and owner mana. Existing custom rarity pets gain the cumulative effects automatically. Mara Wren sells standard provisioner goods at 3503,2562.
+
+Legendary custom pets start at one control slot. Unclaimed tickets also update their reserved pet to one slot before preview/redemption. Further chosen training can increase the slot cost normally; already-claimed pets are not altered.
