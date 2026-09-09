@@ -6,7 +6,7 @@ namespace Server.UOOffline;
 
 public static class HavenTamingMissions
 {
-    public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameStormscale;
+    public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameStormhorn;
     internal static int RollRarity(double roll) => roll < 0.70 ? 0 : roll < 0.92 ? 1 : roll < 0.99 ? 2 : 3;
     public static string PetName(HavenExpeditionKind kind) => kind switch
     {
@@ -19,6 +19,9 @@ public static class HavenTamingMissions
         HavenExpeditionKind.TameEmberwing => "Emberwing ostard",
         HavenExpeditionKind.TameMoonfang => "Moonfang wolf",
         HavenExpeditionKind.TameStormscale => "Stormscale drake",
+        HavenExpeditionKind.TameFrostmane => "Frostmane steed",
+        HavenExpeditionKind.TameVerdantLlama => "Verdant llama",
+        HavenExpeditionKind.TameStormhorn => "Stormhorn kirin",
         _ => "Unknown pet"
     };
     public static double Requirement(HavenExpeditionKind kind) => kind switch
@@ -30,6 +33,9 @@ public static class HavenTamingMissions
         HavenExpeditionKind.TameEmberwing => 65,
         HavenExpeditionKind.TameMoonfang => 95,
         HavenExpeditionKind.TameStormscale => 110,
+        HavenExpeditionKind.TameFrostmane => 70,
+        HavenExpeditionKind.TameVerdantLlama => 80,
+        HavenExpeditionKind.TameStormhorn => 105,
         _ => double.MaxValue
     };
     internal static bool CanStart(HavenCompanion companion, HavenExpeditionKind kind) =>
@@ -45,6 +51,9 @@ public static class HavenTamingMissions
         HavenExpeditionKind.TameEmberwing => new HavenEmberwing(),
         HavenExpeditionKind.TameMoonfang => new HavenMoonfang(),
         HavenExpeditionKind.TameStormscale => new HavenStormscale(),
+        HavenExpeditionKind.TameFrostmane => new HavenFrostmane(),
+        HavenExpeditionKind.TameVerdantLlama => new HavenVerdantLlama(),
+        HavenExpeditionKind.TameStormhorn => new HavenStormhorn(),
         _ => null
     };
 }

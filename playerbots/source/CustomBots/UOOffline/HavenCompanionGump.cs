@@ -82,12 +82,12 @@ public sealed class HavenCompanionGump : Gump
                 break;
             case 6:
                 AddLabel(20, 128, 0, "Required Taming AND Lore; rarity is random");
-                for (var i = 6; i < 9; i++)
+                for (var i = 6; i < 12; i++)
                 {
                     var kind = (HavenExpeditionKind)(5 + i);
-                    Button(20, 160 + (i - 6) * 45, 30 + i, $"{HavenTamingMissions.PetName(kind)} {HavenTamingMissions.Requirement(kind):F1} both skills");
+                    Button(20, 151 + (i - 6) * 25, 30 + i, $"{HavenTamingMissions.PetName(kind)} {HavenTamingMissions.Requirement(kind):F1} both skills");
                 }
-                AddHtml(20, 286, 330, 38, "Ember: fire strike. Moon: healing.<BR>Storm: energy strike and mana support.");
+                AddHtml(20, 307, 330, 20, "Mounts: Emberwing, Frostmane, Verdant, Stormhorn.");
                 break;
             default:
                 Button(20, 133, 1, "Follow");
@@ -137,7 +137,7 @@ public sealed class HavenCompanionGump : Gump
             DisplayTo(from, _companion, _tab);
             return;
         }
-        if (button is >= 20 and <= 24 or >= 30 and <= 38)
+        if (button is >= 20 and <= 24 or >= 30 and <= 41)
         {
             var kind = (HavenExpeditionKind)(button >= 30 ? button - 25 : button - 20);
             if (!HavenCompanionExpedition.Start(_companion, from, kind)) { from.SendMessage("Your companion must meet the mission skills and be alive, nearby and ready."); }

@@ -145,7 +145,7 @@ public static class HavenWorldPopulation
             "Horse", "RidableLlama", "ForestOstard");
         yield return TrainingSpawn("Haven practice creatures", new Point3D(3560, 2585, 0), 10, 18,
             "GiantRat", "Mongbat", "HeadlessOne", "Slime");
-        foreach (var (name, x, y, delay) in new[] { ("HavenEmberwing", 3455, 2630, 30), ("HavenMoonfang", 3600, 2670, 60), ("HavenStormscale", 3740, 2440, 120) })
+        foreach (var (name, x, y, delay) in new[] { ("HavenEmberwing", 3455, 2630, 30), ("HavenMoonfang", 3600, 2670, 60), ("HavenStormscale", 3740, 2440, 120), ("HavenFrostmane", 3490, 2640, 30), ("HavenVerdantLlama", 3500, 2650, 60), ("HavenStormhorn", 3515, 2645, 120) })
         {
             yield return new SpawnerDataDto
             {

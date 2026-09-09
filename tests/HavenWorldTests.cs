@@ -1273,7 +1273,7 @@ public class HavenWorldTests
                 Assert.False(spawner.IsEmpty, $"No NPCs spawned for {dto.Name} at {dto.Location}.");
                 Assert.Contains(spawner.Spawned.Keys, s => s is BaseCreature { Deleted: false, Alive: true });
             }
-            Assert.Equal(33, created.Count);
+            Assert.Equal(36, created.Count);
         }
         finally
         {

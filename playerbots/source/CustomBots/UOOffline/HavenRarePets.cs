@@ -19,6 +19,7 @@ internal static class HavenRarePetAbility
             pet.Hits = Math.Min(pet.HitsMax, pet.Hits + 10);
             if (owner.Map == pet.Map && pet.InRange(owner, 12) && pet.InLOS(owner)) { owner.Heal(15, pet); }
         }
+        else if (tier == 4) { AOS.Damage(target, pet, 25, 0, 0, 100, 0, 0); }
         else
         {
             AOS.Damage(target, pet, 30, 0, 0, 0, 0, 100);
