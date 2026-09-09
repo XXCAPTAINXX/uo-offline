@@ -92,6 +92,17 @@ public class HavenWorldTests
             Assert.False(bench.Repair(player, sword));
             Assert.Equal(50, wallet.Balance);
             sword.HitPoints = 10;
+            Assert.False(bench.Restore(player, sword));
+            Assert.Equal(50, wallet.Balance);
+            wallet.Balance = 500;
+            Assert.True(bench.Restore(player, sword));
+            Assert.Equal(250, wallet.Balance);
+            Assert.Equal(sword.InitMaxHits, sword.MaxHitPoints);
+            Assert.Equal(sword.MaxHitPoints, sword.HitPoints);
+            Assert.Equal(30, sword.Attributes.WeaponDamage);
+            Assert.False(bench.Restore(player, sword));
+            Assert.Equal(250, wallet.Balance);
+            sword.HitPoints = 10;
             player.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
             Assert.False(bench.Repair(player, sword));
             Assert.Equal(10, sword.HitPoints);
