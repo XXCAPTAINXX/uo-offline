@@ -11,7 +11,7 @@ public partial class HavenGearExperience : Item
     [SerializableField(0)] private int _experience;
     [SerializableField(1)] private int _appliedLevel = 1;
     private Timer _cleanup;
-    internal static bool IsSpecial(Item gear) => gear is IAosItem && gear.RootParent is HavenCompanion ||
+    internal static bool IsSpecial(Item gear) => HavenQuestGear.IsReward(gear) || gear is IAosItem && gear.RootParent is HavenCompanion ||
         gear is IStarterUpgradeable or IEvolvingStarterWeapon or ApprenticeGrimoire or
         HavenLevelingCape or HavenStarterSash or HavenChampionPendant or HavenSetRing or HavenConcordTalisman or
         HavenCompanionBlade or HavenCompanionBow or StarterFortuneEarrings or AstralFortuneEarrings or AstralWeaversRing or AstralGuardianMantle || HavenJewelrySets.BraceletTheme(gear) >= 0 ||
@@ -56,8 +56,11 @@ public partial class HavenGearExperience : Item
             aos.Attributes.BonusStr += milestones;
             aos.Attributes.BonusDex += milestones;
             aos.Attributes.BonusInt += milestones;
+            HavenQuestGear.Grow(gear, levels, milestones);
             progress.AppliedLevel = progress.Level;
         }
+        HavenAstralGrowth.Apply(gear, progress.Level);
+        if (gear is HavenConcordTalisman talisman && gear.Parent is Mobile wearer) { talisman.UnlockFollower(wearer); }
         gear.InvalidateProperties();
     }
     public static void AddProperties(Item gear, IPropertyList list)
@@ -67,7 +70,7 @@ public partial class HavenGearExperience : Item
         var progress = Find(gear);
         if (gear is BaseWeapon evolved && HavenCompanionWeaponEvolution.Level(evolved) >= 20)
         { list.Add($"{"Companion unlock:"} {"all-monster slayer while wielded by your companion"}"); }
-        if (progress == null) { return; }
+        if (progress == null) { list.Add($"{"Gear level:"} {1}/20"); return; }
         list.Add($"{"Gear level:"} {progress.Level}/20");
         list.Add($"{"Shared experience:"} {progress.Experience:N0} / 1,900");
     }

@@ -36,6 +36,20 @@ public partial class HavenSetRing : GoldRing
 [SerializationGenerator(0)]
 public partial class HavenConcordTalisman : BaseTalisman
 {
+    internal void UnlockFollower(Mobile owner)
+    {
+        if (owner is not Server.Mobiles.PlayerMobile || owner is Server.CustomBots.PlayerBot || HavenGearExperience.Find(this)?.Level != 20) { return; }
+        if (owner.FollowersMax < 6)
+        {
+            owner.FollowersMax = 6;
+            owner.SendMessage("Your level-20 Haven talisman unlocks one permanent follower slot (capacity 6). This does not stack.");
+        }
+    }
+    public override void OnDoubleClick(Mobile from)
+    {
+        if (Parent == from || from.Backpack != null && IsChildOf(from.Backpack)) { UnlockFollower(from); }
+        base.OnDoubleClick(from);
+    }
     [Constructible]
     public HavenConcordTalisman() : base(0x2F5A)
     {
@@ -50,6 +64,7 @@ public partial class HavenConcordTalisman : BaseTalisman
     {
         base.GetProperties(list);
         HavenGearExperience.AddProperties(this, list);
+        list.Add($"{"Level 20 unlock:"} {"+1 permanent follower capacity (6 total, does not stack); double-click to claim"}");
         list.Add($"{"Matching ring and bracelet:"} {"+250 Luck, +10% weapon and spell damage"}");
     }
 }

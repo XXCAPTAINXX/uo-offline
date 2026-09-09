@@ -2364,7 +2364,7 @@ public class HavenWorldTests
     [Fact]
     public void FullTamingMissionsAlwaysReturnSelectedPetWithPersistedRarity()
     {
-        foreach (var (roll, tier) in new[] { (0.0, 0), (0.699, 0), (0.70, 1), (0.919, 1), (0.92, 2), (0.989, 2), (0.99, 3) })
+        foreach (var (roll, tier) in new[] { (0.0, 0), (0.399, 0), (0.40, 1), (0.749, 1), (0.75, 2), (0.949, 2), (0.95, 3) })
         {
             var bag = HavenCompanionExpedition.CreateLoot(HavenExpeditionKind.TameEmberwing, 5, null, roll);
             HavenExpeditionPetClaim copy = null;

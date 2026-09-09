@@ -44,7 +44,7 @@ public class HavenWorldTestsPetTraining
         finally { pet.Delete(); enemy.Delete(); owner.Delete(); other.Delete(); }
     }
     [SkippableFact]
-    public void FinalStageGivesPermanentCapacityFloorAndHealingWorks()
+    public void FinalStagePreservesPlayerCapacityAndHealingWorks()
     {
         TileDataRequirement.SkipIfMissing();
         var pet = new HavenFrostmane { ControlSlots = 4 }; var owner = Owner(pet);
@@ -56,8 +56,8 @@ public class HavenWorldTestsPetTraining
             Assert.False(record.LearnHealing(owner, pet));
             pet.Skills.Healing.Base = 100; pet.Skills.Anatomy.Base = 100; owner.Hits = 1;
             pet.Heal(owner); Assert.True(owner.Hits > 1);
-            Assert.True(record.Finish(owner, pet)); Assert.Equal(6, owner.FollowersMax);
-            Assert.False(record.Finish(owner, pet)); Assert.False(record.Begin(owner, pet)); Assert.Equal(6, owner.FollowersMax);
+            Assert.True(record.Finish(owner, pet)); Assert.Equal(5, owner.FollowersMax);
+            Assert.False(record.Finish(owner, pet)); Assert.False(record.Begin(owner, pet)); Assert.Equal(5, owner.FollowersMax);
             var writer = new BufferWriter(true); record.Serialize(writer);
             var copy = new HavenPetTraining(World.NewItem);
             try

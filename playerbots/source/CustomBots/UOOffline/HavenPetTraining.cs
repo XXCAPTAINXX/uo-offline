@@ -94,12 +94,6 @@ public partial class HavenPetTraining : Item
     {
         if (!Owned(owner, pet) || Find(pet) != this || !Active || !Advanced || Progress < 10000) { return false; }
         Active = false; PointsTenths = 0; _targets.Clear();
-        if (pet.ControlSlots == 5 && owner.FollowersMax < 6)
-        {
-            // FollowersMax is already persisted on Mobile. A floor, rather than +=, prevents repeat rewards.
-            owner.FollowersMax = 6;
-            owner.SendMessage("Master Trainer earned! Your permanent follower capacity is now 6 (+1). This reward does not stack.");
-        }
         pet.InvalidateProperties(); return true;
     }
     internal static readonly string[] Labels = ["Strength", "Dexterity", "Intelligence", "Maximum health", "Maximum stamina", "Maximum mana", "Physical resist", "Fire resist", "Cold resist", "Poison resist", "Energy resist"];

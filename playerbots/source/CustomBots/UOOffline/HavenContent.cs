@@ -202,7 +202,8 @@ public partial class StarterSupplyStone : Item
             new("Starter Fortune Earrings - free", 0x1087, 0x501),
             new("Blessed Travel Book - free", 0x22C5),
             new("Leveling cape - free", 0x1515, 0x59B),
-            new("Evolving sash - free", 0x1541, 0x59B)
+            new("Evolving sash - free", 0x1541, 0x59B),
+            new("Claim earned Haven training rewards - free", 0x14F0, 0x489)
         ];
 
         public StarterSupplyMenu() : base("New Haven Starter Supplies", MenuEntries)
@@ -219,6 +220,7 @@ public partial class StarterSupplyStone : Item
 
             if (index == 12) { HavenLevelingCape.Claim(from); return; }
             if (index == 13) { HavenStarterSash.Claim(from); return; }
+            if (index == 14) { HavenTrainingRewards.Claim(from); return; }
             var item = CreateItem(index);
             if (item == null)
             {
@@ -246,6 +248,7 @@ public partial class StarterSupplyStone : Item
                 11 => new OfflineTravelBook(),
                 12 => new HavenLevelingCape(),
                 13 => new HavenStarterSash(),
+                14 => new Item(0x14F0) { Name = "Claim once for each Haven training quest whose base skill requirement you already meet" },
                 _ => null
             };
     }

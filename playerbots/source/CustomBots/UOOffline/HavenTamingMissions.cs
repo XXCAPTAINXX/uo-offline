@@ -7,7 +7,7 @@ namespace Server.UOOffline;
 public static class HavenTamingMissions
 {
     public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameStormhorn;
-    internal static int RollRarity(double roll) => roll < 0.70 ? 0 : roll < 0.92 ? 1 : roll < 0.99 ? 2 : 3;
+    internal static int RollRarity(double roll) => roll < 0.40 ? 0 : roll < 0.75 ? 1 : roll < 0.95 ? 2 : 3;
     public static bool IsCustomMission(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TameEmberwing and <= HavenExpeditionKind.TameStormhorn;
     public static bool IsCustomPet(BaseCreature pet) => pet is HavenEmberwing or HavenMoonfang or HavenStormscale or HavenFrostmane or HavenVerdantLlama or HavenStormhorn or VampiricSteed;
     public static string PetName(HavenExpeditionKind kind) => kind switch
