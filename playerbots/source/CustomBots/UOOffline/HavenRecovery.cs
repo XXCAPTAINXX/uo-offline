@@ -9,8 +9,8 @@ namespace Server.UOOffline;
 
 public static class HavenRecovery
 {
-    public static readonly Point3D BankLocation = new(3491, 2584, 20);
-    public static readonly Point3D HealerLocation = new(3491, 2582, 20);
+    public static readonly Point3D BankLocation = new(3511, 2575, 14);
+    public static readonly Point3D HealerLocation = new(3511, 2574, 14);
 
     public static void GoToBank(Mobile from)
     {
@@ -29,19 +29,19 @@ public static class HavenRecovery
         BaseCreature.TeleportPets(from, destination, Map.Trammel);
         from.MoveToWorld(destination, Map.Trammel);
         from.PlaySound(0x1FE);
-        from.SendMessage("Welcome to New Haven bank. The healer and corpse summoner are beside the bank.");
+        from.SendMessage("Welcome to New Haven square. The healer and corpse summoner are beside you.");
     }
 
     public static void EnsureServices()
     {
         EnsureNpc<HavenBankHealer>(HealerLocation, "Elias Thorne", "the healer - free resurrection");
-        EnsureNpc<HavenCorpseSummoner>(new Point3D(3494, 2582, 20), "Silas Grey", "the spirit guide - free corpse recovery");
-        EnsureNpc<HavenPetHealer>(new Point3D(3497, 2582, 20), "Mira Willow", "the veterinarian - free pet resurrection");
+        EnsureNpc<HavenCorpseSummoner>(new Point3D(3513, 2576, 14), "Silas Grey", "the spirit guide - free corpse recovery");
+        EnsureNpc<HavenPetHealer>(new Point3D(3510, 2581, 14), "Mira Willow", "the veterinarian - free pet resurrection");
     }
 
     private static void EnsureNpc<T>(Point3D preferred, string name, string title) where T : BaseCreature, new()
     {
-        foreach (var npc in Map.Trammel.GetMobilesInRange<T>(preferred, 8))
+        foreach (var npc in Map.Trammel.GetMobilesInRange<T>(preferred, 30))
         {
             if (!npc.Deleted)
             {

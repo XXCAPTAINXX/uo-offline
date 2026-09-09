@@ -546,11 +546,11 @@ public static class HavenContentBootstrap
 {
     private static readonly ILogger logger = LogFactory.GetLogger(typeof(HavenContentBootstrap));
     internal static readonly Point2D HavenWildernessSteed = new(3675, 2410);
-    private static readonly Point2D NewHavenSupply = new(3481, 2582);
-    private static readonly Point2D NewHavenUpgrade = new(3484, 2582);
-    private static readonly Point2D NewHavenRewards = new(3487, 2582);
-    private static readonly Point2D NewHavenHitchingPost = new(3499, 2582);
-    private static readonly Point2D NewHavenDungeonPortal = new(3501, 2585);
+    private static readonly Point2D NewHavenSupply = new(3501, 2574);
+    private static readonly Point2D NewHavenUpgrade = new(3504, 2571);
+    private static readonly Point2D NewHavenRewards = new(3508, 2571);
+    private static readonly Point2D NewHavenHitchingPost = new(3513, 2580);
+    private static readonly Point2D NewHavenDungeonPortal = new(3499, 2579);
     private static readonly Point2D OldHavenBoss = new(3670, 2587);
     private static readonly Point2D OldHavenSteed = new(3690, 2525);
 
@@ -627,10 +627,15 @@ public static class HavenContentBootstrap
         ArrangeHavenItem<SpecialRewardStone>(NewHavenRewards);
         ArrangeHavenItem<FreePetHitchingPost>(NewHavenHitchingPost);
         ArrangeHavenItem<UOOfflineDungeonPortal>(NewHavenDungeonPortal);
-        ArrangeHavenItem<HavenRepairBench>(new Point2D(3484, 2585));
-        EnsureHavenDecoration(new Point3D(3479, 2582, 20), true);
-        EnsureHavenDecoration(new Point3D(3501, 2582, 20), true);
-        EnsureHavenDecoration(new Point3D(3489, 2582, 20), false);
+        ArrangeHavenItem<HavenRepairBench>(new Point2D(3502, 2581));
+        var oldDecorations = new List<Item>();
+        foreach (var item in Map.Trammel.GetItemsInRange<Item>(new Point3D(3490, 2582, 20), 30))
+        {
+            if (item.Name == "Haven welcome garden") { oldDecorations.Add(item); }
+        }
+        foreach (var item in oldDecorations) { item.Delete(); }
+        EnsureHavenDecoration(new Point3D(3501, 2582, 14), false);
+        EnsureHavenDecoration(new Point3D(3509, 2570, 14), false);
     }
 
     public static void EnsureBankServices(Map map, Point3D bank)
@@ -650,9 +655,9 @@ public static class HavenContentBootstrap
 
     private static void ArrangeHavenItem<T>(Point2D position) where T : Item, new()
     {
-        var preferred = new Point3D(position.X, position.Y, 20);
+        var preferred = new Point3D(position.X, position.Y, 14);
         var found = new List<T>();
-        foreach (var item in Map.Trammel.GetItemsInRange<T>(new Point3D(3490, 2582, 20), 18))
+        foreach (var item in Map.Trammel.GetItemsInRange<T>(new Point3D(3495, 2580, 20), 30))
         {
             if (!item.Deleted) { found.Add(item); }
         }
@@ -667,11 +672,11 @@ public static class HavenContentBootstrap
     {
         foreach (var item in Map.Trammel.GetItemsInRange<Item>(preferred, 1))
         {
-            if (item.Name == "Haven welcome garden") { return; }
+            if (item.Name == "Haven square flowers") { return; }
         }
         if (!HavenRecovery.FindLocation(preferred, out var location, 1)) { return; }
         Item decoration = lamp ? new LampPost1 { Burning = true } : new PottedPlant1();
-        decoration.Name = "Haven welcome garden";
+        decoration.Name = "Haven square flowers";
         decoration.Movable = false;
         decoration.MoveToWorld(location, Map.Trammel);
     }

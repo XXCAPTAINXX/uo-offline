@@ -503,7 +503,7 @@ public class HavenWorldTests
             HavenContentBootstrap.EnsureBankServices(Map.Trammel, new Point3D(3483, 2575, 20));
             foreach (var item in Map.Trammel.GetItemsInRange<Item>(HavenRecovery.BankLocation, 20))
             {
-                if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal or HavenRepairBench || item.Name == "Haven welcome garden") { items.Add(item); }
+                if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal or HavenRepairBench || item.Name == "Haven square flowers") { items.Add(item); }
             }
             Assert.Same(oldPortal, Assert.Single(items.OfType<UOOfflineDungeonPortal>()));
             Assert.False(oldPortal.InRange(HavenRecovery.BankLocation, 6));
@@ -511,7 +511,7 @@ public class HavenWorldTests
             Assert.Single(items.OfType<HavenUpgradeStone>());
             Assert.Single(items.OfType<SpecialRewardStone>());
             Assert.Single(items.OfType<FreePetHitchingPost>());
-            Assert.Equal(3, items.Count(i => i.Name == "Haven welcome garden"));
+            Assert.Equal(2, items.Count(i => i.Name == "Haven square flowers"));
         }
         finally { foreach (var item in items) { item.Delete(); } oldPortal.Delete(); }
     }
@@ -838,7 +838,9 @@ public class HavenWorldTests
                     }
                     banks++;
                     HavenContentBootstrap.EnsureBankServices(dto.Map, dto.Location);
-                    var before = Services(dto.Map, dto.Location);
+                    var serviceLocation = dto.Map == Map.Trammel && Utility.InRange(dto.Location, new Point3D(3490, 2582, 20), 20)
+                        ? new Point3D(3506, 2576, 14) : dto.Location;
+                    var before = Services(dto.Map, serviceLocation);
                     foreach (var item in before) { created.Add(item); }
                     Assert.Contains(before, i => i is StarterSupplyStone);
                     Assert.Contains(before, i => i is HavenUpgradeStone);
@@ -847,7 +849,7 @@ public class HavenWorldTests
                     Assert.Contains(before, i => i is UOOfflineDungeonPortal);
                     Assert.Contains(before, i => i is HavenRepairBench);
                     HavenContentBootstrap.EnsureBankServices(dto.Map, dto.Location);
-                    Assert.Equal(before.Count, Services(dto.Map, dto.Location).Count);
+                    Assert.Equal(before.Count, Services(dto.Map, serviceLocation).Count);
                 }
             }
             Assert.True(banks >= 30, $"Only {banks} bank spawn points checked.");
