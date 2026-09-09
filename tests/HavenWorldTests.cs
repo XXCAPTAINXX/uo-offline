@@ -111,6 +111,31 @@ public class HavenWorldTests
     }
 
     [SkippableFact]
+    public void StarterEquipmentRepairsAndRestoresForFree()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        player.AddItem(new Backpack());
+        var bench = new HavenRepairBench();
+        var blade = new ApprenticeBlade { Level = 4, MaxHitPoints = 20, HitPoints = 5, BoundTo = player };
+        player.Backpack.DropItem(blade);
+        try
+        {
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            bench.MoveToWorld(player.Location, player.Map);
+            Assert.True(bench.Repair(player, blade));
+            Assert.Equal(20, blade.HitPoints);
+            Assert.True(bench.Restore(player, blade));
+            Assert.Equal(blade.InitMaxHits, blade.MaxHitPoints);
+            Assert.Equal(blade.MaxHitPoints, blade.HitPoints);
+            Assert.Equal(4, blade.Level);
+            Assert.Same(player, blade.BoundTo);
+            Assert.False(bench.Restore(player, blade));
+        }
+        finally { bench.Delete(); player.Delete(); }
+    }
+
+    [SkippableFact]
     public void CompanionRecallPreservesIdentityInventoryAndOwnership()
     {
         TileDataRequirement.SkipIfMissing();

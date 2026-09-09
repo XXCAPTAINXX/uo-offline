@@ -11,6 +11,7 @@ public partial class HavenRepairBench : WoodenBench
 {
     public const int RepairCost = 50;
     public const int RestoreCost = 250;
+    private static bool IsStarterGear(Item item) => item is IStarterUpgradeable or IEvolvingStarterWeapon;
     [Constructible]
     public HavenRepairBench()
     {
@@ -50,7 +51,8 @@ public partial class HavenRepairBench : WoodenBench
             from.SendMessage("This item is already at or above its type's normal maximum durability, or has no restorable durability. You were not charged.");
             return false;
         }
-        if (!HavenEconomy.TryPay(from, RestoreCost))
+        var cost = IsStarterGear(item) ? 0 : RestoreCost;
+        if (cost > 0 && !HavenEconomy.TryPay(from, cost))
         {
             from.SendMessage("Restoration costs 250 gold. Your wallet, backpack and bank funds are insufficient.");
             return false;
@@ -71,7 +73,7 @@ public partial class HavenRepairBench : WoodenBench
                 break;
         }
         from.PlaySound(0x2A);
-        from.SendMessage($"Restored to {maximum}/{maximum} durability for 250 gold. All bonuses are unchanged.");
+        from.SendMessage($"Restored to {maximum}/{maximum} durability for {cost} gold. All bonuses are unchanged.");
         return true;
     }
 
@@ -95,7 +97,8 @@ public partial class HavenRepairBench : WoodenBench
             from.SendMessage("That item has no repairable damage. You were not charged.");
             return false;
         }
-        if (!HavenEconomy.TryPay(from, RepairCost))
+        var cost = IsStarterGear(item) ? 0 : RepairCost;
+        if (cost > 0 && !HavenEconomy.TryPay(from, cost))
         {
             from.SendMessage("Repairs cost 50 gold. Your wallet, backpack and bank funds are insufficient.");
             return false;
@@ -116,7 +119,8 @@ public partial class HavenRepairBench : WoodenBench
                 return false;
         }
         from.PlaySound(0x2A);
-        from.SendMessage("Repaired for 50 gold. Its properties and maximum durability are unchanged.");
+        if (cost == 0) { from.SendMessage("Starter equipment repaired for free. Bonuses and maximum durability are unchanged."); }
+        else { from.SendMessage("Repaired for 50 gold. Bonuses and maximum durability are unchanged."); }
         return true;
     }
 
@@ -147,10 +151,10 @@ public partial class HavenRepairBench : WoodenBench
             AddHtml(30, 25, 460, 30, "<B>Adventurer's repair bench</B>");
             AddButton(30, 75, 4005, 4007, 1);
             AddLabel(68, 77, 0, "Repair an item - 50 gold");
-            AddHtml(68, 110, 400, 50, "Refill current durability. No maximum durability is lost.");
+            AddHtml(68, 110, 400, 50, "Starter gear is free. Refill current durability with no maximum durability loss.");
             AddButton(30, 170, 4005, 4007, 2);
             AddLabel(68, 172, 0, "Restore maximum durability - 250 gold");
-            AddHtml(68, 205, 400, 70, "Restore to the item's normal type maximum, including durability bonuses, and fully repair it. Other bonuses are unchanged. Wallet funds are used first.");
+            AddHtml(68, 205, 400, 70, "Starter gear is free. Restore the item's normal type maximum, including durability bonuses, and fully repair it. Wallet funds are used first.");
             AddButton(370, 290, 4005, 4007, 0);
             AddLabel(408, 292, 0, "Close");
         }
@@ -159,7 +163,7 @@ public partial class HavenRepairBench : WoodenBench
         {
             var from = sender.Mobile;
             if (info.ButtonID is not (1 or 2) || _bench.Deleted || from.Map != _bench.Map || !from.InRange(_bench, 3)) { return; }
-            from.SendMessage(info.ButtonID == 2 ? "Choose your item to restore for 250 gold." : "Choose your item to repair for 50 gold.");
+            from.SendMessage(info.ButtonID == 2 ? "Choose your item to restore: starter gear free, other gear 250 gold." : "Choose your item to repair: starter gear free, other gear 50 gold.");
             from.Target = new RepairTarget(_bench, info.ButtonID == 2);
         }
     }

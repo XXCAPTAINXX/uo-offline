@@ -88,3 +88,5 @@ Double-click the wallet in your backpack. Choose Deposit to store carried gold, 
 A labeled repair bench is placed beside the New Haven stones and supplied at other town banks. Double-click it and choose Repair or Restore, then select your carried or worn weapon, armor, shield or clothing. Repairs cost 50 gold per damaged item, paid from wallet/backpack/bank funds, and restore current durability to the item's existing maximum; attributes and maximum durability remain unchanged. The bench checks ownership and distance again when the target is chosen.
 
 Restore costs 250 gold and raises maximum durability to the item type's normal maximum, including existing durability bonuses, then fully repairs it. It never reduces a higher custom maximum, changes bonuses, or repeatedly increases maximum durability. Items already at their type maximum are not charged.
+
+Starter progression equipment (including upgraded starter weapons and the Haven robe) is exempt from both repair and restoration fees. Its progression and bonuses are preserved.
