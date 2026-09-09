@@ -44,6 +44,18 @@ if (Test-Path -LiteralPath $source) { Copy-Item -LiteralPath $source -Destinatio
 
 New-Item -ItemType Directory -Force -Path $source | Out-Null
 Copy-Item -Path (Join-Path $payloadRoot 'CustomBots\*') -Destination $source -Recurse -Force
+$nativeSource = Join-Path $payloadRoot 'NativeSource'
+if (Test-Path -LiteralPath $nativeSource) {
+    foreach ($file in Get-ChildItem -LiteralPath $nativeSource -File -Recurse) {
+        $relative = $file.FullName.Substring($nativeSource.Length).TrimStart([char[]]'\/' )
+        $target = Join-Path (Join-Path $engineRoot 'Projects\UOContent') $relative
+        $saved = Join-Path (Join-Path $backup 'NativeSource') $relative
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $saved) | Out-Null
+        if (Test-Path -LiteralPath $target) { Copy-Item -LiteralPath $target -Destination $saved }
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $target) | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $target -Force
+    }
+}
 Copy-Item -LiteralPath $newAssembly -Destination $assembly -Force
 Copy-Item -LiteralPath (Join-Path $payloadRoot 'UOContent.pdb') -Destination $pdb -Force
 Copy-Item -LiteralPath (Join-Path $payloadRoot 'manifest.json') -Destination (Join-Path $installRoot 'haven-world-update.json') -Force

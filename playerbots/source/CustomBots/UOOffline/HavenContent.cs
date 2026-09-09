@@ -563,6 +563,7 @@ public static class HavenContentBootstrap
 
     public static void EnsureContent()
     {
+        HavenRecovery.EnsureServices();
         RemoveBrokenNewHavenDungeonPortal();
 
         // Intended ML-era hub.

@@ -34,6 +34,79 @@ public class HavenWorldTests
     }
     private static string SpawnRoot => Environment.GetEnvironmentVariable("HAVEN_WORLD_DATA") ?? Core.BaseDirectory;
 
+    [SkippableTheory]
+    [InlineData(0x190)]
+    [InlineData(0x192)]
+    public void BankTravelWorksForLivingPlayersAndGhosts(int body)
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = body };
+        try
+        {
+            var alive = player.Alive;
+            player.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
+            HavenRecovery.GoToBank(player);
+            Assert.Same(Map.Trammel, player.Map);
+            Assert.True(player.InRange(HavenRecovery.BankLocation, 5));
+            Assert.Equal(alive, player.Alive);
+        }
+        finally { player.Delete(); }
+    }
+
+    [SkippableFact]
+    public void RecoveryNpcsArePresentAndNotDuplicated()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var npcs = new List<BaseCreature>();
+        try
+        {
+            HavenRecovery.EnsureServices();
+            HavenRecovery.EnsureServices();
+            foreach (var npc in Map.Trammel.GetMobilesInRange<BaseCreature>(HavenRecovery.BankLocation, 15))
+            {
+                if (npc is HavenBankHealer or HavenCorpseSummoner) { npcs.Add(npc); }
+            }
+            Assert.Single(npcs.OfType<HavenBankHealer>());
+            Assert.Single(npcs.OfType<HavenCorpseSummoner>());
+        }
+        finally { foreach (var npc in npcs) { npc.Delete(); } }
+    }
+
+    [SkippableFact]
+    public void CorpseRecoveryMovesOnlyOwnedCorpseWithoutCopyingLoot()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190, Name = "recovery test" };
+        var other = new PlayerMobile { Player = true, Body = 0x190, Name = "other owner" };
+        var npc = new HavenCorpseSummoner();
+        var corpse = new Corpse(player, new List<Item>());
+        var foreign = new Corpse(other, new List<Item>());
+        var gold = new Gold(123);
+        corpse.DropItem(gold);
+        try
+        {
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            npc.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            corpse.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
+            player.Corpse = corpse;
+            Assert.True(HavenRecovery.RecoverCorpse(player, npc));
+            Assert.Same(player.Map, corpse.Map);
+            Assert.Equal(player.Location, corpse.Location);
+            Assert.Contains(gold, corpse.Items);
+            Assert.True(HavenRecovery.RecoverCorpse(player, npc));
+            Assert.Equal(123, corpse.GetAmount(typeof(Gold)));
+            player.Corpse = foreign;
+            Assert.False(HavenRecovery.RecoverCorpse(player, npc));
+            player.Corpse = corpse;
+            player.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
+            Assert.False(HavenRecovery.RecoverCorpse(player, npc));
+            corpse.Delete();
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            Assert.False(HavenRecovery.RecoverCorpse(player, npc));
+        }
+        finally { corpse.Delete(); foreign.Delete(); npc.Delete(); player.Delete(); other.Delete(); }
+    }
+
     [Theory]
     [InlineData(500, 0, 250, true, 250, 0)]
     [InlineData(100, 200, 250, true, 0, 50)]

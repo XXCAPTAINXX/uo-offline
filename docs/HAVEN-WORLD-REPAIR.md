@@ -1,5 +1,16 @@
 # Haven world and service repair
 
+## New Haven recovery
+
+`[bank` is now available to players and teleports living characters and ghosts
+to New Haven bank. The former GM bank-inspection command is `[BankBox`.
+An invulnerable resurrection healer and corpse summoner remain beside the bank.
+Double-click the healer for free resurrection, or the summoner to confirm free
+recovery of the character's most recent surviving corpse. The original corpse
+and remaining loot are moved; decayed bodies and removed items are not recreated,
+and another player's corpse cannot be claimed. Repeating setup does not duplicate
+the NPCs. Native command changes are reproduced by patch 0013.
+
 ## Reduced bot density
 
 Player-bot spawners now fill to two-thirds of their saved counts, rounded to the
