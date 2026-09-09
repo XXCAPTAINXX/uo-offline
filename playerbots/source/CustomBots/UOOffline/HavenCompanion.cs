@@ -136,7 +136,8 @@ public partial class HavenCompanion : BaseCreature
     public bool SongUnlocked => Skills.Musicianship.Value >= 80 && Skills.Peacemaking.Value >= 80;
     public bool DiscordUnlocked => Skills.Musicianship.Value >= 60 && Skills.Discordance.Value >= 60;
 
-    public double Mastery => 75.0 + Math.Sqrt(Math.Max(0, TrainingMinutes)) / 2.0;
+    public const double SkillGainMultiplier = 1.25;
+    public double Mastery => 75.0 + Math.Sqrt(Math.Max(0, TrainingMinutes)) / 2.0 * SkillGainMultiplier;
     public double TrainingLevel => 1.0 + Math.Floor(Math.Sqrt(Math.Max(0, TrainingMinutes) / 60.0));
 
     [Constructible]
