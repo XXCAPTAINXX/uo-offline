@@ -16,6 +16,7 @@ public partial class HavenCompanion
     private DateTime _nextResourceRecovery = Core.Now;
     private DateTime _nextLifeGift = Core.Now;
     private DateTime _nextManaForm = Core.Now;
+    private DateTime _nextThunderstorm = Core.Now;
     private Spell _companionSpell;
     private Mobile _companionSpellTarget;
     private bool _beneficialSpell;
@@ -34,7 +35,8 @@ public partial class HavenCompanion
         {
             return new WordOfDeathSpell(this);
         }
-        if (Skills.Spellweaving.Value >= 10 && Mana >= 52 && NearbyCasterEnemies() >= 2) { return new ThunderstormSpell(this); }
+        if (Skills.Spellweaving.Value >= 10 && Mana >= 32 && Core.Now >= _nextThunderstorm &&
+            InRange(enemy, 8) && NearbyCasterEnemies() >= 1) { return new ThunderstormSpell(this); }
         if (Skills.Magery.Value >= 70 && Mana >= 30) { return new EnergyBoltSpell(this); }
         if (Skills.Magery.Value >= 45 && Mana >= 21) { return new LightningSpell(this); }
         return Mana >= 14 ? new MagicArrowSpell(this) : null;
@@ -77,6 +79,7 @@ public partial class HavenCompanion
         _companionSpellTarget = target;
         _beneficialSpell = beneficial;
         _nextCasterSpell = Core.Now + TimeSpan.FromSeconds(0.5);
+        if (spell is ThunderstormSpell) { _nextThunderstorm = Core.Now + TimeSpan.FromSeconds(6); }
         return true;
     }
 
@@ -117,6 +120,7 @@ public partial class HavenCompanion
 
     internal void RecoverResources(DateTime now)
     {
+        HavenCompanionIdleMissions.Ensure(this);
         if (IsDeadPet || !Alive || now < _nextResourceRecovery) { return; }
         _nextResourceRecovery = now + TimeSpan.FromSeconds(3);
         var growth = (int)Math.Min(40, TrainingLevel / 5);
@@ -145,6 +149,11 @@ public partial class HavenCompanion
             return;
         }
         var enemy = Combatant as Mobile ?? BoundOwner.Combatant as Mobile;
-        if (enemy != null) { BeginCompanionSpell(ChooseAttackSpell(enemy), enemy, false); }
+        if (enemy != null)
+        {
+            var attack = ChooseAttackSpell(enemy);
+            // Thunderstorm is centered on the caster, and must not cancel if one enemy dies mid-cast.
+            BeginCompanionSpell(attack, attack is ThunderstormSpell ? this : enemy, attack is ThunderstormSpell);
+        }
     }
 }

@@ -38,6 +38,7 @@ public partial class HavenCompanionExpedition : Item
         companion.Internalize();
         trip.Schedule();
         owner.CloseGump<HavenCompanionGump>();
+        owner.CloseGump<HavenCompanionAfkGump>();
         owner.SendMessage("Your companion left on a five-minute expedition. Use [companion and Tasks to check progress or return early.");
         return true;
     }
@@ -76,6 +77,8 @@ public partial class HavenCompanionExpedition : Item
         }
         var minutes = Math.Clamp((int)(now - Started).TotalMinutes, 0, 5);
         var companion = Companion;
+        var idleMissions = companion.Backpack.FindItemByType<HavenCompanionIdleMissions>();
+        var idleTrip = idleMissions?.Owns(this) == true;
         Claimed = true;
         _timer?.Stop();
         companion.AwardExpeditionProgress(minutes, now);
@@ -84,14 +87,16 @@ public partial class HavenCompanionExpedition : Item
         if (minutes > 0)
         {
             var loot = CreateLoot(Kind, minutes, owner, tamingRoll);
-            if (companion.Backpack.TryDropItem(companion, loot, false)) { owner.SendMessage("Expedition loot is in your companion's pack."); }
+            if (idleTrip) { companion.Backpack.DropItem(loot); owner.SendMessage("Idle expedition rewards are in your companion's pack."); }
+            else if (companion.Backpack.TryDropItem(companion, loot, false)) { owner.SendMessage("Expedition loot is in your companion's pack."); }
             else if (owner.Backpack?.TryDropItem(owner, loot, false) == true) { owner.SendMessage("The shared pack is full; expedition loot is in your backpack."); }
             else { loot.MoveToWorld(owner.Location, owner.Map); owner.SendMessage("Both packs are full; expedition supplies are at your feet."); }
             owner.SendMessage($"Your companion returned with {Kind} rewards, skill training, +{minutes} Str/Dex/Int and {minutes * 10} gear experience.");
         }
         else { owner.SendMessage("Your companion returned. Expeditions earn rewards for each full minute away."); }
+        var stillIdle = idleMissions?.Finished(this, now) == true;
         Delete();
-        if (owner.NetState != null) { HavenCompanionGump.DisplayTo(owner, companion); }
+        if (!stillIdle && owner.NetState != null) { HavenCompanionGump.DisplayTo(owner, companion); }
         return true;
     }
     internal static Bag CreateLoot(HavenExpeditionKind kind, int minutes, Mobile owner = null, double? tamingRoll = null)
@@ -112,10 +117,13 @@ public partial class HavenCompanionExpedition : Item
         }
         switch (kind)
         {
-            case HavenExpeditionKind.Ore: bag.DropItem(new IronOre(minutes * 20)); break;
-            case HavenExpeditionKind.Wood: bag.DropItem(new Log(minutes * 40)); break;
-            case HavenExpeditionKind.Leather: bag.DropItem(new Leather(minutes * 20)); break;
-            case HavenExpeditionKind.Reagents: bag.DropItem(new BagOfReagents(minutes * 10)); break;
+            case HavenExpeditionKind.Ore: bag.DropItem(Deed(new IronIngot(minutes * 20))); break;
+            case HavenExpeditionKind.Wood: bag.DropItem(Deed(new Log(minutes * 40))); break;
+            case HavenExpeditionKind.Leather: bag.DropItem(Deed(new Leather(minutes * 20))); break;
+            case HavenExpeditionKind.Reagents:
+                var reagents = new BagOfReagents(minutes * 10);
+                foreach (var item in reagents.Items.ToArray()) { bag.DropItem(Deed(item)); }
+                reagents.Delete(); break;
             default:
                 bag.DropItem(new Gold(minutes * Utility.RandomMinMax(200, 300)));
                 bag.DropItem(new HavenMark(minutes));
@@ -123,6 +131,13 @@ public partial class HavenCompanionExpedition : Item
                 break;
         }
         return bag;
+    }
+    private static CommodityDeed Deed(Item resource)
+    {
+        var deed = new CommodityDeed();
+        if (!deed.SetCommodity(resource))
+        { deed.Delete(); resource.Delete(); throw new InvalidOperationException("Mission resource must be deedable."); }
+        return deed;
     }
     internal static Item TamingBonus(double roll) => roll switch
     {

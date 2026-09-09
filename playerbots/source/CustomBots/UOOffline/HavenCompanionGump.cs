@@ -70,6 +70,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(20, 244, 24, "Gather reagents");
                 Button(195, 244, 25, "Return now");
                 Button(20, 280, 26, "Taming missions...");
+                Button(195, 280, 29, "AFK / auto...");
                 break;
             case 5:
                 AddLabel(20, 128, 0, $"Taming {companion.Skills.AnimalTaming.Base:F1} / Lore {companion.Skills.AnimalLore.Base:F1}");
@@ -119,6 +120,7 @@ public sealed class HavenCompanionGump : Gump
     {
         if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
         if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
+        if (button == 29) { from.SendGump(new HavenCompanionAfkGump(HavenCompanionIdleMissions.Ensure(_companion))); return; }
         if (button == 17) { DisplayTo(from, _companion, 4); return; }
         if (button == 26) { DisplayTo(from, _companion, 5); return; }
         if (button == 27) { DisplayTo(from, _companion, 6); return; }

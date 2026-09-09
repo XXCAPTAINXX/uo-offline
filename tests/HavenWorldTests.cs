@@ -243,7 +243,7 @@ public class HavenWorldTests
             foreach (var mobile in new Mobile[] { owner, companion, enemy }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
             companion.Mana = companion.ManaMax;
             Assert.Null(companion.ChooseAttackSpell(owner));
-            Assert.IsType<Server.Spells.Sixth.EnergyBoltSpell>(companion.ChooseAttackSpell(enemy));
+            Assert.IsType<Server.Spells.Spellweaving.ThunderstormSpell>(companion.ChooseAttackSpell(enemy));
             companion.Skills.Spellweaving.Base = 100;
             enemy.Hits = 1;
             Assert.IsType<Server.Spells.Spellweaving.WordOfDeathSpell>(companion.ChooseAttackSpell(enemy));
@@ -2196,11 +2196,11 @@ public class HavenWorldTests
             Assert.True(companion.RawStr >= strength + 5);
             Assert.True(companion.RawDex >= dexterity + 5);
             Assert.True(companion.RawInt >= intelligence + 5);
-            Assert.Equal(100, companion.Backpack.FindItemByType<IronOre>().Amount);
+            Assert.Equal(100, companion.Backpack.FindItemByType<CommodityDeed>().Commodity.Amount);
             var trained = companion.TrainingMinutes;
             Assert.False(restored.Return(owner, restored.Due));
             Assert.Equal(trained, companion.TrainingMinutes);
-            Assert.Equal(100, companion.Backpack.FindItemByType<IronOre>().Amount);
+            Assert.Equal(100, companion.Backpack.FindItemByType<CommodityDeed>().Commodity.Amount);
         }
         finally { restored?.Delete(); companion.Delete(); owner.Delete(); }
     }
