@@ -91,4 +91,17 @@ public class HavenWorldTestsIslandTrial
         }
         finally { Server.Engines.MLQuests.MLQuestSystem.Contexts.Remove(owner); owner.Delete(); }
     }
+    [SkippableFact]
+    public void ProvisionerUsesMarkedShopAndIsNotDuplicated()
+    {
+        TileDataRequirement.SkipIfMissing();
+        HavenProvisioner.Ensure(); HavenProvisioner.Ensure();
+        var count = 0; Provisioner found = null;
+        foreach (var vendor in Map.Trammel.GetMobilesInRange<Provisioner>(HavenProvisioner.Site, 5))
+        {
+            count++; found = vendor; Assert.Equal("Mara Wren", vendor.Name); Assert.InRange(vendor.Z, 19, 23);
+        }
+        found?.Delete();
+        Assert.Equal(1, count);
+    }
 }
