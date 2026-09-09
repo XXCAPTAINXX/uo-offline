@@ -87,9 +87,9 @@ public partial class HavenCompanionExpedition : Item
             if (minutes < 5) { owner?.SendMessage("Taming missions need the full five minutes to return a pet."); }
             else
             {
-                var rarity = HavenTamingMissions.RollRarity(tamingRoll ?? Utility.RandomDouble());
+                var rarity = HavenTamingMissions.IsCustomMission(kind) ? HavenTamingMissions.RollRarity(tamingRoll ?? Utility.RandomDouble()) : 0;
                 bag.DropItem(new HavenExpeditionPetClaim { Owner = owner, Kind = kind, Rarity = rarity });
-                owner?.SendMessage($"Your companion found a {HavenPetRarity.RarityName(rarity)} {HavenTamingMissions.PetName(kind)}! Move the claim to your backpack to redeem it.");
+                owner?.SendMessage($"Your companion found a {HavenTamingMissions.PetName(kind)}! The claim in the shared pack shows its details.");
             }
             return bag;
         }

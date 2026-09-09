@@ -2366,13 +2366,13 @@ public class HavenWorldTests
     {
         foreach (var (roll, tier) in new[] { (0.0, 0), (0.699, 0), (0.70, 1), (0.919, 1), (0.92, 2), (0.989, 2), (0.99, 3) })
         {
-            var bag = HavenCompanionExpedition.CreateLoot(HavenExpeditionKind.TameHorse, 5, null, roll);
+            var bag = HavenCompanionExpedition.CreateLoot(HavenExpeditionKind.TameEmberwing, 5, null, roll);
             HavenExpeditionPetClaim copy = null;
             try
             {
                 var claim = bag.FindItemByType<HavenExpeditionPetClaim>();
                 Assert.NotNull(claim);
-                Assert.Equal(HavenExpeditionKind.TameHorse, claim.Kind);
+                Assert.Equal(HavenExpeditionKind.TameEmberwing, claim.Kind);
                 Assert.Equal(tier, claim.Rarity);
                 var writer = new BufferWriter(true);
                 claim.Serialize(writer);

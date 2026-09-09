@@ -48,7 +48,7 @@ public partial class HavenEmberwing : ForestOstard
     public override void OnGaveMeleeAttack(Mobile defender, int damage)
     { base.OnGaveMeleeAttack(defender, damage); HavenRarePetAbility.Activate(this, defender, 1, ref _nextAbility); }
     public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Rare companion:"} {"Ember strike: extra fire damage, 12-second cooldown while tamed"}"); }
+    { base.GetProperties(list); list.Add($"{"Custom pet:"} {"Ember strike: extra fire damage, 12-second cooldown while tamed"}"); }
 }
 
 [SerializationGenerator(0)]
@@ -65,7 +65,7 @@ public partial class HavenMoonfang : DireWolf
     public override void OnGaveMeleeAttack(Mobile defender, int damage)
     { base.OnGaveMeleeAttack(defender, damage); HavenRarePetAbility.Activate(this, defender, 2, ref _nextAbility); }
     public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Epic companion:"} {"Moon mend: heals itself and nearby owner in combat, 12-second cooldown"}"); }
+    { base.GetProperties(list); list.Add($"{"Custom pet:"} {"Moon mend: heals itself and nearby owner in combat, 12-second cooldown"}"); }
 }
 
 [SerializationGenerator(0)]
@@ -82,5 +82,5 @@ public partial class HavenStormscale : Drake
     public override void OnGaveMeleeAttack(Mobile defender, int damage)
     { base.OnGaveMeleeAttack(defender, damage); HavenRarePetAbility.Activate(this, defender, 3, ref _nextAbility); }
     public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Legendary companion:"} {"Storm strike: energy damage and nearby owner's mana recovery, 12-second cooldown"}"); }
+    { base.GetProperties(list); list.Add($"{"Custom pet:"} {"Storm strike: energy damage and nearby owner's mana recovery, 12-second cooldown"}"); }
 }

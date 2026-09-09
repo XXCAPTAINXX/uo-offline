@@ -8,6 +8,8 @@ public static class HavenTamingMissions
 {
     public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameStormhorn;
     internal static int RollRarity(double roll) => roll < 0.70 ? 0 : roll < 0.92 ? 1 : roll < 0.99 ? 2 : 3;
+    public static bool IsCustomMission(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TameEmberwing and <= HavenExpeditionKind.TameStormhorn;
+    public static bool IsCustomPet(BaseCreature pet) => pet is HavenEmberwing or HavenMoonfang or HavenStormscale or HavenFrostmane or HavenVerdantLlama or HavenStormhorn or VampiricSteed;
     public static string PetName(HavenExpeditionKind kind) => kind switch
     {
         HavenExpeditionKind.TamePackHorse => "Pack horse",
@@ -58,31 +60,55 @@ public static class HavenTamingMissions
     };
 }
 
-[SerializationGenerator(1)]
+[SerializationGenerator(2)]
 public partial class HavenExpeditionPetClaim : Item
 {
     [SerializableField(0)] private Mobile _owner;
     [SerializableField(1)] private HavenExpeditionKind _kind;
     [SerializableField(2)] private int _rarity;
+    [SerializableField(3)] private BaseCreature _reservedPet;
+    private void MigrateFrom(V1Content content) { _owner = content.Owner; _kind = content.Kind; _rarity = content.Rarity; }
     private void MigrateFrom(V0Content content) { _owner = content.Owner; _kind = content.Kind; }
     [Constructible]
     public HavenExpeditionPetClaim() : base(0x14F0) { Weight = 1; LootType = LootType.Blessed; Hue = 0x59B; }
-    public override string DefaultName => $"{HavenPetRarity.RarityName(Rarity)} pet claim: {HavenTamingMissions.PetName(Kind)}";
+    public override string DefaultName => HavenTamingMissions.IsCustomMission(Kind)
+        ? $"{HavenPetRarity.RarityName(Rarity)} pet claim: {HavenTamingMissions.PetName(Kind)}"
+        : $"Pet claim: {HavenTamingMissions.PetName(Kind)}";
     public override void OnDoubleClick(Mobile from) => Claim(from);
+    internal BaseCreature Inspect(Mobile from)
+    {
+        if (Deleted || from?.Deleted != false || from != Owner || !from.Alive ||
+            from.Backpack == null || !IsChildOf(from.Backpack) || !HavenTamingMissions.IsTaming(Kind)) { return null; }
+        if (_reservedPet?.Deleted != false)
+        {
+            ReservedPet = HavenTamingMissions.CreatePet(Kind);
+            AnimalTaming.ScaleSkills(_reservedPet, _reservedPet is GreaterDragon ? 0.72 : 0.90);
+            if (_reservedPet.StatLossAfterTame) { AnimalTaming.ScaleStats(_reservedPet, 0.50); }
+            HavenPetRarity.Apply(_reservedPet, Rarity);
+            _reservedPet.Internalize();
+        }
+        return _reservedPet;
+    }
+    public void InspectWithAnimalLore(Mobile from)
+    {
+        var pet = Inspect(from);
+        if (pet == null) { from.SendMessage("Keep your own pet ticket in your backpack to inspect it."); return; }
+        AnimalLoreGump.DisplayTo(from, pet);
+        from.SendMessage($"This ticket holds {pet.Name}: {pet.ControlSlots} follower slots. These are its actual stats after taming.");
+        if (HavenTamingMissions.IsCustomMission(Kind)) { from.SendMessage(HavenPetRarity.Describe(Rarity)); }
+    }
     internal bool Claim(Mobile from)
     {
         if (Deleted || from?.Deleted != false || from != Owner || !from.Alive || from.Backpack == null ||
             !IsChildOf(from.Backpack) || from.Map == null || from.Map == Map.Internal || !HavenTamingMissions.IsTaming(Kind)) { return false; }
-        var pet = HavenTamingMissions.CreatePet(Kind);
+        var pet = Inspect(from);
+        if (pet == null) { return false; }
         if (from.Followers + pet.ControlSlots > from.FollowersMax || !pet.SetControlMaster(from))
         {
-            pet.Delete();
             from.SendMessage("Free enough follower slots before claiming this pet. Your claim is preserved.");
             return false;
         }
-        AnimalTaming.ScaleSkills(pet, pet is GreaterDragon ? 0.72 : 0.90);
-        if (pet.StatLossAfterTame) { AnimalTaming.ScaleStats(pet, 0.50); }
-        HavenPetRarity.Apply(pet, Rarity);
+        ReservedPet = null;
         pet.Owners.Add(from);
         pet.Loyalty = BaseCreature.MaxLoyalty;
         pet.ControlTarget = from;
@@ -95,7 +121,9 @@ public partial class HavenExpeditionPetClaim : Item
     public override void GetProperties(IPropertyList list)
     {
         base.GetProperties(list);
+        list.Add($"{"Use Animal Lore on this ticket to inspect the pet before claiming."}");
         list.Add($"{"Double-click in your backpack to claim. Owner:"} {Owner?.Name ?? "none"}");
+        if (HavenTamingMissions.IsCustomMission(Kind)) { list.Add($"{"Rarity benefits:"} {HavenPetRarity.Describe(Rarity)}"); }
     }
-    public override void OnDelete() { Owner = null; base.OnDelete(); }
+    public override void OnDelete() { _reservedPet?.Delete(); ReservedPet = null; Owner = null; base.OnDelete(); }
 }
