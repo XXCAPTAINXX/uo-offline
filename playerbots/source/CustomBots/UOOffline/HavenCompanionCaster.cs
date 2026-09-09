@@ -3,6 +3,7 @@ using Server.Spells;
 using Server.Spells.First;
 using Server.Spells.Fourth;
 using Server.Spells.Sixth;
+using Server.Spells.Second;
 using Server.Spells.Spellweaving;
 using Server.Targeting;
 
@@ -22,18 +23,39 @@ public partial class HavenCompanion
 
     internal bool CanCastAt(Mobile target, bool beneficial) => Role == HavenCompanionRole.Caster && !IsDeadPet &&
         Alive && target?.Deleted == false && target.Alive && target.Map == Map && InRange(target, 10) && InLOS(target) &&
-        (beneficial ? target == BoundOwner : CanBeHarmful(target, false));
+        (beneficial ? target == BoundOwner || target == this : CanBeHarmful(target, false));
 
     internal Spell ChooseAttackSpell(Mobile enemy)
     {
         if (!CanCastAt(enemy, false)) { return null; }
-        if (Skills.Spellweaving.Value >= 80 && Mana >= 60 && enemy.Hits < enemy.HitsMax / 4)
+        if (Skills.Spellweaving.Value >= 80 && Mana >= 70 && enemy.Hits < enemy.HitsMax * 0.30)
         {
             return new WordOfDeathSpell(this);
         }
+        if (Skills.Spellweaving.Value >= 10 && Mana >= 52 && NearbyCasterEnemies() >= 2) { return new ThunderstormSpell(this); }
         if (Skills.Magery.Value >= 70 && Mana >= 30) { return new EnergyBoltSpell(this); }
         if (Skills.Magery.Value >= 45 && Mana >= 21) { return new LightningSpell(this); }
         return Mana >= 14 ? new MagicArrowSpell(this) : null;
+    }
+    internal int NearbyCasterEnemies()
+    {
+        var count = 0;
+        foreach (var enemy in Map.GetMobilesInRange<Server.Mobiles.BaseCreature>(Location, 8))
+        {
+            if (enemy != this && enemy.Alive && !enemy.Controlled && !enemy.Summoned && enemy is not Server.Mobiles.BaseVendor &&
+                CanCastAt(enemy, false) && SpellHelper.ValidIndirectTarget(this, enemy))
+            { if (++count >= 2) { break; } }
+        }
+        return count;
+    }
+    internal Spell ChooseEmergencySpell(out Mobile patient)
+    {
+        patient = BoundOwner;
+        if (CanCastAt(BoundOwner, true) && BoundOwner.Poisoned && Mana >= 11) { return new CureSpell(this); }
+        if (Poisoned && Mana >= 11) { patient = this; return new CureSpell(this); }
+        if (CanCastAt(BoundOwner, true) && BoundOwner.Hits < BoundOwner.HitsMax * 0.65 && Mana >= 21) { return new GreaterHealSpell(this); }
+        if (Hits < HitsMax * 0.50 && Mana >= 21) { patient = this; return new GreaterHealSpell(this); }
+        return null;
     }
 
     private bool BeginCompanionSpell(Spell spell, Mobile target, bool beneficial)
@@ -42,7 +64,7 @@ public partial class HavenCompanion
         _companionSpell = spell;
         _companionSpellTarget = target;
         _beneficialSpell = beneficial;
-        _nextCasterSpell = Core.Now + TimeSpan.FromSeconds(4);
+        _nextCasterSpell = Core.Now + TimeSpan.FromSeconds(0.5);
         return true;
     }
 
@@ -92,7 +114,9 @@ public partial class HavenCompanion
     {
 
         if (Role != HavenCompanionRole.Caster) { return; }
-if (Spell != null || Core.Now < _nextCasterSpell) { return; }
+        if (Spell != null || Target != null || Core.Now < _nextCasterSpell || Core.TickCount - NextSpellTime < 0) { return; }
+        var emergency = ChooseEmergencySpell(out var patient);
+        if (emergency != null && BeginCompanionSpell(emergency, patient, true)) { return; }
         if (BoundOwner.Alive && BoundOwner.Hits < BoundOwner.HitsMax * 0.85 && Mana >= 34 &&
             CanBeginAction<GiftOfRenewalSpell>() && BeginCompanionSpell(new GiftOfRenewalSpell(this), BoundOwner, true)) { return; }
         if (BoundOwner.Alive && BoundOwner.Combatant == null && Skills.Spellweaving.Value >= 80 &&

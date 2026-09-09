@@ -11,10 +11,47 @@ public class HavenWorldTestsIslandTrial
 {
     public HavenWorldTestsIslandTrial() => _ = new HavenWorldTests();
     [SkippableFact]
+    public void ThemesPersistAndGiveMatchingResourcesWithoutChangingDifficulty()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var trial = new HavenIslandTrial();
+        try
+        {
+            for (var theme = 0; theme < 3; theme++)
+            {
+                HavenTrialTheme.Set(trial, theme);
+                Assert.Equal(theme, HavenTrialTheme.Get(trial));
+                var boss = new HavenTrialCreature(4, theme);
+                var material = HavenTrialTheme.Resource(theme, true);
+                try
+                {
+                    Assert.Equal(theme, HavenTrialTheme.Get(boss));
+                    Assert.Equal(450, boss.HitsMax);
+                    if (theme == 0) { Assert.IsType<Board>(material); }
+                    else if (theme == 1) { Assert.IsType<IronIngot>(material); }
+                    else { Assert.IsType<Hides>(material); }
+                    Assert.InRange(material.Amount, 150, 350);
+                }
+                finally { boss.Delete(); material.Delete(); }
+            }
+            var record = new HavenTrialTheme(2);
+            var writer = new BufferWriter(true); record.Serialize(writer);
+            var copy = new HavenTrialTheme(World.NewItem);
+            try
+            {
+                copy.Deserialize(new BufferReader(writer.Buffer.AsSpan(0, (int)writer.Position).ToArray()));
+                Assert.Equal(2, copy.Theme);
+            }
+            finally { record.Delete(); copy.Delete(); }
+        }
+        finally { trial.Delete(); }
+    }
+    [SkippableFact]
     public void ThreeShortWavesThenBossPayOnceAndCleanUp()
     {
         TileDataRequirement.SkipIfMissing();
         var trial = new HavenIslandTrial(); var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var helper = new PlayerMobile { Player = true, Body = 0x190 }; helper.AddItem(new Backpack());
         owner.AddItem(new Backpack());
         var previous = Mobile.CreateCorpseHandler;
         Mobile.CreateCorpseHandler = Corpse.Mobile_CreateCorpseHandler;
@@ -22,11 +59,13 @@ public class HavenWorldTestsIslandTrial
         {
             Assert.True(HavenIslandTrial.FindSite(HavenIslandTrial.Site, out var site));
             trial.MoveToWorld(site, Map.Trammel); owner.MoveToWorld(site, Map.Trammel);
+            helper.MoveToWorld(site, Map.Trammel);
             trial.OnDoubleClick(owner); Assert.Equal(1, trial.Stage);
             for (var i = 0; i < 18; i++)
             {
                 trial.Tick(); Assert.InRange(trial.Creatures.Count, 1, 3);
                 var mob = trial.Creatures[0]; Assert.InRange(mob.HitsMax, 80, 120);
+                if (i == 0) { mob.DamageEntries.Add(new DamageEntry(helper) { DamageGiven = 1, LastDamage = Core.Now }); }
                 mob.Kill(); mob.Corpse?.Delete();
             }
             Assert.Equal(4, trial.Stage); trial.Tick(); Assert.Single(trial.Creatures);
@@ -35,13 +74,19 @@ public class HavenWorldTestsIslandTrial
             boss.Kill();
             Assert.Equal(0, trial.Stage); Assert.Empty(trial.Creatures);
             Assert.Equal(5, owner.Backpack.FindItemByType<AstralShard>().Amount);
+            Assert.Equal(5, helper.Backpack.FindItemByType<AstralShard>().Amount);
             var corpse = Assert.IsAssignableFrom<Container>(boss.Corpse);
-            var count = 0; foreach (var scroll in corpse.FindItemsByType<PowerScroll>()) { count++; Assert.InRange(scroll.Value, 105, 110); } Assert.Equal(5, count);
-            Assert.Equal(20, corpse.FindItemByType<HavenMark>().Amount);
+            var count = 0; foreach (var scroll in owner.Backpack.FindItemsByType<PowerScroll>()) { count++; Assert.InRange(scroll.Value, 105, 110); } Assert.Equal(5, count);
+            Assert.Null(corpse.FindItemByType<PowerScroll>());
+            Assert.Equal(20, owner.Backpack.FindItemByType<HavenMark>().Amount);
+            Assert.NotNull(owner.Backpack.FindItemByType<ScrollofAlacrity>());
+            Assert.InRange(owner.Backpack.FindItemByType<ScrollofTranscendence>().Value, 0.5, 2.0);
+            Assert.NotNull(helper.Backpack.FindItemByType<ScrollofAlacrity>());
+            Assert.InRange(owner.Backpack.FindItemByType<Gold>().Amount, 25000, 40000);
             trial.Defeated(boss); Assert.Equal(5, owner.Backpack.FindItemByType<AstralShard>().Amount);
             trial.OnDoubleClick(owner); Assert.Equal(0, trial.Stage); corpse.Delete();
         }
-        finally { Mobile.CreateCorpseHandler = previous; trial.Delete(); owner.Delete(); }
+        finally { Mobile.CreateCorpseHandler = previous; trial.Delete(); owner.Delete(); helper.Delete(); }
     }
     [SkippableFact]
     public void AstralGrowthAndGearFollowerUnlockAreIdempotent()

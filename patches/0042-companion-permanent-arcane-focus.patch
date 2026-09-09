@@ -1,0 +1,11 @@
+diff --git a/Projects/UOContent/Spells/Spellweaving/ArcanistSpell.cs b/Projects/UOContent/Spells/Spellweaving/ArcanistSpell.cs
+--- a/Projects/UOContent/Spells/Spellweaving/ArcanistSpell.cs
++++ b/Projects/UOContent/Spells/Spellweaving/ArcanistSpell.cs
+@@ -24,6 +24,7 @@ namespace Server.Spells.Spellweaving
+ 
+         public static int GetFocusLevel(Mobile from)
+         {
++            if (from is Server.UOOffline.HavenCompanion { Role: Server.UOOffline.HavenCompanionRole.Caster }) { return 6; }
+             var focus = FindArcaneFocus(from);
+ 
+             return focus?.Deleted != false ? 0 : focus.StrengthBonus;

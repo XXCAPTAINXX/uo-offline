@@ -13,6 +13,8 @@ namespace Server.UOOffline;
 [SerializationGenerator(0)]
 public partial class HavenPetTraining : Item
 {
+    internal const int ProgressMultiplier = 3;
+    internal const int WrestlingGap = 75;
     [SerializableField(0)] private int _progress;
     [SerializableField(1)] private int _pointsTenths;
     [SerializableField(2)] private int _healing;
@@ -73,7 +75,7 @@ public partial class HavenPetTraining : Item
         {
             owner.SendMessage(Progress >= 10000
                 ? "Combat training is complete. Spend your points, then finish this stage."
-                : "Training is already active. Your pet must damage wild enemies whose Wrestling is no more than 50 below its own. Use several enemies, then Refresh to see progress.");
+                : "Training is already active. Your pet must damage wild enemies whose Wrestling is no more than 75 below its own. Progress earns three times faster. Use several enemies, then Refresh to see progress.");
             return false;
         }
         if (pet.ControlSlots >= MaxSlots(pet))
@@ -92,11 +94,11 @@ public partial class HavenPetTraining : Item
             !Owned(owner, pet) || target == pet || target.Controlled || target.Summoned || target.IsDeadPet) { return; }
         var record = Find(pet);
         if (record == null || !record.Active || record.Progress >= 10000) { return; }
-        if (pet.Skills.Wrestling.Base - target.Skills.Wrestling.Base > 50) { return; }
+        if (pet.Skills.Wrestling.Base - target.Skills.Wrestling.Base > WrestlingGap) { return; }
         var serial = (int)target.Serial.Value;
         record._targets.TryGetValue(serial, out var earned);
         var limit = pet.ControlSlots < 3 ? 5000 : 2500;
-        var gain = Math.Min(Math.Min(damage, target.HitsMax), Math.Max(0, limit - earned));
+        var gain = (int)Math.Min((long)Math.Min(damage, target.HitsMax) * ProgressMultiplier, Math.Max(0, limit - earned));
         if (gain <= 0) { return; }
         record._targets[serial] = earned + gain;
         record.Progress = Math.Min(10000, record.Progress + gain);
@@ -105,7 +107,7 @@ public partial class HavenPetTraining : Item
     }
     internal bool CanSpend(Mobile owner, BaseCreature pet, int cost) => Owned(owner, pet) && Find(pet) == this && Active &&
         Progress == 10000 && cost > 0 && cost <= PointsTenths && (Advanced || owner.Followers + 1 <= owner.FollowersMax);
-    private void Spend(Mobile owner, BaseCreature pet, int cost)
+    internal void Spend(Mobile owner, BaseCreature pet, int cost)
     {
         if (!Advanced)
         {
@@ -164,14 +166,18 @@ public partial class HavenPetTraining : Item
     }
     internal bool LearnHealing(Mobile owner, BaseCreature pet)
     {
-        if (Healing > 0 || pet.CanHealOwner || !CanSpend(owner, pet, 1000)) { return false; }
+        if (Healing > 0 || pet.CanHealOwner || !HavenPetAbilities.HasRoom(pet, 4) || !CanSpend(owner, pet, 1000)) { return false; }
         Healing = 1;
         pet.Skills.Healing.Base = Math.Max(20, pet.Skills.Healing.Base);
         pet.Skills.Anatomy.Base = Math.Max(20, pet.Skills.Anatomy.Base);
         Spend(owner, pet, 1000); return true;
     }
     internal static readonly SkillName[] TrainableSkills = [SkillName.Wrestling, SkillName.Tactics, SkillName.Anatomy, SkillName.Healing,
-        SkillName.MagicResist, SkillName.Magery, SkillName.EvalInt, SkillName.Meditation, SkillName.Focus];
+        SkillName.MagicResist, SkillName.Magery, SkillName.EvalInt, SkillName.Meditation, SkillName.Focus,
+        SkillName.Poisoning, SkillName.Parry, SkillName.Hiding, SkillName.DetectHidden,
+        SkillName.Necromancy, SkillName.SpiritSpeak, SkillName.Spellweaving, SkillName.Mysticism,
+        SkillName.Chivalry, SkillName.Bushido, SkillName.Ninjitsu, SkillName.Musicianship, SkillName.Discordance,
+        SkillName.Peacemaking, SkillName.Provocation];
     internal bool RaiseCap(Mobile owner, BaseCreature pet, SkillName skill, Item scroll)
     {
         if (!Array.Exists(TrainableSkills, s => s == skill) || scroll?.Deleted != false || owner.Backpack == null || !scroll.IsChildOf(owner.Backpack)) { return false; }
@@ -208,6 +214,8 @@ public sealed class HavenPetTrainingGump : Gump
     public static void DisplayTo(Mobile owner, BaseCreature pet, bool confirmFinish = false, int category = 0)
     {
         if (!HavenPetTraining.Owned(owner, pet)) { return; }
+        if (category is 2 or 3) { HavenPetSkillCapsGump.DisplayTo(owner, pet, category == 2); return; }
+        if (category == 4) { HavenPetAbilitiesGump.DisplayTo(owner, pet); return; }
         owner.CloseGump<HavenPetTrainingGump>(); owner.SendGump(new HavenPetTrainingGump(pet, confirmFinish, category));
     }
     internal HavenPetTrainingGump(BaseCreature pet, bool confirmFinish = false, int category = 0) : base(20, 30)
@@ -273,7 +281,9 @@ public sealed class HavenPetTrainingGump : Gump
     {
         var owner = sender.Mobile; var button = info.ButtonID;
         if (button == 0 || !HavenPetTraining.Owned(owner, _pet)) { return; }
-        if (button is >= 1000 and <= 1004) { DisplayTo(owner, _pet, category: button - 1000); return; }
+        if (button is 1002 or 1003) { HavenPetSkillCapsGump.DisplayTo(owner, _pet, button == 1002); return; }
+        if (button == 1004) { HavenPetAbilitiesGump.DisplayTo(owner, _pet); return; }
+        if (button is >= 1000 and <= 1001) { DisplayTo(owner, _pet, category: button - 1000); return; }
         if (button == 904) { HavenAnimalLoreGump.DisplayTo(owner, _pet); return; }
         if (button == 903)
         {

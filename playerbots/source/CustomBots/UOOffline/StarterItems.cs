@@ -200,6 +200,7 @@ public partial class AdventurersWallet : Item
         }
         DepositBackpackGold(from);
         DepositBackpackMarks(from);
+        DepositBackpackShards(from);
         CollectNearbyGold(from);
     }
 
@@ -259,6 +260,18 @@ public partial class AdventurersWallet : Item
         foreach (var mark in marks) { mark.Delete(); }
         HavenMarks += amount;
         from.SendMessage($"Deposited {amount:N0} Haven marks. Wallet marks: {HavenMarks:N0}.");
+        return amount;
+    }
+    internal long DepositBackpackShards(Mobile from)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack)) { return 0; }
+        var shards = new List<AstralShard>(); long amount = 0;
+        foreach (var shard in from.Backpack.FindItemsByType<AstralShard>())
+        { if (!shard.Deleted) { shards.Add(shard); amount += shard.Amount; } }
+        if (amount <= 0 || amount > long.MaxValue - AstralShards) { return 0; }
+        foreach (var shard in shards) { shard.Delete(); }
+        AstralShards += amount;
+        from.SendMessage($"Deposited {amount:N0} Astral shards. Wallet shards: {AstralShards:N0}.");
         return amount;
     }
     internal bool WithdrawMarks(Mobile from, int amount)
