@@ -13,3 +13,5 @@ Wallet double-click collects nearby loose gold; `[wallet` opens balances and wit
 Travel menus display twelve compact destinations per page. Shops show item stats on inspection and tooltips over entries.
 
 Dead companions resurrect automatically after five seconds near their online owner. Refresh resurrects immediately when nearby, preserving their identity and gear.
+
+Animal Taming and Animal Lore do not count against a player's existing total skill cap. They still require training and obey individual skill caps and locks. Natural gains and NPC training use the same exemption. Use [skillbudget to see the counted total; the standard client skill total still includes all skills. The requested 1,000-point total cap was cancelled.

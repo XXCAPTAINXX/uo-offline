@@ -1,0 +1,90 @@
+diff --git a/Projects/UOContent/Skills/SkillCheck.cs b/Projects/UOContent/Skills/SkillCheck.cs
+index 5913b0a7f..8e1c93059 100644
+--- a/Projects/UOContent/Skills/SkillCheck.cs
++++ b/Projects/UOContent/Skills/SkillCheck.cs
+@@ -109,7 +109,7 @@ public static bool CheckSkill(Mobile from, Skill skill, object amObj, double cha
+             }
+             else if (AllowGain(from, skill, amObj))
+             {
+-                var gc = (double)(from.Skills.Cap - from.Skills.Total) / from.Skills.Cap;
++                var gc = (double)(from.Skills.Cap - Server.UOOffline.HavenFreeSkills.CountedTotal(from)) / from.Skills.Cap;
+                 gc += (skill.Cap - skill.Base) / skill.Cap;
+                 gc /= 2;
+ 
+@@ -228,13 +228,13 @@ public static void Gain(Mobile from, Skill skill)
+ 
+             var skills = from.Skills;
+ 
+-            if (from.Player && skills.Total / (double)skills.Cap >= Utility.RandomDouble())
++            if (from.Player && !Server.UOOffline.HavenFreeSkills.IsFree(from, skill) && Server.UOOffline.HavenFreeSkills.CountedTotal(from) / (double)skills.Cap >= Utility.RandomDouble())
+             {
+                 for (var i = 0; i < skills.Length; ++i)
+                 {
+                     var toLower = skills[i];
+ 
+-                    if (toLower != skill && toLower.Lock == SkillLock.Down && toLower.BaseFixedPoint >= toGain)
++                    if (toLower != skill && !Server.UOOffline.HavenFreeSkills.IsFree(from, toLower) && toLower.Lock == SkillLock.Down && toLower.BaseFixedPoint >= toGain)
+                     {
+                         toLower.BaseFixedPoint = Math.Max(toLower.BaseFixedPoint - toGain, 0);
+                         break;
+@@ -247,8 +247,9 @@ public static void Gain(Mobile from, Skill skill)
+                 toGain *= Utility.RandomMinMax(2, 5);
+             }
+ 
+-            if (!from.Player || skills.Total < skills.Cap)
++            if (!from.Player || Server.UOOffline.HavenFreeSkills.IsFree(from, skill) || Server.UOOffline.HavenFreeSkills.CountedTotal(from) < skills.Cap)
+             {
++                if (from.Player && !Server.UOOffline.HavenFreeSkills.IsFree(from, skill)) { toGain = Math.Min(toGain, skills.Cap - Server.UOOffline.HavenFreeSkills.CountedTotal(from)); }
+                 skill.BaseFixedPoint = Math.Min(skill.BaseFixedPoint + toGain, skill.CapFixedPoint);
+             }
+         }
+@@ -475,3 +476,4 @@ public static void GainStat(Mobile from, Stat stat)
+         IncreaseStat(from, stat, atrophy);
+     }
+ }
++
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+index 50fa709..77c3477 100644
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -4505,14 +4505,15 @@ bool doTeach
+                 return TeachResult.SkillNotRaisable;
+             }
+ 
+-            var freePoints = Math.Max(m.Skills.Cap - m.Skills.Total, 0);
++            var freeSkill = Server.UOOffline.HavenFreeSkills.IsFree(m, theirSkill);
++            var freePoints = freeSkill ? pointsToLearn : Math.Max(m.Skills.Cap - Server.UOOffline.HavenFreeSkills.CountedTotal(m), 0);
+             var freeablePoints = 0;
+ 
+             for (var i = 0; freePoints + freeablePoints < pointsToLearn && i < m.Skills.Length; ++i)
+             {
+                 var sk = m.Skills[i];
+ 
+-                if (sk == theirSkill || sk.Lock != SkillLock.Down)
++                if (sk == theirSkill || Server.UOOffline.HavenFreeSkills.IsFree(m, sk) || sk.Lock != SkillLock.Down)
+                 {
+                     continue;
+                 }
+@@ -4539,7 +4540,7 @@ bool doTeach
+                 {
+                     var sk = m.Skills[i];
+ 
+-                    if (sk == theirSkill || sk.Lock != SkillLock.Down)
++                    if (sk == theirSkill || Server.UOOffline.HavenFreeSkills.IsFree(m, sk) || sk.Lock != SkillLock.Down)
+                     {
+                         continue;
+                     }
+@@ -4558,7 +4559,7 @@ bool doTeach
+ 
+                 /* Sanity check */
+                 if (baseToSet > theirSkill.CapFixedPoint ||
+-                    m.Skills.Total - theirSkill.BaseFixedPoint + baseToSet > m.Skills.Cap)
++                    !freeSkill && Server.UOOffline.HavenFreeSkills.CountedTotal(m) - theirSkill.BaseFixedPoint + baseToSet > m.Skills.Cap)
+                 {
+                     return TeachResult.NotEnoughFreePoints;
+                 }
+@@ -5825,3 +5826,4 @@ protected override void OnTick()
+         }
+     }
+ }
++

@@ -1428,6 +1428,56 @@ public class HavenWorldTests
         }
         finally { companion.Delete(); owner.Delete(); }
     }
+    [Fact]
+    public void TamingAndLoreDoNotConsumeSkillBudgetOrLowerOtherSkills()
+    {
+        var player = new PlayerMobile { Player = true, Body = 0x190, SkillsCap = 1000 };
+        try
+        {
+            player.Skills.Swords.Base = 100;
+            player.Skills.AnimalTaming.Base = 20;
+            player.Skills.AnimalLore.Base = 20;
+            Assert.Equal(1000, HavenFreeSkills.CountedTotal(player));
+            Server.Misc.SkillCheck.Gain(player, player.Skills.AnimalTaming);
+            Server.Misc.SkillCheck.Gain(player, player.Skills.AnimalLore);
+            Assert.Equal(20.1, player.Skills.AnimalTaming.Base);
+            Assert.Equal(20.1, player.Skills.AnimalLore.Base);
+            Assert.Equal(100.0, player.Skills.Swords.Base);
+            player.Skills.AnimalLore.SetLockNoRelay(SkillLock.Down);
+            Server.Misc.SkillCheck.Gain(player, player.Skills.Healing);
+            Assert.Equal(0.0, player.Skills.Healing.Base);
+            Assert.Equal(20.1, player.Skills.AnimalLore.Base);
+            player.Skills.Swords.Base = 99;
+            Server.Misc.SkillCheck.Gain(player, player.Skills.Healing);
+            Assert.True(player.Skills.Healing.Base > 0);
+            player.Skills.AnimalTaming.Base = player.Skills.AnimalTaming.Cap;
+            Server.Misc.SkillCheck.Gain(player, player.Skills.AnimalTaming);
+            Assert.Equal(player.Skills.AnimalTaming.Cap, player.Skills.AnimalTaming.Base);
+            Assert.Equal(1000, player.SkillsCap);
+        }
+        finally { player.Delete(); }
+    }
+    [SkippableFact]
+    public void TrainersTeachFreeSkillsAtTotalCap()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190, SkillsCap = 1000 };
+        var trainer = new AnimalTrainer();
+        try
+        {
+            player.Skills.Swords.Base = 100;
+            trainer.Skills.AnimalLore.Base = 90;
+            trainer.Skills.AnimalTaming.Base = 90;
+            foreach (var skill in new[] { SkillName.AnimalTaming, SkillName.AnimalLore })
+            {
+                var learned = 0;
+                Assert.Equal(BaseCreature.TeachResult.Success, trainer.CheckTeachSkills(skill, player, 100, ref learned, true));
+                Assert.True(player.Skills[skill].Base > 0);
+            }
+            Assert.Equal(1000, HavenFreeSkills.CountedTotal(player));
+        }
+        finally { trainer.Delete(); player.Delete(); }
+    }
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())
