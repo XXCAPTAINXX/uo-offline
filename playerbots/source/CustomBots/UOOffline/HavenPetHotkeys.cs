@@ -1,5 +1,11 @@
 using Server.Commands;
 using Server.Network;
+using System;
+using System.Buffers;
+using System.Buffers.Binary;
+using Server.ContextMenus;
+using Server.Mobiles;
+using Server.Targeting;
 
 namespace Server.UOOffline;
 
@@ -13,6 +19,19 @@ public static class HavenPetHotkeys
         Register("PetStop", "all stop", 0x167);
         Register("PetAttack", "all kill", 0x168);
         Register("PetCome", "all come", 0x164);
+        CommandSystem.Register("PetMenu", AccessLevel.Player, e =>
+        { e.Mobile.SendMessage("Select your pet or its health bar to open its menu."); e.Mobile.Target = new MenuTarget(); });
+    }
+    private sealed class MenuTarget : Target
+    {
+        public MenuTarget() : base(18, false, TargetFlags.None) { }
+        protected override void OnTarget(Mobile from, object targeted)
+        {
+            if (targeted is not BaseCreature pet || pet.ControlMaster != from || !pet.Controlled || from.NetState == null) { return; }
+            Span<byte> data = stackalloc byte[4];
+            BinaryPrimitives.WriteUInt32BigEndian(data, pet.Serial.Value);
+            ContextMenuSystem.ContextMenuRequest(from.NetState, new SpanReader(data));
+        }
     }
 
     private static void Register(string command, string speech, int keyword)

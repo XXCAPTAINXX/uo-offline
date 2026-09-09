@@ -104,6 +104,8 @@ public partial class HavenCompanionExpedition : Item
             {
                 var rarity = HavenTamingMissions.IsCustomMission(kind) ? HavenTamingMissions.RollRarity(tamingRoll ?? Utility.RandomDouble()) : 0;
                 bag.DropItem(new HavenExpeditionPetClaim { Owner = owner, Kind = kind, Rarity = rarity });
+                var bonus = TamingBonus(Utility.RandomDouble());
+                if (bonus != null) { bag.DropItem(bonus); owner?.SendMessage("Your companion also found a useful taming supply!"); }
                 owner?.SendMessage($"Your companion found a {HavenTamingMissions.PetName(kind)}! The claim in the shared pack shows its details.");
             }
             return bag;
@@ -122,6 +124,13 @@ public partial class HavenCompanionExpedition : Item
         }
         return bag;
     }
+    internal static Item TamingBonus(double roll) => roll switch
+    {
+        < 0.08 => new HavenBondingPotion(),
+        < 0.16 => new HavenPetLeash(),
+        < 0.25 => new HavenPetPowerScroll(Utility.RandomList(SkillName.Wrestling, SkillName.Tactics, SkillName.Anatomy, SkillName.Healing, SkillName.MagicResist), 105),
+        _ => null
+    };
     public override void OnDelete() { _timer?.Stop(); _timer = null; Companion = null; base.OnDelete(); }
 }
 
