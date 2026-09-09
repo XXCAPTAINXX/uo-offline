@@ -18,13 +18,14 @@ public partial class HavenPetRarity : Item
     {
         1 => "+10% starting stats/HP; +5 combat skills, minimum 105 caps; innate fire strike (12s, no training cost)",
         2 => "+20% starting stats/HP; +10 combat skills, minimum 110 caps; innate fire strike + self/owner healing (12s, no training cost)",
-        3 => "Found with 1 follower slot; +30% starting stats/HP; +15 combat skills, minimum 120 caps; innate fire strike + healing + energy strike + owner mana (12s, no training cost)",
+        3 => "Found with 1 follower slot; +30% starting stats/HP; +15 combat skills, minimum 120 caps; 50% chance of 1-3 existing skills at 125-150 with matching caps; innate fire strike + healing + energy strike + owner mana (12s, no training cost)",
         _ => "Standard species stats and abilities"
     };
     public static void AddProperties(BaseCreature pet, IPropertyList list)
     {
         var rarity = pet.Backpack?.FindItemByType<HavenPetRarity>();
         if (rarity != null && HavenTamingMissions.IsCustomPet(pet)) { list.Add($"{RarityName(rarity.Tier)} {"rarity:"} {Describe(rarity.Tier)}"); }
+        pet.Backpack?.FindItemByType<HavenLegendaryPetSkills>()?.AddProperties(pet, list);
     }
     internal static void Apply(BaseCreature pet, int tier)
     {
@@ -45,11 +46,13 @@ public partial class HavenPetRarity : Item
             pet.Skills[skill].Cap = Math.Max(pet.Skills[skill].Cap, tier == 3 ? 120 : 100 + tier * 5);
             pet.Skills[skill].Base = Math.Min(pet.Skills[skill].Cap, pet.Skills[skill].Base + tier * 5);
         }
+        if (tier == 3) { HavenLegendaryPetSkills.Roll(pet); }
     }
     public static void OnAttack(BaseCreature pet, Mobile defender)
     {
         if (!HavenTamingMissions.IsCustomPet(pet)) { return; }
         var rarity = pet.Backpack?.FindItemByType<HavenPetRarity>();
+        if (rarity?.Tier == 3 && pet.Controlled) { HavenLegendaryPetSkills.Roll(pet); }
         if (rarity != null) { HavenRarePetAbility.Activate(pet, defender, rarity.Tier, ref rarity._nextAbility, cumulative: true); }
     }
 }

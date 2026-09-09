@@ -14,6 +14,7 @@ public sealed class HavenAnimalLoreGump : Gump
     public static void DisplayTo(Mobile from, BaseCreature pet)
     {
         if (from?.NetState == null || pet?.Deleted != false) { return; }
+        if (pet.ControlMaster == from) { HavenLegendaryPetSkills.Roll(pet); }
         from.CloseGump<HavenAnimalLoreGump>();
         from.SendGump(new HavenAnimalLoreGump(from, pet));
     }
