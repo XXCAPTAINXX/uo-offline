@@ -1,0 +1,20 @@
+diff --git a/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs b/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs
+index 485d56c1d..10ebfc99e 100644
+--- a/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs
++++ b/Projects/UOContent/Mobiles/Vendors/BaseVendor.cs
+@@ -245,6 +245,15 @@ public virtual bool OnBuyItems(Mobile buyer, List<BuyItemResponse> list)
+             var bought = buyer.AccessLevel >= AccessLevel.GameMaster;
+ 
+             var cont = buyer.Backpack;
++            if (!bought && cont?.FindItemByType<Server.UOOffline.AdventurersWallet>() != null)
++            {
++                if (totalCost > 0 && !Server.UOOffline.HavenEconomy.TryPay(buyer, totalCost))
++                {
++                    SayTo(buyer, 500192);
++                    return false;
++                }
++                bought = true;
++            }
+             if (!bought && cont != null)
+             {
+                 if (cont.ConsumeTotal(typeof(Gold), totalCost))

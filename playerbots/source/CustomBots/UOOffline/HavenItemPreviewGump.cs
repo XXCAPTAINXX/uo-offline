@@ -39,7 +39,7 @@ public sealed class HavenItemPreviewGump : Gump
         }
         finally { preview?.Delete(); }
         AddHtml(28, 330, 482, 45, $"{menu.Question}");
-        AddHtml(28, 375, 482, 20, "Gold payments use wallet first, then backpack and bank.");
+        AddHtml(28, 375, 482, 20, stone is AdventurersWallet ? "Astral purchases use the shard balance in this wallet." : "Gold payments use wallet first, then backpack and bank.");
         AddButton(28, 399, 4014, 4016, 2);
         AddLabel(66, 401, 0, "Back");
         AddButton(200, 399, 4005, 4007, 1);
@@ -92,7 +92,7 @@ public sealed class HavenItemPreviewGump : Gump
             NewHavenAdventurersRobe => "Binds to the buyer. Four upgrade tiers, purchased with Haven marks or gold.",
             ApprenticeGrimoire => "All 64 Magery spells. Binds to the buyer; evolves through spellcasting to level 20.",
             CleanupTrashBag => "Accepts eligible unwanted items; removes them after 3 minutes and awards cleanup points.",
-            AdventurersWallet => "Double-click to collect backpack gold. Stone purchases can spend the balance.",
+            AdventurersWallet => "Double-click to collect backpack and nearby loose gold. Say withdraw 1000. Use [wallet for balances and Astral treasures.",
             ProgressionArchive => "Collects compatible progression scrolls, champion skulls, Haven marks, primers and binders.",
             PeerlessKeyVault => "Collects recognized Peerless keys from your backpack. Keys do not expire.",
             OfflineTravelBook => "Reusable travel book. Opens the moongate destination and facet selector from your backpack. No charges or reagents. Normal moongate eligibility applies; unavailable while dead, criminal, in combat or casting.",
@@ -105,7 +105,7 @@ public sealed class HavenItemPreviewGump : Gump
     {
         var from = sender.Mobile;
         if (info.ButtonID == 0 || from == null) { return; }
-        if (_stone.Deleted || from.Map != _stone.Map || !from.InRange(_stone.Location, 3))
+        if (!HavenShopAccess.CanUse(from, _stone))
         {
             from.SendMessage("Return to the stone before buying.");
             return;
@@ -113,4 +113,11 @@ public sealed class HavenItemPreviewGump : Gump
         if (info.ButtonID == 1) { _menu.OnResponse(sender, _index); }
         if (info.ButtonID is 1 or 2) { from.SendGump(new HavenListGump(_stone, _menu, _page)); }
     }
+}
+
+public static class HavenShopAccess
+{
+    public static bool CanUse(Mobile from, Item anchor) => from?.Deleted == false && anchor?.Deleted == false &&
+        (anchor is AdventurersWallet ? from.Backpack != null && anchor.IsChildOf(from.Backpack) :
+        from.Map == anchor.Map && from.InRange(anchor.GetWorldLocation(), 3));
 }

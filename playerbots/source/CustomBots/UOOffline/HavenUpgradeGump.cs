@@ -32,7 +32,7 @@ public sealed class HavenUpgradeGump : Gump
         else
         {
             AddHtml(30, 76, 420, 40, $"Current tier: {_tier}. Upgrade to tier {_tier + 1}.");
-            AddHtml(30, 120, 420, 60, $"Cost: {_tier + 1} Haven mark(s), or {(_tier + 1) * 5000:N0} gold if you do not have enough marks.");
+            AddHtml(30, 120, 420, 60, $"Cost: {_tier + 1} Haven mark(s), or {(_tier + 1) * 5000:N0} gold from wallet, backpack or bank if you do not have enough marks.");
             AddButton(30, 193, 4005, 4007, 1);
             AddLabel(68, 195, 0, "Buy this upgrade");
         }

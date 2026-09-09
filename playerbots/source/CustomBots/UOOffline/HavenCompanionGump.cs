@@ -1,3 +1,4 @@
+using System.Linq;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
@@ -29,8 +30,9 @@ public sealed class HavenCompanionGump : Gump
         AddLabel(20, 43, 0, $"{companion.Role} | Level {companion.TrainingLevel:N0} | {companion.ControlOrder}");
         AddLabel(20, 65, 0, $"HP {companion.Hits}/{companion.HitsMax}  Mana {companion.Mana}/{companion.ManaMax}");
         Button(20, 95, 100, "Orders");
-        Button(130, 95, 101, "Stats");
-        Button(240, 95, 102, "Role");
+        Button(115, 95, 101, "Stats");
+        Button(205, 95, 102, "Role");
+        Button(285, 95, 103, "Gear");
         switch (tab)
         {
             case 1:
@@ -41,13 +43,21 @@ public sealed class HavenCompanionGump : Gump
                 AddLabel(20, 218, 0, $"Healing {companion.Skills.Healing.Value:F1}  Resist {companion.Skills.MagicResist.Value:F1}");
                 AddLabel(20, 240, 0, $"Music {companion.Skills.Musicianship.Value:F1}  Discord {companion.Skills.Discordance.Value:F1}");
                 AddLabel(20, 262, 0, $"Peacemaking {companion.Skills.Peacemaking.Value:F1}  Mastery {companion.Mastery:F1}");
-                AddLabel(20, 284, 0, $"Pack: {companion.Backpack.TotalItems}/1000 items");
+                AddLabel(20, 284, 0, $"Magery {companion.Skills.Magery.Value:F1}  Weaving {companion.Skills.Spellweaving.Value:F1}");
                 break;
             case 2:
                 Button(20, 133, 10, "Fighter - melee support");
-                Button(20, 170, 11, "Healer - faster healing");
-                Button(20, 207, 12, "Bard - discord and songs");
-                AddHtml(20, 248, 330, 68, "Discord: 60 Music + Discordance.<BR>Stat buffs: 80 Music + Peacemaking.<BR>Higher skills strengthen songs.");
+                Button(20, 164, 11, "Healer - faster healing");
+                Button(20, 195, 12, "Bard - discord and songs");
+                Button(20, 226, 13, "Caster - mage / spellweaver");
+                Button(20, 257, 15, "Archer - ranged support");
+                AddHtml(20, 291, 330, 36, "Bard: Discord at 60, songs at 80.<BR>Caster: bolts, renewal; death/life at 80.");
+                break;
+            case 3:
+                Button(20, 133, 14, "Equip item...");
+                Button(195, 133, 6, "Open pack");
+                AddHtml(20, 175, 330, 110, string.Join("<BR>", companion.Items.Where(i => i.Layer != Layer.Backpack).Select(i => $"{i.Layer}: {i.Name ?? i.DefaultName}")), false, true);
+                AddHtml(20, 291, 330, 30, "Replaced gear goes into the shared pack.");
                 break;
             default:
                 Button(20, 133, 1, "Follow");
@@ -76,7 +86,7 @@ public sealed class HavenCompanionGump : Gump
     internal void HandleCommand(Mobile from, int button)
     {
         if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
-        if (button is >= 100 and <= 102) { DisplayTo(from, _companion, button - 100); return; }
+        if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
         if (button == 110) { DisplayTo(from, _companion, _tab); return; }
         if (button == 9)
         {
@@ -121,9 +131,16 @@ public sealed class HavenCompanionGump : Gump
                 if (CompanionParty.Get(_companion)?.Contains(from) == true) { CompanionParty.Get(_companion).Remove(_companion); }
                 else { _companion.JoinParty(from); }
                 break;
+            case 15:
+                _companion.Role = HavenCompanionRole.Archer;
+                break;
+            case 14:
+                _companion.RequestEquipment(from);
+                break;
             case 10:
             case 11:
             case 12:
+            case 13:
                 _companion.Role = (HavenCompanionRole)(button - 10);
                 break;
         }

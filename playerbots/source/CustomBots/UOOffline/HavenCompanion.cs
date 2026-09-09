@@ -88,7 +88,7 @@ public static class HavenCompanions
     }
 }
 
-public enum HavenCompanionRole { Fighter, Healer, Bard }
+public enum HavenCompanionRole { Fighter, Healer, Bard, Caster, Archer }
 
 [SerializationGenerator(0)]
 public partial class HavenCompanion : BaseCreature
@@ -162,6 +162,10 @@ public partial class HavenCompanion : BaseCreature
         Skills.Discordance.Base = Math.Max(Skills.Discordance.Base, Math.Min(6553.5, Mastery));
         Skills.Peacemaking.Base = Math.Max(Skills.Peacemaking.Base, Math.Min(6553.5, Mastery));
         Skills.Healing.Base = Math.Max(Skills.Healing.Base, Math.Min(6553.5, Mastery));
+        Skills.Archery.Base = Math.Max(Skills.Archery.Base, Math.Min(6553.5, Mastery));
+        Skills.Magery.Base = Math.Max(Skills.Magery.Base, Math.Min(6553.5, Mastery));
+        Skills.EvalInt.Base = Math.Max(Skills.EvalInt.Base, Math.Min(6553.5, Mastery));
+        Skills.Spellweaving.Base = Math.Max(Skills.Spellweaving.Base, Math.Min(6553.5, Mastery));
         Skills.Meditation.Base = Math.Max(Skills.Meditation.Base, Math.Min(6553.5, Mastery));
         if (Backpack?.FindItemByType<HavenCompanionLute>() == null && Backpack != null)
         {
@@ -317,6 +321,9 @@ public partial class HavenCompanion : BaseCreature
     public override void OnThink()
     {
         if (!_configured) { ConfigureCompanion(); }
+        ConfigureCombatRole();
+        RecoverResources(Core.Now);
+        ProcessCompanionSpell();
         base.OnThink();
         if (Controlled) { Loyalty = MaxLoyalty; }
         if (Core.Now >= _nextTraining)
@@ -339,6 +346,7 @@ public partial class HavenCompanion : BaseCreature
             ControlOrder = OrderType.Attack;
         }
         Support(BoundOwner);
+        ThinkAsCaster();
         var party = CompanionParty.Get(BoundOwner);
         if (party?.Contains(this) == true)
         {
@@ -370,6 +378,7 @@ public partial class HavenCompanion : BaseCreature
     public override void OnDelete()
     {
         CompanionParty.Get(this)?.Remove(this);
+        CancelCompanionSpell();
         BoundOwner = null;
         base.OnDelete();
     }

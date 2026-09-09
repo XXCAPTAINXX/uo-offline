@@ -1,0 +1,12 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+index f64a289f4..f24b8672a 100644
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -3267,6 +3267,7 @@ public static List<DamageStore> GetLootingRights(List<DamageEntry> damageEntries
+ 
+         public virtual void OnKilledBy(Mobile mob)
+         {
++            Server.UOOffline.HavenAstralRewards.OnMonsterKilled(this, mob);
+             if (GivesMLMinorArtifact)
+             {
+                 if (MondainsLegacy.CheckArtifactChance(mob, this))

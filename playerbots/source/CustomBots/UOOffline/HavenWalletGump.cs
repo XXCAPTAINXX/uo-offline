@@ -13,6 +13,7 @@ public sealed class HavenWalletGump : Gump
         AddBackground(12, 12, 436, 306, 3000);
         AddHtml(30, 25, 400, 30, "<B>Adventurer's wallet</B>");
         AddLabel(30, 65, 0, $"Balance: {wallet.Balance:N0} gold");
+        AddLabel(30, 87, 0, $"Astral shards: {wallet.AstralShards:N0}");
         AddButton(30, 110, 4005, 4007, 1);
         AddLabel(66, 112, 0, "Deposit all backpack gold");
         AddLabel(30, 160, 0, "Withdraw gold to your backpack:");
@@ -21,6 +22,8 @@ public sealed class HavenWalletGump : Gump
         AddButton(230, 195, 4005, 4007, 2);
         AddLabel(266, 197, 0, "Withdraw");
         AddLabel(30, 238, 0, "1 to 60,000 gold per withdrawal; capacity applies.");
+        AddButton(30, 280, 4005, 4007, 3);
+        AddLabel(66, 282, 0, "Astral treasures");
         AddButton(320, 280, 4005, 4007, 0);
         AddLabel(356, 282, 0, "Close");
     }
@@ -29,6 +32,7 @@ public sealed class HavenWalletGump : Gump
     {
         var from = sender.Mobile;
         if (info.ButtonID == 0 || _wallet.Deleted || from.Backpack == null || !_wallet.IsChildOf(from.Backpack)) { return; }
+        if (info.ButtonID == 3) { from.SendGump(new HavenListGump(_wallet, new HavenAstralRewards.Menu(_wallet))); return; }
         if (info.ButtonID == 1) { _wallet.DepositBackpackGold(from); }
         else if (info.ButtonID == 2)
         {

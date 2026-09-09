@@ -26,7 +26,7 @@ public sealed class HavenListGump : Gump
         AddBackground(12, 12, 516, 436, 3000);
         AddHtml(28, 24, 482, 48, $"<BASEFONT COLOR=#111111><B>{menu.Question}</B></BASEFONT>");
         AddHtml(28, 76, 480, 28, menu is IHavenShop
-            ? "<BASEFONT COLOR=#333333>Select an item to inspect its stats before buying.</BASEFONT>"
+            ? "<BASEFONT COLOR=#333333>Hover over an item for stats; select it for the full preview.</BASEFONT>"
             : "<BASEFONT COLOR=#333333>Select your destination.</BASEFONT>");
 
         for (var row = 0; row < PageSize; row++)
@@ -36,16 +36,24 @@ public sealed class HavenListGump : Gump
             {
                 break;
             }
+            string tooltip = null;
             var y = 112 + row * 66;
             AddButton(28, y + 5, 4005, 4007, index + 1);
             if (menu is IHavenShop shop)
             {
                 var item = shop.CreateItem(index);
-                try { AddItem(65, y, item.ItemID, item.Hue); }
+                try
+                {
+                    tooltip = HavenItemPreviewGump.Describe(item).Replace("<BR>", "\n");
+                    AddTooltip(1042971, tooltip);
+                    AddItem(65, y, item.ItemID, item.Hue);
+                    AddTooltip(1042971, tooltip);
+                }
                 finally { item.Delete(); }
             }
             else { AddItem(65, y, menu.Entries[index].ItemID, menu.Entries[index].Hue); }
             AddHtml(115, y, 389, 42, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
+            if (tooltip != null) { AddTooltip(1042971, tooltip); }
         }
 
         if (_page > 0)
@@ -75,8 +83,7 @@ public sealed class HavenListGump : Gump
             return;
         }
         var from = sender.Mobile;
-        if (from == null || _anchor.Deleted || from.Map != _anchor.Map ||
-            !from.InRange(_anchor.GetWorldLocation(), 3))
+        if (!HavenShopAccess.CanUse(from, _anchor))
         {
             from?.SendMessage("Return to the service stone to use this menu.");
             return;

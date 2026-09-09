@@ -87,6 +87,268 @@ public class HavenWorldTests
         }
         finally { steed.Delete(); }
     }
+    [SkippableFact]
+    public void WalletDoubleClickCollectsLooseGoldButLeavesSecuredAndDistantGold()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        player.AddItem(new Backpack());
+        var wallet = new AdventurersWallet();
+        var nearby = new Gold(400);
+        var far = new Gold(600);
+        var secured = new Gold(900) { Movable = false };
+        try
+        {
+            player.Backpack.DropItem(wallet);
+            player.Backpack.DropItem(new Gold(100));
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            nearby.MoveToWorld(player.Location, player.Map);
+            secured.MoveToWorld(player.Location, player.Map);
+            far.MoveToWorld(new Point3D(player.X + 20, player.Y, player.Z), player.Map);
+            wallet.OnDoubleClick(player);
+            Assert.Equal(500, wallet.Balance);
+            Assert.True(nearby.Deleted);
+            Assert.False(far.Deleted);
+            Assert.False(secured.Deleted);
+            wallet.OnDoubleClick(player);
+            Assert.Equal(500, wallet.Balance);
+            var speech = new Server.SpeechEventArgs(player, "withdraw 100", Server.MessageType.Regular, 0, Array.Empty<int>());
+            HavenWalletCommands.OnSpeech(speech);
+            Assert.True(speech.Handled);
+            Assert.Equal(400, wallet.Balance);
+            Assert.Equal(100, player.Backpack.GetAmount(typeof(Gold)));
+        }
+        finally { nearby.Delete(); far.Delete(); secured.Delete(); player.Delete(); }
+    }
+
+    [Fact]
+    public void WalletSaveLoadPreservesGoldAndShardsAndMigratesOldGoldOnlyWallets()
+    {
+        var wallet = new AdventurersWallet { Balance = 123456, AstralShards = 42 };
+        var header = new Item(World.NewItem);
+        AdventurersWallet copy = null;
+        AdventurersWallet legacy = null;
+        try
+        {
+            var writer = new BufferWriter(true);
+            wallet.Serialize(writer);
+            var data = writer.Buffer.AsSpan(0, (int)writer.Position).ToArray();
+            copy = new AdventurersWallet(World.NewItem);
+            copy.Deserialize(new BufferReader(data));
+            Assert.Equal(123456, copy.Balance);
+            Assert.Equal(42, copy.AstralShards);
+            var reader = new BufferReader(data);
+            header.Deserialize(reader);
+            var versionPosition = (int)reader.Position;
+            var oldData = data.AsSpan(0, data.Length - 8).ToArray();
+            oldData[versionPosition] = 0;
+            legacy = new AdventurersWallet(World.NewItem);
+            legacy.Deserialize(new BufferReader(oldData));
+            Assert.Equal(123456, legacy.Balance);
+            Assert.Equal(0, legacy.AstralShards);
+        }
+        finally { wallet.Delete(); header.Delete(); copy?.Delete(); legacy?.Delete(); }
+    }
+
+    [SkippableFact]
+    public void GearUpgradeSpendsWalletGoldAndRejectsStalePrice()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        player.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { Balance = 15000 };
+        var robe = new NewHavenAdventurersRobe();
+        var stone = new HavenUpgradeStone();
+        try
+        {
+            player.Backpack.DropItem(wallet); player.Backpack.DropItem(robe);
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); stone.MoveToWorld(player.Location, player.Map);
+            stone.ApplyUpgrade(player, 0);
+            Assert.Equal(1, robe.UpgradeTier);
+            Assert.Equal(10000, wallet.Balance);
+            stone.ApplyUpgrade(player, 0);
+            Assert.Equal(10000, wallet.Balance);
+        }
+        finally { player.Delete(); stone.Delete(); }
+    }
+
+    [Fact]
+    public void AstralPurchasesUseShardsAndDoNotChargeFullPacks()
+    {
+        var player = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        player.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { Balance = 50000, AstralShards = 60 };
+        player.Backpack.DropItem(wallet);
+        try
+        {
+            player.Backpack.MaxItems = 1;
+            Assert.False(HavenAstralRewards.Buy(player, wallet, 2));
+            Assert.Equal(60, wallet.AstralShards);
+            player.Backpack.MaxItems = 125;
+            Assert.True(HavenAstralRewards.Buy(player, wallet, 2));
+            Assert.Equal(0, wallet.AstralShards);
+            Assert.Equal(50000, wallet.Balance);
+            Assert.Single(player.Backpack.Items.OfType<AstralFortuneEarrings>());
+            Assert.False(HavenAstralRewards.Buy(player, wallet, 0));
+            Assert.True(HavenAstralRewards.Award(player, 3));
+            Assert.Equal(3, wallet.AstralShards);
+        }
+        finally { player.Delete(); }
+    }
+
+    [SkippableTheory]
+    [InlineData(HavenCompanionRole.Fighter)]
+    [InlineData(HavenCompanionRole.Healer)]
+    [InlineData(HavenCompanionRole.Bard)]
+    [InlineData(HavenCompanionRole.Caster)]
+    public void CompanionRecoversAllResourcesWithoutRefillingEveryThink(HavenCompanionRole role)
+    {
+        TileDataRequirement.SkipIfMissing();
+        var companion = new HavenCompanion { Role = role };
+        try
+        {
+            companion.Hits = companion.Stam = companion.Mana = 1;
+            var now = Core.Now.AddSeconds(1);
+            companion.RecoverResources(now);
+            Assert.True(companion.Hits > 1 && companion.Stam >= 13 && companion.Mana >= 9);
+            var stamina = companion.Stam;
+            companion.RecoverResources(now);
+            Assert.Equal(stamina, companion.Stam);
+            companion.RecoverResources(now.AddSeconds(3));
+            Assert.True(companion.Stam > stamina);
+        }
+        finally { companion.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CasterChoosesNativeSpellsAndRejectsPlayerTargets()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Caster };
+        var enemy = new OldHavenWarden();
+        try
+        {
+            foreach (var mobile in new Mobile[] { owner, companion, enemy }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            companion.Mana = companion.ManaMax;
+            Assert.Null(companion.ChooseAttackSpell(owner));
+            Assert.IsType<Server.Spells.Sixth.EnergyBoltSpell>(companion.ChooseAttackSpell(enemy));
+            companion.Skills.Spellweaving.Base = 100;
+            enemy.Hits = 1;
+            Assert.IsType<Server.Spells.Spellweaving.WordOfDeathSpell>(companion.ChooseAttackSpell(enemy));
+            Assert.True(companion.CanCastAt(owner, true));
+            companion.Role = HavenCompanionRole.Fighter;
+            Assert.Null(companion.ChooseAttackSpell(enemy));
+        }
+        finally { companion.Delete(); enemy.Delete(); owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionEquipmentSwapStoresOldGearAndRejectsAnotherOwner()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack()); other.AddItem(new Backpack());
+        var companion = new HavenCompanion { BoundOwner = owner };
+        var sword = new Longsword();
+        try
+        {
+            foreach (var mobile in new Mobile[] { owner, other, companion }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            owner.Backpack.DropItem(sword);
+            var old = companion.FindItemOnLayer(Layer.OneHanded);
+            Assert.False(companion.EquipFromOwner(other, sword));
+            Assert.True(companion.EquipFromOwner(owner, sword));
+            Assert.Same(sword, companion.FindItemOnLayer(Layer.OneHanded));
+            Assert.True(old.IsChildOf(companion.Backpack));
+        }
+        finally { companion.Delete(); owner.Delete(); other.Delete(); }
+    }
+
+    [Fact]
+    public void ShopRowsIncludeStatTooltips()
+    {
+        var stone = new SpecialRewardStone();
+        try
+        {
+            var gump = new HavenListGump(stone, new SpecialRewardStone.RewardMenu());
+            Assert.Equal(12, gump.Entries.OfType<GumpTooltip>().Count());
+        }
+        finally { stone.Delete(); }
+    }
+    [SkippableFact]
+    public void MerchantPurchaseUsesWalletAndCannotDoubleChargeInsufficientFunds()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190, Str = 100, AccessLevel = AccessLevel.Player };
+        player.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { Balance = 10000 };
+        var vendor = new Provisioner();
+        try
+        {
+            player.Backpack.DropItem(wallet);
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            vendor.MoveToWorld(player.Location, player.Map);
+            var offer = vendor.GetBuyInfo().OfType<GenericBuyInfo>().First(i => i.Amount > 0 && i.Price > 0 && i.GetDisplayEntity() is Item);
+            var display = offer.GetDisplayEntity();
+            Assert.True(vendor.OnBuyItems(player, new List<BuyItemResponse> { new(display.Serial, 1) }));
+            Assert.True(wallet.Balance < 10000);
+            Assert.Equal(0, player.Backpack.GetAmount(typeof(Gold)));
+            wallet.Balance = 1;
+            Assert.False(vendor.OnBuyItems(player, new List<BuyItemResponse> { new(display.Serial, 100) }));
+            Assert.Equal(1, wallet.Balance);
+        }
+        finally { vendor.Delete(); player.Delete(); }
+    }
+
+    [SkippableFact]
+    public void ArcherUsesBowWithoutConsumingAmmoAndCanEquipAnImprovedCrossbow()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack());
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Archer };
+        var enemy = new OldHavenWarden();
+        try
+        {
+            foreach (var mobile in new Mobile[] { owner, companion, enemy }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            companion.ConfigureCombatRole();
+            Assert.IsType<Bow>(companion.Weapon);
+            Assert.Equal(AIType.AI_Archer, companion.AI);
+            var arrows = companion.Backpack.GetAmount(typeof(Arrow));
+            Assert.True(((BaseRanged)companion.Weapon).OnFired(companion, enemy));
+            Assert.Equal(arrows, companion.Backpack.GetAmount(typeof(Arrow)));
+            var crossbow = new Crossbow();
+            owner.Backpack.DropItem(crossbow);
+            Assert.True(companion.EquipFromOwner(owner, crossbow));
+            Assert.Same(crossbow, companion.Weapon);
+            companion.Role = HavenCompanionRole.Fighter;
+            companion.ConfigureCombatRole();
+            Assert.False(companion.Weapon is BaseRanged);
+            Assert.True(crossbow.IsChildOf(companion.Backpack));
+        }
+        finally { companion.Delete(); enemy.Delete(); owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void AstralEligibilityExcludesPetsAndRequiresNearbyMonsterCredit()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Player = true, Body = 0x190 };
+        var monster = new OldHavenWarden();
+        try
+        {
+            player.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            monster.MoveToWorld(player.Location, player.Map);
+            Assert.True(HavenAstralRewards.Eligible(monster, player));
+            monster.Controlled = true;
+            Assert.False(HavenAstralRewards.Eligible(monster, player));
+            monster.Controlled = false;
+            player.MoveToWorld(new Point3D(player.X + 30, player.Y, player.Z), player.Map);
+            Assert.False(HavenAstralRewards.Eligible(monster, player));
+        }
+        finally { monster.Delete(); player.Delete(); }
+    }
     private static bool _npcConfigured;
     public HavenWorldTests()
     {

@@ -159,12 +159,18 @@ public partial class ApprenticeGrimoire : Spellbook
     }
 }
 
-[SerializationGenerator(0)]
+[SerializationGenerator(1)]
 public partial class AdventurersWallet : Item
 {
     [SerializableField(0)]
     [InvalidateProperties]
     private long _balance;
+
+    [SerializableField(1)]
+    [InvalidateProperties]
+    private long _astralShards;
+
+    private void MigrateFrom(V0Content content) { _balance = content.Balance; }
 
     public override string DefaultName => "adventurer's wallet";
 
@@ -182,8 +188,8 @@ public partial class AdventurersWallet : Item
             from.SendMessage("Keep the wallet in your backpack to use it.");
             return;
         }
-        from.CloseGump<HavenWalletGump>();
-        from.SendGump(new HavenWalletGump(this));
+        DepositBackpackGold(from);
+        CollectNearbyGold(from);
     }
 
     public void DepositBackpackGold(Mobile from)
@@ -229,6 +235,26 @@ public partial class AdventurersWallet : Item
         from.SendMessage($"{deposited:N0} gold deposited into your wallet. Balance: {Balance:N0}.");
     }
 
+    internal long CollectNearbyGold(Mobile from)
+    {
+        if (Deleted || !from.Alive || from.Backpack == null || !IsChildOf(from.Backpack) || from.Map == Map.Internal) { return 0; }
+        var coins = new List<Gold>();
+        foreach (var gold in from.Map.GetItemsInRange<Gold>(from.Location, 8))
+        {
+            if (!gold.Deleted && gold.Parent == null && gold.Movable && !gold.IsLockedDown && !gold.IsSecure &&
+                from.CanSee(gold) && from.InLOS(gold) && gold.CheckLift(from)) { coins.Add(gold); }
+        }
+        long collected = 0;
+        foreach (var gold in coins)
+        {
+            if (gold.Amount > long.MaxValue - Balance) { continue; }
+            Balance += gold.Amount;
+            collected += gold.Amount;
+            gold.Delete();
+        }
+        if (collected > 0) { from.SendMessage($"Collected {collected:N0} nearby gold. Wallet: {Balance:N0}."); }
+        return collected;
+    }
     internal bool Withdraw(Mobile from, int amount)
     {
         if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack) || amount < 1 || amount > 60000 || Balance < amount)
@@ -267,7 +293,7 @@ public partial class AdventurersWallet : Item
             return;
         }
 
-        Balance += amount;
+        Balance = amount > long.MaxValue - Balance ? long.MaxValue : Balance + amount;
         InvalidateProperties();
     }
 
@@ -275,7 +301,8 @@ public partial class AdventurersWallet : Item
     {
         base.GetProperties(list);
         list.Add($"{"Stored gold:"} {Balance:N0}");
-        list.Add("Double-click to deposit or withdraw gold");
+        list.Add($"{"Astral shards:"} {AstralShards:N0}");
+        list.Add("Double-click: collect gold. Say withdraw 1000. Use [wallet for rewards.");
     }
 }
 
