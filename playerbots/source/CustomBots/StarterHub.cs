@@ -161,12 +161,19 @@ namespace Server.CustomBots
 
         public static Item CreateStarterWeapon(int choice)
         {
+            // These are deliberately endgame-viable BASE WEAPON TYPES. The
+            // starter properties are modest, but the weapon-ability pairs are
+            // useful all the way into advanced templates:
+            //   Swords   : Double Axe   - Double Strike / Whirlwind Attack
+            //   Fencing  : Leafblade    - Feint / Armor Ignore
+            //   Macing   : War Axe      - Armor Ignore / Bleed Attack
+            //   Archery  : Composite Bow- Armor Ignore / Moving Shot
             BaseWeapon weapon = choice switch
             {
-                1 => new Broadsword(),
-                2 => new Kryss(),
-                3 => new Mace(),
-                4 => new Bow(),
+                1 => new DoubleAxe(),
+                2 => new Leafblade(),
+                3 => new WarAxe(),
+                4 => new CompositeBow(),
                 _ => null
             };
 
@@ -177,10 +184,10 @@ namespace Server.CustomBots
 
             weapon.Name = choice switch
             {
-                1 => "Starter Broadsword",
-                2 => "Starter Kryss",
-                3 => "Starter Mace",
-                4 => "Starter Bow",
+                1 => "Starter Double Axe",
+                2 => "Starter Leafblade",
+                3 => "Starter War Axe",
+                4 => "Starter Composite Bow",
                 _ => "Starter Weapon"
             };
 
@@ -188,7 +195,7 @@ namespace Server.CustomBots
             weapon.Attributes.WeaponDamage = 10;
             weapon.Attributes.HitChance = 5;
 
-            if (weapon is Bow)
+            if (weapon is BaseRanged)
             {
                 var pack = new Bag { Name = "Starter Archery Set" };
                 pack.DropItem(weapon);
@@ -292,10 +299,10 @@ namespace Server.CustomBots
 
             builder.AddHtml(30, 20, 300, 24, "<CENTER><B>Choose Your Starter Weapon</B></CENTER>");
 
-            AddChoice(ref builder, 30, 60, 1, "Broadsword - Swords");
-            AddChoice(ref builder, 30, 95, 2, "Kryss - Fencing");
-            AddChoice(ref builder, 30, 130, 3, "Mace - Mace Fighting");
-            AddChoice(ref builder, 30, 165, 4, "Bow + 250 arrows - Archery");
+            AddChoice(ref builder, 30, 60, 1, "Double Axe - Swords (Double Strike / Whirlwind)");
+            AddChoice(ref builder, 30, 95, 2, "Leafblade - Fencing (Feint / Armor Ignore)");
+            AddChoice(ref builder, 30, 130, 3, "War Axe - Macing (Armor Ignore / Bleed)");
+            AddChoice(ref builder, 30, 165, 4, "Composite Bow + 250 arrows - Archery (Armor Ignore)");
 
             builder.AddButton(130, 205, 4005, 4007, 0);
             builder.AddHtml(165, 207, 100, 20, "Cancel");
