@@ -45,7 +45,7 @@ namespace Server.CustomBots
 
         public static void Configure()
         {
-            CommandSystem.Register("RefreshVendors", AccessLevel.GameMaster, Refresh_OnCommand);
+            CommandSystem.Register("RefreshVendors", AccessLevel.Player, Refresh_OnCommand);
             EventSink.WorldLoad += OnWorldLoad;
         }
 
