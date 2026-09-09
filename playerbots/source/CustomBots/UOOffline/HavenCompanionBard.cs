@@ -26,6 +26,7 @@ public partial class HavenCompanion
     {
         if (Role != HavenCompanionRole.Bard || !SongUnlocked || IsDeadPet || !patient.Alive || patient.Map != Map ||
             !InRange(patient, 12) || !InLOS(patient)) { return; }
+        if (_bardMastery != SkillName.Alchemy) { return; }
         var skill = Math.Min(Skills.Musicianship.Value, Skills.Peacemaking.Value);
         var amount = 3 + (int)((skill - 80) / 10) + (int)Math.Log2(1 + Math.Max(0, TrainingMinutes) / 60);
         var song = SelectSong(patient);
@@ -51,6 +52,7 @@ public partial class HavenCompanion
     {
         foreach (var patient in _songRecipients) { if (!patient.Deleted) { RemoveSong(patient); } }
         _songRecipients.Clear();
+        ClearBardMasteries();
     }
     private bool BardEnemy(Mobile target) => target is BaseCreature { Alive: true, Deleted: false, IsDeadPet: false, Controlled: false, Summoned: false, BardImmune: false } creature &&
         creature.Karma < 0 && target.Map == Map && InRange(target, 10) && InLOS(target) && CanBeHarmful(target, false);

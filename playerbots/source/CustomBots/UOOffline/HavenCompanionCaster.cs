@@ -24,7 +24,7 @@ public partial class HavenCompanion
     public override int ManaMax => Role == HavenCompanionRole.Caster
         ? base.ManaMax + 140 + (int)Math.Min(100000, TrainingLevel * 2) : base.ManaMax;
 
-    internal bool CanCastAt(Mobile target, bool beneficial) => Role == HavenCompanionRole.Caster && !IsDeadPet &&
+    internal bool CanCastAt(Mobile target, bool beneficial) => (Role is HavenCompanionRole.Caster or HavenCompanionRole.Bard) && !IsDeadPet &&
         Alive && target?.Deleted == false && target.Alive && target.Map == Map && InRange(target, 10) && InLOS(target) &&
         (beneficial ? target == BoundOwner || target == this : CanBeHarmful(target, false));
 

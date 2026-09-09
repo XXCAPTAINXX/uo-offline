@@ -5,15 +5,15 @@
 // PlayerBot in the world. One timer for all bots — much cheaper than one
 // timer per bot, and avoids ordering issues during world saves.
 //
-// We walk World.Mobiles each tick rather than maintaining our own
-// registration list. With <500 bots this is trivially cheap; we can
-// switch to a registration list later if perf demands it.
+// Bots register on construction/load and unregister on deletion.
+// The AI tick visits registered bots instead of scanning every world mobile.
 // =========================================================================
 
 using System;
 using System.Collections.Generic;
 using Server;
 using Server.Mobiles;
+using Server.Logging;
 
 namespace Server.CustomBots
 {
@@ -21,6 +21,10 @@ namespace Server.CustomBots
     {
         private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(2);
         private static Timer _timer;
+        private static readonly HashSet<PlayerBot> _registered = new();
+        internal static int RegisteredCount => _registered.Count;
+        internal static void Register(PlayerBot bot) { if (!bot.Deleted) { _registered.Add(bot); } }
+        internal static void Unregister(PlayerBot bot) { _registered.Remove(bot); }
 
         // Reusable buffer for snapshot — saves on GC churn since we'd
         // otherwise allocate a new array every 2 seconds.
@@ -34,22 +38,12 @@ namespace Server.CustomBots
 
         private static void OnTick()
         {
-            // SNAPSHOT first. Iterating World.Mobiles.Values directly throws
-            // "Collection was modified" if anything during a Tick adds or
-            // removes a Mobile (bot death + spawner replacement, teleporter
-            // step, monster spawn from aggression, etc). Copy bot references
-            // into a scratch list, then iterate that.
+            // Snapshot allows behaviors to create or delete bots during this pass.
             _scratch.Clear();
-            foreach (var mobile in World.Mobiles.Values)
+            foreach (var bot in _registered)
             {
-                if (mobile is PlayerBot bot &&
-                    !bot.Deleted &&
-                    bot.Map != Map.Internal)
-                {
-                    _scratch.Add(bot);
-                }
+                if (!bot.Deleted && bot.Map != Map.Internal) { _scratch.Add(bot); }
             }
-
             for (int i = 0; i < _scratch.Count; i++)
             {
                 var bot = _scratch[i];
@@ -77,7 +71,7 @@ namespace Server.CustomBots
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"PlayerBot tick error on {bot.Name}: {ex.Message}");
+                    LogFactory.GetLogger(typeof(BehaviorTickManager)).Error(ex, $"PlayerBot tick error on {bot.Name}");
                 }
             }
 

@@ -1,0 +1,365 @@
+diff --git a/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs b/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs
+index 9424e3afe..122537157 100644
+--- a/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs	
++++ b/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs	
+@@ -22,7 +22,8 @@ public enum SpellbookType
+     Ninja,
+     Samurai,
+     Arcanist,
+-    Mystic
++    Mystic,
++    SkillMasteries
+ }
+ 
+ public enum BookQuality
+@@ -379,6 +380,7 @@ public static SpellbookType GetTypeForSpell(int spellID)
+             return SpellbookType.Mystic;
+         }
+ 
++        if (spellID is >= 700 and <= 744) { return SpellbookType.SkillMasteries; }
+         return SpellbookType.Invalid;
+     }
+ 
+diff --git a/Projects/UOContent/Items/Weapons/Abilities/InfectiousStrike.cs b/Projects/UOContent/Items/Weapons/Abilities/InfectiousStrike.cs
+index a5196b6ec..0a9578a1d 100644
+--- a/Projects/UOContent/Items/Weapons/Abilities/InfectiousStrike.cs
++++ b/Projects/UOContent/Items/Weapons/Abilities/InfectiousStrike.cs
+@@ -44,7 +44,7 @@ public override void OnHit(Mobile attacker, Mobile defender, int damage, WorldLo
+                 return;
+             }
+ 
+-            --weapon.PoisonCharges;
++            if (Utility.Random(100) >= Server.Spells.SkillMasteries.MasteryInfo.NonPoisonConsumeChance(attacker)) { --weapon.PoisonCharges; }
+ 
+             var poisoningSkill = attacker.Skills.Poisoning.Value;
+ 
+diff --git a/Projects/UOContent/Items/Weapons/BaseWeapon.cs b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+index fb7a2b6be..950bd9e81 100644
+--- a/Projects/UOContent/Items/Weapons/BaseWeapon.cs
++++ b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+@@ -550,7 +550,7 @@ public float Speed
+     [CommandProperty(AccessLevel.GameMaster)]
+     public int MaxRange
+     {
+-        get => _maxRange == -1 ? Core.AOS ? AosMaxRange : OldMaxRange : _maxRange;
++        get => this is BaseRanged && RootParent is Mobile owner && Server.Spells.SkillMasteries.SkillMasterySpell.HasSpell<Server.Spells.SkillMasteries.PlayingTheOddsSpell>(owner) ? Math.Max(1, (_maxRange == -1 ? AosMaxRange : _maxRange) / 2) : _maxRange == -1 ? Core.AOS ? AosMaxRange : OldMaxRange : _maxRange;
+         set
+         {
+             _maxRange = value;
+@@ -1108,6 +1108,7 @@ public override void OnAdded(IEntity parent)
+ 
+     public override void OnRemoved(IEntity parent)
+     {
++        if (parent is Mobile owner) { Server.Spells.SkillMasteries.SkillMasterySpell.OnWeaponRemoved(owner, this); }
+         if (parent is not Mobile m)
+         {
+             return;
+@@ -1200,10 +1201,10 @@ public virtual SkillName GetUsedSkill(Mobile m, bool checkSkillAttrs)
+     }
+ 
+     public virtual double GetAttackSkillValue(Mobile attacker, Mobile defender) =>
+-        attacker.Skills[GetUsedSkill(attacker, true)].Value;
++        Server.Spells.SkillMasteries.MysticWeaponSpell.WeaponSkill(attacker, this, attacker.Skills[GetUsedSkill(attacker, true)].Value);
+ 
+     public virtual double GetDefendSkillValue(Mobile attacker, Mobile defender) =>
+-        defender.Skills[GetUsedSkill(defender, true)].Value;
++        Server.Spells.SkillMasteries.MysticWeaponSpell.WeaponSkill(defender, this, defender.Skills[GetUsedSkill(defender, true)].Value);
+ 
+     public virtual bool CheckHit(Mobile attacker, Mobile defender)
+     {
+@@ -1525,7 +1526,7 @@ public static bool CheckParry(Mobile defender)
+                 chance = chance * (20 + defender.Dex) / 100;
+             }
+ 
+-            return defender.CheckSkill(SkillName.Parry, chance);
++            return defender.CheckSkill(SkillName.Parry, chance + Server.Spells.SkillMasteries.HeightenedSensesSpell.GetParryBonus(defender));
+         }
+ 
+         if (defender.Weapon is Fists or BaseRanged)
+@@ -1566,11 +1567,11 @@ public static bool CheckParry(Mobile defender)
+ 
+         if (chance > aosChance)
+         {
+-            return defender.CheckSkill(SkillName.Parry, chance);
++            return defender.CheckSkill(SkillName.Parry, chance + Server.Spells.SkillMasteries.HeightenedSensesSpell.GetParryBonus(defender));
+         }
+ 
+         // Only skillcheck if wielding a shield & there's no effect from Bushido
+-        return aosChance > Utility.RandomDouble();
++        return aosChance + Server.Spells.SkillMasteries.HeightenedSensesSpell.GetParryBonus(defender) > Utility.RandomDouble();
+     }
+ 
+     public virtual int AbsorbDamageAOS(Mobile attacker, Mobile defender, int damage)
+@@ -1583,6 +1584,7 @@ public virtual int AbsorbDamageAOS(Mobile attacker, Mobile defender, int damage)
+ 
+             if (blocked)
+             {
++                Server.Spells.SkillMasteries.SkillMasterySpell.OnParried(attacker, defender);
+                 defender.FixedEffect(0x37B9, 10, 16);
+                 damage = 0;
+ 
+@@ -1991,6 +1993,9 @@ out var direct
+                           Bladeweave.BladeWeaving(attacker, out var bladeweavingAbi) &&
+                           bladeweavingAbi is ArmorIgnore;
+ 
++        if (this is Fists) { damage += AOS.Scale(damage, Server.Spells.SkillMasteries.MasteryInfo.GetKnockoutModifier(attacker, defender.Player)); }
++        Server.Spells.SkillMasteries.WhiteTigerFormSpell.OnHit(attacker, defender);
++        Server.Spells.SkillMasteries.SkillMasterySpell.OnHit(attacker, defender, ref damage);
+         var damageGiven = AOS.Damage(
+             defender,
+             attacker,
+@@ -2418,6 +2423,7 @@ private int ApplyCraftAttributeElementDamage(int attrDamage, ref int element, in
+ 
+     public virtual void OnMiss(Mobile attacker, Mobile defender)
+     {
++        Server.Spells.SkillMasteries.SkillMasterySpell.OnMiss(attacker, defender);
+         PlaySwingAnimation(attacker);
+         attacker.PlaySound(GetMissAttackSound(attacker, defender));
+         defender.PlaySound(GetMissDefendSound(attacker, defender));
+diff --git a/Projects/UOContent/Misc/AOS.cs b/Projects/UOContent/Misc/AOS.cs
+index f83ed5575..d12ff6f98 100644
+--- a/Projects/UOContent/Misc/AOS.cs
++++ b/Projects/UOContent/Misc/AOS.cs
+@@ -46,7 +46,7 @@ bool keepAlive
+ 
+         public static int Damage(
+             Mobile m, Mobile from, int damage, bool ignoreArmor, int phys, int fire, int cold, int pois,
+-            int nrgy, int chaos = 0, int direct = 0, bool keepAlive = false, bool archer = false, bool deathStrike = false
++            int nrgy, int chaos = 0, int direct = 0, bool keepAlive = false, bool archer = false, bool deathStrike = false, Server.Spells.SkillMasteries.DamageType masteryType = Server.Spells.SkillMasteries.DamageType.Melee
+         )
+         {
+             if (m?.Deleted != false || !m.Alive || damage <= 0)
+@@ -65,6 +65,7 @@ public static int Damage(
+                 return damage;
+             }
+ 
++            Server.Spells.SkillMasteries.MasteryDamage.Apply(m, from, archer ? Server.Spells.SkillMasteries.DamageType.Ranged : masteryType, ref damage);
+             Fix(ref phys);
+             Fix(ref fire);
+             Fix(ref cold);
+@@ -708,7 +709,7 @@ public static int GetValue(Mobile m, AosAttribute attribute)
+             }
+ 
+             return value + Server.UOOffline.HavenJewelrySets.GetBonus(m, attribute)
+-                + Server.UOOffline.HavenCompanionGearGrowth.GetBonus(m, attribute);
++                + Server.UOOffline.HavenCompanionGearGrowth.GetBonus(m, attribute) + Server.Spells.SkillMasteries.SkillMasterySpell.GetAttributeBonus(m, attribute);
+         }
+ 
+         public override string ToString() => "...";
+diff --git a/Projects/UOContent/Misc/RegenRates.cs b/Projects/UOContent/Misc/RegenRates.cs
+index 02ffc1e46..5f1da8abd 100644
+--- a/Projects/UOContent/Misc/RegenRates.cs
++++ b/Projects/UOContent/Misc/RegenRates.cs
+@@ -43,7 +43,7 @@ private static void CheckBonusSkill(Mobile m, int cur, int max, SkillName skill)
+ 
+         private static TimeSpan Mobile_HitsRegenRate(Mobile from)
+         {
+-            var points = AosAttributes.GetValue(from, AosAttribute.RegenHits);
++            var points = AosAttributes.GetValue(from, AosAttribute.RegenHits) + Server.Spells.SkillMasteries.CombatTrainingSpell.RegenBonus(from);
+ 
+             var bc = from as BaseCreature;
+ 
+@@ -101,7 +101,7 @@ private static TimeSpan Mobile_StamRegenRate(Mobile from)
+                 points += 40;
+             }
+ 
+-            var cappedPoints = AosAttributes.GetValue(from, AosAttribute.RegenStam);
++            var cappedPoints = AosAttributes.GetValue(from, AosAttribute.RegenStam) + (from is BaseCreature summoned ? Server.Spells.SkillMasteries.MasteryInfo.EnchantedSummoningBonus(summoned) : 0);
+ 
+             if (TransformationSpellHelper.UnderTransformation(from, typeof(VampiricEmbraceSpell)))
+             {
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+index df9da9539..2e2d6e11c 100644
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -582,7 +582,7 @@ public virtual int DamageMax
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+         public override int HitsMax =>
+-            HitsMaxSeed <= 0 ? Str : Math.Clamp(HitsMaxSeed + GetStatOffset(StatType.Str), 1, 65000);
++            AOS.Scale((HitsMaxSeed <= 0 ? Str : Math.Clamp(HitsMaxSeed + GetStatOffset(StatType.Str), 1, 65000)), 100 + Server.Spells.SkillMasteries.MasteryInfo.EnchantedSummoningBonus(this)) + Server.Spells.SkillMasteries.InvigorateSpell.GetHPBonus(this) + Server.Spells.SkillMasteries.ToughnessSpell.GetHPBonus(this);
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+         public int HitsMaxSeed { get; set; } = -1;
+@@ -1598,6 +1598,7 @@ public override ApplyPoisonResult ApplyPoison(Mobile from, Poison poison)
+                 poison = PoisonImpl.IncreaseLevel(poison);
+             }
+ 
++            if (poison != null && Server.Spells.SkillMasteries.ToleranceSpell.OnPoisonApplied(this)) { return ApplyPoisonResult.Immune; }
+             var result = base.ApplyPoison(from, poison);
+ 
+             if (from != null && result == ApplyPoisonResult.Poisoned && PoisonTimer is PoisonImpl.PoisonTimer timer)
+@@ -2439,6 +2440,7 @@ public virtual void OnGaveMeleeAttack(Mobile defender, int damage)
+ 
+         public override void OnAfterDelete()
+         {
++            Server.Spells.SkillMasteries.MasteryLifecycle.Clear(this);
+             if (AIObject != null)
+             {
+                 AIObject.AITimer?.Stop();
+diff --git a/Projects/UOContent/Mobiles/PlayerMobile.cs b/Projects/UOContent/Mobiles/PlayerMobile.cs
+index 9d426d087..29431ce2f 100644
+--- a/Projects/UOContent/Mobiles/PlayerMobile.cs
++++ b/Projects/UOContent/Mobiles/PlayerMobile.cs
+@@ -567,7 +567,7 @@ public override int HitsMax
+                     strBase = RawStr;
+                 }
+ 
+-                return strBase / 2 + 50 + strOffs;
++                return strBase / 2 + 50 + strOffs + Server.Spells.SkillMasteries.InvigorateSpell.GetHPBonus(this) + Server.Spells.SkillMasteries.ToughnessSpell.GetHPBonus(this);
+             }
+         }
+ 
+@@ -576,7 +576,7 @@ public override int HitsMax
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+         public override int ManaMax => base.ManaMax + AosAttributes.GetValue(this, AosAttribute.BonusMana) +
+-                                       (Core.ML && Race == Race.Elf ? 20 : 0);
++                                       (Core.ML && Race == Race.Elf ? 20 : 0) + Server.Spells.SkillMasteries.MasteryInfo.IntuitionBonus(this);
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+         public override int Str
+@@ -3287,6 +3287,7 @@ public override bool CanSee(Item item) =>
+ 
+         public override void OnAfterDelete()
+         {
++            Server.Spells.SkillMasteries.MasteryLifecycle.Clear(this);
+             base.OnAfterDelete();
+ 
+             var faction = Faction.Find(this);
+@@ -3749,6 +3750,7 @@ public override ApplyPoisonResult ApplyPoison(Mobile from, Poison poison)
+                 poison = Poison.IncreaseLevel(poison);
+             }
+ 
++            if (poison != null && Server.Spells.SkillMasteries.ToleranceSpell.OnPoisonApplied(this)) { return ApplyPoisonResult.Immune; }
+             var result = base.ApplyPoison(from, poison);
+ 
+             if (from != null && result == ApplyPoisonResult.Poisoned && PoisonTimer is PoisonImpl.PoisonTimer timer)
+diff --git a/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs b/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs
+index aeb466246..42aae4db7 100644
+--- a/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs
++++ b/Projects/UOContent/Mobiles/Vendors/NPC/AnimalTrainer.cs
+@@ -99,7 +99,7 @@ public static int GetMaxStabled(Mobile from)
+                 max += (int)((vetern - 90.0) / 10);
+             }
+ 
+-            return max;
++            return max + Server.Spells.SkillMasteries.MasteryInfo.BoardingSlotIncrease(from);
+         }
+ 
+         private static void CloseClaimList(Mobile from)
+diff --git a/Projects/UOContent/Skills/DetectHidden.cs b/Projects/UOContent/Skills/DetectHidden.cs
+index 487eda693..e3d2d9a14 100644
+--- a/Projects/UOContent/Skills/DetectHidden.cs
++++ b/Projects/UOContent/Skills/DetectHidden.cs
+@@ -115,7 +115,7 @@ public static bool TryDetectStealther(Mobile detector, Mobile stealther)
+         }
+ 
+         var ss = detectSkill + Utility.Random(21) - 10;
+-        var ts = stealther.Skills.Hiding.Value + Utility.Random(21) - 10;
++        var ts = stealther.Skills.Hiding.Value * (1 + Server.Spells.SkillMasteries.ShadowSpell.GetDifficultyFactor(stealther)) + Utility.Random(21) - 10;
+ 
+         if (ss >= ts)
+         {
+@@ -196,7 +196,7 @@ protected override void OnTarget(Mobile src, object targ)
+                         }
+ 
+                         var ss = srcSkill + Utility.Random(21) - 10;
+-                        var ts = trg.Skills.Hiding.Value + Utility.Random(21) - 10;
++                        var ts = trg.Skills.Hiding.Value * (1 + Server.Spells.SkillMasteries.ShadowSpell.GetDifficultyFactor(trg)) + Utility.Random(21) - 10;
+ 
+                         if (src.AccessLevel < trg.AccessLevel || ss < ts && (!inHouse || !house.IsInside(trg)))
+                         {
+diff --git a/Projects/UOContent/Skills/SkillCheck.cs b/Projects/UOContent/Skills/SkillCheck.cs
+index 932d24067..472f6719c 100644
+--- a/Projects/UOContent/Skills/SkillCheck.cs
++++ b/Projects/UOContent/Skills/SkillCheck.cs
+@@ -127,6 +127,9 @@ public static bool CheckSkill(Mobile from, Skill skill, object amObj, double cha
+                 if (from is BaseCreature { Controlled: true })
+                 {
+                     gc *= 2;
++                    var owner = ((BaseCreature)from).ControlMaster;
++                    var whisper = owner == null ? null : Server.Spells.SkillMasteries.SkillMasterySpell.GetSpell<Server.Spells.SkillMasteries.WhisperingSpell>(owner);
++                    if (whisper != null && owner.Map == from.Map && owner.InRange(from, whisper.PartyRange)) { gc *= 1 + whisper.EnhancedGainChance / 100.0; }
+                 }
+ 
+                 if (gc >= Utility.RandomDouble())
+diff --git a/Projects/UOContent/Spells/Base/SpellHelper.cs b/Projects/UOContent/Spells/Base/SpellHelper.cs
+index 9d5f9d0ed..cb0b8373a 100644
+--- a/Projects/UOContent/Spells/Base/SpellHelper.cs
++++ b/Projects/UOContent/Spells/Base/SpellHelper.cs
+@@ -1041,7 +1041,8 @@ public static void Damage(
+ 
+                 StaminaSystem.DFA = dfa;
+ 
+-                var damageGiven = AOS.Damage(target, from, dmg, phys, fire, cold, pois, nrgy, chaos);
++                var damageGiven = AOS.Damage(target, from, dmg, false, phys, fire, cold, pois, nrgy, chaos, masteryType: Server.Spells.SkillMasteries.DamageType.Spell);
++                if (spell is Server.Spells.Necromancy.PoisonStrikeSpell) { Server.Spells.SkillMasteries.ConduitSpell.SpreadDamage(from, target, dmg, phys, fire, cold, pois, nrgy); }
+                 Mysticism.SpellPlagueSpell.OnMobileDamaged(target);
+ 
+                 StaminaSystem.DFA = DFAlgorithm.Standard;
+diff --git a/Projects/UOContent/Spells/Base/SpellRegistry.cs b/Projects/UOContent/Spells/Base/SpellRegistry.cs
+index 1f3060d76..eb5f5e43a 100644
+--- a/Projects/UOContent/Spells/Base/SpellRegistry.cs
++++ b/Projects/UOContent/Spells/Base/SpellRegistry.cs
+@@ -5,7 +5,7 @@ namespace Server.Spells
+ {
+     public static class SpellRegistry
+     {
+-        private static readonly Type[] m_Types = new Type[700];
++        private static readonly Type[] m_Types = new Type[745];
+         private static int m_Count;
+ 
+         private static readonly Dictionary<Type, int> m_IDsFromTypes = new(m_Types.Length);
+diff --git a/Projects/UOContent/Spells/Necromancy/PainSpike.cs b/Projects/UOContent/Spells/Necromancy/PainSpike.cs
+index eca3bd275..290df4d54 100644
+--- a/Projects/UOContent/Spells/Necromancy/PainSpike.cs
++++ b/Projects/UOContent/Spells/Necromancy/PainSpike.cs
+@@ -77,6 +77,7 @@ public void Target(Mobile m)
+             // TODO: Find a better way to do this
+             StaminaSystem.DFA = DFAlgorithm.PainSpike;
+             m.Damage((int)damage, Caster, ignoreEvilOmen: true);
++            Server.Spells.SkillMasteries.ConduitSpell.SpreadDamage(Caster, m, (int)damage, 100, 0, 0, 0, 0);
+             SpellHelper.DoLeech((int)damage, Caster, m);
+             StaminaSystem.DFA = DFAlgorithm.Standard;
+ 
+diff --git a/Projects/UOContent/Spells/Necromancy/Strangle.cs b/Projects/UOContent/Spells/Necromancy/Strangle.cs
+index 1b4a0465d..f3ec963f5 100644
+--- a/Projects/UOContent/Spells/Necromancy/Strangle.cs
++++ b/Projects/UOContent/Spells/Necromancy/Strangle.cs
+@@ -197,7 +197,8 @@ protected override void OnTick()
+                 damage *= 1.75;
+             }
+ 
+-            AOS.Damage(_target, _from, (int)damage, 0, 0, 0, 100, 0);
++            AOS.Damage(_target, _from, (int)damage, false, 0, 0, 0, 100, 0, masteryType: Server.Spells.SkillMasteries.DamageType.Spell);
++            Server.Spells.SkillMasteries.ConduitSpell.SpreadDamage(_from, _target, (int)damage, 0, 0, 0, 100, 0);
+ 
+             // OSI: randomly revealed between first and third damage tick, guessing 60% chance
+             if (Utility.RandomDouble() < 0.40)
+diff --git a/Projects/UOContent/Spells/Seventh/MassDispel.cs b/Projects/UOContent/Spells/Seventh/MassDispel.cs
+index bd5113e08..72857f32e 100644
+--- a/Projects/UOContent/Spells/Seventh/MassDispel.cs
++++ b/Projects/UOContent/Spells/Seventh/MassDispel.cs
+@@ -44,7 +44,7 @@ public void Target(IPoint3D p)
+                         }
+ 
+                         var dispelChance =
+-                            (50.0 + 100 * (Caster.Skills.Magery.Value - bc.DispelDifficulty) / (bc.DispelFocus * 2)) / 100;
++                            (50.0 + 100 * (Caster.Skills.Magery.Value - (bc.DispelDifficulty + Server.Spells.SkillMasteries.MasteryInfo.EnchantedSummoningBonus(bc))) / (bc.DispelFocus * 2)) / 100;
+ 
+                         if (dispelChance > Utility.RandomDouble())
+                         {
+diff --git a/Projects/UOContent/Spells/Sixth/Dispel.cs b/Projects/UOContent/Spells/Sixth/Dispel.cs
+index cf3171109..55913b179 100644
+--- a/Projects/UOContent/Spells/Sixth/Dispel.cs
++++ b/Projects/UOContent/Spells/Sixth/Dispel.cs
+@@ -33,7 +33,7 @@ public void Target(Mobile m)
+                 SpellHelper.Turn(Caster, m);
+ 
+                 var dispelChance =
+-                    (50.0 + 100 * (Caster.Skills.Magery.Value - bc.DispelDifficulty) / (bc.DispelFocus * 2)) / 100;
++                    (50.0 + 100 * (Caster.Skills.Magery.Value - (bc.DispelDifficulty + Server.Spells.SkillMasteries.MasteryInfo.EnchantedSummoningBonus(bc))) / (bc.DispelFocus * 2)) / 100;
+ 
+                 if (dispelChance > Utility.RandomDouble())
+                 {

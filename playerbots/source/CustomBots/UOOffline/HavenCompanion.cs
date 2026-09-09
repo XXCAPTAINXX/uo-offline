@@ -401,6 +401,7 @@ public partial class HavenCompanion : BaseCreature
         DefendOwner();
         Support(BoundOwner);
         ThinkAsCaster();
+        ThinkBardMasteries();
         var party = CompanionParty.Get(BoundOwner);
         if (party?.Contains(this) == true)
         {
