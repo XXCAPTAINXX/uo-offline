@@ -7,10 +7,11 @@ namespace Server.UOOffline;
 [SerializationGenerator(0)]
 public partial class HavenRepairBench : WoodenBench
 {
+    public const int RepairCost = 50;
     [Constructible]
     public HavenRepairBench()
     {
-        Name = "Adventurer's repair bench - free repairs";
+        Name = "Adventurer's repair bench - 50 gold per item";
         Hue = 0x59B;
         Movable = false;
     }
@@ -22,7 +23,7 @@ public partial class HavenRepairBench : WoodenBench
             from.SendMessage("Stand beside the repair bench.");
             return;
         }
-        from.SendMessage("Choose a weapon, armor, shield or piece of clothing you carry or wear. Repairs are free.");
+        from.SendMessage("Choose your damaged weapon, armor, shield or clothing. Repair costs 50 gold, with no durability loss. Wallet funds are used first.");
         from.Target = new RepairTarget(this);
     }
 
@@ -32,6 +33,23 @@ public partial class HavenRepairBench : WoodenBench
             item?.Deleted != false || (item.Parent != from && (from.Backpack == null || !item.IsChildOf(from.Backpack))))
         {
             from.SendMessage("Bring your own equipment to the repair bench while alive.");
+            return false;
+        }
+        var damaged = item switch
+        {
+            BaseWeapon weapon => weapon.MaxHitPoints > 0 && weapon.HitPoints < weapon.MaxHitPoints,
+            BaseArmor armor => armor.MaxHitPoints > 0 && armor.HitPoints < armor.MaxHitPoints,
+            BaseClothing clothing => clothing.MaxHitPoints > 0 && clothing.HitPoints < clothing.MaxHitPoints,
+            _ => false
+        };
+        if (!damaged)
+        {
+            from.SendMessage("That item has no repairable damage. You were not charged.");
+            return false;
+        }
+        if (!HavenEconomy.TryPay(from, RepairCost))
+        {
+            from.SendMessage("Repairs cost 50 gold. Your wallet, backpack and bank funds are insufficient.");
             return false;
         }
         switch (item)
@@ -50,7 +68,7 @@ public partial class HavenRepairBench : WoodenBench
                 return false;
         }
         from.PlaySound(0x2A);
-        from.SendMessage("Your item is fully repaired. Its properties and maximum durability are unchanged.");
+        from.SendMessage("Repaired for 50 gold. Its properties and maximum durability are unchanged.");
         return true;
     }
 

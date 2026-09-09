@@ -70,6 +70,8 @@ public class HavenWorldTests
         var other = new PlayerMobile { Player = true, Body = 0x190 };
         player.AddItem(new Backpack());
         var bench = new HavenRepairBench();
+        var wallet = new AdventurersWallet { Balance = 49 };
+        player.Backpack.DropItem(wallet);
         var sword = new Longsword { MaxHitPoints = 50, HitPoints = 5 };
         sword.Attributes.WeaponDamage = 30;
         player.Backpack.DropItem(sword);
@@ -78,11 +80,17 @@ public class HavenWorldTests
             foreach (var mobile in new Mobile[] { player, other }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
             bench.MoveToWorld(player.Location, player.Map);
             Assert.False(bench.Repair(other, sword));
+            Assert.False(bench.Repair(player, sword));
+            Assert.Equal(49, wallet.Balance);
+            Assert.Equal(5, sword.HitPoints);
+            wallet.Balance = 100;
             Assert.True(bench.Repair(player, sword));
+            Assert.Equal(50, wallet.Balance);
             Assert.Equal(50, sword.HitPoints);
             Assert.Equal(50, sword.MaxHitPoints);
             Assert.Equal(30, sword.Attributes.WeaponDamage);
             Assert.False(bench.Repair(player, sword));
+            Assert.Equal(50, wallet.Balance);
             sword.HitPoints = 10;
             player.MoveToWorld(new Point3D(1427, 1695, 0), Map.Felucca);
             Assert.False(bench.Repair(player, sword));
