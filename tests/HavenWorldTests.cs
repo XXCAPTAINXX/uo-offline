@@ -8,6 +8,8 @@ using Server.Engines.Spawners;
 using Server.Gumps;
 using Server.Json;
 using Server.Items;
+using Server.Accounting;
+using Server.Accounting.Security;
 using Server.Multis.Deeds;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
@@ -56,6 +58,9 @@ public class HavenWorldTests
             Assert.Single(pack.Items.OfType<AdventurersWallet>());
             Assert.Single(pack.Items.OfType<CleanupTrashBag>());
             Assert.Single(pack.Items.OfType<SmallBrickHouseDeed>());
+            var earrings = Assert.Single(pack.Items.OfType<StarterFortuneEarrings>());
+            Assert.Equal(100, earrings.Attributes.LowerRegCost);
+            Assert.Equal(200, earrings.Attributes.Luck);
             Assert.Equal(50, Assert.Single(pack.Items.OfType<Bandage>()).Amount);
             if (skill == SkillName.Archery)
             {
@@ -71,6 +76,90 @@ public class HavenWorldTests
             Assert.Equal(150, robe.Attributes.Luck);
         }
         finally { player.Delete(); }
+    }
+
+    [Fact]
+    public void MissedBundlePreservesBankedProgressionAndCannotBeClaimedTwice()
+    {
+        var account = CreateTestAccount();
+        var player = new PlayerMobile { Player = true, Account = account };
+        player.AddItem(new Backpack());
+        var robe = new NewHavenAdventurersRobe();
+        robe.BindTo(player);
+        robe.TryUpgrade(player);
+        player.BankBox.DropItem(robe);
+        try
+        {
+            StarterBundleClaims.Claim(player);
+            var bundle = Assert.Single(player.Backpack.Items.OfType<Bag>());
+            Assert.DoesNotContain(bundle.Items, i => i is NewHavenAdventurersRobe);
+            Assert.Single(bundle.Items.OfType<StarterFortuneEarrings>());
+            Assert.Equal(1, robe.UpgradeTier);
+            player.BankBox.DropItem(bundle);
+            StarterBundleClaims.Claim(player);
+            Assert.Empty(player.Backpack.Items);
+            Assert.Equal("claimed", account.GetTag($"HavenStarterBundle:{player.Serial}"));
+        }
+        finally { player.Delete(); account.Delete(); }
+    }
+
+    [Fact]
+    public void FullBackpackDoesNotConsumeBundleClaim()
+    {
+        var account = CreateTestAccount();
+        var player = new PlayerMobile { Player = true, Account = account };
+        player.AddItem(new Backpack { MaxItems = 1 });
+        try
+        {
+            StarterBundleClaims.Claim(player);
+            Assert.Empty(player.Backpack.Items);
+            Assert.Null(account.GetTag($"HavenStarterBundle:{player.Serial}"));
+            player.Backpack.MaxItems = 125;
+            StarterBundleClaims.Claim(player);
+            Assert.Single(player.Backpack.Items.OfType<Bag>());
+        }
+        finally { player.Delete(); account.Delete(); }
+    }
+
+    [Fact]
+    public void EveryShopItemHasAnIconAndStatsBeforePurchase()
+    {
+        var stone = new StarterSupplyStone();
+        try
+        {
+            foreach (ItemListMenu menu in new ItemListMenu[] { new StarterSupplyStone.StarterSupplyMenu(), new SpecialRewardStone.RewardMenu() })
+            {
+                for (var index = 0; index < menu.Entries.Length; index++)
+                {
+                    var preview = new HavenItemPreviewGump(stone, menu, index, index / 4);
+                    CheckBounds(preview, 540, 460);
+                    Assert.Single(preview.Entries.OfType<GumpItem>());
+                    var stats = Assert.Single(preview.Entries.OfType<GumpHtml>(), h => h.Scrollbar).Text;
+                    Assert.Contains("Loot type", stats);
+                    Assert.Contains(preview.Entries.OfType<GumpButton>(), b => b.ButtonID == 1);
+                    if (menu.Entries[index].Name.Contains("Fortune Earrings"))
+                    {
+                        Assert.Contains("Lower Reagent Cost (%): 100", stats);
+                        Assert.Contains("Luck: 200", stats);
+                    }
+                }
+            }
+            var list = new HavenListGump(stone, new StarterSupplyStone.StarterSupplyMenu());
+            Assert.Equal(4, list.Entries.OfType<GumpItem>().Count());
+            Assert.Contains(list.Entries.OfType<GumpButton>(), b => b.ButtonID == 10003);
+        }
+        finally { stone.Delete(); }
+    }
+
+    private static Account CreateTestAccount()
+    {
+        var previous = AccountSecurity.CurrentAlgorithm;
+        try
+        {
+            AccountSecurity.CurrentAlgorithm = PasswordProtectionAlgorithm.SHA2;
+            return new Account("haven-test-" + Guid.NewGuid(), "test-only-password");
+        }
+        finally { AccountSecurity.CurrentAlgorithm = previous; }
     }
 
     [Fact]
@@ -271,14 +360,14 @@ public class HavenWorldTests
             var entries = Enumerable.Range(0, 32).Select(i => new ItemListEntry("Destination " + i, 0)).ToArray();
             var menu = new ItemListMenu("Dungeon travel", entries);
             var first = new HavenListGump(stone, menu);
-            var last = new HavenListGump(stone, menu, 5);
+            var last = new HavenListGump(stone, menu, 7);
             CheckBounds(first, 540, 460);
             CheckBounds(last, 540, 460);
             Assert.Contains(first.Entries.OfType<GumpButton>(), b => b.ButtonID == 10002);
             Assert.DoesNotContain(first.Entries.OfType<GumpButton>(), b => b.ButtonID == 10001);
             Assert.Contains(last.Entries.OfType<GumpButton>(), b => b.ButtonID == 10001);
             Assert.DoesNotContain(last.Entries.OfType<GumpButton>(), b => b.ButtonID == 10002);
-            Assert.Equal(6, first.Entries.OfType<GumpButton>().Count(b => b.ButtonID is > 0 and < 10000));
+            Assert.Equal(4, first.Entries.OfType<GumpButton>().Count(b => b.ButtonID is > 0 and < 10000));
         }
         finally { stone.Delete(); }
     }

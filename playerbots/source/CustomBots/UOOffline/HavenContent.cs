@@ -171,7 +171,7 @@ public partial class StarterSupplyStone : Item
         from.SendGump(new HavenListGump(this, new StarterSupplyMenu()));
     }
 
-    private sealed class StarterSupplyMenu : ItemListMenu
+    internal sealed class StarterSupplyMenu : ItemListMenu, IHavenShop
     {
         private static readonly ItemListEntry[] MenuEntries =
         [
@@ -184,7 +184,9 @@ public partial class StarterSupplyStone : Item
             new("Apprentice mace - 250 gold", 0x1407),
             new("Apprentice bow - 250 gold", 0x13B2),
             new("Champion progression archive - 250 gold", 0x2259, 0x489),
-            new("Peerless key vault - 250 gold", 0x9A8, 0x497)
+            new("Peerless key vault - 250 gold", 0x9A8, 0x497),
+            new("Starter Fortune Earrings - 2,500 gold", 0x1087, 0x501),
+            new("Blessed Travel Book - 250 gold", 0x22C5)
         ];
 
         public StarterSupplyMenu() : base("New Haven Starter Supplies", MenuEntries)
@@ -203,6 +205,7 @@ public partial class StarterSupplyStone : Item
             {
                 0 or 1 => 100,
                 2 or 3 => 500,
+                10 => 2500,
                 _ => 250
             };
 
@@ -212,7 +215,17 @@ public partial class StarterSupplyStone : Item
                 return;
             }
 
-            Item item = index switch
+            var item = CreateItem(index);
+            if (item == null)
+            {
+                return;
+            }
+            BindStarterItem(item, from);
+            from.Backpack.DropItem(item);
+            from.SendMessage($"Purchased {item.DefaultName} for {price:N0} gold.");
+        }
+
+        public Item CreateItem(int index) => index switch
             {
                 0 => new CleanupTrashBag(),
                 1 => new AdventurersWallet(),
@@ -224,18 +237,10 @@ public partial class StarterSupplyStone : Item
                 7 => new ApprenticeBow(),
                 8 => new ProgressionArchive(),
                 9 => new PeerlessKeyVault(),
+                10 => new StarterFortuneEarrings(),
+                11 => new OfflineTravelBook(),
                 _ => null
             };
-
-            if (item == null)
-            {
-                return;
-            }
-
-            BindStarterItem(item, from);
-            from.Backpack.DropItem(item);
-            from.SendMessage($"Purchased {item.DefaultName} for {price:N0} gold.");
-        }
     }
 
     internal static void BindStarterItem(Item item, Mobile from)
@@ -366,7 +371,7 @@ public partial class SpecialRewardStone : Item
         from.SendGump(new HavenListGump(this, new RewardMenu()));
     }
 
-    private sealed class RewardMenu : ItemListMenu
+    internal sealed class RewardMenu : ItemListMenu, IHavenShop
     {
         private const int MarkCost = 15;
         private const int GoldFallbackCost = 25000;
@@ -390,6 +395,8 @@ public partial class SpecialRewardStone : Item
         )
         {
         }
+
+        public Item CreateItem(int index) => SpecialBraceletFactory.Create(index);
 
         public override void OnResponse(NetState state, int index)
         {
@@ -457,7 +464,7 @@ public static class HavenEconomy
 public static class StarterProvisioner
 {
     public static void Configure() =>
-        CommandSystem.Register("StarterKit", AccessLevel.GameMaster, e => Provision(e.Mobile));
+        CommandSystem.Register("StarterKit", AccessLevel.Player, e => StarterBundleClaims.Claim(e.Mobile));
 
     public static void Provision(Mobile mobile)
     {
@@ -498,14 +505,16 @@ public static class StarterProvisioner
         mobile.Backpack.DropItem(new CleanupTrashBag());
         mobile.Backpack.DropItem(house);
         mobile.Backpack.DropItem(new Bandage(50));
+        mobile.Backpack.DropItem(new StarterFortuneEarrings());
         if (weapon is ApprenticeBow)
         {
             mobile.Backpack.DropItem(new Arrow(100));
         }
         mobile.SendMessage("Your Haven starter equipment is in your backpack.");
+        StarterBundleClaims.MarkClaimed(mobile);
     }
 
-    private static Item SelectStarterWeapon(Mobile mobile)
+    internal static Item SelectStarterWeapon(Mobile mobile)
     {
         var archery = mobile.Skills[SkillName.Archery].Value;
         var fencing = mobile.Skills[SkillName.Fencing].Value;

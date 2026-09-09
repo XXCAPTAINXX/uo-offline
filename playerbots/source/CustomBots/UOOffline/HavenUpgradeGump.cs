@@ -13,8 +13,9 @@ public sealed class HavenUpgradeGump : Gump
         _stone = stone;
         var robe = from.Backpack?.FindItemByType<NewHavenAdventurersRobe>();
         _tier = robe?.UpgradeTier ?? -1;
-        AddBackground(0, 0, 490, 290, 5054);
-        AddBackground(12, 12, 466, 266, 3000);
+        AddBackground(0, 0, 540, 490, 5054);
+        AddBackground(12, 12, 516, 466, 3000);
+        AddItem(465, 30, 0x1F03, 0x59B);
         AddHtml(30, 28, 420, 30, "<B>Upgrade your adventurer's robe</B>");
         if (robe == null)
         {
@@ -35,8 +36,24 @@ public sealed class HavenUpgradeGump : Gump
             AddButton(30, 193, 4005, 4007, 1);
             AddLabel(68, 195, 0, "Buy this upgrade");
         }
-        AddButton(180, 242, 4005, 4007, 0);
-        AddLabel(218, 244, 0, "Close");
+        if (robe != null)
+        {
+            AddHtml(30, 235, 225, 20, "<B>Current stats</B>");
+            AddHtml(30, 258, 225, 170, HavenItemPreviewGump.Describe(robe), false, true);
+            if (_tier < robe.MaxUpgradeTier)
+            {
+                var next = new NewHavenAdventurersRobe { UpgradeTier = _tier + 1 };
+                try
+                {
+                    next.ApplyTier();
+                    AddHtml(280, 235, 220, 20, "<B>After upgrade</B>");
+                    AddHtml(280, 258, 220, 170, HavenItemPreviewGump.Describe(next), false, true);
+                }
+                finally { next.Delete(); }
+            }
+        }
+        AddButton(210, 448, 4005, 4007, 0);
+        AddLabel(248, 450, 0, "Close");
     }
 
     public override void OnResponse(NetState sender, in RelayInfo info)

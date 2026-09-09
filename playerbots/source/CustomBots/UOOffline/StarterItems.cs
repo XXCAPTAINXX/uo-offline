@@ -58,7 +58,7 @@ public partial class NewHavenAdventurersRobe : BaseOuterTorso, IStarterUpgradeab
         return true;
     }
 
-    private void ApplyTier()
+    internal void ApplyTier()
     {
         Attributes.Luck = 50 + UpgradeTier * 25;
         Attributes.RegenHits = 1 + UpgradeTier / 2;

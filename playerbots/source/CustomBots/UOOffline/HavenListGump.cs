@@ -9,7 +9,7 @@ namespace Server.UOOffline;
 // text row and bounds the window height regardless of the number of choices.
 public sealed class HavenListGump : Gump
 {
-    private const int PageSize = 6;
+    private const int PageSize = 4;
     private readonly Item _anchor;
     private readonly ItemListMenu _menu;
     private readonly int _page;
@@ -25,7 +25,9 @@ public sealed class HavenListGump : Gump
         AddBackground(0, 0, 540, 460, 5054);
         AddBackground(12, 12, 516, 436, 3000);
         AddHtml(28, 24, 482, 48, $"<BASEFONT COLOR=#111111><B>{menu.Question}</B></BASEFONT>");
-        AddHtml(28, 76, 480, 28, "<BASEFONT COLOR=#333333>Choose an item below. Prices are shown before purchase.</BASEFONT>");
+        AddHtml(28, 76, 480, 28, menu is IHavenShop
+            ? "<BASEFONT COLOR=#333333>Select an item to inspect its stats before buying.</BASEFONT>"
+            : "<BASEFONT COLOR=#333333>Select your destination.</BASEFONT>");
 
         for (var row = 0; row < PageSize; row++)
         {
@@ -34,9 +36,16 @@ public sealed class HavenListGump : Gump
             {
                 break;
             }
-            var y = 114 + row * 45;
+            var y = 112 + row * 66;
             AddButton(28, y + 5, 4005, 4007, index + 1);
-            AddHtml(66, y, 440, 42, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
+            if (menu is IHavenShop shop)
+            {
+                var item = shop.CreateItem(index);
+                try { AddItem(65, y, item.ItemID, item.Hue); }
+                finally { item.Delete(); }
+            }
+            else { AddItem(65, y, menu.Entries[index].ItemID, menu.Entries[index].Hue); }
+            AddHtml(115, y, 389, 42, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
         }
 
         if (_page > 0)
@@ -50,8 +59,13 @@ public sealed class HavenListGump : Gump
             AddButton(390, 395, 4005, 4007, 10002);
             AddLabel(428, 397, 0, "Next");
         }
-        AddButton(220, 428, 4005, 4007, 0);
-        AddLabel(258, 430, 0, "Close");
+        AddButton(390, 428, 4005, 4007, 0);
+        AddLabel(428, 430, 0, "Close");
+        if (anchor is StarterSupplyStone)
+        {
+            AddButton(28, 428, 4005, 4007, 10003);
+            AddLabel(66, 430, 0, "Claim starter bundle");
+        }
     }
 
     public override void OnResponse(NetState sender, in RelayInfo info)
@@ -72,9 +86,20 @@ public sealed class HavenListGump : Gump
             from.SendGump(new HavenListGump(_anchor, _menu, _page + (info.ButtonID == 10001 ? -1 : 1), _reopen));
             return;
         }
+        if (info.ButtonID == 10003 && _anchor is StarterSupplyStone)
+        {
+            StarterBundleClaims.Claim(from);
+            from.SendGump(new HavenListGump(_anchor, _menu, _page, _reopen));
+            return;
+        }
         var index = info.ButtonID - 1;
         if (index < 0 || index >= _menu.Entries.Length)
         {
+            return;
+        }
+        if (_menu is IHavenShop)
+        {
+            from.SendGump(new HavenItemPreviewGump(_anchor, _menu, index, _page));
             return;
         }
         _menu.OnResponse(sender, index);
