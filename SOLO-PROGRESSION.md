@@ -15,3 +15,9 @@ Travel menus display twelve compact destinations per page. Shops show item stats
 Dead companions resurrect automatically after five seconds near their online owner. Refresh resurrects immediately when nearby, preserving their identity and gear.
 
 Animal Taming and Animal Lore do not count against a player's existing total skill cap. They still require training and obey individual skill caps and locks. Natural gains and NPC training use the same exemption. Use [skillbudget to see the counted total; the standard client skill total still includes all skills. The requested 1,000-point total cap was cancelled.
+
+Training Supplies now opens Combat, Magic, Bards/Tamers, Crafting, and Pet Supplies categories. Shop entries show short inline bonuses plus full single-argument hover text, avoiding client newline truncation.
+
+Pet supplies include six-scroll 105 bundles (15,000 gold), six-scroll 110 bundles (45,000 gold), bonding potions (2,500), reusable shrinking leashes (5,000), and house shrinking posts (10,000). All use wallet payments. Bundles contain Wrestling, Tactics, Anatomy, Magic Resistance, Meditation and Focus; Magery and Evaluating Intelligence are excluded. Scrolls apply only to nearby, living, owned pets and raise caps without granting skill points or abilities. Invalid or redundant uses preserve the scroll.
+
+House posts must be placed in a house the user owns or co-owns and can be locked down. Leashes reuse the town shrinking rules. Bonding potions consume only after successfully bonding an eligible owned pet. The new Arcane and Training stones move to 3504,2583 and 3508,2583 around the south side of the monument, clearing their former east-side locations.

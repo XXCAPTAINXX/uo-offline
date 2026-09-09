@@ -15,34 +15,55 @@ public partial class HavenTrainingStone : Item
     public HavenTrainingStone() : base(0xED4) { Name = "Training Supplies"; Hue = 0x489; Movable = false; }
     public override void OnDoubleClick(Mobile from)
     {
-        if (HavenShopAccess.CanUse(from, this)) { from.SendGump(new HavenListGump(this, new Menu())); }
+        if (HavenShopAccess.CanUse(from, this)) { from.SendGump(new Categories(this)); }
+    }
+    internal sealed class Categories : Gump
+    {
+        private readonly HavenTrainingStone _stone;
+        internal static readonly string[] Names = ["Combat skills", "Magic skills", "Bards and tamers", "Crafting skills", "Pet supplies and mastery"];
+        public Categories(HavenTrainingStone stone) : base(30, 30)
+        {
+            _stone = stone;
+            AddBackground(0, 0, 440, 330, 5054);
+            AddLabel(24, 24, 0, "Training Supplies");
+            AddHtml(24, 56, 390, 38, "Choose a category. Player scrolls are 105/110.<BR>Pet bundles contain six pet-only scrolls.");
+            for (var i = 0; i < Names.Length; i++) { AddButton(24, 105 + i * 36, 4005, 4007, i + 1); AddLabel(64, 107 + i * 36, 0, Names[i]); }
+            AddButton(300, 294, 4005, 4007, 0); AddLabel(337, 296, 0, "Close");
+        }
+        public override void OnResponse(NetState state, in RelayInfo info)
+        {
+            if (info.ButtonID is < 1 or > 5 || !HavenShopAccess.CanUse(state.Mobile, _stone)) { return; }
+            state.Mobile.SendGump(new HavenListGump(_stone, new Menu(info.ButtonID - 1)));
+        }
     }
     internal sealed class Menu : ItemListMenu, IHavenShop
     {
-        internal static readonly SkillName[] Skills = [SkillName.Swords, SkillName.Fencing, SkillName.Macing, SkillName.Archery,
-            SkillName.Tactics, SkillName.Anatomy, SkillName.Healing, SkillName.MagicResist, SkillName.Magery, SkillName.EvalInt,
-            SkillName.Meditation, SkillName.Spellweaving, SkillName.Necromancy, SkillName.SpiritSpeak, SkillName.Chivalry,
-            SkillName.Musicianship, SkillName.Discordance, SkillName.Peacemaking, SkillName.Provocation, SkillName.AnimalTaming,
-            SkillName.AnimalLore, SkillName.Veterinary, SkillName.Blacksmith, SkillName.Tailoring, SkillName.Carpentry,
-            SkillName.Alchemy, SkillName.Inscribe];
-        private static ItemListEntry[] EntriesForShop() => new[] { new ItemListEntry("Shard mastery manual — 1,000 gold", 0xEFA, 0x489) }
-            .Concat(Skills.SelectMany(skill => new[] { new ItemListEntry($"{skill} 105 scroll — 2,500 gold", 0x14F0), new ItemListEntry($"{skill} 110 scroll — 7,500 gold", 0x14F0) })).ToArray();
-        public Menu() : base("Training supplies — 105/110 scrolls and shard mastery", EntriesForShop()) { }
-        public Item CreateItem(int index) => index == 0 ? new HavenMasteryManual() : new PowerScroll(Skills[(index - 1) / 2], (index - 1) % 2 == 0 ? 105 : 110);
+        private static readonly SkillName[][] Groups = [
+            [SkillName.Swords, SkillName.Fencing, SkillName.Macing, SkillName.Archery, SkillName.Wrestling, SkillName.Parry, SkillName.Tactics, SkillName.Anatomy, SkillName.Healing],
+            [SkillName.MagicResist, SkillName.Magery, SkillName.EvalInt, SkillName.Meditation, SkillName.Focus, SkillName.Spellweaving, SkillName.Necromancy, SkillName.SpiritSpeak, SkillName.Chivalry],
+            [SkillName.Musicianship, SkillName.Discordance, SkillName.Peacemaking, SkillName.Provocation, SkillName.AnimalTaming, SkillName.AnimalLore, SkillName.Veterinary],
+            [SkillName.Blacksmith, SkillName.Tailoring, SkillName.Carpentry, SkillName.Alchemy, SkillName.Inscribe]];
+        private readonly int _category;
+        private static ItemListEntry[] EntriesForShop(int category) => category == 4
+            ? [new("Pet scroll bundle 105 - 15,000 gold", 0xE76, 0x489), new("Pet scroll bundle 110 - 45,000 gold", 0xE76, 0x489), new("Shard mastery manual - 1,000 gold", 0xEFA, 0x489), new("Bonding potion - 2,500 gold", 0xF0E, 0x489), new("Reusable shrinking leash - 5,000 gold", 0x14F8), new("House shrinking post - 10,000 gold", 0x14E7, 0x59B)]
+            : Groups[category].SelectMany(skill => new[] { new ItemListEntry($"{skill} 105 - 2,500 gold", 0x14F0), new ItemListEntry($"{skill} 110 - 7,500 gold", 0x14F0) }).ToArray();
+        public Menu(int category = 0) : base(Categories.Names[category], EntriesForShop(category)) { _category = category; }
+        public Item CreateItem(int index) => _category == 4
+            ? index switch { 0 => new HavenPetScrollBundle(105), 1 => new HavenPetScrollBundle(110), 2 => new HavenMasteryManual(), 3 => new HavenBondingPotion(), 4 => new HavenPetLeash(), _ => new HavenHouseHitchingPost() }
+            : new PowerScroll(Groups[_category][index / 2], index % 2 == 0 ? 105 : 110);
         public override void OnResponse(NetState state, int index)
         {
             var from = state.Mobile;
             if (index < 0 || index >= Entries.Length || from.Backpack == null) { return; }
             var item = CreateItem(index);
-            var price = index == 0 ? 1000 : (index - 1) % 2 == 0 ? 2500 : 7500;
+            var price = _category == 4 ? index switch { 0 => 15000, 1 => 45000, 2 => 1000, 3 => 2500, 4 => 5000, _ => 10000 } : index % 2 == 0 ? 2500 : 7500;
             if (!from.Backpack.CheckHold(from, item, false)) { item.Delete(); from.SendMessage("Make room in your backpack."); return; }
             if (!HavenEconomy.TryPay(from, price)) { item.Delete(); from.SendMessage($"You need {price:N0} gold."); return; }
             from.Backpack.DropItem(item);
-            from.SendMessage("Your training item is in your backpack. Normal skill-cap requirements apply.");
+            from.SendMessage("Your training item is in your backpack. Skill caps do not grant skill points or new abilities.");
         }
     }
 }
-
 [SerializationGenerator(0)]
 public partial class HavenMasteryManual : Item
 {

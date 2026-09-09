@@ -160,16 +160,19 @@ public partial class FreePetHitchingPost : Item
         from.Target = new ShrinkTarget(this);
     }
 
+    internal static void BeginShrink(Mobile from, Item source) => from.Target = new ShrinkTarget(source);
     private sealed class ShrinkTarget : Target
     {
-        private readonly FreePetHitchingPost _post;
+        private readonly Item _post;
 
-        public ShrinkTarget(FreePetHitchingPost post) : base(12, false, TargetFlags.None) =>
+        public ShrinkTarget(Item post) : base(12, false, TargetFlags.None) =>
             _post = post;
 
         protected override void OnTarget(Mobile from, object targeted)
         {
-            if (_post?.Deleted != false || !from.InRange(_post.GetWorldLocation(), 3))
+            if (_post?.Deleted != false || !from.Alive || from.Map != _post.Map && _post.Parent == null || !from.InRange(_post.GetWorldLocation(), 3) ||
+                _post is HavenPetLeash && !(_post.IsChildOf(from.Backpack)) ||
+                _post is HavenHouseHitchingPost housePost && !housePost.CanUse(from))
             {
                 from.SendMessage("You are too far away from the hitching post.");
                 return;
@@ -181,7 +184,7 @@ public partial class FreePetHitchingPost : Item
                 return;
             }
 
-            if (!pet.Controlled || pet.ControlMaster != from)
+            if (!pet.Controlled || pet.ControlMaster != from || pet.Map != from.Map || !from.InRange(pet, 3) || !from.InLOS(pet))
             {
                 from.SendMessage("You may only shrink a pet that you control.");
                 return;

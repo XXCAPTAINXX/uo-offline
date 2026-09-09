@@ -620,8 +620,8 @@ public static class HavenContentBootstrap
         ArrangeHavenItem<StarterSupplyStone>(NewHavenSupply);
         ArrangeHavenItem<HavenUpgradeStone>(NewHavenUpgrade);
         ArrangeHavenItem<SpecialRewardStone>(NewHavenRewards);
-        ArrangeHavenItem<ArcaneSupplyStone>(new Point2D(3513, 2571));
-        ArrangeHavenItem<HavenTrainingStone>(new Point2D(3516, 2573));
+        ArrangeHavenItem<ArcaneSupplyStone>(new Point2D(3504, 2583));
+        ArrangeHavenItem<HavenTrainingStone>(new Point2D(3508, 2583));
         ArrangeHavenItem<FreePetHitchingPost>(NewHavenHitchingPost);
         ArrangeHavenItem<UOOfflineDungeonPortal>(NewHavenDungeonPortal);
         ArrangeHavenItem<HavenRepairBench>(new Point2D(3502, 2581));
@@ -658,7 +658,7 @@ public static class HavenContentBootstrap
         var found = new List<T>();
         foreach (var item in Map.Trammel.GetItemsInRange<T>(new Point3D(3495, 2580, 20), 30))
         {
-            if (!item.Deleted) { found.Add(item); }
+            if (!item.Deleted && item.GetType() == typeof(T)) { found.Add(item); }
         }
         if (found.Count > 0 && found[0].X == position.X && found[0].Y == position.Y) { return; }
         if (!HavenRecovery.FindLocation(preferred, out var location, 1)) { return; }
@@ -764,7 +764,7 @@ public static class HavenContentBootstrap
         var loc = AtSurface(map, p);
         foreach (var existing in map.GetItemsInRange<T>(loc, 2))
         {
-            if (!existing.Deleted)
+            if (!existing.Deleted && existing.GetType() == typeof(T))
             {
                 return;
             }
@@ -779,7 +779,7 @@ public static class HavenContentBootstrap
         var loc = AtSurface(map, p);
         foreach (var existing in map.GetItemsInRange<T>(loc, 2))
         {
-            if (!existing.Deleted)
+            if (!existing.Deleted && existing.GetType() == typeof(T))
             {
                 return;
             }

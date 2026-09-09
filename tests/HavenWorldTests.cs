@@ -871,7 +871,7 @@ public class HavenWorldTests
             HavenContentBootstrap.EnsureBankServices(Map.Trammel, new Point3D(3483, 2575, 20));
             foreach (var item in Map.Trammel.GetItemsInRange<Item>(HavenRecovery.BankLocation, 20))
             {
-                if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal or HavenRepairBench or ArcaneSupplyStone || item.Name == "Haven square flowers") { items.Add(item); }
+                if (item is StarterSupplyStone or HavenUpgradeStone or SpecialRewardStone or FreePetHitchingPost or UOOfflineDungeonPortal or HavenRepairBench or ArcaneSupplyStone or HavenTrainingStone || item.Name == "Haven square flowers") { items.Add(item); }
             }
             Assert.Same(oldPortal, Assert.Single(items.OfType<UOOfflineDungeonPortal>()));
             Assert.False(oldPortal.InRange(HavenRecovery.BankLocation, 6));
@@ -880,6 +880,8 @@ public class HavenWorldTests
             Assert.Single(items.OfType<SpecialRewardStone>());
             Assert.Single(items.OfType<FreePetHitchingPost>());
             Assert.Equal(2, items.Count(i => i.Name == "Haven square flowers"));
+            Assert.True(Assert.Single(items.OfType<ArcaneSupplyStone>()).InRange(new Point3D(3504, 2583, 14), 1));
+            Assert.True(Assert.Single(items.OfType<HavenTrainingStone>()).InRange(new Point3D(3508, 2583, 14), 1));
         }
         finally { foreach (var item in items) { item.Delete(); } oldPortal.Delete(); }
     }
@@ -1477,6 +1479,94 @@ public class HavenWorldTests
             Assert.Equal(1000, HavenFreeSkills.CountedTotal(player));
         }
         finally { trainer.Delete(); player.Delete(); }
+    }
+    [Fact]
+    public void ShopTooltipsKeepAllBonusesInOneArgumentAndShowInlineStats()
+    {
+        var bracelet = SpecialBraceletFactory.CreateRandom();
+        try
+        {
+            var text = HavenItemPreviewGump.Tooltip(bracelet);
+            Assert.DoesNotContain("\n", text);
+            Assert.DoesNotContain("\t", text);
+            Assert.False(text.StartsWith("Weight:"));
+            Assert.NotEmpty(HavenItemPreviewGump.ShortStats(bracelet));
+        }
+        finally { bracelet.Delete(); }
+        for (var category = 0; category < 5; category++)
+        {
+            var menu = new HavenTrainingStone.Menu(category);
+            for (var i = 0; i < menu.Entries.Length; i++) { var item = menu.CreateItem(i); Assert.NotNull(item); item.Delete(); }
+        }
+    }
+
+    [SkippableFact]
+    public void PetScrollBundleHasSixSkillsAndRaisesOnlyOwnedPetCaps()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack());
+        var pet = new Horse();
+        var bundle = new HavenPetScrollBundle(110);
+        owner.Backpack.DropItem(bundle);
+        try
+        {
+            foreach (var mobile in new Mobile[] { owner, other, pet }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            var scrolls = bundle.Items.OfType<HavenPetPowerScroll>().ToArray();
+            Assert.Equal(6, scrolls.Length);
+            Assert.DoesNotContain(scrolls, s => s.Skill is SkillName.Magery or SkillName.EvalInt);
+            var scroll = scrolls[0];
+            pet.SetControlMaster(other);
+            Assert.False(scroll.ApplyTo(owner, pet));
+            pet.SetControlMaster(owner);
+            var before = pet.Skills[scroll.Skill].Base;
+            Assert.True(scroll.ApplyTo(owner, pet));
+            Assert.Equal(110, pet.Skills[scroll.Skill].Cap);
+            Assert.Equal(before, pet.Skills[scroll.Skill].Base);
+            var duplicate = new HavenPetPowerScroll(scroll.Skill, 110);
+            owner.Backpack.DropItem(duplicate);
+            Assert.False(duplicate.ApplyTo(owner, pet));
+            Assert.False(duplicate.Deleted);
+        }
+        finally { pet.Delete(); owner.Delete(); other.Delete(); }
+    }
+
+    private sealed class BondableTestHorse : Horse { public override bool IsBondable => true; }
+
+    [SkippableFact]
+    public void BondingPotionAndReusableLeashPreserveTheOwnedPet()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack());
+        var pet = new BondableTestHorse();
+        var potion = new HavenBondingPotion();
+        var leash = new HavenPetLeash();
+        owner.Backpack.DropItem(potion); owner.Backpack.DropItem(leash);
+        var post = new HavenHouseHitchingPost();
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            pet.MoveToWorld(owner.Location, owner.Map);
+            pet.SetControlMaster(owner);
+            Assert.True(potion.ApplyTo(owner, pet));
+            Assert.True(pet.IsBonded);
+            Assert.True(potion.Deleted);
+            leash.OnDoubleClick(owner);
+            owner.Target.Invoke(owner, pet);
+            Assert.Equal(Map.Internal, pet.Map);
+            var token = owner.Backpack.FindItemByType<ShrunkenPet>();
+            Assert.NotNull(token);
+            Assert.Same(pet, token.Pet);
+            token.OnDoubleClick(owner);
+            Assert.Equal(owner.Map, pet.Map);
+            Assert.Same(owner, pet.ControlMaster);
+            Assert.False(leash.Deleted);
+            post.MoveToWorld(owner.Location, owner.Map);
+            Assert.False(post.CanUse(owner));
+        }
+        finally { post.Delete(); pet.Delete(); owner.Delete(); }
     }
     private static void CheckBounds(Gump gump, int width, int height)
     {

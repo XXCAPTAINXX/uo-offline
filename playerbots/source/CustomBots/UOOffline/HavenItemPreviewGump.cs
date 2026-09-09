@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Server.Gumps;
 using Server.Items;
@@ -48,6 +49,10 @@ public sealed class HavenItemPreviewGump : Gump
         AddLabel(428, 401, 0, "Close");
     }
 
+    internal static string Tooltip(Item item) => string.Join("; ", Describe(item).Split("<BR>")
+        .Where(line => !string.IsNullOrWhiteSpace(line)).OrderBy(line => line.StartsWith("Weight:") || line.StartsWith("Loot type:") ? 1 : 0));
+    internal static string ShortStats(Item item) => string.Join("; ", Describe(item).Split("<BR>")
+        .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("Weight:") && !line.StartsWith("Loot type:")).Take(2));
     internal static string Describe(Item item)
     {
         var lines = new List<string> { $"Weight: {item.Weight:0.##} stones", $"Loot type: {item.LootType}" };
@@ -97,6 +102,11 @@ public sealed class HavenItemPreviewGump : Gump
             PeerlessKeyVault => "Collects recognized Peerless keys from your backpack. Keys do not expire.",
             OfflineTravelBook => "Reusable travel book. Opens the moongate destination and facet selector from your backpack. No charges or reagents. Normal moongate eligibility applies; unavailable while dead, criminal, in combat or casting.",
             HavenMasteryManual => "Custom shard mastery: one 30-minute Warrior, Archer, Caster, Bard, Healer or Beastmaster stat focus. Requires 90 skill; scales at 100/110/120. Focuses do not stack.",
+            HavenPetPowerScroll petScroll => $"Raises an owned pet {petScroll.Skill} cap to {petScroll.Cap}. Does not teach new abilities.",
+            HavenBondingPotion => "Instantly bonds one living, bondable pet you own. Consumed only on success.",
+            HavenPetLeash => "Reusable portable pet shrinking tool. Keep it in your pack. Target your living pet within 3 tiles; no charges.",
+            HavenHouseHitchingPost => "Place in a house you own or co-own, then lock it down. Reusable free pet shrinking, with the same safety rules as town posts.",
+            HavenPetScrollBundle => "Six pet cap scrolls: Wrestling, Tactics, Anatomy, Magic Resist, Meditation and Focus. Double-click each scroll and target your pet.",
             PowerScroll scroll => $"Raises the {scroll.Skill} skill cap to {scroll.Value:0}. This raises the cap, not the current skill. Native total skill cap remains.",
             HavenLevelingCape cape => $"Level {cape.Level}/20; XP {cape.Experience:N0}. Wear it to gain shared monster and companion experience. Free starter cape; repairs and restoration are free.",
             HavenRunicAtlas => "48 marked locations in three 16-location chapters. Drop marked runes onto the atlas; use a chapter for normal recall, gate, charges and rune removal.",

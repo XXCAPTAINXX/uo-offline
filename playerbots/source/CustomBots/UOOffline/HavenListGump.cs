@@ -38,6 +38,7 @@ public sealed class HavenListGump : Gump
                 break;
             }
             string tooltip = null;
+            string summary = null;
             var y = 112 + row * (menu is IHavenShop ? 66 : 23);
             AddButton(28, y + 5, 4005, 4007, index + 1);
             if (menu is IHavenShop shop)
@@ -45,7 +46,8 @@ public sealed class HavenListGump : Gump
                 var item = shop.CreateItem(index);
                 try
                 {
-                    tooltip = HavenItemPreviewGump.Describe(item).Replace("<BR>", "\n");
+                    tooltip = HavenItemPreviewGump.Tooltip(item);
+                    summary = HavenItemPreviewGump.ShortStats(item);
                     AddTooltip(1042971, tooltip);
                     AddItem(65, y, item.ItemID, item.Hue);
                     AddTooltip(1042971, tooltip);
@@ -53,8 +55,9 @@ public sealed class HavenListGump : Gump
                 finally { item.Delete(); }
             }
 
-            AddHtml(menu is IHavenShop ? 115 : 66, y, menu is IHavenShop ? 389 : 442, menu is IHavenShop ? 42 : 23, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
+            AddHtml(menu is IHavenShop ? 115 : 66, y, menu is IHavenShop ? 389 : 442, 23, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
             if (tooltip != null) { AddTooltip(1042971, tooltip); }
+            if (summary != null) { AddHtml(115, y + 23, 389, 39, $"<BASEFONT COLOR=#444444>{summary}</BASEFONT>"); }
         }
 
         if (_page > 0)
@@ -70,6 +73,7 @@ public sealed class HavenListGump : Gump
         }
         AddButton(390, 428, 4005, 4007, 0);
         AddLabel(428, 430, 0, "Close");
+        if (menu is HavenTrainingStone.Menu) { AddButton(28, 428, 4014, 4016, 10004); AddLabel(66, 430, 0, "Categories"); }
         if (anchor is StarterSupplyStone)
         {
             AddButton(28, 428, 4005, 4007, 10003);
@@ -89,6 +93,7 @@ public sealed class HavenListGump : Gump
             from?.SendMessage("Return to the service stone to use this menu.");
             return;
         }
+        if (info.ButtonID == 10004 && _anchor is HavenTrainingStone training) { training.OnDoubleClick(from); return; }
         if (info.ButtonID is 10001 or 10002)
         {
             from.SendGump(new HavenListGump(_anchor, _menu, _page + (info.ButtonID == 10001 ? -1 : 1), _reopen));
