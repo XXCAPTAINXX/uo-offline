@@ -65,6 +65,17 @@ namespace Server.CustomBots
             new("Jhelom",     "Felucca", 1417, 3821, 0, 0.7),
             new("Skara Brae", "Felucca",  591, 2147, 0, 0.7),
             new("Moonglow",   "Felucca", 4471, 1175, 0, 0.7),
+
+            // New Haven is the player's modern starting hub. Keep a visible
+            // crowd here even though most of the legacy sandbox population
+            // lives on Felucca.
+            new("New Haven",  "Trammel", 3506, 2570, 14, 1.0,
+                SubAnchors: new[]
+                {
+                    new Point2D(3506, 2570), // bank / inn approach
+                    new Point2D(3502, 2592), // town square
+                    new Point2D(3525, 2532), // skill-instructor quarter
+                }),
         };
 
         // Roaming-population mix, round-robin across the spawners that AREN'T
