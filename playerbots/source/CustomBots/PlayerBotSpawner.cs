@@ -74,6 +74,11 @@ namespace Server.CustomBots
 
         public override void Spawn()
         {
+            Defrag();
+            if (Spawned.Count >= BotPopulation.ScaleCount(Count))
+            {
+                return;
+            }
             if (CurveGated && _behaviorName != "PK" && !BotSessionManager.AllowSpawn())
             {
                 return;

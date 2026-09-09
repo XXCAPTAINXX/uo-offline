@@ -7,6 +7,9 @@
 // change it live without a rebuild).
 // =========================================================================
 
+using System;
+using Server.Logging;
+
 namespace Server.CustomBots
 {
     public static class BotPopulation
@@ -16,6 +19,19 @@ namespace Server.CustomBots
         //
         // Runtime-adjustable via [SetBotPopulation <n>.
         public static int TargetCount { get; set; } = 1600;
+
+        // Apply to saved and newly generated spawners without rewriting their
+        // counts, so repeated restarts never compound the reduction.
+        public const double Density = 2.0 / 3.0;
+        public static int EffectiveTargetCount => ScaleCount(TargetCount);
+        public static int ScaleCount(int count) => count <= 0
+            ? 0
+            : Math.Max(1, (int)Math.Round(count * Density, MidpointRounding.AwayFromZero));
+
+        public static void Configure() =>
+            LogFactory.GetLogger(typeof(BotPopulation)).Information(
+                "Bot density: two-thirds; base target {BaseTarget}, effective target {EffectiveTarget}",
+                TargetCount, EffectiveTargetCount);
 
         // PKs are player bots too, but they come from their own drawn spawn
         // set (Data/CustomSpawns/pk_spawns.json) instead of the TargetCount
@@ -27,7 +43,7 @@ namespace Server.CustomBots
         // it never caps a legitimate population — it only catches a genuine
         // runaway (e.g. a corrupted pile of spawners). Recomputed from
         // TargetCount so it always stays comfortably above it.
-        public static int StartupCap => TargetCount + 300;
+        public static int StartupCap => EffectiveTargetCount + ScaleCount(300);
 
         // Per-spawner bot count. A city's allotment is split into spawners
         // of roughly this size — many small spawners with room to place

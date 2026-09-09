@@ -150,6 +150,9 @@ namespace Server.CustomBots
                         $"{sp.Serial}: {ex.Message}");
                 }
             }
+            Server.Logging.LogFactory.GetLogger(typeof(BotStartupManager)).Information(
+                "Bot population rebuilt: {LiveBots} live bots from {Spawners} spawners at two-thirds density",
+                CountBots(), respawned);
             return respawned;
         }
 

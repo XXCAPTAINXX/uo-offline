@@ -34,6 +34,25 @@ public class HavenWorldTests
     }
     private static string SpawnRoot => Environment.GetEnvironmentVariable("HAVEN_WORLD_DATA") ?? Core.BaseDirectory;
 
+    [Fact]
+    public void BotDensityKeepsSavedCountsAndNativeSpawnsUnchanged()
+    {
+        var bot = new PlayerBotSpawner("PK", 12, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2));
+        var native = new Spawner(12, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(2), 0, default, "Banker");
+        try
+        {
+            Assert.Equal(1067, BotPopulation.ScaleCount(1600));
+            Assert.Equal(8, BotPopulation.ScaleCount(bot.Count));
+            Assert.Equal(8, BotPopulation.ScaleCount(bot.Count));
+            Assert.Equal(12, bot.Count);
+            Assert.Equal(12, native.Count);
+            Assert.Equal(1, BotPopulation.ScaleCount(1));
+            Assert.Equal(0, BotPopulation.ScaleCount(0));
+            Assert.Equal(1267, BotPopulation.StartupCap);
+        }
+        finally { bot.Delete(); native.Delete(); }
+    }
+
     [Theory]
     [InlineData(AccessLevel.Player, SkillName.Swords, typeof(ApprenticeBlade))]
     [InlineData(AccessLevel.Owner, SkillName.Archery, typeof(ApprenticeBow))]

@@ -67,7 +67,7 @@ namespace Server.CustomBots
         public static double CurveNow => HourCurve[DateTime.Now.Hour];
 
         public static int TargetNow =>
-            Math.Max(1, (int)(BotPopulation.TargetCount * CurveNow));
+            Math.Max(1, (int)(BotPopulation.EffectiveTargetCount * CurveNow));
 
         public static void Configure()
         {
@@ -309,7 +309,7 @@ namespace Server.CustomBots
             e.Mobile.SendMessage(
                 $"Bot sessions: {(Enabled ? "ON" : "OFF")}. Live {CountLive()}, " +
                 $"target {TargetNow} (curve {CurveNow:P0} at {hour:00}:00, " +
-                $"cap {BotPopulation.TargetCount}).");
+                $"cap {BotPopulation.EffectiveTargetCount}).");
         }
     }
 }

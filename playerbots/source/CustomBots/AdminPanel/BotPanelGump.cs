@@ -457,7 +457,7 @@ namespace Server.CustomBots
                     BotPanelActions.RunCommand(from, "GeneratePKs");
                     BotPanelActions.SaveWorld(from);
                     BotPanelState.Log(from,
-                        $"First Time Setup complete — target {BotPopulation.TargetCount} " +
+                        $"First Time Setup complete — target {BotPopulation.EffectiveTargetCount} " +
                         $"bots plus reds.");
                     break;
 
