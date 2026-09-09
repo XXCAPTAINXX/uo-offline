@@ -1,0 +1,173 @@
+diff --git a/Projects/UOContent/Multis/HousePlacementTarget.cs b/Projects/UOContent/Multis/HousePlacementTarget.cs
+--- a/Projects/UOContent/Multis/HousePlacementTarget.cs
++++ b/Projects/UOContent/Multis/HousePlacementTarget.cs
+@@ -21,31 +21,8 @@ public class HousePlacementTarget : MultiTarget
+             _         => new Point3D(ip)
+         };
+ 
+-        var reg = Region.Find(p, from.Map);
+-
+-        if (from.AccessLevel >= AccessLevel.GameMaster || reg.AllowHousing(from, p))
+-        {
+-            _deed.OnPlacement(from, p);
+-        }
+-        else if (reg.IsPartOf<TempNoHousingRegion>())
+-        {
+-            // Lord British has decreed a 'no build' period, thus you cannot build this house at this time.
+-            from.SendLocalizedMessage(501270);
+-        }
+-        else if (reg.IsPartOf<TreasureRegion>() || reg.IsPartOf<HouseRegion>())
+-        {
+-            // The house could not be created here.  Either something is blocking the house, or the house would not be on valid terrain.
+-            from.SendLocalizedMessage(1043287);
+-        }
+-        else if (reg.IsPartOf<HouseRaffleRegion>())
+-        {
+-            from.SendLocalizedMessage(1150493); // You must have a deed for this plot of land in order to build here.
+-        }
+-        else
+-        {
+-            from.SendLocalizedMessage(501265); // Housing can not be created in this area.
+-        }
++        // UO Offline is a sandbox: players choose where they live. Region
++        // policy must not veto a deed target; HousePlacement.Check still
++        // enforces physical fit so houses cannot overlap solid geometry.
++        _deed.OnPlacement(from, p);
+     }
+ }
+diff --git a/Projects/UOContent/Multis/Houses/HousePlacementTool.cs b/Projects/UOContent/Multis/Houses/HousePlacementTool.cs
+--- a/Projects/UOContent/Multis/Houses/HousePlacementTool.cs
++++ b/Projects/UOContent/Multis/Houses/HousePlacementTool.cs
+@@ -255,31 +255,8 @@ public class NewHousePlacementTarget : MultiTarget
+             _         => new Point3D(ip)
+         };
+ 
+-        var reg = Region.Find(p, from.Map);
+-
+-        if (from.AccessLevel >= AccessLevel.GameMaster || reg.AllowHousing(from, p))
+-        {
+-            _placed = _entry.OnPlacement(from, p);
+-        }
+-        else if (reg.IsPartOf<TempNoHousingRegion>())
+-        {
+-            // Lord British has decreed a 'no build' period, thus you cannot build this house at this time.
+-            from.SendLocalizedMessage(501270);
+-        }
+-        else if (reg.IsPartOf<TreasureRegion>() || reg.IsPartOf<HouseRegion>())
+-        {
+-            // The house could not be created here.  Either something is blocking the house, or the house would not be on valid terrain.
+-            from.SendLocalizedMessage(1043287);
+-        }
+-        else if (reg.IsPartOf<HouseRaffleRegion>())
+-        {
+-            from.SendLocalizedMessage(1150493); // You must have a deed for this plot of land in order to build here.
+-        }
+-        else
+-        {
+-            from.SendLocalizedMessage(501265); // Housing can not be created in this area.
+-        }
++        // Sandbox housing: region type does not decide whether a player may
++        // build here. The real placement validator below owns physical fit.
++        _placed = _entry.OnPlacement(from, p);
+     }
+ 
+     protected override void OnTargetFinish(Mobile from)
+diff --git a/Projects/UOContent/Multis/Houses/HousePlacement.cs b/Projects/UOContent/Multis/Houses/HousePlacement.cs
+--- a/Projects/UOContent/Multis/Houses/HousePlacement.cs
++++ b/Projects/UOContent/Multis/Houses/HousePlacement.cs
+@@ -50,36 +50,11 @@ namespace Server.Multis
+                 return HousePlacementResult.BadLand; // A house cannot go here
+             }
+ 
+-            if (!ContentFeatureFlags.HousePlacement && from.AccessLevel < FeatureFlagSettings.RequiredAccessLevel)
+-            {
+-                return HousePlacementResult.BadRegionTemp;
+-            }
+-
+             if (from.AccessLevel >= AccessLevel.GameMaster)
+             {
+                 return HousePlacementResult.Valid; // Staff can place anywhere
+             }
+ 
+-            if (map == Map.Ilshenar || SpellHelper.IsFeluccaT2A(map, center))
+-            {
+-                return HousePlacementResult.BadRegion; // No houses in Ilshenar/T2A
+-            }
+-
+-            if (map == Map.Malas && multiID is 0x007C or 0x007E)
+-            {
+-                return HousePlacementResult.InvalidCastleKeep;
+-            }
+-
+-            if (Region.Find(center, map).IsPartOf<NoHousingRegion, NoHousingGuardedRegion>())
+-            {
+-                return HousePlacementResult.BadRegion;
+-            }
+-
+             // This holds data describing the internal structure of the house
+             var mcl = MultiData.GetComponents(multiID);
+@@ -120,27 +95,6 @@ namespace Server.Multis
+ 
+                     var testPoint = new Point3D(tileX, tileY, center.Z);
+ 
+-                    var reg = Region.Find(testPoint, map);
+-
+-                    if (!reg.AllowHousing(from, testPoint)) // Cannot place houses in dungeons, towns, treasure map areas etc
+-                    {
+-                        if (reg.IsPartOf<TempNoHousingRegion>())
+-                        {
+-                            return HousePlacementResult.BadRegionTemp;
+-                        }
+-
+-                        if (reg.IsPartOf<TreasureRegion, HouseRegion>())
+-                        {
+-                            return HousePlacementResult.BadRegionHidden;
+-                        }
+-
+-                        if (reg.IsPartOf<HouseRaffleRegion>())
+-                        {
+-                            return HousePlacementResult.BadRegionRaffle;
+-                        }
+-
+-                        return HousePlacementResult.BadRegion;
+-                    }
+-
+                     var landTile = map.Tiles.GetLandTile(tileX, tileY);
+                     var landID = landTile.ID & TileData.MaxLandValue;
+@@ -260,18 +214,6 @@ namespace Server.Multis
+                         }
+                     }
+ 
+-                    for (var i = 0; i < m_RoadIDs.Length; i += 2)
+-                    {
+-                        if (landID >= m_RoadIDs[i] && landID <= m_RoadIDs[i + 1])
+-                        {
+-                            return HousePlacementResult.BadLand; // Broke rule #5
+-                        }
+-                    }
+-
+                     if (hasFoundation)
+                     {
+-                        if (!CheckYard(map, tileX, tileY, YardSize, houseFacing))
+-                        {
+-                            return HousePlacementResult.BadStatic; // Broke rule #3
+-                        }
+-
+                         for (var xOffset = -1; xOffset <= 1; ++xOffset)
+                         {
+                             for (var yOffset = -1; yOffset <= 1; ++yOffset)
+@@ -327,14 +269,6 @@ namespace Server.Multis
+                     return HousePlacementResult.BadLand;
+                 }
+ 
+-                for (var j = 0; j < m_RoadIDs.Length; j += 2)
+-                {
+-                    if (landID >= m_RoadIDs[j] && landID <= m_RoadIDs[j + 1])
+-                    {
+-                        return HousePlacementResult.BadLand; // Broke rule #5
+-                    }
+-                }
+-
+                 foreach (var tile in map.Tiles.GetStaticAndMultiTiles(borderPoint.X, borderPoint.Y))
+                 {
+                     var id = TileData.ItemTable[tile.ID & TileData.MaxItemValue];
