@@ -42,7 +42,7 @@ public sealed class HavenCompanionGump : Gump
                 AddLabel(20, 196, 0, $"Swords {companion.Skills.Swords.Value:F1}  Tactics {companion.Skills.Tactics.Value:F1}");
                 AddLabel(20, 218, 0, $"Healing {companion.Skills.Healing.Value:F1}  Resist {companion.Skills.MagicResist.Value:F1}");
                 AddLabel(20, 240, 0, $"Music {companion.Skills.Musicianship.Value:F1}  Discord {companion.Skills.Discordance.Value:F1}");
-                AddLabel(20, 262, 0, $"Peacemaking {companion.Skills.Peacemaking.Value:F1}  Mastery {companion.Mastery:F1}");
+                AddLabel(20, 262, 0, $"Peace {companion.Skills.Peacemaking.Value:F1}  Provoke {companion.Skills.Provocation.Value:F1}");
                 AddLabel(20, 284, 0, $"Magery {companion.Skills.Magery.Value:F1}  Weaving {companion.Skills.Spellweaving.Value:F1}");
                 AddLabel(20, 306, 0, $"Base stats: {companion.RawStr} Str / {companion.RawDex} Dex / {companion.RawInt} Int");
                 break;
@@ -52,7 +52,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(20, 195, 12, "Bard - discord and songs");
                 Button(20, 226, 13, "Caster - mage / spellweaver");
                 Button(20, 257, 15, "Archer - ranged support");
-                AddHtml(20, 291, 330, 36, "Bard: Discord at 60, songs at 80.<BR>Caster: bolts, renewal; death/life at 80.");
+                AddHtml(20, 291, 330, 36, "Bard: Discord 60; peace/provoke 75; songs 80/90.<BR>Caster: bolts, renewal; death/life at 80.");
                 break;
             case 3:
                 Button(20, 133, 14, "Equip item...");
@@ -69,7 +69,8 @@ public sealed class HavenCompanionGump : Gump
                 Button(195, 207, 6, "Pack");
                 Button(20, 244, 9, "Recall");
                 Button(195, 244, 7, CompanionParty.Get(companion)?.Contains(companion.BoundOwner) == true ? "Leave party" : "Join party");
-                AddHtml(20, 286, 330, 30, "All roles auto-heal within 12 tiles and sight.");
+                Button(20, 280, 16, companion.TamingAssistActive ? "Stop assist" : "Tame assist...");
+                AddHtml(20, 310, 330, 20, "All roles auto-heal within 12 tiles and sight.");
                 break;
         }
         Button(20, 332, 110, "Refresh");
@@ -131,6 +132,9 @@ public sealed class HavenCompanionGump : Gump
             case 7:
                 if (CompanionParty.Get(_companion)?.Contains(from) == true) { CompanionParty.Get(_companion).Remove(_companion); }
                 else { _companion.JoinParty(from); }
+                break;
+            case 16:
+                _companion.RequestTamingAssist(from);
                 break;
             case 15:
                 _companion.Role = HavenCompanionRole.Archer;

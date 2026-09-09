@@ -324,7 +324,7 @@ public partial class HavenUpgradeStone : Item
 
         var markCost = robe.UpgradeTier + 1;
         var goldCost = markCost * 5000;
-        var paidWithMarks = pack.ConsumeTotal(typeof(HavenMark), markCost);
+        var paidWithMarks = HavenEconomy.TryPayMarks(from, markCost);
 
         if (!paidWithMarks && !HavenEconomy.TryPay(from, goldCost))
         {
@@ -380,21 +380,23 @@ public partial class SpecialRewardStone : Item
             new("Artisan bracelet", 0x1086, 0x96D),
             new("Fortune bracelet", 0x1086, 0x8A5),
             new("Guardian bracelet", 0x1086, 0x497),
-            new("Night bracelet", 0x1086, 0x455)
+            new("Night bracelet", 0x1086, 0x455),
+            new("Champion pendant - 250 Haven marks only", 0x1088, 0x489)
         ];
 
         public RewardMenu() : base(
-            $"Special Bracelets - {MarkCost} Haven marks or {GoldFallbackCost:N0} gold",
+            $"Bracelets: {MarkCost} marks / {GoldFallbackCost:N0} gold. Pendant: 250 marks.",
             MenuEntries
         )
         {
         }
 
-        public Item CreateItem(int index) => SpecialBraceletFactory.Create(index);
+        public Item CreateItem(int index) => index == 9 ? new HavenChampionPendant() : SpecialBraceletFactory.Create(index);
 
-        public override void OnResponse(NetState state, int index)
+        public override void OnResponse(NetState state, int index) => Buy(state.Mobile, index);
+
+        internal static void Buy(Mobile from, int index)
         {
-            var from = state.Mobile;
             var pack = from?.Backpack;
 
             if (pack == null || index < 0 || index >= MenuEntries.Length)
@@ -402,29 +404,21 @@ public partial class SpecialRewardStone : Item
                 return;
             }
 
-            var paidWithMarks = pack.ConsumeTotal(typeof(HavenMark), MarkCost);
-            if (!paidWithMarks && !HavenEconomy.TryPay(from, GoldFallbackCost))
+            var reward = index == 9 ? new HavenChampionPendant() : SpecialBraceletFactory.Create(index);
+            if (reward == null) { return; }
+            if (!pack.CheckHold(from, reward, false)) { reward.Delete(); from.SendMessage("Make room in your backpack."); return; }
+            var markCost = index == 9 ? 250 : MarkCost;
+            var paidWithMarks = HavenEconomy.TryPayMarks(from, markCost);
+            if (!paidWithMarks && (index == 9 || !HavenEconomy.TryPay(from, GoldFallbackCost)))
             {
-                from.SendMessage(
-                    $"You need {MarkCost} Haven marks or {GoldFallbackCost:N0} gold for a bracelet."
-                );
+                reward.Delete();
+                from.SendMessage(index == 9 ? "The champion pendant costs 250 Haven marks; gold cannot buy it." : "You need 15 Haven marks or 25,000 gold for a bracelet.");
                 return;
             }
-
-            var reward = SpecialBraceletFactory.Create(index);
-            if (reward == null)
-            {
-                if (paidWithMarks)
-                {
-                    pack.DropItem(new HavenMark(MarkCost));
-                }
-                return;
-            }
-
             pack.DropItem(reward);
             from.SendMessage(
                 paidWithMarks
-                    ? $"You exchange {MarkCost} Haven marks for {reward.DefaultName}."
+                    ? $"You exchange {markCost} Haven marks for {reward.DefaultName}."
                     : $"You purchase {reward.DefaultName} for {GoldFallbackCost:N0} gold."
             );
         }
@@ -433,6 +427,17 @@ public partial class SpecialRewardStone : Item
 
 public static class HavenEconomy
 {
+    public static bool TryPayMarks(Mobile from, int amount)
+    {
+        if (from?.Backpack == null || amount <= 0) { return false; }
+        var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
+        var walletMarks = (int)Math.Min(amount, Math.Max(0, wallet?.HavenMarks ?? 0));
+        var looseMarks = amount - walletMarks;
+        if (from.Backpack.GetAmount(typeof(HavenMark)) < looseMarks) { return false; }
+        if (looseMarks > 0 && !from.Backpack.ConsumeTotal(typeof(HavenMark), looseMarks)) { return false; }
+        if (walletMarks > 0) { wallet.HavenMarks -= walletMarks; }
+        return true;
+    }
     public static bool TryPay(Mobile from, int amount)
     {
         if (from?.Backpack == null || amount <= 0)

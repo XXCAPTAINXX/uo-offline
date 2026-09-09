@@ -60,20 +60,18 @@ public static class HavenAstralRewards
 
     internal static bool Award(Mobile player, int amount)
     {
-        var wallet = player.Backpack?.FindItemByType<AdventurersWallet>();
-        if (wallet != null)
+        if (player?.Deleted != false || amount <= 0) { return false; }
+        var shards = new AstralShard(amount);
+        if (player.Backpack?.TryDropItem(player, shards, false) == true)
         {
-            if (amount <= 0 || amount > long.MaxValue - wallet.AstralShards) { return false; }
-            wallet.AstralShards += amount;
-            player.SendMessage(0x482, $"You found {amount} Astral shard(s)! Wallet total: {wallet.AstralShards:N0}.");
+            player.SendMessage(0x482, $"You found {amount} Astral shard(s)! They are in your backpack.");
             return true;
         }
-        var shards = new AstralShard(amount);
-        if (player.Backpack?.TryDropItem(player, shards, false) == true) { return true; }
+        if (player.Map == null || player.Map == Map.Internal) { shards.Delete(); return false; }
         shards.MoveToWorld(player.Location, player.Map);
+        player.SendMessage(0x482, "Your backpack is full. The Astral shards are at your feet.");
         return true;
     }
-
     internal static bool Buy(Mobile from, AdventurersWallet wallet, int index)
     {
         if (wallet.Deleted || from.Backpack == null || !wallet.IsChildOf(from.Backpack) || index < 0 || index > 2) { return false; }

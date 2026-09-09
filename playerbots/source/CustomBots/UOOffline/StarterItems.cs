@@ -159,7 +159,7 @@ public partial class ApprenticeGrimoire : Spellbook
     }
 }
 
-[SerializationGenerator(1)]
+[SerializationGenerator(2)]
 public partial class AdventurersWallet : Item
 {
     [SerializableField(0)]
@@ -170,6 +170,10 @@ public partial class AdventurersWallet : Item
     [InvalidateProperties]
     private long _astralShards;
 
+    [SerializableField(2)]
+    [InvalidateProperties]
+    private long _havenMarks;
+    private void MigrateFrom(V1Content content) { _balance = content.Balance; _astralShards = content.AstralShards; }
     private void MigrateFrom(V0Content content) { _balance = content.Balance; }
 
     public override string DefaultName => "adventurer's wallet";
@@ -189,6 +193,7 @@ public partial class AdventurersWallet : Item
             return;
         }
         DepositBackpackGold(from);
+        DepositBackpackMarks(from);
         CollectNearbyGold(from);
     }
 
@@ -235,6 +240,30 @@ public partial class AdventurersWallet : Item
         from.SendMessage($"{deposited:N0} gold deposited into your wallet. Balance: {Balance:N0}.");
     }
 
+    internal long DepositBackpackMarks(Mobile from)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack)) { return 0; }
+        var marks = new List<HavenMark>();
+        long amount = 0;
+        foreach (var mark in from.Backpack.FindItemsByType<HavenMark>())
+        {
+            if (!mark.Deleted) { marks.Add(mark); amount += mark.Amount; }
+        }
+        if (amount <= 0 || amount > long.MaxValue - HavenMarks) { return 0; }
+        foreach (var mark in marks) { mark.Delete(); }
+        HavenMarks += amount;
+        from.SendMessage($"Deposited {amount:N0} Haven marks. Wallet marks: {HavenMarks:N0}.");
+        return amount;
+    }
+    internal bool WithdrawMarks(Mobile from, int amount)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack) || amount is < 1 or > 60000 || HavenMarks < amount) { return false; }
+        var marks = new HavenMark(amount);
+        if (!from.Backpack.TryDropItem(from, marks, false)) { marks.Delete(); return false; }
+        HavenMarks -= amount;
+        from.SendMessage($"Withdrew {amount:N0} Haven marks.");
+        return true;
+    }
     internal long CollectNearbyGold(Mobile from)
     {
         if (Deleted || !from.Alive || from.Backpack == null || !IsChildOf(from.Backpack) || from.Map == Map.Internal) { return 0; }
@@ -302,6 +331,7 @@ public partial class AdventurersWallet : Item
         base.GetProperties(list);
         list.Add($"{"Stored gold:"} {Balance:N0}");
         list.Add($"{"Astral shards:"} {AstralShards:N0}");
+        list.Add($"{"Haven marks:"} {HavenMarks:N0}");
         list.Add("Double-click: collect gold. Say withdraw 1000. Use [wallet for rewards.");
     }
 }

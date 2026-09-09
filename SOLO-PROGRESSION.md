@@ -31,3 +31,13 @@ Haven Island now grants +1,000 Luck to players on Trammel, including New Haven a
 Player skills train faster below 100 on Haven Island: five times normal gain chance and five times normal gain amount, stopping the larger increment at 100. Skill checks still need valid practice; individual caps, skill locks and the existing counted total cap remain enforced. Above 100 and outside Haven, normal training applies.
 
 The player total skill cap is now 1,000 points and applies automatically on login for new and existing characters. Animal Taming and Animal Lore remain excluded from this budget. Companion caps are unchanged.
+
+Wallets now store Haven marks with a separate balance. Double-clicking collects backpack marks along with gold, retaining nearby gold pickup. [wallet opens Haven rewards and supports mark withdrawals. Bracelets and robe upgrades spend stored marks first, then loose marks, and only use gold when there are not enough total marks. Wallet v0/v1 saves migrate without losing gold or Astral shards.
+
+The champion pendant costs 250 Haven marks, with no gold alternative. Its base bonuses include 500 Luck, +10 Str/Dex/Int, +3 hit/stamina/mana regeneration, 25% weapon and spell damage, 10% hit/defense chance, 10% lower mana cost and 100% lower reagent cost. Existing bracelets are unchanged.
+
+Bards learn Musicianship, Discordance, Peacemaking and Provocation. Songs unlock at 80 Music/Peace, show timed buff icons, last 60 seconds and refresh every 45 seconds. At 90 Music, they adapt their stat emphasis to health, mana and combat style. Hostile bard attempts are spaced by 20 seconds: emergency peacemaking, provocation between hostile attackers, or Discordance. Role changes/death/deletion clear maintained song buffs.
+
+Astral shards now arrive as physical backpack items even when carrying a wallet. Double-click shards to deposit them. If the backpack is full, drops appear at the player's feet.
+
+Bard companions offer Tame assist from Orders. Select a nearby wild tamable animal, then tame it normally. The companion stays in support mode, attempts native Peacemaking at most every 12 seconds while the target is not pacified, and continues normal healing. It does not attack while assisting. Stop assist ends the mode; successful taming, moving away, death or changing roles also ends it. Peacemaking success depends on bard skills and the animal's difficulty; companions do not tame or claim pets themselves.

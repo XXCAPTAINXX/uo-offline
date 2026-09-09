@@ -124,7 +124,7 @@ public class HavenWorldTests
     [Fact]
     public void WalletSaveLoadPreservesGoldAndShardsAndMigratesOldGoldOnlyWallets()
     {
-        var wallet = new AdventurersWallet { Balance = 123456, AstralShards = 42 };
+        var wallet = new AdventurersWallet { Balance = 123456, AstralShards = 42, HavenMarks = 73 };
         var header = new Item(World.NewItem);
         AdventurersWallet copy = null;
         AdventurersWallet legacy = null;
@@ -137,10 +137,16 @@ public class HavenWorldTests
             copy.Deserialize(new BufferReader(data));
             Assert.Equal(123456, copy.Balance);
             Assert.Equal(42, copy.AstralShards);
+            Assert.Equal(73, copy.HavenMarks);
             var reader = new BufferReader(data);
             header.Deserialize(reader);
             var versionPosition = (int)reader.Position;
-            var oldData = data.AsSpan(0, data.Length - 8).ToArray();
+            var v1Data = data.AsSpan(0, data.Length - 8).ToArray();
+            v1Data[versionPosition] = 1;
+            var v1 = new AdventurersWallet(World.NewItem);
+            try { v1.Deserialize(new BufferReader(v1Data)); Assert.Equal(123456, v1.Balance); Assert.Equal(42, v1.AstralShards); Assert.Equal(0, v1.HavenMarks); }
+            finally { v1.Delete(); }
+            var oldData = data.AsSpan(0, data.Length - 16).ToArray();
             oldData[versionPosition] = 0;
             legacy = new AdventurersWallet(World.NewItem);
             legacy.Deserialize(new BufferReader(oldData));
@@ -191,6 +197,9 @@ public class HavenWorldTests
             Assert.Single(player.Backpack.Items.OfType<AstralFortuneEarrings>());
             Assert.False(HavenAstralRewards.Buy(player, wallet, 0));
             Assert.True(HavenAstralRewards.Award(player, 3));
+            Assert.Equal(0, wallet.AstralShards);
+            Assert.Equal(3, player.Backpack.GetAmount(typeof(AstralShard)));
+            player.Backpack.FindItemByType<AstralShard>().OnDoubleClick(player);
             Assert.Equal(3, wallet.AstralShards);
         }
         finally { player.Delete(); }
@@ -1690,6 +1699,193 @@ public class HavenWorldTests
             Assert.Equal(100, player.Skills.AnimalTaming.Base);
         }
         finally { player.Delete(); }
+    }
+    [Fact]
+    public void WalletMarksDepositSpendAndWithdrawWithoutLosingCurrency()
+    {
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var other = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack()); other.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { Balance = 50000, AstralShards = 12 };
+        owner.Backpack.DropItem(wallet);
+        owner.Backpack.DropItem(new HavenMark(10));
+        try
+        {
+            Assert.Equal(0, wallet.DepositBackpackMarks(other));
+            Assert.Equal(10, wallet.DepositBackpackMarks(owner));
+            Assert.Equal(0, wallet.DepositBackpackMarks(owner));
+            owner.Backpack.DropItem(new HavenMark(5));
+            Assert.False(HavenEconomy.TryPayMarks(owner, 16));
+            Assert.Equal(10, wallet.HavenMarks);
+            Assert.Equal(5, owner.Backpack.GetAmount(typeof(HavenMark)));
+            SpecialRewardStone.RewardMenu.Buy(owner, 0);
+            Assert.Equal(0, wallet.HavenMarks);
+            Assert.Equal(0, owner.Backpack.GetAmount(typeof(HavenMark)));
+            Assert.Equal(50000, wallet.Balance);
+            Assert.Equal(12, wallet.AstralShards);
+            wallet.HavenMarks = 30;
+            owner.Backpack.MaxItems = owner.Backpack.Items.Count;
+            SpecialRewardStone.RewardMenu.Buy(owner, 1);
+            Assert.Equal(30, wallet.HavenMarks);
+            Assert.False(wallet.WithdrawMarks(owner, 5));
+            Assert.Equal(30, wallet.HavenMarks);
+            owner.Backpack.MaxItems = 125;
+            Assert.True(wallet.WithdrawMarks(owner, 5));
+            Assert.Equal(25, wallet.HavenMarks);
+            Assert.Equal(5, owner.Backpack.GetAmount(typeof(HavenMark)));
+            CheckBounds(new HavenWalletGump(wallet), 460, 395);
+        }
+        finally { owner.Delete(); other.Delete(); }
+    }
+
+    [SkippableFact]
+    public void RobeUpgradeUsesStoredMarksBeforeGold()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { HavenMarks = 2, Balance = 5000 };
+        var robe = new NewHavenAdventurersRobe();
+        var stone = new HavenUpgradeStone();
+        owner.Backpack.DropItem(wallet); owner.Backpack.DropItem(robe);
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            stone.MoveToWorld(owner.Location, owner.Map);
+            stone.ApplyUpgrade(owner, 0);
+            Assert.Equal(1, robe.UpgradeTier);
+            Assert.Equal(1, wallet.HavenMarks);
+            Assert.Equal(5000, wallet.Balance);
+        }
+        finally { stone.Delete(); owner.Delete(); }
+    }
+    [Fact]
+    public void ChampionPendantRequiresMarksAndCannotUseGoldFallback()
+    {
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        owner.AddItem(new Backpack());
+        var wallet = new AdventurersWallet { Balance = 1000000, HavenMarks = 249 };
+        owner.Backpack.DropItem(wallet);
+        try
+        {
+            SpecialRewardStone.RewardMenu.Buy(owner, 9);
+            Assert.Null(owner.Backpack.FindItemByType<HavenChampionPendant>());
+            Assert.Equal(1000000, wallet.Balance);
+            Assert.Equal(249, wallet.HavenMarks);
+            wallet.HavenMarks = 250;
+            SpecialRewardStone.RewardMenu.Buy(owner, 9);
+            var pendant = owner.Backpack.FindItemByType<HavenChampionPendant>();
+            Assert.NotNull(pendant);
+            Assert.Equal(500, pendant.Attributes.Luck);
+            Assert.Equal(25, pendant.Attributes.SpellDamage);
+            Assert.Equal(25, pendant.Attributes.WeaponDamage);
+            Assert.Equal(0, wallet.HavenMarks);
+        }
+        finally { owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void BardSongsAdaptAndClearTheirStatBonuses()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100, Dex = 80, Int = 60 };
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Bard };
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            companion.MoveToWorld(owner.Location, owner.Map);
+            companion.Skills.Musicianship.Base = companion.Skills.Peacemaking.Base = 100;
+            owner.Hits = 1;
+            Assert.Equal("Recovery", companion.SelectSong(owner));
+            companion.BardSupport(owner);
+            Assert.True(owner.Str > 100);
+            companion.ClearSongs();
+            Assert.Equal(100, owner.Str);
+            owner.Hits = owner.HitsMax; owner.Mana = 0;
+            Assert.Equal("Arcane", companion.SelectSong(owner));
+            companion.BardSupport(owner);
+            Assert.True(owner.Int > owner.RawInt);
+            companion.Delete();
+            Assert.Equal(owner.RawInt, owner.Int);
+            Assert.Equal(TimeSpan.FromSeconds(60), HavenCompanion.SongBuff("Arcane", 3, 3, 6).Duration);
+        }
+        finally { companion.Delete(); owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void BardProvokesTwoHostileAttackersUsingNativeSkill()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var oldHandler = Mobile.SkillCheckTargetHandler;
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Bard };
+        var first = new Rat(); var second = new Rat();
+        try
+        {
+            Mobile.SkillCheckTargetHandler = Server.Misc.SkillCheck.Mobile_SkillCheckTarget;
+            foreach (var mobile in new Mobile[] { owner, companion, first, second }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            owner.Hits = owner.HitsMax;
+            companion.Skills.Musicianship.Base = companion.Skills.Provocation.Base = 120;
+            first.Karma = second.Karma = -1000;
+            second.Combatant = owner;
+            companion.ThinkBardCombat(first);
+            Assert.True(first.BardProvoked);
+            Assert.Same(second, first.BardTarget);
+        }
+        finally { Mobile.SkillCheckTargetHandler = oldHandler; companion.Delete(); first.Delete(); second.Delete(); owner.Delete(); }
+    }
+    [SkippableFact]
+    public void BardUsesPeacemakingWhenOwnerIsInDanger()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var oldHandler = Mobile.SkillCheckTargetHandler;
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Bard };
+        var enemy = new Rat { Karma = -1000 };
+        try
+        {
+            Mobile.SkillCheckTargetHandler = Server.Misc.SkillCheck.Mobile_SkillCheckTarget;
+            foreach (var mobile in new Mobile[] { owner, companion, enemy }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            owner.Hits = 1;
+            companion.Skills.Musicianship.Base = companion.Skills.Peacemaking.Base = 120;
+            companion.ThinkBardCombat(enemy);
+            Assert.True(enemy.BardPacified);
+            Assert.Equal(OrderType.Follow, companion.ControlOrder);
+        }
+        finally { Mobile.SkillCheckTargetHandler = oldHandler; companion.Delete(); enemy.Delete(); owner.Delete(); }
+    }
+    [SkippableFact]
+    public void TamingAssistCalmsWithoutAttackingAndEndsWhenTamed()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var oldHandler = Mobile.SkillCheckTargetHandler;
+        var owner = new PlayerMobile { Player = true, Body = 0x190, Str = 100 };
+        var stranger = new PlayerMobile();
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Bard };
+        var animal = new Horse();
+        try
+        {
+            Mobile.SkillCheckTargetHandler = Server.Misc.SkillCheck.Mobile_SkillCheckTarget;
+            foreach (var mobile in new Mobile[] { owner, companion, animal }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
+            companion.Skills.Musicianship.Base = companion.Skills.Peacemaking.Base = 120;
+            Assert.False(companion.StartTamingAssist(stranger, animal));
+            Assert.True(companion.StartTamingAssist(owner, animal));
+            Assert.False(companion.CanBeHarmful(animal, false));
+            owner.Combatant = animal;
+            Assert.False(companion.DefendOwner());
+            companion.ThinkTamingAssist();
+            Assert.True(animal.BardPacified);
+            Assert.Null(companion.Combatant);
+            Assert.False(companion.CanBeHarmful(animal, false));
+            owner.Hits = 1;
+            companion.Mana = companion.ManaMax;
+            Assert.True(companion.Support(owner));
+            Assert.True(owner.Hits > 1);
+            animal.Controlled = true;
+            companion.ThinkTamingAssist();
+            Assert.False(companion.TamingAssistActive);
+        }
+        finally { Mobile.SkillCheckTargetHandler = oldHandler; companion.Delete(); animal.Delete(); stranger.Delete(); owner.Delete(); }
     }
     private static void CheckBounds(Gump gump, int width, int height)
     {

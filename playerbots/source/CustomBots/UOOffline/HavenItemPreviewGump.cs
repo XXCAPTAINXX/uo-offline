@@ -40,7 +40,7 @@ public sealed class HavenItemPreviewGump : Gump
         }
         finally { preview?.Delete(); }
         AddHtml(28, 330, 482, 45, $"{menu.Question}");
-        AddHtml(28, 375, 482, 20, stone is AdventurersWallet ? "Astral purchases use the shard balance in this wallet." : "Gold payments use wallet first, then backpack and bank.");
+        AddHtml(28, 375, 482, 20, menu is HavenAstralRewards.Menu ? "Astral purchases use the shard balance in this wallet." : "Marks use wallet then backpack; gold also uses your bank.");
         AddButton(28, 399, 4014, 4016, 2);
         AddLabel(66, 401, 0, "Back");
         AddButton(200, 399, 4005, 4007, 1);

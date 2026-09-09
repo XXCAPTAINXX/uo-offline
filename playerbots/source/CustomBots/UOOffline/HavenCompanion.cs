@@ -171,6 +171,7 @@ public partial class HavenCompanion : BaseCreature
         Skills.Musicianship.Base = Math.Max(Skills.Musicianship.Base, Math.Min(6553.5, Mastery));
         Skills.Discordance.Base = Math.Max(Skills.Discordance.Base, Math.Min(6553.5, Mastery));
         Skills.Peacemaking.Base = Math.Max(Skills.Peacemaking.Base, Math.Min(6553.5, Mastery));
+        Skills.Provocation.Base = Math.Max(Skills.Provocation.Base, Math.Min(6553.5, Mastery));
         Skills.Healing.Base = Math.Max(Skills.Healing.Base, Math.Min(6553.5, Mastery));
         Skills.Archery.Base = Math.Max(Skills.Archery.Base, Math.Min(6553.5, Mastery));
         Skills.Magery.Base = Math.Max(Skills.Magery.Base, Math.Min(6553.5, Mastery));
@@ -288,20 +289,6 @@ public partial class HavenCompanion : BaseCreature
         party.Add(this);
     }
 
-    internal void BardSupport(Mobile patient)
-    {
-        if (Role != HavenCompanionRole.Bard || !SongUnlocked || IsDeadPet || !patient.Alive || patient.Map != Map ||
-            !InRange(patient, 8) || !InLOS(patient)) { return; }
-        var skill = Math.Min(Skills.Musicianship.Value, Skills.Peacemaking.Value);
-        var amount = 3 + (int)((skill - 80) / 10) + (int)Math.Log2(1 + Math.Max(0, TrainingMinutes) / 60);
-        patient.RemoveStatMod("HavenCompanionSongStr");
-        patient.RemoveStatMod("HavenCompanionSongDex");
-        patient.RemoveStatMod("HavenCompanionSongInt");
-        patient.AddStatMod(new StatMod(StatType.Str, "HavenCompanionSongStr", amount, TimeSpan.FromSeconds(20)));
-        patient.AddStatMod(new StatMod(StatType.Dex, "HavenCompanionSongDex", amount, TimeSpan.FromSeconds(20)));
-        patient.AddStatMod(new StatMod(StatType.Int, "HavenCompanionSongInt", amount, TimeSpan.FromSeconds(20)));
-    }
-
     internal bool TryDiscord(Mobile enemy)
     {
         if (Role != HavenCompanionRole.Bard || !DiscordUnlocked || IsDeadPet || !Alive ||
@@ -329,7 +316,7 @@ public partial class HavenCompanion : BaseCreature
     public override bool CanBeControlledBy(Mobile m) => m == BoundOwner;
 
     public override bool CanBeHarmful(Mobile target, bool message, bool ignoreOurBlessedness) =>
-        target?.Player != true && target is not BaseCreature { ControlMaster.Player: true } &&
+        (!TamingAssistActive || _calmingAnimal) && target?.Player != true && target is not BaseCreature { ControlMaster.Player: true } &&
         base.CanBeHarmful(target, message, ignoreOurBlessedness);
 
     private DateTime _reviveAt;
@@ -354,10 +341,10 @@ public partial class HavenCompanion : BaseCreature
 
     internal bool DefendOwner()
     {
-        if (IsDeadPet || BoundOwner == null || BoundOwner.Map != Map || !InRange(BoundOwner, 12) ||
+        if (TamingAssistActive || IsDeadPet || BoundOwner == null || BoundOwner.Map != Map || !InRange(BoundOwner, 12) ||
             ControlOrder is not (OrderType.Follow or OrderType.Guard)) { return false; }
         bool Valid(Mobile target) => target is { Deleted: false, Alive: true } &&
-            target is not BaseCreature { IsDeadPet: true } && target.Map == Map &&
+            target is not BaseCreature { IsDeadPet: true } && target is not BaseCreature { BardPacified: true } && target.Map == Map &&
             InRange(target, 10) && InLOS(target) && CanBeHarmful(target, false);
         var enemy = BoundOwner.Combatant as Mobile;
         if (!Valid(enemy))
@@ -377,11 +364,13 @@ public partial class HavenCompanion : BaseCreature
 
     public override void OnThink()
     {
+        if (Role != HavenCompanionRole.Bard || IsDeadPet) { ClearSongs(); }
         if (BoundOwner?.NetState != null) { RecoverFromDeath(Core.Now); }
         if (!_configured) { ConfigureCompanion(); }
         ConfigureCombatRole();
         RecoverResources(Core.Now);
         ProcessCompanionSpell();
+        ThinkTamingAssist();
         base.OnThink();
         if (Controlled) { Loyalty = MaxLoyalty; }
         if (Core.Now >= _nextTraining)
@@ -409,11 +398,11 @@ public partial class HavenCompanion : BaseCreature
         }
         if (Role == HavenCompanionRole.Bard)
         {
-            TryDiscord(Combatant as Mobile ?? BoundOwner.Combatant as Mobile);
+            if (!TamingAssistActive) { ThinkBardCombat(Combatant as Mobile ?? BoundOwner.Combatant as Mobile); }
         }
-        if (Role == HavenCompanionRole.Bard && SongUnlocked && Core.Now >= _nextBuff && Mana >= 5)
+        if (Role == HavenCompanionRole.Bard && SongUnlocked && Core.Now >= _nextBuff && Mana >= 5 && BoundOwner.Alive && InLOS(BoundOwner))
         {
-            _nextBuff = Core.Now + TimeSpan.FromSeconds(10);
+            _nextBuff = Core.Now + TimeSpan.FromSeconds(45);
             Mana -= 5;
             BardSupport(BoundOwner);
             if (party?.Contains(this) == true)
@@ -429,6 +418,8 @@ public partial class HavenCompanion : BaseCreature
 
     public override void OnDelete()
     {
+        StopTamingAssist();
+        ClearSongs();
         CompanionParty.Get(this)?.Remove(this);
         CancelCompanionSpell();
         BoundOwner = null;
