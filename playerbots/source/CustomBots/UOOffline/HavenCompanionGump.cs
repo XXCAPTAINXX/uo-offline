@@ -28,7 +28,8 @@ public sealed class HavenCompanionGump : Gump
         AddBackground(10, 10, 350, 350, 3000);
         AddLabel(20, 20, 0, companion.Name);
         AddLabel(20, 43, 0, $"{companion.Role} | Level {companion.TrainingLevel:N0} | {companion.ControlOrder}");
-        AddLabel(20, 65, 0, $"HP {companion.Hits}/{companion.HitsMax}  Mana {companion.Mana}/{companion.ManaMax}");
+        if (companion.Expedition is { } trip) { AddLabel(20, 65, 0, trip.Status); }
+        else { AddLabel(20, 65, 0, $"HP {companion.Hits}/{companion.HitsMax}  Mana {companion.Mana}/{companion.ManaMax}"); }
         Button(20, 95, 100, "Orders");
         Button(115, 95, 101, "Stats");
         Button(205, 95, 102, "Role");
@@ -58,7 +59,17 @@ public sealed class HavenCompanionGump : Gump
                 Button(20, 133, 14, "Equip item...");
                 Button(195, 133, 6, "Open pack");
                 AddHtml(20, 175, 330, 110, string.Join("<BR>", companion.Items.Where(i => i.Layer != Layer.Backpack).Select(i => $"{i.Layer}: {i.Name ?? i.DefaultName}")), false, true);
-                AddHtml(20, 291, 330, 30, "Replaced gear goes into the shared pack.");
+                Button(20, 290, 18, "Claim evolving arms");
+                break;
+            case 4:
+                AddHtml(20, 130, 330, 30, "Five-minute expeditions; returns automatically.");
+                Button(20, 170, 20, "Grind for loot");
+                Button(195, 170, 21, "Gather ore");
+                Button(20, 207, 22, "Gather wood");
+                Button(195, 207, 23, "Gather leather");
+                Button(20, 244, 24, "Gather reagents");
+                Button(195, 244, 25, "Return now");
+                AddHtml(20, 285, 330, 35, "Rewards go into the shared pack. Every full minute earns skills, stats and gear experience.");
                 break;
             default:
                 Button(20, 133, 1, "Follow");
@@ -70,6 +81,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(20, 244, 9, "Recall");
                 Button(195, 244, 7, CompanionParty.Get(companion)?.Contains(companion.BoundOwner) == true ? "Leave party" : "Join party");
                 Button(20, 280, 16, companion.TamingAssistActive ? "Stop assist" : "Tame assist...");
+                Button(195, 280, 17, "Tasks");
                 AddHtml(20, 310, 330, 20, "All roles auto-heal within 12 tiles and sight.");
                 break;
         }
@@ -89,6 +101,9 @@ public sealed class HavenCompanionGump : Gump
     {
         if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
         if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
+        if (button == 17) { DisplayTo(from, _companion, 4); return; }
+        if (button == 25 || button == 9 && _companion.Expedition != null)
+        { _companion.Expedition?.Return(from, Core.Now); DisplayTo(from, _companion, 4); return; }
         if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab); return; }
         if (button == 9)
         {
@@ -101,6 +116,11 @@ public sealed class HavenCompanionGump : Gump
             from.SendMessage("Your companion is out of reach. Use Recall to bring them back.");
             DisplayTo(from, _companion, _tab);
             return;
+        }
+        if (button is >= 20 and <= 24)
+        {
+            if (!HavenCompanionExpedition.Start(_companion, from, (HavenExpeditionKind)(button - 20))) { from.SendMessage("Your companion must be alive, nearby and ready before starting an expedition."); }
+            DisplayTo(from, _companion, 4); return;
         }
         switch (button)
         {
@@ -132,6 +152,9 @@ public sealed class HavenCompanionGump : Gump
             case 7:
                 if (CompanionParty.Get(_companion)?.Contains(from) == true) { CompanionParty.Get(_companion).Remove(_companion); }
                 else { _companion.JoinParty(from); }
+                break;
+            case 18:
+                _companion.ClaimEvolvingArms(from);
                 break;
             case 16:
                 _companion.RequestTamingAssist(from);

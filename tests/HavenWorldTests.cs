@@ -324,7 +324,7 @@ public class HavenWorldTests
         {
             foreach (var mobile in new Mobile[] { owner, companion, enemy }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
             companion.ConfigureCombatRole();
-            Assert.IsType<Bow>(companion.Weapon);
+            Assert.IsAssignableFrom<Bow>(companion.Weapon);
             Assert.Equal(AIType.AI_Archer, companion.AI);
             var arrows = companion.Backpack.GetAmount(typeof(Arrow));
             Assert.True(((BaseRanged)companion.Weapon).OnFired(companion, enemy));
@@ -429,14 +429,14 @@ public class HavenWorldTests
     [Fact]
     public void GearProgressPersistsWithoutApplyingBonusesAgain()
     {
-        var armor = new PlateChest();
+        var armor = new HavenStarterSash();
         HavenGearExperience copy = null;
         try
         {
             var initialLuck = armor.Attributes.Luck;
             HavenGearExperience.Gain(armor, 400);
             Assert.Equal(20 + initialLuck, armor.Attributes.Luck);
-            Assert.Equal(1, armor.Attributes.BonusDex);
+            Assert.Equal(2, armor.Attributes.BonusDex);
             var progress = HavenGearExperience.Find(armor);
             var writer = new BufferWriter(true);
             progress.Serialize(writer);
@@ -1273,7 +1273,7 @@ public class HavenWorldTests
                 Assert.False(spawner.IsEmpty, $"No NPCs spawned for {dto.Name} at {dto.Location}.");
                 Assert.Contains(spawner.Spawned.Keys, s => s is BaseCreature { Deleted: false, Alive: true });
             }
-            Assert.Equal(29, created.Count);
+            Assert.Equal(30, created.Count);
         }
         finally
         {
@@ -2030,7 +2030,7 @@ public class HavenWorldTests
         var enemy = new Rat { Karma = -1000, Str = 100 };
         var secondary = new Rat { Karma = -1000, Str = 100 };
         var pet = new Horse { Controlled = true, ControlMaster = owner };
-        var weapon = new Longsword();
+        var weapon = new HavenCompanionBlade();
         try
         {
             foreach (var mobile in new Mobile[] { owner, companion, enemy, secondary, pet })
@@ -2042,6 +2042,13 @@ public class HavenWorldTests
             Assert.Equal(10, weapon.WeaponAttributes.HitEnergyArea);
             HavenGearExperience.GainEquipped(companion, 1500);
             Assert.Equal(40, weapon.WeaponAttributes.HitEnergyArea);
+            Assert.Equal(40, weapon.Attributes.WeaponDamage);
+            Assert.Equal(0, weapon.Attributes.SpellDamage);
+            Assert.Equal(20, weapon.Attributes.WeaponSpeed);
+            Assert.Equal(40, weapon.WeaponAttributes.HitLowerAttack);
+            Assert.Equal(40, weapon.WeaponAttributes.HitLowerDefend);
+            Assert.Equal(40, weapon.WeaponAttributes.HitLeechMana);
+            Assert.Equal(40, weapon.WeaponAttributes.HitLeechHits);
             Assert.Equal(CheckSlayerResult.Slayer, weapon.CheckSlayers(companion, enemy));
             Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, owner, enemy));
             Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, companion, pet));
@@ -2116,6 +2123,167 @@ public class HavenWorldTests
         }
         finally { owner.Delete(); bench.Delete(); weapon.Delete(); armor.Delete(); starter.Delete(); }
     }
+    [SkippableFact]
+    public void CompanionGearGrowthSupportsEveryRoleAndStopsWhenUnequipped()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true };
+        var companion = new HavenCompanion { BoundOwner = owner };
+        var armor = new HavenStarterSash();
+        try
+        {
+            companion.FindItemOnLayer(armor.Layer)?.Delete();
+            companion.AddItem(armor);
+            var weaponDamage = AosAttributes.GetValue(companion, AosAttribute.WeaponDamage);
+            var spellDamage = AosAttributes.GetValue(companion, AosAttribute.SpellDamage);
+            HavenGearExperience.Gain(armor, 1900);
+            Assert.Equal(weaponDamage + 8, AosAttributes.GetValue(companion, AosAttribute.WeaponDamage));
+            Assert.Equal(spellDamage + 8, AosAttributes.GetValue(companion, AosAttribute.SpellDamage));
+            foreach (var role in Enum.GetValues<HavenCompanionRole>())
+            {
+                companion.Role = role; companion.ConfigureCombatRole();
+                Assert.Equal(8, HavenCompanionGearGrowth.GetBonus(companion, AosAttribute.WeaponDamage));
+                Assert.Equal(8, HavenCompanionGearGrowth.GetBonus(companion, AosAttribute.SpellDamage));
+                foreach (var attribute in new[] { AosAttribute.RegenHits, AosAttribute.RegenStam, AosAttribute.RegenMana, AosAttribute.AttackChance, AosAttribute.DefendChance, AosAttribute.LowerManaCost })
+                { Assert.Equal(2, HavenCompanionGearGrowth.GetBonus(companion, attribute)); }
+            }
+            companion.Backpack.DropItem(armor);
+            Assert.Equal(0, HavenCompanionGearGrowth.GetBonus(companion, AosAttribute.WeaponDamage));
+            companion.AddItem(armor);
+            Assert.Equal(8, HavenCompanionGearGrowth.GetBonus(companion, AosAttribute.WeaponDamage));
+            Assert.Equal(20, HavenGearExperience.Find(armor).Level);
+            owner.AddItem(armor);
+            Assert.Equal(0, HavenCompanionGearGrowth.GetBonus(owner, AosAttribute.WeaponDamage));
+        }
+        finally { companion.Delete(); owner.Delete(); armor.Delete(); }
+    }
+    [SkippableFact]
+    public void GatheringExpeditionSurvivesReloadAndAwardsProgressOnlyOnce()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        owner.AddItem(new Backpack());
+        var companion = new HavenCompanion { BoundOwner = owner };
+        HavenCompanionExpedition restored = null;
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            companion.MoveToWorld(owner.Location, owner.Map); companion.SetControlMaster(owner);
+            var mining = companion.Skills.Mining.Base;
+            var strength = companion.RawStr; var dexterity = companion.RawDex; var intelligence = companion.RawInt;
+            Assert.True(HavenCompanionExpedition.Start(companion, owner, HavenExpeditionKind.Ore));
+            Assert.Equal(Map.Internal, companion.Map);
+            Assert.False(HavenCompanionExpedition.Start(companion, owner, HavenExpeditionKind.Grind));
+            owner.AutoStablePets();
+            Assert.False(companion.IsStabled); Assert.Same(owner, companion.ControlMaster);
+            var original = companion.Expedition;
+            var writer = new BufferWriter(true); original.Serialize(writer);
+            var data = writer.Buffer.AsSpan(0, (int)writer.Position).ToArray();
+            original.Delete();
+            restored = new HavenCompanionExpedition(World.NewItem);
+            restored.Deserialize(new BufferReader(data));
+            companion.Backpack.DropItem(restored);
+            Assert.Same(companion, restored.Companion);
+            Assert.Equal(HavenExpeditionKind.Ore, restored.Kind);
+            Assert.True(restored.Return(owner, restored.Due));
+            Assert.Equal(owner.Map, companion.Map); Assert.Equal(owner.Location, companion.Location);
+            Assert.Null(companion.Expedition);
+            Assert.True(companion.Skills.Mining.Base > mining);
+            Assert.True(companion.RawStr >= strength + 5);
+            Assert.True(companion.RawDex >= dexterity + 5);
+            Assert.True(companion.RawInt >= intelligence + 5);
+            Assert.Equal(100, companion.Backpack.FindItemByType<IronOre>().Amount);
+            var trained = companion.TrainingMinutes;
+            Assert.False(restored.Return(owner, restored.Due));
+            Assert.Equal(trained, companion.TrainingMinutes);
+            Assert.Equal(100, companion.Backpack.FindItemByType<IronOre>().Amount);
+        }
+        finally { restored?.Delete(); companion.Delete(); owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void ExpeditionEarlyReturnHasNoInstantLootAndAllRewardChoicesWork()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var other = new PlayerMobile { Player = true };
+        var companion = new HavenCompanion { BoundOwner = owner };
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); companion.MoveToWorld(owner.Location, owner.Map);
+            Assert.False(HavenCompanionExpedition.Start(companion, other, HavenExpeditionKind.Grind));
+            Assert.True(HavenCompanionExpedition.Start(companion, owner, HavenExpeditionKind.Grind));
+            var trip = companion.Expedition;
+            Assert.False(trip.Return(other, trip.Due));
+            Assert.True(trip.Return(owner, trip.Started));
+            Assert.Null(companion.Backpack.FindItemByType<HavenMark>());
+            foreach (var kind in Enum.GetValues<HavenExpeditionKind>())
+            {
+                var loot = HavenCompanionExpedition.CreateLoot(kind, 5);
+                try
+                {
+                    Assert.NotEmpty(loot.Items);
+                    if (kind == HavenExpeditionKind.Grind)
+                    {
+                        Assert.Equal(5, loot.GetAmount(typeof(HavenMark)));
+                        Assert.InRange(loot.GetAmount(typeof(Gold)), 1000, 1500);
+                    }
+                }
+                finally { loot.Delete(); }
+            }
+            CheckBounds(new HavenCompanionGump(companion, 4), 370, 370);
+        }
+        finally { companion.Delete(); owner.Delete(); other.Delete(); }
+    }
+    [Fact]
+    public void OrdinaryGearEvolvesOnlyForCompanionsAndCasterUsesBook()
+    {
+        var player = new PlayerMobile();
+        var companion = new HavenCompanion { BoundOwner = player };
+        var armor = new LeatherChest();
+        try
+        {
+            player.AddItem(armor);
+            HavenGearExperience.Gain(armor, 1900);
+            Assert.Null(HavenGearExperience.Find(armor));
+            companion.AddItem(armor);
+            HavenGearExperience.Gain(armor, 1900);
+            Assert.Equal(20, HavenGearExperience.Find(armor).Level);
+            companion.Backpack.DropItem(armor);
+            Assert.True(HavenGearExperience.IsSpecial(armor));
+            companion.Role = HavenCompanionRole.Caster;
+            companion.ConfigureCombatRole();
+            var book = Assert.IsType<ApprenticeGrimoire>(companion.FindItemOnLayer(Layer.OneHanded));
+            book.Level = 20;
+            HavenCompanionGearGrowth.ApplySpellbook(book);
+            Assert.Equal(40, book.Attributes.SpellDamage);
+            Assert.Equal(0, book.Attributes.WeaponDamage);
+            companion.Role = HavenCompanionRole.Fighter;
+            companion.ConfigureCombatRole();
+            Assert.IsAssignableFrom<BaseWeapon>(companion.Weapon);
+        }
+        finally { armor.Delete(); companion.Delete(); player.Delete(); }
+    }
+
+    [Fact]
+    public void TrainingSentinelIsStationaryHarmlessAndSurvivesLethalDamage()
+    {
+        var sentinel = new HavenTrainingSentinel();
+        var player = new PlayerMobile();
+        try
+        {
+            Assert.True(sentinel.CantWalk);
+            Assert.True(sentinel.AlwaysAttackable);
+            Assert.False(sentinel.CanBeHarmful(player, false, false));
+            Assert.True(sentinel.HitsMax >= 30000);
+            sentinel.Hits = 1;
+            Assert.False(sentinel.OnBeforeDeath());
+            Assert.Equal(sentinel.HitsMax, sentinel.Hits);
+            Assert.False(sentinel.Tamable);
+        }
+        finally { sentinel.Delete(); player.Delete(); }
+    }
+
     private static void CheckBounds(Gump gump, int width, int height)
     {
         foreach (var html in gump.Entries.OfType<GumpHtml>())

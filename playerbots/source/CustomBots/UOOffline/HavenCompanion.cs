@@ -12,11 +12,16 @@ namespace Server.UOOffline;
 
 public static class HavenCompanions
 {
-    public static void Initialize() => CommandSystem.Register("Companion", AccessLevel.Player, e =>
+    public static void Initialize()
+    {
+        CommandSystem.Register("Companion", AccessLevel.Player, OpenCompanion);
+        CommandSystem.Register("c", AccessLevel.Player, OpenCompanion);
+    }
+    private static void OpenCompanion(CommandEventArgs e)
     {
         var companion = ClaimOrRecall(e.Mobile);
         if (companion != null) { HavenCompanionGump.DisplayTo(e.Mobile, companion); }
-    });
+    }
 
     internal static HavenCompanion ClaimOrRecall(Mobile from)
     {
@@ -33,6 +38,12 @@ public static class HavenCompanions
             {
                 from.SendMessage("This companion belongs to another adventurer.");
                 return null;
+            }
+            if (companion.Expedition is { } trip)
+            {
+                if (Core.Now >= trip.Due) { trip.Return(from, Core.Now); }
+                else { from.SendMessage("Your companion is on an expedition. Open Tasks for progress or Return now."); }
+                return companion;
             }
             if (companion.IsStabled)
             {
@@ -156,7 +167,7 @@ public partial class HavenCompanion : BaseCreature
         AddItem(new ChainChest { Movable = false });
         AddItem(new ChainLegs { Movable = false });
         AddItem(new Boots { Movable = false });
-        AddItem(new Longsword { Movable = false });
+        AddItem(new HavenCompanionBlade { Movable = false });
         AddItem(new MetalShield { Movable = false });
         AddItem(new Cloak(0x59B) { Movable = false });
         AddItem(new HavenCompanionPack());
@@ -165,6 +176,7 @@ public partial class HavenCompanion : BaseCreature
 
     internal void ConfigureCompanion()
     {
+        UpgradeLegacyStarterBlade();
         SetSpeed(0.1, 0.1);
         SetMoveSpeed(0.1, 0.1);
         SkillsCap = int.MaxValue;

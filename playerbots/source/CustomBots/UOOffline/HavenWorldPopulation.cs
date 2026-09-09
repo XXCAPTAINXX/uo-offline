@@ -137,6 +137,8 @@ public static class HavenWorldPopulation
         {
             yield return TrainingSpawn("Haven instructor: " + name, location, 1, 0, name);
         }
+        yield return TrainingSpawn("Haven training sentinel", new Point3D(3564, 2585, 0), 1, 0,
+            "HavenTrainingSentinel");
         yield return TrainingSpawn("Haven meadow animals", new Point3D(3450, 2605, 10), 10, 18,
             "Rabbit", "Hind", "GreatHart", "Cow", "Goat", "Sheep");
         yield return TrainingSpawn("Haven beginner mounts", new Point3D(3506, 2640, 0), 8, 18,

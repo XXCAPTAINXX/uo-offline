@@ -8,7 +8,7 @@ public partial class HavenCompanion
     internal bool EquipFromOwner(Mobile from, Item item)
     {
         if (from != BoundOwner || Deleted || IsDeadPet || Map != from.Map || !from.InRange(this, 3) ||
-            item?.Deleted != false || item is not (BaseWeapon or BaseArmor or BaseClothing or BaseJewel or BaseTalisman) ||
+            item?.Deleted != false || item is not (BaseWeapon or BaseArmor or BaseClothing or BaseJewel or BaseTalisman or Spellbook) ||
             !(from.Backpack != null && item.IsChildOf(from.Backpack) || Backpack != null && item.IsChildOf(Backpack))) { return false; }
         if (!EquipSafely(item)) { from.SendMessage("Your companion cannot equip that item, or their pack is full."); return false; }        from.SendMessage($"Your companion equipped {item.Name ?? item.DefaultName}. Replaced gear is in their pack.");
         return true;
@@ -48,19 +48,30 @@ public partial class HavenCompanion
             if (Weapon is not BaseRanged)
             {
                 var bow = Backpack.FindItemByType<BaseRanged>();
-                if (bow == null) { bow = new Bow(); Backpack.DropItem(bow); }
+                if (bow == null) { bow = new HavenCompanionBow(); Backpack.DropItem(bow); }
                 EquipSafely(bow);
             }
             if (Backpack.FindItemByType<Arrow>() == null) { Backpack.DropItem(new Arrow(1) { Movable = false }); }
         }
-        else if (Weapon is BaseRanged)
+        else if (Role == HavenCompanionRole.Caster)
+        {
+            if (FindItemOnLayer(Layer.OneHanded) is not Spellbook)
+            {
+                Spellbook book = null;
+                foreach (var candidate in Backpack.FindItemsByType<Spellbook>())
+                { if (candidate.CanEquip(this)) { book = candidate; break; } }
+                if (book == null) { book = new ApprenticeGrimoire { BoundTo = this }; Backpack.DropItem(book); }
+                EquipSafely(book);
+            }
+        }
+        else if (Weapon is BaseRanged || FindItemOnLayer(Layer.OneHanded) is Spellbook)
         {
             BaseWeapon melee = null;
             foreach (var candidate in Backpack.FindItemsByType<BaseWeapon>())
             {
                 if (candidate is not BaseRanged) { melee = candidate; break; }
             }
-            if (melee == null) { melee = new Longsword(); Backpack.DropItem(melee); }
+            if (melee == null) { melee = new HavenCompanionBlade(); Backpack.DropItem(melee); }
             EquipSafely(melee);
         }
     }

@@ -1,0 +1,14 @@
+diff --git a/Projects/UOContent/Misc/AOS.cs b/Projects/UOContent/Misc/AOS.cs
+index a221e91..f83ed55 100644
+--- a/Projects/UOContent/Misc/AOS.cs
++++ b/Projects/UOContent/Misc/AOS.cs
+@@ -707,7 +707,8 @@ namespace Server
+                 }
+             }
+ 
+-            return value + Server.UOOffline.HavenJewelrySets.GetBonus(m, attribute);
++            return value + Server.UOOffline.HavenJewelrySets.GetBonus(m, attribute)
++                + Server.UOOffline.HavenCompanionGearGrowth.GetBonus(m, attribute);
+         }
+ 
+         public override string ToString() => "...";

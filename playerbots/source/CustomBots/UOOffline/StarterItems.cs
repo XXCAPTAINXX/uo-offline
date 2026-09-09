@@ -107,14 +107,16 @@ public partial class ApprenticeGrimoire : Spellbook
 
     public void BindTo(Mobile mobile) => BoundTo = mobile;
 
-    public void GainCastExperience(Mobile caster)
+    public void GainCastExperience(Mobile caster) => GainSharedExperience(caster, 1);
+
+    internal void GainSharedExperience(Mobile caster, int amount)
     {
-        if (caster == null || caster != BoundTo || Level >= MaxLevel)
+        if (caster == null || caster != BoundTo || Level >= MaxLevel || amount <= 0)
         {
             return;
         }
 
-        Experience++;
+        Experience += amount;
 
         var needed = 20 + Level * 10;
         if (Experience < needed)
