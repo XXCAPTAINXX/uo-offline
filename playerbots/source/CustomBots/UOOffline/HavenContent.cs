@@ -9,6 +9,7 @@ using Server.Mobiles;
 using Server.Multis;
 using Server.Multis.Deeds;
 using Server.Network;
+using Server.Logging;
 
 namespace Server.UOOffline;
 
@@ -543,6 +544,8 @@ public static class StarterProvisioner
 
 public static class HavenContentBootstrap
 {
+    private static readonly ILogger logger = LogFactory.GetLogger(typeof(HavenContentBootstrap));
+    internal static readonly Point2D HavenWildernessSteed = new(3675, 2410);
     private static readonly Point2D NewHavenSupply = new(3481, 2582);
     private static readonly Point2D NewHavenUpgrade = new(3484, 2582);
     private static readonly Point2D NewHavenRewards = new(3487, 2582);
@@ -569,7 +572,12 @@ public static class HavenContentBootstrap
         // Intended ML-era hub.
         EnsureHavenPlaza();
         EnsureSpawner<OldHavenBossSpawner>(Map.Trammel, OldHavenBoss);
-        EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, OldHavenSteed);
+        RelocateOldHavenSteeds();
+        EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, HavenWildernessSteed);
+        foreach (var bossSpawner in Map.Trammel.GetItemsInRange<OldHavenBossSpawner>(AtSurface(Map.Trammel, OldHavenBoss), 2))
+        {
+            logger.Information("Old Haven Warden spawner at {Location}: running={Running}, spawned={Count}, next={Next}", bossSpawner.Location, bossSpawner.Running, bossSpawner.Spawned.Count, bossSpawner.NextSpawn);
+        }
 
         // Also retain the established Felucca bank services.
         EnsureItem<StarterSupplyStone>(Map.Felucca, BritainSupply);
@@ -580,6 +588,38 @@ public static class HavenContentBootstrap
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
     }
 
+    internal static void RelocateOldHavenSteeds()
+    {
+        var map = Map.Trammel;
+        var preferred = AtSurface(map, HavenWildernessSteed);
+        if (!HavenRecovery.FindLocation(preferred, out var destination, 8))
+        {
+            throw new InvalidOperationException("No walkable location for the Haven wilderness steeds.");
+        }
+        var oldLocation = AtSurface(map, OldHavenSteed);
+        var spawners = new List<VampiricSteedSpawner>();
+        var steeds = new HashSet<VampiricSteed>();
+        foreach (var spawner in map.GetItemsInRange<VampiricSteedSpawner>(oldLocation, 2))
+        {
+            spawners.Add(spawner);
+            foreach (var spawn in spawner.Spawned.Keys)
+            {
+                if (spawn is VampiricSteed steed && !steed.Controlled && !steed.Summoned) { steeds.Add(steed); }
+            }
+        }
+        foreach (var steed in map.GetMobilesInRange<VampiricSteed>(oldLocation, 100))
+        {
+            if (!steed.Controlled && !steed.Summoned) { steeds.Add(steed); }
+        }
+        foreach (var spawner in spawners) { spawner.MoveToWorld(preferred, map); }
+        foreach (var steed in steeds)
+        {
+            steed.Combatant = null;
+            steed.Home = destination;
+            steed.MoveToWorld(destination, map);
+        }
+        logger.Information("Haven steeds relocated: {Spawners} spawners, {Steeds} wild steeds; destination {Destination}", spawners.Count, steeds.Count, destination);
+    }
     internal static void EnsureHavenPlaza()
     {
         ArrangeHavenItem<StarterSupplyStone>(NewHavenSupply);

@@ -22,6 +22,71 @@ namespace UOContent.Tests;
 [Collection("Sequential UOContent Tests")]
 public class HavenWorldTests
 {
+    [SkippableFact]
+    public void HavenSteedsMoveToWalkableWildernessWithoutMovingPetsOrWeakeningStats()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var map = Map.Trammel;
+        var point = HavenContentBootstrap.HavenWildernessSteed;
+        Assert.True(map.CanSpawnMobile(point.X, point.Y, map.GetAverageZ(point.X, point.Y)), "Wilderness destination must be walkable");
+        Assert.True(map.CanSpawnMobile(3670, 2587, map.GetAverageZ(3670, 2587)), "Warden spawn must be walkable");
+        var wild = new VampiricSteed();
+        var pet = new VampiricSteed { Controlled = true };
+        var spawner = new VampiricSteedSpawner();
+        try
+        {
+            var old = new Point3D(3690, 2525, map.GetAverageZ(3690, 2525));
+            wild.MoveToWorld(old, map);
+            pet.MoveToWorld(old, map);
+            spawner.MoveToWorld(old, map);
+            HavenContentBootstrap.RelocateOldHavenSteeds();
+            Assert.Equal(point.X, wild.X);
+            Assert.Equal(point.Y, wild.Y);
+            Assert.Equal(wild.Location, spawner.Location);
+            Assert.Equal(wild.Location, wild.Home);
+            Assert.Equal(old, pet.Location);
+            Assert.Equal(20, wild.DamageMax);
+            HavenContentBootstrap.RelocateOldHavenSteeds();
+            Assert.Equal(point.Y, wild.Y);
+        }
+        finally { wild.Delete(); pet.Delete(); spawner.Delete(); }
+    }
+    [SkippableFact]
+    public void IslandSteedsRegainNormalCapabilitiesWhenTamedOrLeavingIsland()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var steed = new VampiricSteed();
+        try
+        {
+            var fullHits = steed.HitsMax;
+            steed.MoveToWorld(new Point3D(3490, 2582, 20), Map.Trammel);
+            steed.UpdateIslandDifficulty();
+            Assert.Equal(120, steed.HitsMax);
+            Assert.Equal(AIType.AI_Melee, steed.AI);
+            var damage = 20;
+            steed.AlterMeleeDamageTo(null, ref damage);
+            Assert.Equal(8, damage);
+            steed.Controlled = true;
+            steed.UpdateIslandDifficulty();
+            Assert.Equal(fullHits, steed.HitsMax);
+            Assert.Equal(AIType.AI_Mage, steed.AI);
+            damage = 20;
+            steed.AlterMeleeDamageTo(null, ref damage);
+            Assert.Equal(20, damage);
+            Assert.InRange(steed.RawDex, 180, 210);
+            Assert.InRange(steed.StamMax, 180, 210);
+            Assert.Equal(steed.StamMax, steed.Stam);
+            var tamedDex = steed.RawDex;
+            steed.UpdateIslandDifficulty();
+            Assert.Equal(tamedDex, steed.RawDex);
+            steed.Controlled = false;
+            steed.MoveToWorld(new Point3D(1388, 1498, 0), Map.Felucca);
+            steed.UpdateIslandDifficulty();
+            Assert.Equal(fullHits, steed.HitsMax);
+            Assert.Equal(AIType.AI_Mage, steed.AI);
+        }
+        finally { steed.Delete(); }
+    }
     private static bool _npcConfigured;
     public HavenWorldTests()
     {
