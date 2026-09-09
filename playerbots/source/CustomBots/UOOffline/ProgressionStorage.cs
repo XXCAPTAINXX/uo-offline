@@ -8,7 +8,7 @@ namespace Server.UOOffline;
 [SerializationGenerator(0)]
 public partial class ProgressionArchive : Bag
 {
-    public override string DefaultName => "champion progression archive";
+    public override string DefaultName => "Champion's Codex";
 
     [Constructible]
     public ProgressionArchive()
@@ -23,13 +23,13 @@ public partial class ProgressionArchive : Bag
     {
         if (!IsChildOf(from.Backpack))
         {
-            from.SendMessage("Keep the progression archive in your backpack while using it.");
+            from.SendMessage("Keep the Champion's Codex in your backpack while using it.");
             return false;
         }
 
         if (!Accepts(dropped))
         {
-            from.SendMessage("That does not belong in the progression archive.");
+            from.SendMessage("That does not belong in the Champion's Codex.");
             return false;
         }
 
@@ -40,7 +40,7 @@ public partial class ProgressionArchive : Bag
     {
         if (!Accepts(item))
         {
-            from.SendMessage("That does not belong in the progression archive.");
+            from.SendMessage("That does not belong in the Champion's Codex.");
             return false;
         }
 
@@ -51,20 +51,20 @@ public partial class ProgressionArchive : Bag
     {
         if (!IsChildOf(from.Backpack))
         {
-            from.SendMessage("The progression archive must be in your backpack.");
+            from.SendMessage("The Champion's Codex must be in your backpack.");
             return;
         }
 
         var collected = CollectAll(from);
         if (collected > 0)
         {
-            from.SendMessage($"The archive collected {collected} progression item(s) from your backpack.");
+            from.SendMessage($"The codex collected {collected} progression item(s) from your backpack.");
         }
 
-        base.OnDoubleClick(from);
+        ChampionCodexGump.DisplayTo(from, this);
     }
 
-    private int CollectAll(Mobile from)
+    internal int CollectAll(Mobile from)
     {
         var pack = from.Backpack;
         if (pack == null)
@@ -136,7 +136,7 @@ public partial class ProgressionArchive : Bag
         base.GetProperties(list);
         list.Add("Stores Power/Stat/Transcendence/Alacrity scrolls");
         list.Add("Stores Champion Skulls, Haven Marks, primers and binders");
-        list.Add("Double-click to collect compatible backpack items");
+        list.Add("Double-click to collect items and open the scroll ledger");
     }
 }
 

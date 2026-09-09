@@ -197,7 +197,7 @@ public partial class StarterSupplyStone : Item
             new("Apprentice fencer - free", 0x1401),
             new("Apprentice mace - free", 0x1407),
             new("Apprentice bow - free", 0x13B2),
-            new("Champion progression archive - free", 0x2259, 0x489),
+            new("Champion's Codex - free", 0x2259, 0x489),
             new("Peerless key vault - free", 0x9A8, 0x497),
             new("Starter Fortune Earrings - free", 0x1087, 0x501),
             new("Blessed Travel Book - free", 0x22C5),
