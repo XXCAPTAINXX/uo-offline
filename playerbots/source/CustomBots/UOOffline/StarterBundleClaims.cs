@@ -45,6 +45,8 @@ public static class StarterBundleClaims
         AddMissing<NewHavenAdventurersRobe>(from, bundle, () => new NewHavenAdventurersRobe());
         AddMissing<ApprenticeGrimoire>(from, bundle, () => new ApprenticeGrimoire());
         AddMissing<StarterFortuneEarrings>(from, bundle, () => new StarterFortuneEarrings());
+        AddMissing<HavenStarterSash>(from, bundle, () => new HavenStarterSash());
+        AddMissing<HavenLevelingCape>(from, bundle, () => new HavenLevelingCape { BoundTo = from });
         var weapon = StarterProvisioner.SelectStarterWeapon(from);
         var needsArrows = weapon is ApprenticeBow;
         if (!HasStarterWeapon(from))

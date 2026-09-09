@@ -176,18 +176,20 @@ public partial class StarterSupplyStone : Item
     {
         private static readonly ItemListEntry[] MenuEntries =
         [
-            new("Cleanup trash bag - 100 gold", 0xE76, 0x455),
-            new("Adventurer's wallet - 100 gold", 0xE79),
-            new("New Haven starter robe - 500 gold", 0x1F03, 0x59B),
-            new("Full apprentice grimoire - 500 gold", 0xEFA, 0x482),
-            new("Apprentice blade - 250 gold", 0xF61),
-            new("Apprentice fencer - 250 gold", 0x1401),
-            new("Apprentice mace - 250 gold", 0x1407),
-            new("Apprentice bow - 250 gold", 0x13B2),
-            new("Champion progression archive - 250 gold", 0x2259, 0x489),
-            new("Peerless key vault - 250 gold", 0x9A8, 0x497),
-            new("Starter Fortune Earrings - 2,500 gold", 0x1087, 0x501),
-            new("Blessed Travel Book - 250 gold", 0x22C5)
+            new("Cleanup trash bag - free", 0xE76, 0x455),
+            new("Adventurer's wallet - free", 0xE79),
+            new("New Haven starter robe - free", 0x1F03, 0x59B),
+            new("Full apprentice grimoire - free", 0xEFA, 0x482),
+            new("Apprentice blade - free", 0xF61),
+            new("Apprentice fencer - free", 0x1401),
+            new("Apprentice mace - free", 0x1407),
+            new("Apprentice bow - free", 0x13B2),
+            new("Champion progression archive - free", 0x2259, 0x489),
+            new("Peerless key vault - free", 0x9A8, 0x497),
+            new("Starter Fortune Earrings - free", 0x1087, 0x501),
+            new("Blessed Travel Book - free", 0x22C5),
+            new("Leveling cape - free", 0x1515, 0x59B),
+            new("Evolving sash - free", 0x1541, 0x59B)
         ];
 
         public StarterSupplyMenu() : base("New Haven Starter Supplies", MenuEntries)
@@ -202,28 +204,17 @@ public partial class StarterSupplyStone : Item
                 return;
             }
 
-            var price = index switch
-            {
-                0 or 1 => 100,
-                2 or 3 => 500,
-                10 => 2500,
-                _ => 250
-            };
-
-            if (!HavenEconomy.TryPay(from, price))
-            {
-                from.SendMessage($"You need {price:N0} gold for that item.");
-                return;
-            }
-
+            if (index == 12) { HavenLevelingCape.Claim(from); return; }
+            if (index == 13) { HavenStarterSash.Claim(from); return; }
             var item = CreateItem(index);
             if (item == null)
             {
                 return;
             }
+            if (!from.Backpack.CheckHold(from, item, false)) { item.Delete(); from.SendMessage("Make room in your backpack."); return; }
             BindStarterItem(item, from);
             from.Backpack.DropItem(item);
-            from.SendMessage($"Purchased {item.DefaultName} for {price:N0} gold.");
+            from.SendMessage("Your free starter item is in your backpack.");
         }
 
         public Item CreateItem(int index) => index switch
@@ -240,6 +231,8 @@ public partial class StarterSupplyStone : Item
                 9 => new PeerlessKeyVault(),
                 10 => new StarterFortuneEarrings(),
                 11 => new OfflineTravelBook(),
+                12 => new HavenLevelingCape(),
+                13 => new HavenStarterSash(),
                 _ => null
             };
     }
@@ -508,6 +501,8 @@ public static class StarterProvisioner
         mobile.Backpack.DropItem(house);
         mobile.Backpack.DropItem(new Bandage(50));
         mobile.Backpack.DropItem(new StarterFortuneEarrings());
+        mobile.Backpack.DropItem(new HavenStarterSash());
+        mobile.Backpack.DropItem(new HavenLevelingCape { BoundTo = mobile });
         if (weapon is ApprenticeBow)
         {
             mobile.Backpack.DropItem(new Arrow(100));
@@ -625,6 +620,8 @@ public static class HavenContentBootstrap
         ArrangeHavenItem<StarterSupplyStone>(NewHavenSupply);
         ArrangeHavenItem<HavenUpgradeStone>(NewHavenUpgrade);
         ArrangeHavenItem<SpecialRewardStone>(NewHavenRewards);
+        ArrangeHavenItem<ArcaneSupplyStone>(new Point2D(3513, 2571));
+        ArrangeHavenItem<HavenTrainingStone>(new Point2D(3516, 2573));
         ArrangeHavenItem<FreePetHitchingPost>(NewHavenHitchingPost);
         ArrangeHavenItem<UOOfflineDungeonPortal>(NewHavenDungeonPortal);
         ArrangeHavenItem<HavenRepairBench>(new Point2D(3502, 2581));
@@ -651,6 +648,8 @@ public static class HavenContentBootstrap
         EnsureBankItem<FreePetHitchingPost>(map, bank, 2, 3);
         EnsureBankItem<UOOfflineDungeonPortal>(map, bank, 4, 3);
         EnsureBankItem<HavenRepairBench>(map, bank, -2, 5);
+        EnsureBankItem<ArcaneSupplyStone>(map, bank, 2, 5);
+        EnsureBankItem<HavenTrainingStone>(map, bank, 4, 5);
     }
 
     private static void ArrangeHavenItem<T>(Point2D position) where T : Item, new()

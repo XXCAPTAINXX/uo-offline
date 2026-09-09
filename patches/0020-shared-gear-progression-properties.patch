@@ -1,0 +1,60 @@
+diff --git a/Projects/UOContent/Items/Weapons/BaseWeapon.cs b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+index d48824670..8564cf4a1 100644
+--- a/Projects/UOContent/Items/Weapons/BaseWeapon.cs
++++ b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+@@ -2915,6 +2915,7 @@ public override bool AllowEquippedCast(Mobile from) =>
+     public override void GetProperties(IPropertyList list)
+     {
+         base.GetProperties(list);
++        Server.UOOffline.HavenGearExperience.AddProperties(this, list);
+ 
+         if (_crafter != null)
+         {
+diff --git a/Projects/UOContent/Items/Armor/BaseArmor.cs b/Projects/UOContent/Items/Armor/BaseArmor.cs
+index f4062326d..5ca14fe97 100644
+--- a/Projects/UOContent/Items/Armor/BaseArmor.cs
++++ b/Projects/UOContent/Items/Armor/BaseArmor.cs
+@@ -1262,6 +1262,7 @@ public override bool AllowEquippedCast(Mobile from)
+         public override void GetProperties(IPropertyList list)
+         {
+             base.GetProperties(list);
++        Server.UOOffline.HavenGearExperience.AddProperties(this, list);
+ 
+             if (_crafter != null)
+             {
+diff --git a/Projects/UOContent/Items/Clothing/BaseClothing.cs b/Projects/UOContent/Items/Clothing/BaseClothing.cs
+index 983568d2d..4cb48b9d1 100644
+--- a/Projects/UOContent/Items/Clothing/BaseClothing.cs
++++ b/Projects/UOContent/Items/Clothing/BaseClothing.cs
+@@ -702,6 +702,7 @@ public override void AddNameProperty(IPropertyList list)
+         public override void GetProperties(IPropertyList list)
+         {
+             base.GetProperties(list);
++        Server.UOOffline.HavenGearExperience.AddProperties(this, list);
+ 
+             if (_crafter != null)
+             {
+diff --git a/Projects/UOContent/Items/Jewels/BaseJewel.cs b/Projects/UOContent/Items/Jewels/BaseJewel.cs
+index e693c0aaa..f6d1e399b 100644
+--- a/Projects/UOContent/Items/Jewels/BaseJewel.cs
++++ b/Projects/UOContent/Items/Jewels/BaseJewel.cs
+@@ -376,6 +376,7 @@ public override void OnRemoved(IEntity parent)
+     public override void GetProperties(IPropertyList list)
+     {
+         base.GetProperties(list);
++        Server.UOOffline.HavenGearExperience.AddProperties(this, list);
+ 
+         SkillBonuses.GetProperties(list);
+ 
+diff --git a/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs b/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs
+index 9447fddfa..9424e3afe 100644
+--- a/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs	
++++ b/Projects/UOContent/Items/Skill Items/Magical/Spellbook.cs	
+@@ -632,6 +632,7 @@ public void DisplayTo(Mobile to)
+     public override void GetProperties(IPropertyList list)
+     {
+         base.GetProperties(list);
++        Server.UOOffline.HavenGearExperience.AddProperties(this, list);
+ 
+         if (_quality == BookQuality.Exceptional)
+         {

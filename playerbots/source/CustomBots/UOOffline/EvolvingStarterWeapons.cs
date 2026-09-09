@@ -38,7 +38,13 @@ public static class StarterWeaponProgression
             return;
         }
 
-        progression.Experience++;
+        GainSharedExperience(progression, weapon, attacker, 1);
+    }
+
+    internal static void GainSharedExperience(IEvolvingStarterWeapon progression, BaseWeapon weapon, Mobile attacker, int amount)
+    {
+        if (progression.BoundTo != attacker || progression.Level >= MaxLevel || amount <= 0) { return; }
+        progression.Experience += amount;
 
         var needed = 20 + progression.Level * 10;
         if (progression.Experience < needed)

@@ -11,7 +11,7 @@ public partial class HavenRepairBench : WoodenBench
 {
     public const int RepairCost = 50;
     public const int RestoreCost = 250;
-    private static bool IsStarterGear(Item item) => item is IStarterUpgradeable or IEvolvingStarterWeapon;
+    private static bool IsStarterGear(Item item) => item is IStarterUpgradeable or IEvolvingStarterWeapon or HavenLevelingCape or HavenStarterSash;
     [Constructible]
     public HavenRepairBench()
     {

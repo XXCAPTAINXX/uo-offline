@@ -9,7 +9,7 @@ namespace Server.UOOffline;
 // text row and bounds the window height regardless of the number of choices.
 public sealed class HavenListGump : Gump
 {
-    private const int PageSize = 4;
+    private readonly int _pageSize;
     private readonly Item _anchor;
     private readonly ItemListMenu _menu;
     private readonly int _page;
@@ -17,9 +17,10 @@ public sealed class HavenListGump : Gump
 
     public HavenListGump(Item anchor, ItemListMenu menu, int page = 0, bool reopen = true) : base(30, 30)
     {
+        _pageSize = menu is IHavenShop ? 4 : 12;
         _anchor = anchor;
         _menu = menu;
-        _page = Math.Clamp(page, 0, Math.Max(0, (menu.Entries.Length - 1) / PageSize));
+        _page = Math.Clamp(page, 0, Math.Max(0, (menu.Entries.Length - 1) / _pageSize));
         _reopen = reopen;
         AddPage(0);
         AddBackground(0, 0, 540, 460, 5054);
@@ -29,15 +30,15 @@ public sealed class HavenListGump : Gump
             ? "<BASEFONT COLOR=#333333>Hover over an item for stats; select it for the full preview.</BASEFONT>"
             : "<BASEFONT COLOR=#333333>Select your destination.</BASEFONT>");
 
-        for (var row = 0; row < PageSize; row++)
+        for (var row = 0; row < _pageSize; row++)
         {
-            var index = _page * PageSize + row;
+            var index = _page * _pageSize + row;
             if (index >= menu.Entries.Length)
             {
                 break;
             }
             string tooltip = null;
-            var y = 112 + row * 66;
+            var y = 112 + row * (menu is IHavenShop ? 66 : 23);
             AddButton(28, y + 5, 4005, 4007, index + 1);
             if (menu is IHavenShop shop)
             {
@@ -51,8 +52,8 @@ public sealed class HavenListGump : Gump
                 }
                 finally { item.Delete(); }
             }
-            else { AddItem(65, y, menu.Entries[index].ItemID, menu.Entries[index].Hue); }
-            AddHtml(115, y, 389, 42, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
+
+            AddHtml(menu is IHavenShop ? 115 : 66, y, menu is IHavenShop ? 389 : 442, menu is IHavenShop ? 42 : 23, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
             if (tooltip != null) { AddTooltip(1042971, tooltip); }
         }
 
@@ -61,8 +62,8 @@ public sealed class HavenListGump : Gump
             AddButton(28, 395, 4014, 4016, 10001);
             AddLabel(66, 397, 0, "Previous");
         }
-        AddLabel(205, 397, 0, $"Page {_page + 1} / {Math.Max(1, (menu.Entries.Length + PageSize - 1) / PageSize)}");
-        if ((_page + 1) * PageSize < menu.Entries.Length)
+        AddLabel(205, 397, 0, $"Page {_page + 1} / {Math.Max(1, (menu.Entries.Length + _pageSize - 1) / _pageSize)}");
+        if ((_page + 1) * _pageSize < menu.Entries.Length)
         {
             AddButton(390, 395, 4005, 4007, 10002);
             AddLabel(428, 397, 0, "Next");

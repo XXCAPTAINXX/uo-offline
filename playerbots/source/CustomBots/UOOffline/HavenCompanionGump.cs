@@ -87,7 +87,7 @@ public sealed class HavenCompanionGump : Gump
     {
         if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
         if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
-        if (button == 110) { DisplayTo(from, _companion, _tab); return; }
+        if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab); return; }
         if (button == 9)
         {
             HavenCompanions.ClaimOrRecall(from);

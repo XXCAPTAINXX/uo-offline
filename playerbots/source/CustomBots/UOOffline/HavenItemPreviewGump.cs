@@ -96,6 +96,17 @@ public sealed class HavenItemPreviewGump : Gump
             ProgressionArchive => "Collects compatible progression scrolls, champion skulls, Haven marks, primers and binders.",
             PeerlessKeyVault => "Collects recognized Peerless keys from your backpack. Keys do not expire.",
             OfflineTravelBook => "Reusable travel book. Opens the moongate destination and facet selector from your backpack. No charges or reagents. Normal moongate eligibility applies; unavailable while dead, criminal, in combat or casting.",
+            HavenMasteryManual => "Custom shard mastery: one 30-minute Warrior, Archer, Caster, Bard, Healer or Beastmaster stat focus. Requires 90 skill; scales at 100/110/120. Focuses do not stack.",
+            PowerScroll scroll => $"Raises the {scroll.Skill} skill cap to {scroll.Value:0}. This raises the cap, not the current skill. Native total skill cap remains.",
+            HavenLevelingCape cape => $"Level {cape.Level}/20; XP {cape.Experience:N0}. Wear it to gain shared monster and companion experience. Free starter cape; repairs and restoration are free.",
+            HavenRunicAtlas => "48 marked locations in three 16-location chapters. Drop marked runes onto the atlas; use a chapter for normal recall, gate, charges and rune removal.",
+            Runebook => "Stores 16 marked locations. Uses normal recall/gate spells or stored recall-scroll charges.",
+            Spellbook book => $"Contains all {book.BookCount} spells for this school. Normal skill and expansion requirements apply.",
+            BagOfSending bag => $"Sends eligible items to your bank. Charges: {bag.Charges}. Recharge with translocation powder.",
+            PowderOfTranslocation => "Ten doses for recharging bags of sending. Native recharge limits apply.",
+            PowderOfTemperament => "Ten uses of fortification powder to restore eligible equipment maximum durability.",
+            ClothingBlessDeed => "Blesses one eligible piece of your clothing.",
+            HavenEquipmentBlessDeed => "Blesses one eligible weapon, armor piece, clothing item or jewelry item belonging to you.",
             _ => ""
         });
         return string.Join("<BR>", lines);

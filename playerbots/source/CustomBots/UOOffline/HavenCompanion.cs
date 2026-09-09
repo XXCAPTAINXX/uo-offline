@@ -111,6 +111,14 @@ public partial class HavenCompanion : BaseCreature
     private DateTime _nextBuff = Core.Now;
     private DateTime _nextDiscord = Core.Now;
     private bool _configured;
+    private DateTime _nextGearExperience = Core.Now;
+    private void AwardHelpfulAction()
+    {
+        if (Core.Now < _nextGearExperience || BoundOwner?.NetState == null || BoundOwner.Map != Map || !InRange(BoundOwner, 18)) { return; }
+        _nextGearExperience = Core.Now + TimeSpan.FromSeconds(10);
+        HavenGearExperience.GainEquipped(BoundOwner, 1);
+        HavenGearExperience.GainEquipped(this, 1);
+    }
 
     public bool SongUnlocked => Skills.Musicianship.Value >= 80 && Skills.Peacemaking.Value >= 80;
     public bool DiscordUnlocked => Skills.Musicianship.Value >= 60 && Skills.Discordance.Value >= 60;
@@ -210,6 +218,7 @@ public partial class HavenCompanion : BaseCreature
     public override void OnGaveMeleeAttack(Mobile defender, int damage)
     {
         base.OnGaveMeleeAttack(defender, damage);
+        if (damage > 0) { AwardHelpfulAction(); }
         if (damage > 0 && Core.Now >= _nextCombatTraining)
         {
             _nextCombatTraining = Core.Now + TimeSpan.FromSeconds(10);
@@ -253,6 +262,7 @@ public partial class HavenCompanion : BaseCreature
         Mana -= 10;
         patient.FixedEffect(0x376A, 10, 16);
         patient.PlaySound(0x1F2);
+        AwardHelpfulAction();
         return true;
     }
 
@@ -303,7 +313,9 @@ public partial class HavenCompanion : BaseCreature
         _nextDiscord = Core.Now + TimeSpan.FromSeconds(12);
         instrument.UsesRemaining = 100;
         new Discordance.DiscordanceTarget(this, instrument).Invoke(this, enemy);
-        return Discordance.GetEffect(enemy, ref effect);
+        var succeeded = Discordance.GetEffect(enemy, ref effect);
+        if (succeeded) { AwardHelpfulAction(); }
+        return succeeded;
     }
 
     public override bool KeepsItemsOnDeath => true;
@@ -318,8 +330,52 @@ public partial class HavenCompanion : BaseCreature
         target?.Player != true && target is not BaseCreature { ControlMaster.Player: true } &&
         base.CanBeHarmful(target, message, ignoreOurBlessedness);
 
+    private DateTime _reviveAt;
+
+    internal bool RecoverFromDeath(DateTime now, bool immediate = false)
+    {
+        if (!IsDeadPet) { _reviveAt = default; return false; }
+        if (_reviveAt == default) { _reviveAt = now + TimeSpan.FromSeconds(5); }
+        if (BoundOwner == null || BoundOwner.Map != Map || !InRange(BoundOwner, 18) ||
+            (!immediate && now < _reviveAt)) { return false; }
+        ResurrectPet();
+        Hits = HitsMax;
+        Stam = StamMax;
+        Mana = ManaMax;
+        Combatant = null;
+        ControlTarget = BoundOwner;
+        ControlOrder = OrderType.Follow;
+        _reviveAt = default;
+        BoundOwner.SendMessage("Your companion has recovered and is ready to help again.");
+        return true;
+    }
+
+    internal bool DefendOwner()
+    {
+        if (IsDeadPet || BoundOwner == null || BoundOwner.Map != Map || !InRange(BoundOwner, 12) ||
+            ControlOrder is not (OrderType.Follow or OrderType.Guard)) { return false; }
+        bool Valid(Mobile target) => target is { Deleted: false, Alive: true } &&
+            target is not BaseCreature { IsDeadPet: true } && target.Map == Map &&
+            InRange(target, 10) && InLOS(target) && CanBeHarmful(target, false);
+        var enemy = BoundOwner.Combatant as Mobile;
+        if (!Valid(enemy))
+        {
+            enemy = null;
+            foreach (var aggression in BoundOwner.Aggressors)
+            {
+                if (!aggression.Expired && Valid(aggression.Attacker)) { enemy = aggression.Attacker; break; }
+            }
+        }
+        if (enemy == null) { return false; }
+        Combatant = enemy;
+        ControlTarget = enemy;
+        ControlOrder = OrderType.Attack;
+        return true;
+    }
+
     public override void OnThink()
     {
+        if (BoundOwner?.NetState != null) { RecoverFromDeath(Core.Now); }
         if (!_configured) { ConfigureCompanion(); }
         ConfigureCombatRole();
         RecoverResources(Core.Now);
@@ -338,13 +394,7 @@ public partial class HavenCompanion : BaseCreature
             ControlTarget = BoundOwner;
             ControlOrder = OrderType.Follow;
         }
-        if (ControlOrder is OrderType.Follow or OrderType.Guard && BoundOwner.Combatant is Mobile enemy &&
-            enemy.Alive && InRange(enemy, 10) && CanBeHarmful(enemy, false))
-        {
-            Combatant = enemy;
-            ControlTarget = enemy;
-            ControlOrder = OrderType.Attack;
-        }
+        DefendOwner();
         Support(BoundOwner);
         ThinkAsCaster();
         var party = CompanionParty.Get(BoundOwner);
