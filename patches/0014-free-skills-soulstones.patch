@@ -1,7 +1,7 @@
 diff --git a/Projects/UOContent/Items/Special/SoulStone.cs b/Projects/UOContent/Items/Special/SoulStone.cs
 --- a/Projects/UOContent/Items/Special/SoulStone.cs
 +++ b/Projects/UOContent/Items/Special/SoulStone.cs
-@@ -331,7 +331,11 @@ public partial class SoulStone : Item, ISecurable
+@@ -627,7 +627,11 @@
               * 11.6 free points. Also, if we're below our skillcap by, say, 8.2 points,
               * we only need 11.6 - 8.2 = 3.4 points.
               */
@@ -14,7 +14,7 @@ diff --git a/Projects/UOContent/Items/Special/SoulStone.cs b/Projects/UOContent/
  
              var cannotAbsorb = false;
  
-@@ -349,7 +353,8 @@ public partial class SoulStone : Item, ISecurable
+@@ -641,7 +645,8 @@
  
                  for (var i = 0; i < from.Skills.Length; ++i)
                  {
@@ -24,7 +24,7 @@ diff --git a/Projects/UOContent/Items/Special/SoulStone.cs b/Projects/UOContent/
                      {
                          continue;
                      }
-@@ -413,7 +418,8 @@ public partial class SoulStone : Item, ISecurable
+@@ -715,7 +720,8 @@
              {
                  for (var i = 0; i < from.Skills.Length; ++i)
                  {
