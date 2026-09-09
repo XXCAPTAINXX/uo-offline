@@ -179,11 +179,15 @@ public partial class AdventurersWallet : Item
     public override string DefaultName => "adventurer's wallet";
 
     [Constructible]
-    public AdventurersWallet() : base(0xE79)
+    public AdventurersWallet() : base(0xEEF)
     {
         Weight = 1.0;
         LootType = LootType.Blessed;
+        UpdateWalletAppearance();
     }
+
+    [AfterDeserialization]
+    private void UpdateWalletAppearance() { ItemID = 0xEEF; Hue = 0x8A5; }
 
     public override void OnDoubleClick(Mobile from)
     {

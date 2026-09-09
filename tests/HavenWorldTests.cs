@@ -124,7 +124,7 @@ public class HavenWorldTests
     [Fact]
     public void WalletSaveLoadPreservesGoldAndShardsAndMigratesOldGoldOnlyWallets()
     {
-        var wallet = new AdventurersWallet { Balance = 123456, AstralShards = 42, HavenMarks = 73 };
+        var wallet = new AdventurersWallet { Balance = 123456, AstralShards = 42, HavenMarks = 73, ItemID = 0xE79 };
         var header = new Item(World.NewItem);
         AdventurersWallet copy = null;
         AdventurersWallet legacy = null;
@@ -138,6 +138,8 @@ public class HavenWorldTests
             Assert.Equal(123456, copy.Balance);
             Assert.Equal(42, copy.AstralShards);
             Assert.Equal(73, copy.HavenMarks);
+            Assert.Equal(0xEEF, copy.ItemID);
+            Assert.Equal(0x8A5, copy.Hue);
             var reader = new BufferReader(data);
             header.Deserialize(reader);
             var versionPosition = (int)reader.Position;
@@ -2052,6 +2054,34 @@ public class HavenWorldTests
             Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, companion, enemy));
         }
         finally { companion.Delete(); owner.Delete(); enemy.Delete(); secondary.Delete(); pet.Delete(); weapon.Delete(); }
+    }
+    [SkippableFact]
+    public void WardenRelocatesOutOfRuinsToReachableOpenGround()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var map = Map.Trammel;
+        var p = HavenContentBootstrap.OldHavenBoss;
+        var destination = new Point3D(p.X, p.Y, map.GetAverageZ(p.X, p.Y));
+        var warden = new OldHavenWarden();
+        var spawner = new OldHavenBossSpawner();
+        var walker = new Mobile { Body = 0x190 };
+        try
+        {
+            Assert.True(map.CanSpawnMobile(destination.X, destination.Y, destination.Z));
+            foreach (var approach in new[] { new Point2D(p.X + 15, p.Y), new Point2D(p.X, p.Y + 15) })
+            {
+                walker.MoveToWorld(new Point3D(approach.X, approach.Y, map.GetAverageZ(approach.X, approach.Y)), map);
+                Assert.True(new MovementPath(walker, destination).Success, $"No walking route from {approach} to {destination}");
+            }
+            warden.MoveToWorld(new Point3D(3670, 2587, 0), map);
+            spawner.MoveToWorld(warden.Location, map);
+            HavenContentBootstrap.RelocateHavenWarden();
+            Assert.Equal(destination, warden.Location);
+            Assert.Equal(destination, spawner.Location);
+            Assert.Equal(destination, warden.Home);
+            Assert.Equal(6, warden.RangeHome);
+        }
+        finally { warden.Delete(); spawner.Delete(); walker.Delete(); }
     }
     private static void CheckBounds(Gump gump, int width, int height)
     {

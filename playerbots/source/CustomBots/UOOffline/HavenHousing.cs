@@ -12,7 +12,7 @@ public static class HavenHousing
 
     public static bool IsProtectedSite(Point3D point) =>
         point.X >= 3497 && point.X <= 3517 && point.Y >= 2568 && point.Y <= 2586 ||
-        point.X >= 3650 && point.X <= 3690 && point.Y >= 2567 && point.Y <= 2607;
+        point.X >= 3678 && point.X <= 3718 && point.Y >= 2575 && point.Y <= 2615;
 
     public static bool BlocksFootprint(Region region, Map map, Point3D point) =>
         HavenNewcomerLuck.IsInArea(map, point) &&

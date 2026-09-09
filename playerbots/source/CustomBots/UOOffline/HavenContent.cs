@@ -37,6 +37,7 @@ public partial class OldHavenWarden : BaseCreature
     [Constructible]
     public OldHavenWarden() : base(AIType.AI_Melee)
     {
+        RangeHome = 6;
         Body = 0x3CA;
         Hue = 0x455;
         BaseSoundID = 0x107;
@@ -575,7 +576,7 @@ public static class HavenContentBootstrap
     private static readonly Point2D NewHavenRewards = new(3508, 2571);
     private static readonly Point2D NewHavenHitchingPost = new(3513, 2580);
     private static readonly Point2D NewHavenDungeonPortal = new(3499, 2579);
-    private static readonly Point2D OldHavenBoss = new(3670, 2587);
+    internal static readonly Point2D OldHavenBoss = new(3698, 2595);
     private static readonly Point2D OldHavenSteed = new(3690, 2525);
 
     private static readonly Point2D BritainSupply = new(1428, 1697);
@@ -595,6 +596,7 @@ public static class HavenContentBootstrap
 
         // Intended ML-era hub.
         EnsureHavenPlaza();
+        RelocateHavenWarden();
         EnsureSpawner<OldHavenBossSpawner>(Map.Trammel, OldHavenBoss);
         RelocateOldHavenSteeds();
         EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, HavenWildernessSteed);
@@ -643,6 +645,27 @@ public static class HavenContentBootstrap
             steed.MoveToWorld(destination, map);
         }
         logger.Information("Haven steeds relocated: {Spawners} spawners, {Steeds} wild steeds; destination {Destination}", spawners.Count, steeds.Count, destination);
+    }
+    internal static void RelocateHavenWarden()
+    {
+        var map = Map.Trammel;
+        var old = new Point3D(3670, 2587, 0);
+        var destination = AtSurface(map, OldHavenBoss);
+        var spawners = new List<OldHavenBossSpawner>();
+        var wardens = new HashSet<OldHavenWarden>();
+        foreach (var spawner in map.GetItemsInRange<OldHavenBossSpawner>(old, 2))
+        {
+            spawners.Add(spawner);
+            foreach (var spawn in spawner.Spawned.Keys) { if (spawn is OldHavenWarden warden) { wardens.Add(warden); } }
+        }
+        foreach (var warden in map.GetMobilesInRange<OldHavenWarden>(old, 40)) { wardens.Add(warden); }
+        foreach (var spawner in spawners) { spawner.MoveToWorld(destination, map); }
+        foreach (var warden in wardens)
+        {
+            if (warden.Controlled || warden.Summoned) { continue; }
+            warden.Combatant = null; warden.Home = destination; warden.RangeHome = 6;
+            warden.MoveToWorld(destination, map);
+        }
     }
     internal static void EnsureHavenPlaza()
     {
