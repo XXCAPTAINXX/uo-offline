@@ -16,9 +16,9 @@ public partial class HavenPetRarity : Item
     public static string RarityName(int tier) => tier switch { 1 => "Rare", 2 => "Epic", 3 => "Legendary", _ => "Common" };
     public static string Describe(int tier) => tier switch
     {
-        1 => "+10% starting stats/HP; +5 combat skills, minimum 105 caps; fire strike every 12s in combat",
-        2 => "+20% starting stats/HP; +10 combat skills, minimum 110 caps; self/owner healing every 12s in combat",
-        3 => "+30% starting stats/HP; +15 combat skills, minimum 120 caps; energy strike and owner mana every 12s in combat",
+        1 => "+10% starting stats/HP; +5 combat skills, minimum 105 caps; innate fire strike (12s, no training cost)",
+        2 => "+20% starting stats/HP; +10 combat skills, minimum 110 caps; innate fire strike + self/owner healing (12s, no training cost)",
+        3 => "+30% starting stats/HP; +15 combat skills, minimum 120 caps; innate fire strike + healing + energy strike + owner mana (12s, no training cost)",
         _ => "Standard species stats and abilities"
     };
     public static void AddProperties(BaseCreature pet, IPropertyList list)
@@ -49,6 +49,6 @@ public partial class HavenPetRarity : Item
     {
         if (!HavenTamingMissions.IsCustomPet(pet)) { return; }
         var rarity = pet.Backpack?.FindItemByType<HavenPetRarity>();
-        if (rarity != null) { HavenRarePetAbility.Activate(pet, defender, rarity.Tier, ref rarity._nextAbility); }
+        if (rarity != null) { HavenRarePetAbility.Activate(pet, defender, rarity.Tier, ref rarity._nextAbility, cumulative: true); }
     }
 }

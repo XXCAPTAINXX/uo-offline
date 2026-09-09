@@ -34,6 +34,14 @@ public class HavenWorldTestsPetTickets
             Assert.False(pet.Deleted); Assert.Same(owner, pet.ControlMaster);
             Assert.Equal(strength, pet.RawStr); Assert.Equal(skill, pet.Skills.Wrestling.Base);
             Assert.Equal(owner.Map, pet.Map);
+            BaseCreature.Configure();
+            owner.Skills.AnimalTaming.Cap = 120;
+            owner.Skills.AnimalTaming.Base = 120;
+            Assert.False(pet.IsBonded);
+            Assert.True(pet.BondingBegin + pet.BondingDelay <= Core.Now);
+            var food = new Apple();
+            Assert.True(pet.OnDragDrop(owner, food));
+            Assert.True(pet.IsBonded);
         }
         finally { ticket.Delete(); pet?.Delete(); owner.Delete(); stranger.Delete(); }
     }

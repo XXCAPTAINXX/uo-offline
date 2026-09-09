@@ -11,3 +11,5 @@ Use [HavenRewards or the starter supply stone's Claim earned Haven training rewa
 Finishing pet training no longer increases player follower capacity. A level-20 Haven talisman of concord unlocks permanent capacity 6 once, through shared XP while worn or double-clicking it in your inventory. Existing higher capacity is preserved; old untracked capacity awards are not removed.
 
 Custom pet mission odds: Common 40%, Rare 35%, Epic 20%, Legendary 5%. Ordinary species remain unmodified.
+
+Ticket redemption now completes the bonding wait; feed appropriate food after meeting the normal taming requirement. Rarity powers are cumulative, independent of training points: Rare fire strike; Epic also heals pet/owner; Legendary also adds energy damage and owner mana. Existing custom rarity pets gain the cumulative effects automatically. Mara Wren sells standard provisioner goods at 3503,2562.

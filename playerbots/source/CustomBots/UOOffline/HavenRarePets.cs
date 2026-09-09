@@ -6,21 +6,21 @@ namespace Server.UOOffline;
 
 internal static class HavenRarePetAbility
 {
-    internal static bool Activate(BaseCreature pet, Mobile target, int tier, ref DateTime next)
+    internal static bool Activate(BaseCreature pet, Mobile target, int tier, ref DateTime next, bool cumulative = false)
     {
         if (Core.Now < next || !pet.Controlled || pet.IsDeadPet || pet.ControlMaster?.Alive != true ||
             target is not BaseCreature { Controlled: false, Summoned: false, Alive: true } ||
             target.Map != pet.Map || !pet.InRange(target, 2) || !pet.InLOS(target) || !pet.CanBeHarmful(target, false)) { return false; }
         next = Core.Now + TimeSpan.FromSeconds(12);
         var owner = pet.ControlMaster;
-        if (tier == 1) { AOS.Damage(target, pet, 20, 0, 100, 0, 0, 0); }
-        else if (tier == 2)
+        if (tier == 1 || cumulative && tier >= 2) { AOS.Damage(target, pet, 20, 0, 100, 0, 0, 0); }
+        if (tier == 2 || cumulative && tier == 3)
         {
             pet.Hits = Math.Min(pet.HitsMax, pet.Hits + 10);
             if (owner.Map == pet.Map && pet.InRange(owner, 12) && pet.InLOS(owner)) { owner.Heal(15, pet); }
         }
-        else if (tier == 4) { AOS.Damage(target, pet, 25, 0, 0, 100, 0, 0); }
-        else
+        if (tier == 4) { AOS.Damage(target, pet, 25, 0, 0, 100, 0, 0); }
+        if (tier == 3)
         {
             AOS.Damage(target, pet, 30, 0, 0, 0, 0, 100);
             if (owner.Map == pet.Map && pet.InRange(owner, 12) && pet.InLOS(owner)) { owner.Mana = Math.Min(owner.ManaMax, owner.Mana + 8); }

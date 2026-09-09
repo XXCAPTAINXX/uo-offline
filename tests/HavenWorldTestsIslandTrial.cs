@@ -104,4 +104,23 @@ public class HavenWorldTestsIslandTrial
         found?.Delete();
         Assert.Equal(1, count);
     }
+    [SkippableFact]
+    public void LegendaryInnatePowersIncludeHealingAndManaWithoutTraining()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190, RawInt = 100 };
+        var pet = new HavenFrostmane(); var enemy = new Dragon();
+        try
+        {
+            owner.MoveToWorld(new Point3D(3511, 2575, 14), Map.Trammel);
+            pet.MoveToWorld(owner.Location, owner.Map); enemy.MoveToWorld(owner.Location, owner.Map); pet.SetControlMaster(owner);
+            owner.Hits = 1; owner.Mana = 0; pet.Hits = 1;
+            var next = DateTime.MinValue;
+            Assert.True(HavenRarePetAbility.Activate(pet, enemy, 3, ref next, cumulative: true));
+            Assert.True(owner.Hits > 1); Assert.Equal(8, owner.Mana); Assert.Equal(11, pet.Hits);
+            Assert.Null(HavenPetTraining.Find(pet));
+            Assert.False(HavenRarePetAbility.Activate(pet, enemy, 3, ref next, cumulative: true));
+        }
+        finally { pet.Delete(); enemy.Delete(); owner.Delete(); }
+    }
 }

@@ -1,3 +1,4 @@
+using System;
 using ModernUO.Serialization;
 using Server.Mobiles;
 using Server.SkillHandlers;
@@ -111,10 +112,11 @@ public partial class HavenExpeditionPetClaim : Item
         ReservedPet = null;
         pet.Owners.Add(from);
         pet.Loyalty = BaseCreature.MaxLoyalty;
+        pet.BondingBegin = Core.Now - pet.BondingDelay - TimeSpan.FromSeconds(1);
         pet.ControlTarget = from;
         pet.ControlOrder = OrderType.Follow;
         pet.MoveToWorld(from.Location, from.Map);
-        from.SendMessage("Your companion's pet has joined you. Your own skills govern its obedience; bonding works normally.");
+        from.SendMessage("Your companion's pet has joined you. Feed it suitable food to bond immediately once you meet its normal taming requirement; the waiting period is already complete.");
         Delete();
         return true;
     }
