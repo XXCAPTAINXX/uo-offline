@@ -57,6 +57,7 @@ public static class HavenReleaseOperations
                 case "guild-castle":
                     var castleOwner = World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
                     var castle = HavenPirateHeadquarters.Install(castleOwner);
+                    HavenIslandDecoration.Apply(castle.Estate, castle);
                     _operation = $"Rare Export Company headquarters ready at {castle.Location}, with {castle.CompanyFixtures.Count} furnishings and linked guild storage.";
                     break;
                 case "companion-gear-grind":
@@ -141,6 +142,7 @@ public static class HavenReleaseOperations
             HavenPirateHeadquarters house = null;
             foreach (var candidate in HavenPirateHeadquarters.Registry) { if (!candidate.Deleted && candidate.Owner == estate.Owner) { house = candidate; break; } }
             estates.Add(new { Owner = estate.Owner?.Name, OwnerSerial = (estate.Owner?.Serial ?? Serial.Zero).Value, Fixtures = estate.Fixtures.Count,
+                Decoration = HavenIslandDecoration.Snapshot(estate, house),
                 PatrolBoard = estate.HomePatrol == null ? null : new { Serial = estate.HomePatrol.Serial.Value, estate.HomePatrol.X, estate.HomePatrol.Y, estate.HomePatrol.Z },
                 MiniChampion = estate.HomeTrial == null ? null : new { Serial = estate.HomeTrial.Serial.Value, estate.HomeTrial.Name, estate.HomeTrial.X, estate.HomeTrial.Y, estate.HomeTrial.Stage },
                 Headquarters = house == null ? null : new { Serial = house.Serial.Value, house.Name, house.X, house.Y, house.Z,
