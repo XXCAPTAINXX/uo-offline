@@ -55,9 +55,9 @@ public sealed class HavenListGump : Gump
                 finally { item.Delete(); }
             }
 
-            AddHtml(menu is IHavenShop ? 115 : 66, y, menu is IHavenShop ? 389 : 442, 23, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
+            AddHtml(menu is IHavenShop ? 115 : 66, y, menu is IHavenShop ? 389 : 442, menu is IHavenShop ? 40 : 23, $"<BASEFONT COLOR=#111111>{menu.Entries[index].Name}</BASEFONT>");
             if (tooltip != null) { AddTooltip(1042971, tooltip); }
-            if (summary != null) { AddHtml(115, y + 23, 389, 39, $"<BASEFONT COLOR=#444444>{summary}</BASEFONT>"); }
+            if (summary != null) { AddLabelCropped(115, y + 40, 389, 22, 0x3B2, System.Net.WebUtility.HtmlDecode(summary)); AddTooltip(1042971, tooltip); }
         }
 
         if (_page > 0)
@@ -71,13 +71,13 @@ public sealed class HavenListGump : Gump
             AddButton(390, 395, 4005, 4007, 10002);
             AddLabel(428, 397, 0, "Next");
         }
-        AddButton(390, 428, 4005, 4007, 0);
-        AddLabel(428, 430, 0, "Close");
-        if (menu is HavenTrainingStone.Menu) { AddButton(28, 428, 4014, 4016, 10004); AddLabel(66, 430, 0, "Categories"); }
+        AddButton(390, 420, 4005, 4007, 0);
+        AddLabel(428, 422, 0, "Close");
+        if (menu is HavenTrainingStone.Menu) { AddButton(28, 420, 4014, 4016, 10004); AddLabel(66, 422, 0, "Categories"); }
         if (anchor is StarterSupplyStone)
         {
-            AddButton(28, 428, 4005, 4007, 10003);
-            AddLabel(66, 430, 0, "Claim starter bundle");
+            AddButton(28, 420, 4005, 4007, 10003);
+            AddLabel(66, 422, 0, "Claim starter bundle");
         }
     }
 

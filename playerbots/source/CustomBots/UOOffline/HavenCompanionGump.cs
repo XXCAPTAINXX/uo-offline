@@ -34,7 +34,7 @@ public sealed class HavenCompanionGump : Gump
         AddBackground(10, 10, width - 20, height - 20, 3000);
         AddLabel(20, 20, 0, companion.Name);
         AddLabel(20, 43, 0, $"{companion.Role} | Level {companion.TrainingLevel:N0} | {companion.ControlOrder}");
-        if (companion.Expedition is { } trip) { AddLabel(20, 65, 0, trip.Status); }
+        if (companion.Expedition is { } trip) { AddHtml(20, 65, width - 40, 28, $"<BASEFONT COLOR=#181818>{System.Net.WebUtility.HtmlEncode(trip.Status)}</BASEFONT>", false, true); }
         else { AddLabel(20, 65, 0, $"HP {companion.Hits}/{companion.HitsMax}  Mana {companion.Mana}/{companion.ManaMax}"); }
         Button(20, 95, 100, "Orders");
         Button(105, 95, 101, "Stats");
@@ -75,7 +75,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(20, 195, 12, "Bard - discord and songs");
                 Button(20, 226, 13, "Caster - mage / spellweaver");
                 Button(20, 257, 15, "Archer - ranged support");
-                AddHtml(20, 291, 330, 36, "Bard: Discord 60; peace/provoke 75; songs 80/90.<BR>Caster: bolts, renewal; death/life at 80.");
+                AddHtml(20, 291, 470, 55, "Bard: Discord 60; peace/provoke 75; songs 80/90.<BR>Caster: bolts, renewal; death/life at 80.");
                 break;
             case 3:
                 Button(20, 133, 14, "Equip item...");
@@ -112,7 +112,7 @@ public sealed class HavenCompanionGump : Gump
                     var kind = (HavenExpeditionKind)(5 + i);
                     MissionButton(companion, kind, 151 + (i - 6) * 25, 30 + i);
                 }
-                AddHtml(20, 307, 330, 20, "Mounts: Emberwing, Frostmane, Verdant, Stormhorn.");
+                AddHtml(20, 307, 470, 40, "Mounts: Emberwing, Frostmane, Verdant, Stormhorn.");
                 break;
             case 7:
                 Button(20, 140, 16, companion.TamingAssistActive ? "Stop taming assist" : "Taming assistance...");
@@ -146,9 +146,11 @@ public sealed class HavenCompanionGump : Gump
     }
     private void MissionButton(HavenCompanion companion, HavenExpeditionKind kind, int y, int id)
     {
-        Button(20, y, id, $"{HavenTamingMissions.PetName(kind)} ({HavenTamingMissions.Requirement(kind):F1})");
+        AddButton(20, y, 4005, 4007, id);
+        AddLabelCropped(52, y + 2, 325, 23, 0, $"{HavenTamingMissions.PetName(kind)} ({HavenTamingMissions.Requirement(kind):F1})");
+        AddTooltip(1042971, $"{HavenTamingMissions.PetName(kind)} — requires {HavenTamingMissions.Requirement(kind):F1} Taming and Lore.");
         var status = MissionStatus(companion, kind);
-        AddLabel(282, y + 2, status == "Ready" ? 0x44 : 0x21, status);
+        AddLabel(390, y + 2, status == "Ready" ? 0x44 : 0x21, status);
         AddTooltip(1042971, $"Requires {HavenTamingMissions.Requirement(kind):F1} in BOTH Taming and Lore. Your companion: {companion.Skills.AnimalTaming.Base:F1} Taming, {companion.Skills.AnimalLore.Base:F1} Lore.");
     }
     private void Button(int x, int y, int id, string text)

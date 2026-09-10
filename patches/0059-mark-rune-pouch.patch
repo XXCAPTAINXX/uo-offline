@@ -1,0 +1,18 @@
+--- a/Projects/UOContent/Spells/Sixth/Mark.cs
++++ b/Projects/UOContent/Spells/Sixth/Mark.cs
+@@ -29,6 +29,15 @@
+ 
+         public void Target(Item item)
+         {
++            if (item is Server.UOOffline.HavenRunePouch pouch)
++            {
++                if (pouch.MarkRune(Caster, CheckSequence))
++                {
++                    Caster.PlaySound(0x1FA);
++                    Effects.SendLocationEffect(Caster, 14201, 16);
++                }
++                return;
++            }
+             if (item is not RecallRune rune)
+             {
+                 Caster.NetState.SendMessageLocalized(

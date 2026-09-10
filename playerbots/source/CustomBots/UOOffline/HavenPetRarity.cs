@@ -22,11 +22,11 @@ public partial class HavenPetRarity : Item
     };
     public static void AddProperties(BaseCreature pet, IPropertyList list)
     {
-        HavenPetSignatures.AddProperties(pet,list);
-        var rarity = pet.Backpack?.FindItemByType<HavenPetRarity>();
-        if (rarity != null && HavenTamingMissions.IsCustomPet(pet)) { list.Add($"{RarityName(rarity.Tier)} {"rarity:"} {Describe(rarity.Tier)}"); }
-        pet.Backpack?.FindItemByType<HavenLegendaryPetSkills>()?.AddProperties(pet, list);
+        if (HavenPetSignatures.Kind(pet) == 0) { return; }
+        list.Add($"{"Signature: "}{HavenPetLore.SignatureName(pet)}");
+        list.Add($"{"Animal Lore: full stats, abilities and creature lore"}");
     }
+
     internal static void Apply(BaseCreature pet, int tier)
     {
         if (!HavenTamingMissions.IsCustomPet(pet)) { return; }

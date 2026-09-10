@@ -220,11 +220,11 @@ public class HavenGuildCrewGump : Gump
     {
         _crew = crew; AddBackground(0, 0, 480, 510, 9270);
         AddLabel(20, 20, 1152, $"Fellowship — {crew.Worker?.Name ?? "unclaimed resources"}");
-        AddLabel(20, 50, 0, $"Gathering jobs completed: {crew.CompletedJobs}");
-        AddLabel(20, 76, 0, "Jobs take five minutes; joining a party pauses work.");
-        AddButton(20, 110, 4005, 4007, 1); AddLabel(55, 110, 0, crew.AutoWork ? "Pause automatic work" : "Resume automatic work");
-        AddButton(240, 110, 4005, 4007, 2); AddLabel(275, 110, 0, "Invite to party");
-        AddLabel(20, 148, 0, "Withdraw amount:"); AddTextEntry(180, 145, 100, 24, 0, 1, "100");
+        AddLabel(20, 50, 1152, $"Gathering jobs completed: {crew.CompletedJobs}");
+        AddLabel(20, 76, 1152, "Jobs take five minutes; joining a party pauses work.");
+        AddButton(20, 110, 4005, 4007, 1); AddLabel(55, 110, 1152, crew.AutoWork ? "Pause automatic work" : "Resume automatic work");
+        AddButton(240, 110, 4005, 4007, 2); AddLabel(275, 110, 1152, "Invite to party");
+        AddLabel(20, 148, 1152, "Withdraw amount:"); AddBackground(174, 140, 118, 34, 9350); AddTextEntry(180, 145, 100, 24, 0, 1, "100");
         var indices = new List<int>();
         for (var i = 0; i < crew.Resources.Count; i++) { if (crew.Resources[i] > 0) { indices.Add(i); } }
         _page = Math.Clamp(page, 0, Math.Max(0, (indices.Count - 1) / 8));
@@ -232,13 +232,13 @@ public class HavenGuildCrewGump : Gump
         {
             var i = indices[_page * 8 + row];
             AddButton(20, 180 + row * 30, 4005, 4007, 100 + i);
-            AddLabel(55, 180 + row * 30, 0, $"{HavenResourceCatalog.Entries[i].Name}: {crew.Resources[i]:N0}");
+            AddLabel(55, 180 + row * 30, 1152, $"{HavenResourceCatalog.Entries[i].Name}: {crew.Resources[i]:N0}");
         }
-        AddButton(20, 425, 4014, 4016, 10); AddLabel(55, 425, 0, "Previous");
-        AddButton(160, 425, 4005, 4007, 11); AddLabel(195, 425, 0, "Next");
-        AddButton(310, 425, 4005, 4007, 12); AddLabel(345, 425, 0, "Roster");
-        AddButton(20, 455, 4005, 4007, 3); AddLabel(55, 455, 0, "Dismiss recruit");
-        AddButton(315, 455, 4017, 4019, 0); AddLabel(350, 455, 0, "Close");
+        AddButton(20, 425, 4014, 4016, 10); AddLabel(55, 425, 1152, "Previous");
+        AddButton(160, 425, 4005, 4007, 11); AddLabel(195, 425, 1152, "Next");
+        AddButton(310, 425, 4005, 4007, 12); AddLabel(345, 425, 1152, "Roster");
+        AddButton(20, 455, 4005, 4007, 3); AddLabel(55, 455, 1152, "Dismiss recruit");
+        AddButton(315, 455, 4017, 4019, 0); AddLabel(350, 455, 1152, "Close");
     }
     public override void OnResponse(NetState sender, in RelayInfo info)
     {
@@ -265,14 +265,14 @@ public class HavenGuildRosterGump : Gump
     {
         _crews = HavenGuildCrew.Registry.Values.Where(crew => crew.CanRead(from)).Take(4).ToArray();
         AddBackground(0, 0, 460, 290, 9270); AddLabel(20, 20, 1152, "Fellowship roster");
-        AddLabel(20, 47, 0, "Four guild recruits; up to two in an adventuring party.");
+        AddLabel(20, 47, 1152, "Four guild recruits; up to two in an adventuring party.");
         for (var i = 0; i < _crews.Length; i++)
         {
             var crew = _crews[i]; AddButton(20, 85 + i * 36, 4005, 4007, i + 1);
-            AddLabel(55, 85 + i * 36, 0, $"{crew.Worker?.Name} — {(crew.AutoWork ? "auto work" : "available")}");
+            AddLabel(55, 85 + i * 36, 1152, $"{crew.Worker?.Name} — {(crew.AutoWork ? "auto work" : "available")}");
         }
-        if (_crews.Length == 0) { AddLabel(20, 90, 0, "Guild leaders: use [guildcrew recruit near a bot."); }
-        AddButton(320, 244, 4017, 4019, 0); AddLabel(355, 244, 0, "Close");
+        if (_crews.Length == 0) { AddLabel(20, 90, 1152, "Guild leaders: use [guildcrew recruit near a bot."); }
+        AddButton(320, 244, 4017, 4019, 0); AddLabel(355, 244, 1152, "Close");
     }
     public override void OnResponse(NetState sender, in RelayInfo info)
     { if (info.ButtonID > 0 && info.ButtonID <= _crews.Length) { _crews[info.ButtonID - 1].OnDoubleClick(sender.Mobile); } }

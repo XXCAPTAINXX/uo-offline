@@ -46,8 +46,6 @@ public partial class HavenChelonian : BaseCreature
     public override void GetProperties(IPropertyList list)
     {
         base.GetProperties(list);
-        list.Add($"{"Amphibious:"} {"walks on land, swims and fights at sea; owner-accessible cargo"}");
-        list.Add($"{"Living shell:"} {"below half health, reduces melee damage by 20–35% depending on rarity"}");
     }
 }
 

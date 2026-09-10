@@ -24,7 +24,7 @@ public sealed class HavenTideCargoGump : Gump
         AddButton(25, 330, 4005, 4007, 1); AddLabel(60, 330, 1152, "Deposit...");
         AddButton(180, 330, 4014, 4016, 2); AddLabel(215, 330, 1152, "Prev");
         AddButton(290, 330, 4005, 4007, 3); AddLabel(325, 330, 1152, "Next");
-        AddButton(330, 360, 4017, 4019, 0); AddLabel(365, 360, 1152, "Close");
+        AddButton(330, 352, 4017, 4019, 0); AddLabel(365, 352, 1152, "Close");
     }
     internal static bool Withdraw(HavenTideSteed steed, Mobile from, Item item)
     {

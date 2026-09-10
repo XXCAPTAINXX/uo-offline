@@ -140,8 +140,7 @@ public partial class HavenPetAbilities : Item
     {
         var record = Find(pet);
         if (record == null) { return; }
-        foreach (var id in record.Learned)
-        { if (id >= 0 && id < Names.Length) { list.Add($"{"Trained ability:"} {Names[id]}"); } }
+        list.Add($"{"Trained abilities: "}{record.Learned.Count}{" (Animal Lore for details)"}");
     }
     internal void ClearPool(HavenPetPool pool) { if (_pool == pool) { _pool = null; } }
     public override void OnAfterDelete()

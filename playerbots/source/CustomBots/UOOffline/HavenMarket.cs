@@ -248,19 +248,27 @@ public class HavenMarketGump : Gump
         _stall = stall; _page = Math.Clamp(page, 0, Math.Max(0, (stall.Stock.Count - 1) / 8));
         _items = stall.Stock.Skip(_page * 8).Take(8).ToArray();
         _prices = stall.Prices.Skip(_page * 8).Take(8).ToArray();
-        AddBackground(0, 0, 540, 445, 9270);
-        AddLabel(20, 15, 1152, $"{stall.Artisan?.Name ?? "Haven"} â€” artisan market");
-        AddLabel(20, 42, 0, "Wallet gold accepted. Hover over an item for properties.");
+        AddBackground(0, 0, 600, 480, 9270);
+        AddLabel(25, 20, 1152, $"{stall.Artisan?.Name ?? "Haven"} — artisan market");
+        AddLabel(25, 47, 2101, "Wallet gold accepted. Hover or select to inspect an item.");
+        AddLabel(80, 77, 2101, "Item");
+        AddLabel(405, 77, 2101, "Price");
+        AddLabel(530, 77, 2101, "Inspect");
         for (var i = 0; i < _items.Length; i++)
         {
-            var item = _items[i]; var y = 76 + i * 37;
-            AddItem(20, y, item.ItemID, item.Hue); AddItemProperty(item.Serial);
-            AddLabelCropped(65, y, 310, 22, 0, HavenMarketDirectory.Describe(item));
-            AddLabel(370, y, 0, $"{_prices[i]:N0}g"); AddButton(470, y, 4005, 4007, i + 1);
+            var item = _items[i]; var y = 107 + i * 39;
+            var tooltip = HavenItemPreviewGump.Tooltip(item);
+            AddItem(30, y, item.ItemID, item.Hue); AddTooltip(1042971, tooltip);
+            AddLabelCropped(80, y, 300, 22, 1152, HavenMarketDirectory.Describe(item)); AddTooltip(1042971, tooltip);
+            AddLabel(405, y, 1152, $"{_prices[i]:N0}g"); AddButton(535, y, 4005, 4007, i + 1);
+            AddImageTiled(25, y + 30, 550, 1, 9107);
         }
-        AddButton(20, 395, 4014, 4016, 100); AddLabel(55, 395, 0, "Previous");
-        AddButton(180, 395, 4005, 4007, 101); AddLabel(215, 395, 0, "Next");
-        AddButton(370, 395, 4017, 4019, 0); AddLabel(405, 395, 0, "Close");
+        if (_items.Length == 0) { AddLabel(80, 122, 1152, "No stock available yet."); }
+        var pages = Math.Max(1, (stall.Stock.Count + 7) / 8);
+        if (_page > 0) { AddButton(25, 437, 4014, 4016, 100); AddLabel(62, 437, 1152, "Previous"); }
+        AddLabel(208, 437, 1152, $"Page {_page + 1} / {pages}");
+        if (_page + 1 < pages) { AddButton(365, 437, 4005, 4007, 101); AddLabel(402, 437, 1152, "Next"); }
+        AddButton(495, 437, 4017, 4019, 0); AddLabel(532, 437, 1152, "Close");
     }
     public override void OnResponse(NetState sender, in RelayInfo info)
     {

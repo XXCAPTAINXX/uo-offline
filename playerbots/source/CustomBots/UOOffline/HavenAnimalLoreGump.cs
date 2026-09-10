@@ -53,7 +53,7 @@ public sealed class HavenAnimalLoreGump : Gump
         Skills(CombatSkills, 136, "Combat ratings");
         Skills(MagicSkills, 348, "Lore and magic");
         if (HavenPetTraining.Owned(viewer, pet)) { Button(28, 640, 1, "Animal Training"); }
-        Button(243, 640, 2, "Details"); Button(381, 640, 3, "Refresh"); Button(516, 640, 0, "Close");
+        Button(243, 640, 2, "Abilities / lore"); Button(381, 640, 3, "Refresh"); Button(516, 640, 0, "Close");
     }
     private void Button(int x, int y, int id, string label) { AddButton(x, y, 4005, 4007, id); AddLabel(x + 33, y + 2, 1152, label); }
     private void Bar(int x, int y, string label, int current, int maximum, bool available)
@@ -82,28 +82,29 @@ public sealed class HavenAnimalLoreGump : Gump
             AddLabel(535, y + 24 + i * 20, 1152, $"{skill.Base:F1}/{skill.Cap:F1}");
         }
     }
-    internal bool CanRefresh(Mobile owner)
+    internal bool CanRefresh(Mobile owner) => CanInspect(owner, _pet);
+    internal static bool CanInspect(Mobile owner, BaseCreature pet)
     {
-        if (_pet.Deleted || !owner.Alive) { return false; }
+        if (pet?.Deleted != false || owner?.Deleted != false || !owner.Alive) { return false; }
         if (HavenMarketDirectory.CanShop(owner))
         {
             foreach (var stall in HavenMarketStall.Registry)
             {
                 if (stall.Deleted) { continue; }
                 foreach (var stock in stall.Stock)
-                { if (stock is HavenMarketPetTicket { Deleted: false } ticket && ticket.Parent == stall && ticket.Pet == _pet) { return true; } }
+                { if (stock is HavenMarketPetTicket { Deleted: false } ticket && ticket.Parent == stall && ticket.Pet == pet) { return true; } }
             }
         }
-        if (_pet.Map == owner.Map && owner.InRange(_pet, 12) && owner.InLOS(_pet)) { return true; }
+        if (pet.Map == owner.Map && owner.InRange(pet, 12) && owner.InLOS(pet)) { return true; }
         if (owner.Backpack != null)
         {
             foreach (var ticket in owner.Backpack.FindItemsByType<HavenExpeditionPetClaim>())
             {
-                if (ticket.Owner == owner && ticket.ReservedPet == _pet) { return true; }
+                if (ticket.Owner == owner && ticket.ReservedPet == pet) { return true; }
             }
             foreach (var token in owner.Backpack.FindItemsByType<ShrunkenPet>())
             {
-                if (token.Inspect(owner) == _pet) { return true; }
+                if (token.Inspect(owner) == pet) { return true; }
             }
         }
         return false;
@@ -116,14 +117,8 @@ public sealed class HavenAnimalLoreGump : Gump
         {
             if (info.ButtonID == 2)
             {
-                sender.Mobile.SendMessage($"{_pet.Name}: food {_pet.FavoriteFood}; pack instinct {_pet.PackInstinct}; taming requirement {_pet.MinTameSkill:F1}.");
-                sender.Mobile.SendMessage($"Self healing: {(_pet.CanHeal ? "yes" : "no")}; owner healing: {(_pet.CanHealOwner ? "yes" : "no")}; bard immunity: {(_pet.BardImmune ? "yes" : "no")}.");
-                var rarity = _pet.Backpack?.FindItemByType<HavenPetRarity>();
-                if (_pet is HavenSnowBear) { sender.Mobile.SendMessage(HavenSnowBear.RageDescription); }
-                if(HavenPetSignatures.Kind(_pet)!=0) { sender.Mobile.SendMessage(HavenPetSignatures.Describe(_pet)); }
-                var defense = HavenPetDefenses.Describe(_pet);
-                if (defense.Length > 0) { sender.Mobile.SendMessage(defense); }
-                if (rarity != null && HavenTamingMissions.IsCustomPet(_pet)) { sender.Mobile.SendMessage(HavenPetRarity.Describe(rarity.Tier)); }
+                sender.Mobile.SendGump(new HavenPetLoreGump(_pet));
+                return;
             }
             DisplayTo(sender.Mobile, _pet);
         }

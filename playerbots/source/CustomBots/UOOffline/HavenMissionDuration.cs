@@ -48,19 +48,19 @@ public sealed class HavenMissionDurationGump : Gump
     public HavenMissionDurationGump(HavenCompanion companion,HavenExpeditionKind kind):base(80,80)
     {
         _companion=companion; _kind=kind;
-        AddBackground(0,0,490,365,9270); AddLabel(24,20,1152,HavenRegionalMissions.Name(kind));
-        AddHtml(24,52,440,60,"<BASEFONT COLOR=#FFFFFF>Longer trips earn more loot and training. Finish the full trip for its bonus. Returning early earns normal rewards for time spent; pets require completion.</BASEFONT>");
+        AddBackground(0,0,540,365,9270); AddLabel(24,20,1152,HavenRegionalMissions.Name(kind));
+        AddHtml(24,52,490,60,"<BASEFONT COLOR=#FFFFFF>Longer trips earn more loot and training. Finish the full trip for its bonus. Returning early earns normal rewards for time spent; pets require completion.</BASEFONT>");
         var taming=HavenTamingMissions.IsTaming(kind);
         for(var i=0;i<HavenMissionDuration.Choices.Length;i++)
         {
             var minutes=HavenMissionDuration.Choices[i]; var bonus=HavenMissionDuration.BonusPercent(minutes); var y=126+i*43;
             AddButton(24,y,4005,4007,minutes); AddLabel(64,y,1152,$"Send for {minutes} minutes");
-            AddLabel(278,y,2101,$"+{bonus-100}% completion bonus");
+            AddLabel(295,y,2101,$"+{bonus-100}% loot bonus");
             if(taming) { AddLabel(64,y+20,2101,$"One pet; {HavenMissionDuration.SearchRolls(minutes,bonus)} search / supply rolls"); }
-            else { AddLabel(64,y+20,2101,$"{minutes*bonus/500.0:F1}x the five-minute loot; extra skill, stat and gear training"); }
+            else { AddLabel(64,y+20,2101,$"{minutes*bonus/500.0:F1}x base loot; skill, stat and gear training"); }
         }
         AddLabel(24,306,2101,$"Current AFK trip length: {HavenMissionDuration.Selected(companion)} minutes");
-        AddButton(350,332,4017,4019,0); AddLabel(390,332,1152,"Cancel");
+        AddButton(400,324,4017,4019,0); AddLabel(440,324,1152,"Cancel");
     }
     public override void OnResponse(NetState state,in RelayInfo info)
     {

@@ -27,7 +27,7 @@ public sealed class ChampionCodexGump : Gump
     internal ChampionCodexGump(ProgressionArchive codex, int page = 0, bool other = false, bool ownedOnly = false) : base(30, 30)
     {
         _codex = codex; _other = other; _ownedOnly = ownedOnly;
-        AddBackground(0, 0, 760, 580, 0xA28);
+        AddBackground(0, 0, 760, 590, 0xA28);
         AddLabel(26, 20, 0, "CHAMPION'S CODEX");
         AddLabel(26, 43, 0, "Your scrolls and champion treasures. Select an arrow to withdraw an item.");
         Button(26, 71, 1, "Skill scrolls");
@@ -49,7 +49,9 @@ public sealed class ChampionCodexGump : Gump
                 var y = 139 + row * 21;
                 var id = 100 + row;
                 _withdrawals[id] = item.Serial;
-                Button(26, y, id, item.Name ?? item.DefaultName);
+                AddButton(26, y, 4005, 4007, id);
+                AddLabelCropped(58, y + 2, 510, 21, 0, item.Name ?? item.DefaultName);
+                AddTooltip(1042971, item.Name ?? item.DefaultName);
                 AddTooltip(1042971, "Withdraw this item or stack to your backpack.");
                 AddLabel(600, y + 2, 0, item.Amount.ToString("N0"));
             }

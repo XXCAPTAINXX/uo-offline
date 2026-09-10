@@ -84,7 +84,7 @@ public sealed class HavenRegionalMissionGump : Gump
     internal HavenRegionalMissionGump(HavenCompanion companion):base(60,60)
     {
         _companion=companion;var route=HavenMissionRoute.Get(companion);
-        AddBackground(0,0,620,470,5054);AddBackground(12,12,596,446,3000);AddLabel(25,24,0,"Regional resource missions");
+        AddBackground(0,0,620,535,5054);AddBackground(12,12,596,511,3000);AddLabel(25,24,0,"Regional resource missions");
         AddLabel(25,50,0,$"Combat / resist rating: {HavenRegionalMissions.Skill(companion):F1}. Book-compatible deeds.");
         for(var i=0;i<4;i++)
         {
@@ -92,10 +92,11 @@ public sealed class HavenRegionalMissionGump : Gump
             AddLabel(25,y,0,$"{HavenRegionalMissions.Name(kind)} — needs {HavenRegionalMissions.Requirement(kind)}");AddHtml(25,y+23,410,40,HavenRegionalMissions.Description(kind));
             AddButton(445,y,4005,4007,10+i);AddLabel(480,y+2,0,"Send");AddButton(445,y+30,4005,4007,20+i);AddLabel(480,y+32,0,"AFK focus");
         }
-        AddLabel(25,380,0,$"AFK focus: {(route.Focus<0?"Mixed cycle":HavenRegionalMissions.Name((HavenExpeditionKind)route.Focus))}");
+        AddHtml(25,380,565,40,$"<BASEFONT COLOR=#181818>AFK focus: {(route.Focus<0?"Mixed cycle":HavenRegionalMissions.Name((HavenExpeditionKind)route.Focus))}</BASEFONT>");
         AddButton(25,410,4005,4007,1);AddLabel(60,412,0,"Mixed cycle");AddButton(210,410,4005,4007,2);AddLabel(245,412,0,route.OfflineArmed?"Cancel offline order":"Run this focus after logout");
-        AddButton(495,438,4017,4019,0);AddLabel(530,440,0,"Close");
-        AddButton(25,438,4005,4007,3);AddLabel(60,440,0,"Cycle basic focus: loot / ore / wood / leather / reagents");
+        AddButton(495,495,4017,4019,0);AddLabel(530,497,0,"Close");
+        AddButton(25,447,4005,4007,3);AddLabel(60,449,0,"Cycle gathering / loot focus");
+        AddLabel(25,495,0,"Loot, ore, wood, leather or reagents");
     }
     public override void OnResponse(NetState state,in RelayInfo info)
     {

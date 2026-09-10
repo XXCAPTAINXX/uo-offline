@@ -46,7 +46,7 @@ public sealed class HavenFellowshipGump : Gump
             { AddButton(25 + i % 2 * 285, 197 + i / 2 * 38, 4005, 4007, 100 + i); AddLabel(60 + i % 2 * 285, 197 + i / 2 * 38, 1152, jobs[i].ToString()); }
             AddButton(25, 325, 4005, 4007, 1); AddLabel(60, 325, 1152, crew.AutoWork ? "Pause work" : "Resume work");
             AddButton(310, 325, 4005, 4007, 2); AddLabel(345, 325, 1152, "Invite to party");
-            AddButton(25, 363, 4005, 4007, 3); AddLabel(60, 363, 1152, "Resource balances / withdraw");
+            AddButton(25, 363, 4005, 4007, 3); AddLabel(60, 363, 1152, "Resource balances");
             AddButton(310, 363, 4005, 4007, 4); AddLabel(345, 363, 1152, "Treasurer access");
             AddLabel(25, 400, 2101, "Officers give orders. The leader grants treasury access per recruit.");
         }
@@ -69,7 +69,7 @@ public sealed class HavenFellowshipGump : Gump
             }
             else if (_tab == 3) { foreach (var item in crew.Products) { if (item?.Deleted == false && item.Parent == crew) { all.Add(item); } } }
             _page = Math.Min(_page, Math.Max(0, (all.Count - 1) / 7));
-            AddLabel(25, 124, 2101, _tab == 2 ? "Inspect equipped and spare gear. Only added gear may be withdrawn." : "Crafted from guild materials. Treasury permission is needed to withdraw.");
+            AddHtml(25, 120, 575, 38, _tab == 2 ? "<BASEFONT COLOR=#FFFFFF>Inspect equipped and spare gear. Only added gear may be withdrawn.</BASEFONT>" : "<BASEFONT COLOR=#FFFFFF>Crafted from guild materials. Treasury permission is needed to withdraw.</BASEFONT>");
             for (var i = 0; i < 7 && _page * 7 + i < all.Count; i++)
             {
                 var item = all[_page * 7 + i]; _items.Add(item); var y = 163 + i * 33;

@@ -128,7 +128,7 @@ public partial class HavenExpeditionPetClaim : Item
         base.GetProperties(list);
         list.Add($"{"Use Animal Lore on this ticket to inspect the pet before claiming."}");
         list.Add($"{"Double-click in your backpack to claim. Owner:"} {Owner?.Name ?? "none"}");
-        if (HavenTamingMissions.IsCustomMission(Kind)) { list.Add($"{"Rarity benefits:"} {HavenPetRarity.Describe(Rarity)}"); }
+        if (HavenTamingMissions.IsCustomMission(Kind)) { list.Add($"{"Rarity: "}{HavenPetRarity.RarityName(Rarity)}{"; inspect with Animal Lore"}"); }
     }
     public override void OnDelete() { _reservedPet?.Delete(); ReservedPet = null; Owner = null; base.OnDelete(); }
 }

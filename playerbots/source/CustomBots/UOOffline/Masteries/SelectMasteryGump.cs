@@ -31,7 +31,7 @@ public sealed class MasterySelectionGump : Gump
         {
             var skill = learned[_page * 8 + row]; var level = MasteryInfo.GetMasteryLevel(owner, skill);
             AddButton(24, 116 + row * 35, 4005, 4007, Array.IndexOf(MasteryInfo.Skills, skill) + 1);
-            Text(60, 118 + row * 35, 252, 27, $"{owner.Skills[skill].Name} - Volume {level}", skill == selected);
+            Text(60, 118 + row * 35, 252, 34, $"{owner.Skills[skill].Name} - Volume {level}", skill == selected);
         }
         if (learned.Length == 0) { Text(24, 123, 278, 100, "No masteries learned yet. Use a mastery primer to learn your first volume. Primers are sold at Training Supplies."); }
         var abilityRow = 0;
@@ -44,7 +44,7 @@ public sealed class MasterySelectionGump : Gump
             Text(374, 118 + abilityRow * 57, 235, 49, label + (info.Passive ? " (passive)" : "")); abilityRow++;
         }
         if (abilityRow == 0) { Text(336, 123, 278, 70, "Select one of your learned masteries to see its abilities."); }
-        Text(336, 302, 278, 108, "Abilities require 90 skill and the matching active mastery. Switching masteries has a ten-minute cooldown.\n\nOnly learned volumes appear here. Use a higher-volume primer to improve one.");
+        Text(336, 302, 278, 108, "Abilities require 90 skill and the matching active mastery. Switching has a ten-minute cooldown.\n\nLearn higher volumes with primers.");
         if (_page > 0) { AddButton(24, 403, 4014, 4016, 3001); Text(59, 405, 95, 22, "Previous"); }
         if (_page + 1 < pages) { AddButton(188, 403, 4005, 4007, 3002); Text(223, 405, 80, 22, "Next"); }
         Text(24, 443, 280, 22, $"Learned: {learned.Length} | Page {_page + 1} of {pages}");

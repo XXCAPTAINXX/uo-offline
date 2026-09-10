@@ -141,19 +141,19 @@ public class HavenCompanionAfkGump : Gump
     {
         _record = record;
         AddBackground(0, 0, 430, 325, 9270);
-        AddLabel(20, 20, 0, "Companion AFK missions");
-        AddHtml(20, 52, 380, 70, "Cycle: loot, gathering, pets, Malas and Abyss.<BR>Set a focus in Tasks → Resource routes.<BR>Manual AFK stays on until you turn it off.");
+        AddLabel(20, 20, 1152, "Companion AFK missions");
+        AddHtml(20, 52, 380, 70, "<BASEFONT COLOR=#FFFFFF>Cycle: loot, gathering, pets, Malas and Abyss.<BR>Set a focus in Tasks → Resource routes.<BR>Manual AFK stays on until you turn it off.</BASEFONT>");
         AddButton(20, 135, 4005, 4007, 1);
-        AddLabel(55, 137, 0, record.Afk || record.ActiveTrip != null ? "Leave AFK / return now" : "Enter AFK now");
+        AddLabel(55, 137, 1152, record.Afk || record.ActiveTrip != null ? "Leave AFK / return now" : "Enter AFK now");
         AddButton(20, 172, 4005, 4007, 2);
-        AddLabel(55, 174, 0, record.Enabled ? "Auto after 5 idle minutes: ON" : "Auto after 5 idle minutes: OFF");
-        AddLabel(20,210,0,$"Trip length: {HavenMissionDuration.Selected(record.Companion)} minutes (next mission)");
+        AddLabel(55, 174, 1152, record.Enabled ? "Auto after 5 idle minutes: ON" : "Auto after 5 idle minutes: OFF");
+        AddLabel(20,210,1152,$"Trip length: {HavenMissionDuration.Selected(record.Companion)} minutes (next mission)");
         for(var i=0;i<HavenMissionDuration.Choices.Length;i++)
         {
             var minutes=HavenMissionDuration.Choices[i]; AddButton(20+i*100,244,4005,4007,100+minutes);
-            AddLabel(55+i*100,246,0,$"{minutes}m");
+            AddLabel(55+i*100,246,1152,$"{minutes}m");
         }
-        AddButton(20, 285, 4005, 4007, 0); AddLabel(55, 287, 0, "Close");
+        AddButton(20, 285, 4005, 4007, 0); AddLabel(55, 287, 1152, "Close");
     }
     public override void OnResponse(NetState sender, in RelayInfo info)
     {

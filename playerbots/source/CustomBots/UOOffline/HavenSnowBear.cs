@@ -48,7 +48,7 @@ public partial class HavenSnowBear : BaseMount
     }
     public override void GetProperties(IPropertyList list)
     {
-        base.GetProperties(list); list.Add($"{RageDescription}");
+        base.GetProperties(list);
         list.Add($"{"Custom mount: no stat loss on taming; dexterity/stamina"} {RawDex} {"/"} {StamMax}");
     }
 }

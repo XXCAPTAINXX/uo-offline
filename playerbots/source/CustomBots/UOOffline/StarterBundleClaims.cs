@@ -58,6 +58,7 @@ public static class StarterBundleClaims
         if (needsArrows) { AddMissing<Arrow>(from, bundle, () => new Arrow(100)); }
         AddMissing<AdventurersWallet>(from, bundle, () => new AdventurersWallet());
         AddMissing<CleanupTrashBag>(from, bundle, () => new CleanupTrashBag());
+        AddMissing<HavenRunePouch>(from, bundle, () => new HavenRunePouch());
         AddMissing<HavenFieldGuideBook>(from, bundle, () => new HavenFieldGuideBook());
         AddMissing<SmallBrickHouseDeed>(from, bundle, () => new SmallBrickHouseDeed { LootType = LootType.Blessed });
         AddMissing<Bandage>(from, bundle, () => new Bandage(50));
@@ -116,3 +117,4 @@ public static class StarterBundleClaims
         bundle.DropItem(item);
     }
 }
+

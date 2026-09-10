@@ -62,7 +62,7 @@ public partial class HavenPetDye : Item
         internal Palette(HavenPetDye dye) : base(60, 60)
         {
             _dye = dye; AddBackground(0, 0, 405, 440, 9270); AddLabel(24, 20, 1152, "Pet colors");
-            AddHtml(24, 50, 350, 44, "Dyes override rarity colors. Original color restores<BR>the species' rarity shade. One use per bottle.");
+            AddHtml(24, 50, 350, 44, "<BASEFONT COLOR=#FFFFFF>Dyes override rarity colors. Original color restores<BR>the species' rarity shade. One use per bottle.</BASEFONT>");
             for (var i = 0; i < Colors.Length; i++)
             { var y = 102 + i * 32; AddButton(24, y, 4005, 4007, i + 1); AddItem(67, y, 0xFAB, Hues[i]); AddLabel(110, y + 2, 1152, Colors[i]); }
             AddButton(280, 404, 4017, 4019, 0); AddLabel(315, 404, 1152, "Close");

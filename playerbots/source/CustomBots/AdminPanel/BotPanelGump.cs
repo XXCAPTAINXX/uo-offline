@@ -173,7 +173,7 @@ namespace Server.CustomBots
             // ── Title and close button ──────────────────────────────────
             AddHtml(PadX, y, PanelW - 80, 22,
                 "<BASEFONT COLOR=#111111 SIZE=4><B>GM Panel</B></BASEFONT>");
-            AddButton(PanelW - 36, y, ExitUp, ExitDown, ButtonID(Act.Close));
+            AddButton(PanelW - 48, y, ExitUp, ExitDown, ButtonID(Act.Close));
             y += LineH + 4;
 
             // ── Header: location + counts ───────────────────────────────

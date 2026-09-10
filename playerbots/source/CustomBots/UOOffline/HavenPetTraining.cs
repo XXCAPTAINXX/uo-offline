@@ -192,8 +192,6 @@ public partial class HavenPetTraining : Item
     {
         var record = Find(pet); if (record == null) { return; }
         list.Add($"{"Animal training:"} {pet.ControlSlots}{" / "}{MaxSlots(pet)}{" slots; combat progress "}{record.Progress / 100.0:F1}{"%"}");
-        if (record.Active) { list.Add($"{"Training points:"} {record.Points:F1}"); }
-        if (record.Healing > 0) { list.Add($"{"Learned Healing; automatically heals self and owner"}"); }
     }
     public static void Initialize() => CommandSystem.Register("PetTrain", AccessLevel.Player, e =>
     { e.Mobile.SendMessage("Select your nearby pet to open Animal Training. Dismount first."); e.Mobile.Target = new TrainingTarget(); });
@@ -246,23 +244,13 @@ public sealed class HavenPetTrainingGump : Gump
                 AddButton(442, y, 4005, 4007, 100 + i); AddLabel(475, y + 2, 1152, $"{HavenPetTraining.Weights[i] / 10.0:F1}");
                 AddButton(555, y, 4005, 4007, 200 + i); AddLabel(588, y + 2, 1152, $"{HavenPetTraining.Weights[i]}");
             }
-            if (_category == 1) { AddLabel(238, 394, 53, "Includes innate defenses; training ceiling is 80%."); }
+            if (_category == 1) { AddLabel(238, 394, 53, "Innate defenses included; training limit: 80%."); }
         }
         else if (_category is 2 or 3)
         {
-            AddLabel(238, 169, 53, "Skill                    Current / cap");
-            var first = _category == 2 ? 5 : 0;
-            var end = _category == 2 ? HavenPetTraining.TrainableSkills.Length : 5;
-            for (var i = first; i < end; i++)
-            {
-                var skill = pet.Skills[HavenPetTraining.TrainableSkills[i]];
-                var y = 200 + (i - first) * 36;
-                AddButton(236, y, 4005, 4007, 300 + i);
-                AddLabel(270, y + 2, 1152, skill.Name);
-                AddLabel(460, y + 2, 1152, $"{skill.Base:F1} / {skill.Cap:F1}");
-                AddTooltip(1042971, "Apply the lowest matching power scroll in your backpack that raises this skill cap. Skill points still train through use.");
-            }
-            AddHtml(238, 391, 410, 42, "<BASEFONT COLOR=#FFFFFF>Consumes the matching scroll and training points. Select a skill to apply its next available scroll.</BASEFONT>");
+            AddButton(236, 194, 4005, 4007, _category == 2 ? 1002 : 1003);
+            AddLabel(270, 196, 1152, "Choose skill caps and power scrolls");
+            AddHtml(238, 240, 410, 100, "<BASEFONT COLOR=#FFFFFF>Browse every skill on the paged skill-cap screen. Choose 105, 110, 115 or 120 using a matching power scroll and training points.</BASEFONT>");
         }
         else
         {

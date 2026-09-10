@@ -365,7 +365,7 @@ public class HavenWorldTests
         try
         {
             var gump = new HavenListGump(stone, new SpecialRewardStone.RewardMenu());
-            Assert.Equal(12, gump.Entries.OfType<GumpTooltip>().Count());
+            Assert.Equal(16, gump.Entries.OfType<GumpTooltip>().Count()); // Buttons, icons, names and summaries each expose the full preview.
         }
         finally { stone.Delete(); }
     }
