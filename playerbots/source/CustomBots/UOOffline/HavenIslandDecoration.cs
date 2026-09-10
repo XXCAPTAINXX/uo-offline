@@ -22,6 +22,7 @@ internal static partial class HavenIslandDecoration
         if (house?.Deleted == false && house.Estate == estate && house.Customizer == null && house.HasCompound)
         { ApplyScope(estate, house, true); }
         RebuildSettlement(estate, house);
+        FinishSettlementGardens(estate);
     }
 
     internal static bool Complete(List<Item> fixtures)
@@ -160,12 +161,13 @@ internal static partial class HavenIslandDecoration
     internal static object Snapshot(HavenPirateEstate estate, HavenPirateHeadquarters house)
     {
         // Only estate-owned fixture lists, never world-wide searches or player follower lists.
-        var names = Plan.Concat(SettlementPlan).Select(g => g.Name).ToHashSet();
+        var names = Plan.Concat(SettlementPlan).Concat(FinishingPlan).Select(g => g.Name).ToHashSet();
         object[] Tiles(List<Item> items, Item origin)
             => items.Where(i => i?.Deleted == false && (names.Contains(i.Name ?? "") || i.Name == "Corsair's grove canopy"))
                 .Select(i => (object)new { Id = i.ItemID, X = i.X-origin.X, Y = i.Y-origin.Y, Z = i.Z-origin.Z, i.Name }).ToArray();
         return new { EstateComplete = Complete(estate.Fixtures), HouseComplete = house != null && Complete(house.CompanyFixtures),
             SettlementComplete = estate.Fixtures.Any(i => i?.Deleted == false && i.Name == SettlementMarker),
+            GardensComplete = estate.Fixtures.Any(i => i?.Deleted == false && i.Name == GardenMarker),
             Routes = CheckSettlementRoutes(estate),
             ManagedOutside = estate.Fixtures.Where(i => i?.Deleted == false && i.Visible && i.Map == estate.Map)
                 .SelectMany(i => i is BaseAddon addon ? addon.Components.Cast<Item>() : new[] { i })

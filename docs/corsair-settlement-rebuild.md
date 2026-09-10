@@ -13,6 +13,8 @@ The first decoration pass scattered furniture and foliage and silently omitted b
 
 Native `LargeTable` artwork replaces the incorrect nightstands used as a new outdoor table. The custom house design, indoor storage, functional addons, harvest spawners, patrol board and mini-champion remain in place.
 
+The finishing pass uses compact hedge-bordered flower beds and ivy attached to existing supports, informed by the [UO Home Decor landscape gallery](https://uohomedecor.com/photo-galleries/deco-landscape/) (FrontPatio, FrontPatio-2 and Roof-1). These are layout references; the build uses the installed client's native art. The supplied Reddit discussion was readable, but its browser image view required a verification challenge and was not inspected.
+
 ## Migration
 
 `HavenIslandSettlement.cs` is a one-time revision of estate-managed outdoor statics. The old plan remains as the precise identity/position manifest for removal. Unrecognized or moved items, containers, addons and player property are not deleted. Previous objects are temporarily internalized; any placement/access failure removes new objects and restores the old objects before returning the error.

@@ -34,6 +34,7 @@ public class HavenWorldTestsIslandDecoration
         {
             HavenIslandDecoration.Apply(estate,null);
             Assert.True(HavenIslandDecoration.Complete(estate.Fixtures));
+            Assert.Contains(estate.Fixtures,i=>i.Name==HavenIslandDecoration.GardenMarker);
             Assert.True(estate.Fixtures.Count>900,$"Only {estate.Fixtures.Count} fixtures placed");
             Assert.False(treasure.Deleted);Assert.Equal(treasureSite,treasure.Location);Assert.Same(treasure,gold.Parent);Assert.Equal(1234,gold.Amount);
             Assert.DoesNotContain(estate.Fixtures,i=>i.Location==treasureSite);
