@@ -44,6 +44,12 @@ public static class HavenReleaseOperations
             switch (action)
             {
                 case "status": break;
+                case "companion-gold":
+                    var goldOwner = World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
+                    var goldCompanion = HavenCompanionGearAssignment.Find(goldOwner);
+                    if (goldCompanion?.BoundOwner != goldOwner || goldCompanion == null) { throw new InvalidOperationException("Owner has no companion."); }
+                    _operation = $"Combined companion gold; freed {HavenCompanionGold.Consolidate(goldCompanion.Backpack)} pack slots.";
+                    break;
                 case "companion-ledger":
                     var ledgerOwner = World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
                     _operation = $"Stored {HavenResourceLedger.StoreCompanionPack(ledgerOwner)} supported companion deeds.";
@@ -68,7 +74,7 @@ public static class HavenReleaseOperations
                     { throw new InvalidOperationException("An existing account character is required as island owner."); }
                     Install(owner);
                     break;
-                default: throw new InvalidOperationException("Allowed release actions: status, install, frontiers, original-dungeons, companion-gear-grind, companion-ledger, guild-castle, save.");
+                default: throw new InvalidOperationException("Allowed release actions: status, install, frontiers, original-dungeons, companion-gear-grind, companion-ledger, companion-gold, guild-castle, save.");
             }
             Write(id, true, null);
         }

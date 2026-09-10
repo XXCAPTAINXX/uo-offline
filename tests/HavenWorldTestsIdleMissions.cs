@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Server;
 using Server.Items;
 using Server.Mobiles;
@@ -11,6 +12,25 @@ namespace UOContent.Tests;
 public class HavenWorldTestsIdleMissions
 {
     public HavenWorldTestsIdleMissions() => _ = new HavenWorldTests();
+    [Fact]
+    public void GoldConsolidationPreservesTotalsLimitsAndSeparatedBags()
+    {
+        var pack = new Backpack();
+        try
+        {
+            foreach (var amount in new[] { 40000, 30000, 20000, 5000 }) { pack.DropItem(new Gold(amount)); }
+            var colored = new Gold(12) { Hue = 123 }; pack.DropItem(colored);
+            var bag = new Bag(); var saved = new Gold(99); bag.DropItem(saved); pack.DropItem(bag);
+            var before = pack.TotalGold;
+            Assert.Equal(2, HavenCompanionGold.Consolidate(pack));
+            Assert.Equal(before, pack.TotalGold);
+            Assert.Equal(new[] { 35000, 60000 }, pack.Items.OfType<Gold>().Where(g => g.Hue == 0).Select(g => g.Amount).OrderBy(a => a));
+            Assert.Same(pack, colored.Parent); Assert.Equal(12, colored.Amount);
+            Assert.Same(bag, saved.Parent); Assert.Equal(99, saved.Amount);
+            Assert.Equal(0, HavenCompanionGold.Consolidate(pack));
+        }
+        finally { pack.Delete(); }
+    }
     [SkippableFact]
     public void IdleCyclesReturnOnMovementAndNeverTakeOverManualTrips()
     {
@@ -29,7 +49,13 @@ public class HavenWorldTestsIdleMissions
             record.Tick(now + TimeSpan.FromMinutes(5), true);
             Assert.NotNull(record.ActiveTrip); Assert.Equal(HavenExpeditionKind.Grind, record.ActiveTrip.Kind);
             var trip = record.ActiveTrip;
+            companion.Backpack.DropItem(new Gold(1000));
+            companion.Backpack.DropItem(new Gold(2000));
             Assert.True(trip.Return(owner, trip.Due, automatic: true));
+            var gold = Assert.Single(companion.Backpack.Items.OfType<Gold>());
+            var earned = HavenMissionJournal.Find(companion).Reports[0].Loot.Where(r => r.Icon == 0xEED).Sum(r => r.Amount);
+            Assert.True(earned > 0);
+            Assert.Equal(3000L + earned, (long)gold.Amount);
             companion.Hits = companion.HitsMax; // Recover after mission stat growth before leaving again.
             record.Tick(now + TimeSpan.FromMinutes(10), true);
             Assert.Equal(HavenExpeditionKind.Ore, record.ActiveTrip.Kind);

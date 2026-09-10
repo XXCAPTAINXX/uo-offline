@@ -136,6 +136,7 @@ public partial class HavenCompanionExpedition : Item
             owner.SendMessage($"Your companion returned from {Kind}: {minutes} minutes worked, +{percent-100}% completion bonus, +{training} Str/Dex/Int and {training * 10} gear experience.");
         }
         else { owner.SendMessage("Your companion returned. Expeditions earn rewards for each full minute away."); }
+        HavenCompanionGold.Consolidate(companion.Backpack);
         var stillIdle = idleMissions?.Finished(this, now) == true;
         journal.Completed(Kind,minutes,training,complete);
         if(!stillIdle&&!offline) { journal.Finish(now,complete?"Mission completed":"Returned early"); }
