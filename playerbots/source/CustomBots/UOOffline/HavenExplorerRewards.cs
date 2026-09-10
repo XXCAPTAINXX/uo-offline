@@ -47,6 +47,7 @@ public partial class HavenEndlessBandage : Bandage
 public partial class HavenResourceSatchel : Bag
 {
     [Constructible] public HavenResourceSatchel() { Name = "Gatherer's Resource Satchel"; Hue = 0x59B; Weight = 2; LootType = LootType.Blessed; }
+    public override void OnDoubleClick(Mobile from) => HavenStorageMenu.DisplayTo(from,this);
     public override int DefaultMaxWeight => 20000;
     public override bool OnDragDropInto(Mobile from, Item item, Point3D p) => Accepts(item) && base.OnDragDropInto(from, item, p);
     public override bool TryDropItem(Mobile from, Item item, bool message, bool sound) => Accepts(item) && base.TryDropItem(from, item, message, sound);

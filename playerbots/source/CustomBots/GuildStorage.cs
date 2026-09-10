@@ -112,6 +112,8 @@ namespace Server.CustomBots
             Weight = 1.0;
         }
 
+        public override void OnDoubleClick(Mobile from) => Server.UOOffline.HavenStorageMenu.DisplayTo(from,this);
+
         public override int DefaultMaxItems => 0;
         public override int DefaultMaxWeight => 0;
 
@@ -148,6 +150,8 @@ namespace Server.CustomBots
             Weight = 2.0;
             _sortRange = 24;
         }
+
+        public override void OnDoubleClick(Mobile from) => Server.UOOffline.HavenStorageMenu.DisplayTo(from,this);
 
         public override int DefaultMaxItems => 0;
         public override int DefaultMaxWeight => 0;

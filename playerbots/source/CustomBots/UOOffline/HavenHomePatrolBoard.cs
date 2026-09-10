@@ -75,7 +75,8 @@ public partial class HavenPirateEstate
     internal HavenHomePatrolBoard HomePatrol => Fixtures.OfType<HavenHomePatrolBoard>().FirstOrDefault(b => !b.Deleted);
     internal void EnsureHomePatrol()
     {
-        if (Deleted || Map != Map.Trammel || Fixtures.Count == 0 || HomePatrol != null) { return; }
+        if (Deleted || Map != Map.Trammel || Fixtures.Count == 0) { return; }
+        if (HomePatrol != null) { RefinePatrolNoticeArea(); return; }
         // Preflight the whole shelter before adding anything; leave player property alone.
         for (var x = 75; x <= 77; x++)
         for (var y = 123; y <= 126; y++)
@@ -99,7 +100,7 @@ public partial class HavenPirateEstate
             Add(new Static(0xA25) { Name = "The watchkeeper's lantern", Light = LightType.Circle225 }, 76, 126, 10);
             Add(new Static(0x9) { Name = "Patrol noticeboard mounting post" }, 77, 124);
             Add(new HavenHomePatrolBoard(), 77, 124, 4);
-            Fixtures.AddRange(placed); this.MarkDirty();
+            Fixtures.AddRange(placed); this.MarkDirty(); RefinePatrolNoticeArea();
         }
         catch { foreach (var item in placed) { item.Delete(); } throw; }
     }

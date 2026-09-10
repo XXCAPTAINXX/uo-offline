@@ -1,0 +1,15 @@
+diff --git a/Projects/UOContent/Items/Skill Items/Tools/BaseTool.cs b/Projects/UOContent/Items/Skill Items/Tools/BaseTool.cs
+--- a/Projects/UOContent/Items/Skill Items/Tools/BaseTool.cs
++++ b/Projects/UOContent/Items/Skill Items/Tools/BaseTool.cs
+@@ -123,7 +123,10 @@
+         LabelToAffix(m, 1017323, AffixType.Append, $": {_usesRemaining}"); // Durability
+     }
+
+-    public static bool CheckAccessible(Item tool, Mobile m) => tool.IsChildOf(m) || tool.Parent == m;
++    public static bool CheckAccessible(Item tool, Mobile m) =>
++        tool is Server.UOOffline.HavenCraftStation station
++            ? station.CanOperate(m) && station.UsesRemaining > 0
++            : tool.IsChildOf(m) || tool.Parent == m;
+
+     public static bool CheckTool(Item tool, Mobile m)
+     {

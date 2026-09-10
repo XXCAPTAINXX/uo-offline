@@ -115,6 +115,37 @@ public class HavenWorldTestsPirateHouse
             Assert.All(house.CompanyFixtures.OfType<HavenPirateStair>(), ladder => Assert.Equal(0x8A5,ladder.ItemID));
             var fixtureCount=house.CompanyFixtures.Count; house.RefineFloorAccess(); house.RefineDirectLadders(); Assert.Equal(fixtureCount,house.CompanyFixtures.Count);
             Assert.DoesNotContain(house.CompanyFixtures, i => i is HavenCompanyLadder or HavenCompanyCharter);
+            Assert.Equal(11,house.CompanyFixtures.OfType<HavenCraftStation>().Count());
+            var stationCount=house.CompanyFixtures.Count;house.FurnishCraftStations();Assert.Equal(stationCount,house.CompanyFixtures.Count);
+            foreach(var station in house.CompanyFixtures.OfType<HavenCraftStation>())
+            {
+                var reachable=false;
+                for(var dx=-2;dx<=2 && !reachable;dx++)
+                for(var dy=-2;dy<=2 && !reachable;dy++)
+                {
+                    var at=new Point3D(station.X+dx,station.Y+dy,station.Z);
+                    if(!house.Map.CanFit(at,16,checkMobiles:false)) { continue; }
+                    owner.MoveToWorld(at,house.Map);reachable=station.CanOperate(owner);
+                }
+                Assert.True(reachable,$"Crafting station inaccessible: {station.Name}");
+                Assert.True(BaseTool.CheckAccessible(station,owner));
+                station.UsesRemaining=0;Assert.False(BaseTool.CheckAccessible(station,owner));station.UsesRemaining=500;
+            }
+            var press=house.CompanyFixtures.OfType<HavenCraftStation>().First(s=>s.Kind==HavenCraftStationKind.Smithing);
+            owner.MoveToWorld(new Point3D(press.X,press.Y+1,press.Z),house.Map);
+            var hammer=new SmithHammer(40);owner.Backpack.DropItem(hammer);
+            Assert.True(press.Recharge(owner,hammer));Assert.True(hammer.Deleted);Assert.Equal(540,press.UsesRemaining);
+            var wrong=new SewingKit(30);owner.Backpack.DropItem(wrong);Assert.False(press.Recharge(owner,wrong));Assert.False(wrong.Deleted);
+            press.UsesRemaining=4999;var excess=new SmithHammer(40);owner.Backpack.DropItem(excess);
+            Assert.False(press.Recharge(owner,excess));Assert.Equal(40,excess.UsesRemaining);press.UsesRemaining=500;
+            owner.MoveToWorld(new Point3D(master.X,master.Y+1,master.Z),house.Map);
+            var deposit=new Bag();var sub=new Bag();deposit.DropItem(sub);owner.Backpack.DropItem(deposit);
+            var iron=new IronIngot(111);sub.DropItem(iron);
+            Assert.Equal(1,HavenStorageAccess.Collect(owner,master,deposit));
+            Assert.Contains(iron,HavenStorageAccess.Contents(master));
+            Assert.Equal(11,HavenStorageAccess.Withdraw(owner,master,new[]{iron},11));
+            Assert.Equal(100,HavenStorageAccess.Contents(master).OfType<IronIngot>().Sum(i=>i.Amount));
+
             owner.MoveToWorld(new Point3D(house.X, house.Y + 1, 7), house.Map);
             for (var deck = 0; deck < 5; deck++)
             { Assert.True(house.ChangeDeck(owner,deck)); Assert.Equal(HavenPirateHeadquarters.FloorDestinations[deck].Z,owner.Z); }
@@ -157,6 +188,7 @@ public class HavenWorldTestsPirateHouse
         }
         finally
         {
+            house ??= HavenPirateHeadquarters.Registry.FirstOrDefault(h=>h.Owner==owner);
             if (house != null) { foreach (var item in house.CompanyFixtures.ToArray()) { item.Delete(); } house.Delete(); }
             if (!old.Deleted) { foreach (var item in old.CompanyFixtures.ToArray()) { item.Delete(); } old.Delete(); }
             estate.Delete(); owner.Delete();
