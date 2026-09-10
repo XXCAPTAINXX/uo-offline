@@ -128,7 +128,7 @@ public static class HavenReleaseOperations
                     }
                     characters.Add(new { Serial = player.Serial.Value, player.Name, Access = player.AccessLevel.ToString(),
                         Guild=player.Guild?.Name, Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive, player.Criminal,
-                        HomeTravel = HavenPirateEstate.HomeStatus(player) });
+                        HomeTravel = HavenPirateEstate.HomeStatus(player), Pets = HavenPetDiagnostics.Snapshot(player) });
                 }
             }
         }
