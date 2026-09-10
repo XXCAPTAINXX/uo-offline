@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -49,7 +50,7 @@ public static class HavenReleaseOperations
                     break;
                 case "guild-castle":
                     var castleOwner = World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
-                    var castle = HavenGuildCastle.Install(castleOwner);
+                    var castle = HavenPirateHeadquarters.Install(castleOwner);
                     _operation = $"Rare Export Company headquarters ready at {castle.Location}, with {castle.CompanyFixtures.Count} furnishings and linked guild storage.";
                     break;
                 case "companion-gear-grind":
@@ -129,12 +130,12 @@ public static class HavenReleaseOperations
         var estates = new List<object>();
         foreach (var estate in HavenPirateEstate.Registry)
         {
-            HavenGuildCastle house = null;
-            foreach (var candidate in HavenGuildCastle.Registry) { if (!candidate.Deleted && candidate.Owner == estate.Owner) { house = candidate; break; } }
+            HavenPirateHeadquarters house = null;
+            foreach (var candidate in HavenPirateHeadquarters.Registry) { if (!candidate.Deleted && candidate.Owner == estate.Owner) { house = candidate; break; } }
             estates.Add(new { Owner = estate.Owner?.Name, OwnerSerial = (estate.Owner?.Serial ?? Serial.Zero).Value, Fixtures = estate.Fixtures.Count,
                 MiniChampion = estate.HomeTrial == null ? null : new { Serial = estate.HomeTrial.Serial.Value, estate.HomeTrial.Name, estate.HomeTrial.X, estate.HomeTrial.Y, estate.HomeTrial.Stage },
                 Headquarters = house == null ? null : new { Serial = house.Serial.Value, house.Name, house.X, house.Y, house.Z,
-                    Fixtures = house.CompanyFixtures.Count, MasterChest = house.MasterStorage?.Serial.Value, Stores = house.MasterStorage?.FindLinked().Count } });
+                    Customizable = true, Width = house.Components.Width, Height = house.Components.Height, DesignTiles = house.Components.List.Length, StorageItems = house.Secures.Sum(s => s.Item.TotalItems), Fixtures = house.CompanyFixtures.Count, MasterChest = house.MasterStorage?.Serial.Value, Stores = house.MasterStorage?.FindLinked().Count } });
         }
         var market = new List<object>();
         var dungeonCrews = new List<object>();

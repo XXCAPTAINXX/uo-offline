@@ -64,7 +64,7 @@ public class HavenWorldTestsGuildCastle
         {
             estate.EnsureHomeTrial(); var trial=estate.HomeTrial; Assert.NotNull(trial);
             estate.EnsureHomeTrial(); Assert.Same(trial,estate.HomeTrial);
-            Assert.True(trial.X + 12 < estate.X + 53);
+            Assert.True(trial.Y + 12 < estate.Y + 53);
             player.MoveToWorld(new Point3D(trial.X+1,trial.Y,trial.Z),trial.Map);
             trial.OnDoubleClick(player); Assert.Equal(1,trial.Stage);Assert.Equal(3,HavenTrialTheme.Get(trial));
             for(var stage=1;stage<=3;stage++)
@@ -107,3 +107,4 @@ public class HavenWorldTestsGuildCastle
         finally { Clean(house);owner.Delete();stranger.Delete(); }
     }
 }
+

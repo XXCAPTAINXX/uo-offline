@@ -118,13 +118,13 @@ public class HavenWorldTestsGuardStore
             town.Register(); owner.MoveToWorld(new Point3D(owner.X + 1, owner.Y, owner.Z), owner.Map);
             HavenSovereigns.CheckProgress(owner); var account = HavenSovereignAccount.Get(owner);
             var balance = account.Balance;
-            Assert.Contains("visit:1:town:Sovereign test town", account.Achievements);
+            Assert.Contains("visit2:1:town:Sovereign test town", account.Achievements);
             HavenSovereigns.CheckProgress(owner); Assert.Equal(balance, account.Balance);
             dungeon.Register(); owner.MoveToWorld(new Point3D(owner.X + 1, owner.Y, owner.Z), owner.Map);
-            HavenSovereigns.CheckProgress(owner); Assert.Equal(balance + 20, account.Balance);
-            HavenSovereigns.CheckProgress(owner); Assert.Equal(balance + 20, account.Balance);
-            HavenSovereigns.EncounterCleared(owner, 1); Assert.Equal(balance + 57, account.Balance);
-            HavenSovereigns.EncounterCleared(owner, 1); Assert.Equal(balance + 69, account.Balance);
+            HavenSovereigns.CheckProgress(owner); Assert.Equal(balance + 50, account.Balance);
+            HavenSovereigns.CheckProgress(owner); Assert.Equal(balance + 50, account.Balance);
+            HavenSovereigns.EncounterCleared(owner, 1); Assert.Equal(balance + 87, account.Balance);
+            HavenSovereigns.EncounterCleared(owner, 1); Assert.Equal(balance + 99, account.Balance);
         }
         finally { dungeon.Unregister(); town.Unregister(); owner.Delete(); }
     }

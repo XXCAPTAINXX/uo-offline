@@ -70,6 +70,14 @@ public static class HavenSovereigns
         var before = account.Earned;
         var countBefore = account.Achievements.Count;
         void Milestone(string key, string title, int amount) => account.Award(key, title, amount, false);
+        for (var i = account.Achievements.Count - 1; i >= 0; i--)
+        {
+            var key = account.Achievements[i];
+            if (!key.StartsWith("visit:", StringComparison.Ordinal)) { continue; }
+            var upgraded = "visit2:" + key[6..];
+            account.Award(upgraded, "Discovery reward increase: " + key[6..], key.Contains(":town:", StringComparison.Ordinal) ? 15 : 30, false);
+            account.Achievements.RemoveAt(i); account.MarkDirty();
+        }
         Milestone("welcome", "Welcome to Haven", 25);
         // Use the outer named town/dungeon, not each inn or dungeon sub-room.
         Region destination = null;
@@ -78,7 +86,7 @@ public static class HavenSovereigns
         if (destination != null)
         {
             var kind = destination is DungeonRegion ? "dungeon" : "town";
-            Milestone($"visit:{owner.Map.MapID}:{kind}:{destination.Name}", $"Discovered {destination.Name} ({owner.Map.Name})", kind == "town" ? 10 : 20);
+            Milestone($"visit2:{owner.Map.MapID}:{kind}:{destination.Name}", $"Discovered {destination.Name} ({owner.Map.Name})", kind == "town" ? 25 : 50);
         }
         for (var i = 0; i < owner.Skills.Length; i++)
         {

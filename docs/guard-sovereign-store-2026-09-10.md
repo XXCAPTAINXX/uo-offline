@@ -9,8 +9,8 @@ Sovereigns are a saved **character** balance, separate from gold, Haven Marks an
 | Activity | Reward | Repeatable? |
 |---|---:|---|
 | Welcome | 25 | Once per character |
-| Discover a named town | 10 | Once per town and facet |
-| Discover a named dungeon | 20 | Once per dungeon and facet |
+| Discover a named town | 25 | Once per town and facet |
+| Discover a named dungeon | 50 | Once per dungeon and facet |
 | Reach 50 base skill | 5 | Once per skill |
 | Reach 100 base skill | 25 | Once per skill |
 | Reach 100 base Strength, Dexterity or Intelligence | 10 each | Once per stat |
@@ -21,7 +21,7 @@ Sovereigns are a saved **character** balance, separate from gold, Haven Marks an
 | Wandering encounter clear | 10 + twice the tier | Each clear, including credited helpers |
 | Major boss | 50; 100 at 20,000+ maximum HP | Each credited kill |
 
-Existing skill and stat milestones count automatically. Visits begin recording with this update and are checked every three seconds while alive and online; revisit places explored before the update. Town shops and dungeon subrooms do not create separate discovery rewards when a named parent town/dungeon exists. Unnamed areas and custom areas without town/dungeon regions are not discovery achievements yet.
+Existing skill and stat milestones count automatically. Previously recorded discoveries receive a one-time top-up to the new 25/50 rates. Visits begin recording with this update and are checked every three seconds while alive and online; revisit places explored before the update. Town shops and dungeon subrooms do not create separate discovery rewards when a named parent town/dungeon exists. Unnamed areas and custom areas without town/dungeon regions are not discovery achievements yet.
 
 Boss credit uses the server's kill rights, including credit routed from pets and companions. Champions, Scalis-family bosses and hostile creatures with at least 4,000 maximum HP qualify. Claimants must be within 18 tiles on the same map. Controlled, summoned, previously owned, invulnerable and training creatures cannot award Sovereigns. Repeated callbacks for the same kill cannot pay the same character twice.
 
@@ -60,3 +60,4 @@ In game:
 4. Kill a major boss with another player; check each eligible player's balance.
 5. Order pets/companion to Guard near hostile monsters, then use Follow or Stay to stop patrol behavior.
 6. Reconnect and confirm balance, history and purchases remain intact.
+

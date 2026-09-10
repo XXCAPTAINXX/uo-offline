@@ -85,7 +85,7 @@ public static class HavenSovereignStore
             else
             {
                 AddLabel(28, 112, 1152, $"{account.Achievements.Count:N0} achievements | {account.Kills:N0} credited monster kills");
-                AddHtml(28, 140, 540, 75, "<BASEFONT COLOR=#FFFFFF>Towns +10; dungeons +20 once per place and facet. Skills 50/100: +5/+25. Pets, stats and kill milestones also pay. Major bosses: +50 to +100. Existing skill milestones count automatically.</BASEFONT>", false, true);
+                AddHtml(28, 140, 540, 75, "<BASEFONT COLOR=#FFFFFF>Towns +25; dungeons +50 once per place and facet. Skills 50/100: +5/+25. Pets, stats and kill milestones also pay. Major bosses: +50 to +100. Existing skill milestones count automatically.</BASEFONT>", false, true);
                 for (var row = 0; row < 8; row++)
                 {
                     var index = account.History.Count - 1 - (_page * 8 + row); if (index < 0) { break; }
