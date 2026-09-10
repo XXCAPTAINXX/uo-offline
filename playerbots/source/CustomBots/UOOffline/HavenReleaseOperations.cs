@@ -47,6 +47,11 @@ public static class HavenReleaseOperations
                     var ledgerOwner = World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
                     _operation = $"Stored {HavenResourceLedger.StoreCompanionPack(ledgerOwner)} supported companion deeds.";
                     break;
+                case "guild-castle":
+                    var castleOwner = World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
+                    var castle = HavenGuildCastle.Install(castleOwner);
+                    _operation = $"Rare Export Company headquarters ready at {castle.Location}, with {castle.CompanyFixtures.Count} furnishings and linked guild storage.";
+                    break;
                 case "companion-gear-grind":
                     var grindOwner=World.FindMobile((Serial)request.RootElement.GetProperty("ownerSerial").GetUInt32());
                     HavenCompanionGearAssignment.Begin(HavenCompanionGearAssignment.Find(grindOwner),Core.Now);
@@ -62,7 +67,7 @@ public static class HavenReleaseOperations
                     { throw new InvalidOperationException("An existing account character is required as island owner."); }
                     Install(owner);
                     break;
-                default: throw new InvalidOperationException("Allowed release actions: status, install, frontiers, original-dungeons, companion-gear-grind, companion-ledger, save.");
+                default: throw new InvalidOperationException("Allowed release actions: status, install, frontiers, original-dungeons, companion-gear-grind, companion-ledger, guild-castle, save.");
             }
             Write(id, true, null);
         }
@@ -123,7 +128,14 @@ public static class HavenReleaseOperations
         { expeditions.Add(new { Serial = board.Serial.Value, Sites = board.Sites.Count, Fixtures = board.Fixtures.Count }); }
         var estates = new List<object>();
         foreach (var estate in HavenPirateEstate.Registry)
-        { estates.Add(new { Owner = estate.Owner?.Name, OwnerSerial = (estate.Owner?.Serial ?? Serial.Zero).Value, Fixtures = estate.Fixtures.Count }); }
+        {
+            HavenGuildCastle house = null;
+            foreach (var candidate in HavenGuildCastle.Registry) { if (!candidate.Deleted && candidate.Owner == estate.Owner) { house = candidate; break; } }
+            estates.Add(new { Owner = estate.Owner?.Name, OwnerSerial = (estate.Owner?.Serial ?? Serial.Zero).Value, Fixtures = estate.Fixtures.Count,
+                MiniChampion = estate.HomeTrial == null ? null : new { Serial = estate.HomeTrial.Serial.Value, estate.HomeTrial.Name, estate.HomeTrial.X, estate.HomeTrial.Y, estate.HomeTrial.Stage },
+                Headquarters = house == null ? null : new { Serial = house.Serial.Value, house.Name, house.X, house.Y, house.Z,
+                    Fixtures = house.CompanyFixtures.Count, MasterChest = house.MasterStorage?.Serial.Value, Stores = house.MasterStorage?.FindLinked().Count } });
+        }
         var market = new List<object>();
         var dungeonCrews = new List<object>();
         var seenCrews = new HashSet<HavenDungeonCrew>();
@@ -157,7 +169,14 @@ public static class HavenReleaseOperations
         { if (!lair.Deleted) { bosses.Add(new { Kind = lair.Kind == 0 ? "Cora" : "Corgul", Map = lair.Map?.Name, Serial = lair.Boss?.Serial.Value, lair.Boss?.Alive, lair.Boss?.Hits, lair.Boss?.X, lair.Boss?.Y, lair.Boss?.Z, lair.NextSpawn, Arrival = lair.Arrival.ToString() }); } }
         var fleets = new List<object>();
         foreach (var fleet in HavenFishingFleet.Registry)
-        { if (!fleet.Deleted) { fleets.Add(new { Ship = fleet.Boat?.ShipName, Serial = fleet.Boat?.Serial.Value, fleet.Boat?.X, fleet.Boat?.Y, fleet.Boat?.Z, fleet.Status, fleet.Trips, fleet.Catches, fleet.Wrecks, fleet.Nets, fleet.Sold, Cargo = fleet.Cargo.Count, Crew = fleet.Sailors.Count }); } }
+        {
+            if (fleet.Deleted) { continue; }
+            var passenger = fleet.Passenger(); var crew = new List<object>();
+            foreach (var sailor in fleet.Sailors)
+            { if (sailor?.Deleted == false) { crew.Add(new { sailor.Name, sailor.X, sailor.Y, sailor.Z, sailor.Alive, sailor.Hits, PlayerOwner = HavenBotLoot.PlayerOwner(sailor)?.Serial.Value, Retained = HavenGuildCrew.Retained(sailor) }); } }
+            fleets.Add(new { Ship = fleet.Boat?.ShipName, Serial = fleet.Boat?.Serial.Value, fleet.Boat?.X, fleet.Boat?.Y, fleet.Boat?.Z, fleet.Status, Work = fleet.Work.ToString(), fleet.Trips, fleet.Catches, fleet.Wrecks, fleet.Nets, fleet.Sold, Cargo = fleet.Cargo.Count, Crew = crew,
+                Passenger = passenger == null ? null : new { passenger.Name, Serial = passenger.Serial.Value, passenger.Z } });
+        }
         var data = new { Operation = _operation, FishingFleet = fleets, Bosses = bosses, Id = id, Success = success, Error = error, Time = Core.Now, Market = market, DungeonCrews = dungeonCrews,
             Mobiles = World.Mobiles.Count, Items = World.Items.Count, Characters = characters, Companions=companions,
             Commons = HavenCommunityCenter.Registry.Count, Estates = estates, DoomControllers = HavenDoom.Controllers().Count,

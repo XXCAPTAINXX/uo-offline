@@ -16,6 +16,9 @@ public partial class HavenIslandTrial : Item
     [SerializableField(3)] private DateTime _readyAt;
     [SerializableField(4)] private DateTime _lastActivity;
     private Timer _pulse;
+    protected virtual string TrialName => "Haven's island trial";
+    protected virtual int ChooseTheme() => Utility.Random(3);
+    protected virtual int RoamingRange => 18;
     public static readonly Point3D Site = new(3474, 2723, 25);
 
     [Constructible]
@@ -35,7 +38,7 @@ public partial class HavenIslandTrial : Item
         return false;
     }
     [AfterDeserialization]
-    private void Resume() { Name = "Haven's island trial"; if (Stage > 0) { StartPulse(); } }
+    private void Resume() { Name = TrialName; if (Stage > 0) { StartPulse(); } }
     private void StartPulse()
     {
         _pulse?.Stop();
@@ -46,7 +49,7 @@ public partial class HavenIslandTrial : Item
         if (!from.Alive || from.Map != Map || !from.InRange(this, 3) || !from.InLOS(this)) { return; }
         if (Stage > 0) { from.SendMessage($"{HavenTrialTheme.Label(HavenTrialTheme.Get(this))} trial: stage {Stage}/4, {Kills}/6 defeated. The final stage is the champion."); return; }
         if (Core.Now < ReadyAt) { from.SendMessage("The island trial will be ready again shortly (two minutes between victories)."); return; }
-        HavenTrialTheme.Set(this, Utility.Random(3));
+        HavenTrialTheme.Set(this, ChooseTheme());
         HavenTrialParticipants.Get(this).Clear();
         Stage = 1; Kills = 0; LastActivity = Core.Now;
         from.SendMessage($"The {HavenTrialTheme.Label(HavenTrialTheme.Get(this))} trial begins! Defeat six creatures in each of three waves, then the champion. Creatures carry matching crafting resources.");
@@ -60,7 +63,7 @@ public partial class HavenIslandTrial : Item
         {
             var creature = Creatures[i];
             if (creature == null || creature.Deleted) { Creatures.RemoveAt(i); continue; }
-            if (creature.Map != Map || !creature.InRange(Location, 18))
+            if (creature.Map != Map || !creature.InRange(Location, RoamingRange))
             {
                 if (FindSite(Location, out var home)) { creature.MoveToWorld(home, Map); }
             }
@@ -69,7 +72,7 @@ public partial class HavenIslandTrial : Item
         for (var attempt = 0; attempt < 48 && Creatures.Count < desired; attempt++)
         {
             var preferred = new Point3D(X + Utility.RandomMinMax(-5, 5), Y + Utility.RandomMinMax(-5, 5), Z);
-            if (!FindSite(preferred, out var point) || !Map.LineOfSight(new Point3D(X, Y, Z + 14), new Point3D(point.X, point.Y, point.Z + 14))) { continue; }
+            if (!FindSite(preferred, out var point) || !Utility.InRange(point,Location,RoamingRange) || !Map.LineOfSight(new Point3D(X, Y, Z + 14), new Point3D(point.X, point.Y, point.Z + 14))) { continue; }
             var creature = new HavenTrialCreature(Stage, HavenTrialTheme.Get(this)) { Trial = this, Home = Location, RangeHome = 8 };
             Creatures.Add(creature); creature.MoveToWorld(point, Map); this.MarkDirty();
         }
@@ -105,7 +108,7 @@ public partial class HavenIslandTrial : Item
         list.Add($"{"Beginner champion trial: three short waves and one boss"}");
         list.Add($"{"Theme:"} {HavenTrialTheme.Label(HavenTrialTheme.Get(this))}{"; matching wood, metal or hides"}");
         list.Add($"{"Rewards: 25,000-40,000 gold, five 105/110 scrolls, 20 Haven marks, 5 Astral shards"}");
-        list.Add($"{"Each participant receives a reward bag directly in their backpack"}");
+        list.Add($"{"Each participant receives rewards directly in their backpack"}");
         list.Add($"{"Also includes one Alacrity and one 0.5-2.0 Transcendence scroll per participant"}");
         list.Add($"{"Stage:"} {Stage}/4\t{"Wave kills:"} {Kills}/6");
         list.Add($"{"Double-click to start or check progress"}");

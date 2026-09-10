@@ -310,13 +310,19 @@ Use [home if an estate has been assigned to you. The current personal-island set
 ### Corsair settlement
 Your private island keeps its original size and house plot. A kitchen garden grows carrots, cabbage, wheat and cotton; the orchard produces fruit. Rainwater, a camp kitchen and dock supplies give the settlement a lived-in feel.
 
+### Rare Export Company headquarters
+The assigned private island now has a castle-sized R.E.C. headquarters. The receiving chest automatically sorts goods into thirteen workshop stores, including commodity deeds. Use the ship's stair near the center to choose a deck: ground workshops/galley/pet room, middle guild hall/maps/alchemy, or upper captain's quarters/treasury. Crafting tools are in their profession chests. The house owner, co-owners and members of the owner's guild can use secured company storage. Visitors can enter but cannot use the stores. Guild creation and membership still use the normal Guild menu; the house does not enroll anyone automatically.
+
+### Home-island mini champion
+Blackwake landing is on the western shore of your home island, at 4164, 2892 in Trammel. Double-click its trial marker to begin three waves of six pirates, followed by Captain Blackwake. It uses the same personal rewards as the Haven island trial: 25,000-40,000 gold, five 105/110 power scrolls, Alacrity, Transcendence, 20 Haven marks, five Astral shards and a crafting-resource deed. It rests for two minutes after victory. The raid is started on demand and stays away from the headquarters, gardens and dock.
+
 ## Build boundaries
 
 ### What this build is
 Haven extends a Mondain's Legacy foundation with compatible later-era and custom systems. Seeing an item, creature or destination from a later era does not imply every official expansion mechanic is present.
 
 ### Still incomplete
-Full native Imbuing, all official Stygian Abyss bosses, official-complete Shadowguard/Blackthorn loot ports, moving ship/cannon AI and an independent private island for every multiplayer account remain future work. Some guild crafting recipes still need additional automatic supply support.
+Full native Imbuing, all official Stygian Abyss bosses, official-complete Shadowguard/Blackthorn loot ports, full ship cannon combat and an independent private island for every multiplayer account remain future work. Some guild crafting recipes still need additional automatic supply support.
 
 ### Friends and multiplayer
 The current friends' build is for separate local installations first. Public/shared-server access needs its own configuration and two-player testing. Your friend's private world is separate from yours. Never distribute your Accounts/Saves directories as a fresh-install package.

@@ -96,3 +96,12 @@ See [THREE-BOSSES.md](THREE-BOSSES.md) for commands, reward tables and the five 
 ## Companion report readability
 
 Open [CompanionReport: check dark text on parchment, the Overview before/after/change columns, paged Loot/Skills/Gear, and each Stats detail window. Close a detail window to return to the same report page. Older and newer reports must retain their recorded values.
+
+## R.E.C. headquarters and home island
+
+- [ ] **H01 — Three decks.** Use `[home`, walk north to the R.E.C. castle, and use the ship's stair near its center. Visit workshops, guild hall and captain's quarters; nearby followers should travel with you.
+- [ ] **H02 — Company stores.** Drop ingots, a wood commodity deed, reagents and an unrecognized item into the receiving chest. They should reach the corresponding store or Unsorted without changing quantities. Verify owner/co-owner/guild access and that an unrelated visitor cannot open or withdraw from the stores.
+- [ ] **H03 — Crafting.** Take tools from profession chests. Test the forge/anvil, spinning wheel/loom, cooking oven/flour mill, repair bench and pet shrinking post.
+- [ ] **H04 — Blackwake landing.** Visit 4164, 2892 on the western shore. Start the trial marker, defeat three six-pirate waves and Captain Blackwake, and verify personal gold, scrolls, currency and resource-deed rewards. The raid should stay clear of the house and gardens.
+- [ ] **H05 — Settlement.** Harvest the gardens and fruit trees, inspect the kitchen and dock, and report any art that floats or blocks a useful route.
+- [ ] **H06 — Fishing fleet.** Use `[fishfleet` to observe real voyages and catches, then inspect Maritime market listings. A player aboard pauses departure; sea creatures underneath the boat must not.

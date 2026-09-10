@@ -121,6 +121,23 @@ public class HavenWorldTestsFishingFleet
         finally { copy.Delete(); visitor.Delete(); Clean(fleet); }
     }
     [SkippableFact]
+    public void SeaLifeBelowHullDoesNotPauseVoyageAndBlockedCourseIsRecharted()
+    {
+        TileDataRequirement.SkipIfMissing(); var fleet = Fleet(); var serpent = new SeaSerpent();
+        try
+        {
+            serpent.MoveToWorld(new Point3D(fleet.Boat.X, fleet.Boat.Y, -5), fleet.Boat.Map);
+            Assert.False(fleet.Passengers());
+            fleet.Work = HavenSeaWork.Sailing;
+            // A stale course into dry land must be abandoned after bounded retries.
+            fleet.Course.Add(new Point3D(4196,2868,0));
+            for (var i = 0; i < 3; i++) { fleet.Navigate(fleet.Goal,4); }
+            Assert.Empty(fleet.Course); Assert.Contains("Recharting", fleet.Status);
+            Assert.Equal(fleet.Home,fleet.Boat.Location);
+        }
+        finally { serpent.Delete(); Clean(fleet); }
+    }
+    [SkippableFact]
     public void UnlearnedMasteriesAreHiddenAndLearnedVolumesRetainTheirSkills()
     {
         TileDataRequirement.SkipIfMissing(); var p = new PlayerMobile(); var book = new BookOfMasteries(); p.AddItem(new Backpack()); p.Backpack.DropItem(book);

@@ -11,7 +11,7 @@ public partial class HavenTrialTheme : Item
     public override bool IsVirtualItem => true;
     [Constructible]
     public HavenTrialTheme(int theme = 0) : base(1)
-    { Theme = Math.Clamp(theme, 0, 2); Visible = false; Movable = false; Weight = 0; Name = "island trial theme"; }
+    { Theme = Math.Clamp(theme, 0, 3); Visible = false; Movable = false; Weight = 0; Name = "island trial theme"; }
     internal static int Get(Item holder)
     {
         foreach (var item in holder.Items) { if (item is HavenTrialTheme theme) { return theme.Theme; } }
@@ -25,14 +25,22 @@ public partial class HavenTrialTheme : Item
     internal static void Set(Item holder, int value)
     {
         foreach (var item in holder.Items)
-        { if (item is HavenTrialTheme theme) { theme.Theme = Math.Clamp(value, 0, 2); return; } }
+        { if (item is HavenTrialTheme theme) { theme.Theme = Math.Clamp(value, 0, 3); return; } }
         holder.AddItem(new HavenTrialTheme(value));
     }
-    internal static string Label(int theme) => theme switch { 1 => "Earth and ore", 2 => "Wild beasts", _ => "Woodland" };
+    internal static string Label(int theme) => theme switch { 1 => "Earth and ore", 2 => "Wild beasts", 3 => "Blackwake pirates", _ => "Woodland" };
     internal static void Dress(HavenTrialCreature creature, int theme)
     {
         var boss = creature.TrialStage == 4;
-        if (theme == 1)
+        if (theme == 3)
+        {
+            creature.Name = boss ? "Captain Blackwake, the island raider" : creature.TrialStage switch
+            { 1 => "a Blackwake deckhand", 2 => "a Blackwake raider", _ => "a Blackwake first mate" };
+            creature.Body = 400; creature.Hue = 0x83EA;
+            creature.AddItem(new TricorneHat(0x455)); creature.AddItem(new Shirt(boss ? 0x66D : 0x455));
+            creature.AddItem(new LongPants(0x455)); creature.AddItem(new Boots());
+        }
+        else if (theme == 1)
         {
             creature.Name = boss ? "Stoneback, the quarry champion" : creature.TrialStage switch
             { 1 => "a restless earth wisp", 2 => "a copperstone elemental", _ => "an ironstone guardian" };

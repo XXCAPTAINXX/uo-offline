@@ -42,6 +42,8 @@ public partial class HavenFishingFleet : Item
     private Timer _timer;
     private HavenSeaNavigation _planner;
     private DateTime _nextCast, _nextNet;
+    private int _blockedSteps;
+    private bool _detourHome;
     public override bool IsVirtualItem => true;
     internal HavenFishingSailor Captain => Sailors.Count > 0 ? Sailors[0] : null;
     [Constructible]
@@ -118,13 +120,19 @@ public partial class HavenFishingFleet : Item
         else { Boat.Hold.DropItem(item); }
         this.MarkDirty();
     }
-    internal bool Passengers()
+    internal Mobile Passenger()
     {
-        if (Boat?.Deleted != false) { return false; }
+        if (Boat?.Deleted != false) { return null; }
         foreach (var mobile in Boat.Map.GetMobilesInRange<Mobile>(Boat.Location, 10))
-        { if (mobile is not HavenFishingSailor { Fleet: var f } || f != this) { if (Boat.Contains(mobile)) { return true; } } }
-        return false;
+        {
+            // Contains is a two-dimensional hull check: sea creatures beneath the deck are not passengers.
+            if (mobile.Z < Boat.Z + 2 || mobile.Z > Boat.Z + 20 || !Boat.Contains(mobile)) { continue; }
+            if (mobile is PlayerBot) { continue; }
+            if (mobile.Player || mobile is BaseCreature { Controlled: true } or BaseCreature { Summoned: true }) { return mobile; }
+        }
+        return null;
     }
+    internal bool Passengers() => Passenger() != null;
     internal void Tick(DateTime now)
     {
         if (Deleted || Boat?.Deleted != false || Captain?.Deleted != false) { return; }
@@ -156,7 +164,9 @@ public partial class HavenFishingFleet : Item
         {
             if (Boat.InRange(Home, 1)) { Work = HavenSeaWork.Docked; Trips++; Due = now + TimeSpan.FromMinutes(2); Unload(); return; }
             if (Trail.Count > 0 && Boat.Location == Trail[^1]) { Trail.RemoveAt(Trail.Count - 1); }
-            if (Trail.Count > 0) { Sail(Trail[^1]); } else { Status = "Return route unavailable; anchored safely"; }
+            if (_detourHome || Trail.Count == 0) { Navigate(Home, 1); }
+            else if (Sail(Trail[^1])) { _blockedSteps = 0; }
+            else if (++_blockedSteps >= 3) { _detourHome = true; Course.Clear(); _planner = null; _blockedSteps = 0; }
             return;
         }
         if (Threat()) { Boat.StopMove(false); Status = "Crew defending the vessel"; return; }
@@ -167,15 +177,7 @@ public partial class HavenFishingFleet : Item
             { Work = Wreck?.Deleted == false ? HavenSeaWork.Salvaging : HavenSeaWork.Fishing; Due = now + TimeSpan.FromMinutes(3); _planner = null; Course.Clear(); }
             else
             {
-                if (Course.Count == 0)
-                {
-                    _planner ??= new HavenSeaNavigation(Boat.Location, Goal, Wreck?.Deleted == false ? 35 : 4);
-                    _planner.Advance(Boat);
-                    if (_planner.Failed) { Status = "No safe route; returning with cargo"; BeginReturn(); return; }
-                    if (!_planner.Finished) { Status = "Charting a safe sailing route"; return; }
-                    Course.AddRange(_planner.Path); _planner = null;
-                }
-                if (Course.Count > 0 && Sail(Course[0])) { Course.RemoveAt(0); }
+                Navigate(Goal, Wreck?.Deleted == false ? 35 : 4);
                 return;
             }
         }
@@ -193,6 +195,30 @@ public partial class HavenFishingFleet : Item
         }
         this.MarkDirty();
     }
+    internal void Navigate(Point3D goal, int range)
+    {
+        if (Course.Count == 0)
+        {
+            _planner ??= new HavenSeaNavigation(Boat.Location, goal, range);
+            _planner.Advance(Boat);
+            if (_planner.Failed)
+            {
+                _planner = null; Status = "No safe route; keeping earned cargo aboard";
+                if (Work != HavenSeaWork.Returning) { BeginReturn(); }
+                return;
+            }
+            if (!_planner.Finished) { Status = "Charting a safe sailing route"; return; }
+            Course.AddRange(_planner.Path); _planner = null;
+        }
+        if (Course.Count == 0) { return; }
+        if (Sail(Course[0])) { Course.RemoveAt(0); _blockedSteps = 0; }
+        else if (++_blockedSteps >= 3)
+        {
+            // Another boat may have entered the old course; chart around its current position.
+            Course.Clear(); _planner = null; _blockedSteps = 0;
+            Status = "Recharting around an obstruction";
+        }
+    }
     internal bool Sail(Point3D target)
     {
         var dx = target.X - Boat.X; var dy = target.Y - Boat.Y;
@@ -205,7 +231,7 @@ public partial class HavenFishingFleet : Item
         this.MarkDirty(); return Boat.Location == target;
     }
     internal void BeginReturn()
-    { if (Work == HavenSeaWork.Returning) { return; } Work = HavenSeaWork.Returning; Course.Clear(); _planner = null; Status = "Returning to harbor with earned cargo"; }
+    { if (Work == HavenSeaWork.Returning) { return; } Work = HavenSeaWork.Returning; Course.Clear(); _planner = null; _blockedSteps = 0; _detourHome = false; Status = "Returning to harbor with earned cargo"; }
     internal object WaterTarget()
     {
         if (Captain?.Deleted != false || Boat?.Deleted != false) { return null; }
