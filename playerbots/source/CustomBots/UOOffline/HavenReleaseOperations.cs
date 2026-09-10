@@ -119,6 +119,7 @@ public static class HavenReleaseOperations
                         foreach (var book in companion.Backpack.FindItemsByType<HavenResourceLedger>())
                         { ledgerCount++; foreach (var amount in book.Balances) { ledgerUnits += amount; } }
                         companions.Add(new { OwnerSerial=player.Serial.Value,Serial=companion.Serial.Value,companion.Name,
+                            Role = companion.Role.ToString(), Order = companion.ControlOrder.ToString(), companion.Criminal,
                             PendingDeeds = pendingDeeds, LedgerCount = ledgerCount, LedgerUnits = ledgerUnits,
                             Level=companion.TrainingLevel,companion.RawStr,companion.RawDex,companion.RawInt,
                             PackItems=companion.Backpack?.TotalItems,Expedition=companion.Expedition?.Status,
@@ -126,7 +127,7 @@ public static class HavenReleaseOperations
                             MissionJournal=journal==null ? null : new { journal.Active,journal.Unread,Reports=journal.Reports.Count,Latest=journal.Reports[0] } });
                     }
                     characters.Add(new { Serial = player.Serial.Value, player.Name, Access = player.AccessLevel.ToString(),
-                        Guild=player.Guild?.Name, Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive,
+                        Guild=player.Guild?.Name, Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive, player.Criminal,
                         HomeTravel = HavenPirateEstate.HomeStatus(player) });
                 }
             }
