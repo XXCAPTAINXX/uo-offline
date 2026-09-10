@@ -33,6 +33,8 @@ namespace Server.CustomBots
 {
     public class PlayerGroupBehavior : AdventurerBehavior
     {
+        private readonly HavenPartySupport _support = new();
+        public override void OnDetached(PlayerBot bot) { _support.Cancel(); base.OnDetached(bot); }
         public override string SerializableName => "PlayerGroup";
 
         // Follow tuning.
@@ -132,6 +134,7 @@ namespace Server.CustomBots
                 }
             }
 
+            if (_support.Tick(bot)) { StopStepTimer(); return; }
             base.Tick(bot);
         }
 

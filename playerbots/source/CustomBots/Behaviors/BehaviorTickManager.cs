@@ -59,6 +59,7 @@ namespace Server.CustomBots
                     // A real player may have invited this bot to a party
                     // since the last tick — answer before acting.
                     BotPlayerParty.CheckInvite(bot);
+                    if (Server.UOOffline.HavenGuildCrew.Working(bot)) { continue; }
                     bot.Behavior?.Tick(bot);
 
                     // Judged from OUTSIDE the brain, after it has had its

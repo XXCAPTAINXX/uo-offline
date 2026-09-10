@@ -1,6 +1,8 @@
 # Haven guild crews
 
-Design prepared while deployment is on hold. This document describes proposed behavior, not a live feature.
+Deployment remains on hold. A staged baseline now exists in `HavenGuildCrew.cs`: `[guildcrew recruit`, a four-member persistent roster, two recruited bots per adventuring party, timed gathering jobs, skill/stat gains, pause/resume, resource-deed withdrawal, and dismissal with added gear returned. Only the guild leader recruits, dismisses, and withdraws. Ledger deletion recovers added gear and resource deeds to the leader/recruiter's bank. Native guild membership is checked on every operation. Guild workers are exempt from normal session deletion. Combat and player-party membership pause work. Missed time credits at most one job, not a backlog.
+
+The remaining sections describe the larger design. Officer permissions, a placed Fellowship Board, separate equipment/skills/history tabs, configurable limits, physical harvesting routes, and crafting jobs for recruited guild members are not implemented. Market workshop artisans are a separate persistent workforce. Neither system is installed live yet.
 
 ## What already exists
 

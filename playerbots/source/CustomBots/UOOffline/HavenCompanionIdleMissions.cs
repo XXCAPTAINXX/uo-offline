@@ -83,13 +83,21 @@ public partial class HavenCompanionIdleMissions : Item
         }
         return best;
     }
-    internal HavenExpeditionKind NextMission() => Cycle % 6 == 5 ? BestTaming(Companion) : (HavenExpeditionKind)(Cycle % 6);
+    internal bool ReportingAfk => Enabled&&(Afk||Core.Now-_lastActivity>=TimeSpan.FromMinutes(5));
+    internal HavenExpeditionKind NextMission()
+    {
+        var focus=Companion.Backpack.FindItemByType<HavenMissionRoute>()?.Focus??-1;
+        if(focus>=0&&HavenRegionalMissions.CanStart(Companion,(HavenExpeditionKind)focus)) { return (HavenExpeditionKind)focus; }
+        var slot=Cycle%10;var kind=slot<5?(HavenExpeditionKind)slot:slot==5?BestTaming(Companion):HavenRegionalMissions.Kinds[slot-6];
+        return HavenRegionalMissions.CanStart(Companion,kind)?kind:HavenExpeditionKind.Grind;
+    }
 
     internal void Tick(DateTime now) => Tick(now, Companion?.BoundOwner?.NetState != null);
     internal void Tick(DateTime now, bool connected)
     {
         var owner = Companion?.BoundOwner;
         if (Companion?.Deleted != false || owner?.Deleted != false) { Delete(); return; }
+        if (Companion.Backpack?.FindItemByType<HavenCompanionGearAssignment>()?.Running == true) { return; }
         // Only observe a connected player in the world. Offline training continues separately.
         var active = !connected || owner.Map == null || owner.Map == Map.Internal ||
             !owner.Alive || owner.Warmode || owner.Combatant != null || owner.Spell != null || owner.Target != null ||
@@ -111,10 +119,10 @@ public partial class HavenCompanionIdleMissions : Item
         { Companion.PrepareForExpedition(); }
         if (!connected || !idle || Companion.Expedition != null || Companion.IsDeadPet || Companion.IsStabled ||
             Companion.Combatant != null || Companion.Hits < Companion.HitsMax ||
-            Companion.Backpack.TotalItems >= Companion.Backpack.MaxItems - 15 ||
+            Companion.Backpack.TotalItems >= Companion.Backpack.MaxItems - 20 ||
             Companion.Backpack.TotalWeight >= Companion.Backpack.MaxWeight - 50) { return; }
         if (HavenCompanionExpedition.Start(Companion, owner, NextMission()))
-        { ActiveTrip = Companion.Expedition; Cycle = (Cycle + 1) % 6; }
+        { ActiveTrip = Companion.Expedition; Cycle = (Cycle + 1) % 10; }
     }
     internal bool Finished(HavenCompanionExpedition trip, DateTime now)
     {
@@ -132,14 +140,20 @@ public class HavenCompanionAfkGump : Gump
     public HavenCompanionAfkGump(HavenCompanionIdleMissions record) : base(100, 100)
     {
         _record = record;
-        AddBackground(0, 0, 390, 255, 9270);
+        AddBackground(0, 0, 430, 325, 9270);
         AddLabel(20, 20, 0, "Companion AFK missions");
-        AddHtml(20, 52, 350, 70, "Cycle: loot, gathering, best eligible pet.<BR>Manual AFK stays on until you turn it off.<BR>Activity ends automatic idle missions only.");
+        AddHtml(20, 52, 380, 70, "Cycle: loot, gathering, pets, Malas and Abyss.<BR>Set a focus in Tasks → Resource routes.<BR>Manual AFK stays on until you turn it off.");
         AddButton(20, 135, 4005, 4007, 1);
         AddLabel(55, 137, 0, record.Afk || record.ActiveTrip != null ? "Leave AFK / return now" : "Enter AFK now");
         AddButton(20, 172, 4005, 4007, 2);
         AddLabel(55, 174, 0, record.Enabled ? "Auto after 5 idle minutes: ON" : "Auto after 5 idle minutes: OFF");
-        AddButton(20, 212, 4005, 4007, 0); AddLabel(55, 214, 0, "Close");
+        AddLabel(20,210,0,$"Trip length: {HavenMissionDuration.Selected(record.Companion)} minutes (next mission)");
+        for(var i=0;i<HavenMissionDuration.Choices.Length;i++)
+        {
+            var minutes=HavenMissionDuration.Choices[i]; AddButton(20+i*100,244,4005,4007,100+minutes);
+            AddLabel(55+i*100,246,0,$"{minutes}m");
+        }
+        AddButton(20, 285, 4005, 4007, 0); AddLabel(55, 287, 0, "Close");
     }
     public override void OnResponse(NetState sender, in RelayInfo info)
     {
@@ -147,6 +161,8 @@ public class HavenCompanionAfkGump : Gump
         if (info.ButtonID == 1) { _record.SetAfk(!_record.Afk && _record.ActiveTrip == null); }
         else if (info.ButtonID == 2)
         { _record.Enabled = !_record.Enabled; if (!_record.Enabled) { _record.SetAfk(false); } }
+        else if(HavenMissionDuration.Valid(info.ButtonID-100))
+        { HavenMissionDuration.Select(_record.Companion,info.ButtonID-100); }
         sender.Mobile.CloseGump<HavenCompanionAfkGump>();
         if (_record.ActiveTrip == null) { sender.Mobile.SendGump(new HavenCompanionAfkGump(_record)); }
     }

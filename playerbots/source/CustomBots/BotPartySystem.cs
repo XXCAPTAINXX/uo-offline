@@ -674,6 +674,7 @@ namespace Server.CustomBots
         // the people on his leader were the people it would normally
         // hunt. Reds have their own gangs.
         private static bool IsEligible(PlayerBot bot) =>
+            !Server.UOOffline.HavenGuildCrew.Retained(bot) &&
             bot != null && !bot.Deleted && bot.Alive &&
             !bot.LifecycleExempt && !bot.LoggingOut &&
             bot.Combatant == null &&

@@ -24,6 +24,7 @@ namespace Server.Spells.SkillMasteries
 		public override SkillName DamageSkill { get { return SkillName.Tactics; } }
 
         private int _DefenseMod;
+        private InternalTimer _targetTimer;
 
         public int AttackModifier { get { return (GetMasteryLevel() * 6) * Phase; } }
         public int DefenseModifier
@@ -65,6 +66,10 @@ namespace Server.Spells.SkillMasteries
 
         public override void EndEffects()
         {
+            _targetTimer?.Stop();
+            _targetTimer = null;
+            if (Target != null) { MasteryBuffInfo.RemoveBuff(Target, BuffIcon.ThrustDebuff); }
+            Target = null;
             MasteryBuffInfo.RemoveBuff(Caster, BuffIcon.Thrust);
         }
 
@@ -90,7 +95,7 @@ namespace Server.Spells.SkillMasteries
         public override void OnCast()
         {
             if (!CheckSequence())
-                return;
+            { FinishSequence(); return; }
 
             Phase = 1;
             DefenseModifier = GetMasteryLevel() * 6;
@@ -116,8 +121,10 @@ namespace Server.Spells.SkillMasteries
                 Phase = 1;
                 DefenseModifier = (GetMasteryLevel() * 6);
 
+                if (Target != null) { MasteryBuffInfo.RemoveBuff(Target, BuffIcon.ThrustDebuff); }
+                _targetTimer?.Stop();
 				Target = defender;
-                new InternalTimer(this, defender);
+                _targetTimer = new InternalTimer(this, defender);
 			}
 			else
 			{
@@ -163,6 +170,7 @@ namespace Server.Spells.SkillMasteries
 		private void Reset()
 		{
 			DefenseModifier = 0;
+            if (Target != null) { MasteryBuffInfo.RemoveBuff(Target, BuffIcon.ThrustDebuff); }
             Target = null;
 
             MasteryBuffInfo.AddBuff(Caster, new MasteryBuffInfo(BuffIcon.Thrust, 1155989, 1155990, String.Format("{0}\t{1}\t{2}", AttackModifier.ToString(), (GetMasteryLevel() * 6).ToString(), ScaleMana(30).ToString())));
@@ -197,7 +205,10 @@ namespace Server.Spells.SkillMasteries
             {
                 if (Expires < Core.Now)
                 {
-                    Spell.Reset();
+                    if (Spell.Timer != null && Spell.Target == Target) { Spell.Reset(); }
+                    Spell._targetTimer = null;
+                    Spell = null;
+                    Target = null;
                     Stop();
                 }
             }

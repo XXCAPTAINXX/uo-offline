@@ -27,11 +27,18 @@ public partial class ShrunkenPet : Item
     {
         Pet = pet;
         Owner = owner;
+        HavenPetAppearance.Refresh(pet);
         Hue = pet?.Hue ?? 0;
     }
 
-    internal BaseCreature Inspect(Mobile from) => !Deleted && Pet?.Deleted == false && from?.Deleted == false &&
-        from.Alive && from.Backpack != null && IsChildOf(from.Backpack) && (Owner == null || Owner == from) ? Pet : null;
+    internal BaseCreature Inspect(Mobile from)
+    {
+        if (Deleted || Pet?.Deleted != false || from?.Deleted != false || !from.Alive ||
+            from.Backpack == null || !IsChildOf(from.Backpack) || Owner != null && Owner != from) { return null; }
+        HavenPetAppearance.Refresh(Pet);
+        if (Hue != Pet.Hue) { Hue = Pet.Hue; }
+        return Pet;
+    }
 
     public void InspectWithAnimalLore(Mobile from)
     {
@@ -86,6 +93,7 @@ public partial class ShrunkenPet : Item
 
         Pet = null;
 
+        HavenPetAppearance.Refresh(pet);
         pet.SetControlMaster(from);
         pet.ControlTarget = from;
         pet.ControlOrder = OrderType.Follow;

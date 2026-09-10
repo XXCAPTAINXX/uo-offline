@@ -1,0 +1,27 @@
+diff --git a/Projects/UOContent/Misc/AOS.cs b/Projects/UOContent/Misc/AOS.cs
+--- a/Projects/UOContent/Misc/AOS.cs
++++ b/Projects/UOContent/Misc/AOS.cs
+@@ -144,7 +144,7 @@
+                 }
+ 
+                 if (totalDamage < 1)
+                 {
+-                    totalDamage = 1;
++                    totalDamage = Server.UOOffline.HavenPetDefenses.FullyImmune(m, phys, fire, cold, pois, nrgy, direct) ? 0 : 1;
+                 }
+             }
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -2320,8 +2320,9 @@
+             AIObject?.AITimer.Stop();
+ 
+-            if (ForcedAI != null)
++            var forcedAI = ForcedAI;
++            if (forcedAI != null)
+             {
+-                AIObject = ForcedAI;
++                AIObject = forcedAI;
+                 return;
+             }
+ 

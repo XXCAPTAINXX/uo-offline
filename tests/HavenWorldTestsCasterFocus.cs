@@ -16,6 +16,7 @@ public class HavenWorldTestsCasterFocus
     public void CasterHasPermanentFocusAndUsesGroupDamageCureAndExecutionPriorities()
     {
         TileDataRequirement.SkipIfMissing();
+        using var poisons = new HavenPoisonTestScope();
         var owner = new PlayerMobile { Player = true, Body = 0x190 };
         var caster = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Caster };
         var enemy = new Dragon(); var second = new Dragon();
@@ -28,7 +29,6 @@ public class HavenWorldTestsCasterFocus
             Assert.IsType<ThunderstormSpell>(caster.ChooseAttackSpell(enemy));
             enemy.Hits = enemy.HitsMax / 4;
             Assert.IsType<WordOfDeathSpell>(caster.ChooseAttackSpell(enemy));
-            if (Poison.Regular == null) { PoisonKinds.Configure(); }
             owner.Poison = Poison.Regular;
             Assert.IsType<CureSpell>(caster.ChooseEmergencySpell(out var patient)); Assert.Same(owner, patient);
             caster.Role = HavenCompanionRole.Fighter;
@@ -36,6 +36,6 @@ public class HavenWorldTestsCasterFocus
             caster.Role = HavenCompanionRole.Caster;
             Assert.Equal(6, ArcanistSpell.GetFocusLevel(caster));
         }
-        finally { caster.Delete(); owner.Delete(); enemy.Delete(); second.Delete(); }
+        finally { owner.Poison = null; caster.Delete(); owner.Delete(); enemy.Delete(); second.Delete(); }
     }
 }

@@ -26,6 +26,9 @@ namespace Server.Spells.SkillMasteries
         public override SkillName CastSkill { get { return SkillName.Parry; } }
 
 		private double _Block;
+        private Mobile _offeredTo;
+        private Mobile _offeredOwner;
+        private DateTime _offerUntil;
 
         public BodyGuardSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
@@ -65,6 +68,7 @@ namespace Server.Spells.SkillMasteries
                     SpellHelper.Turn(Caster, master);
                     OnTarget(master);
                 }
+                else { FinishSequence(); }
             }
             else
             {
@@ -86,7 +90,7 @@ namespace Server.Spells.SkillMasteries
 		protected override void OnTarget(object o)
 		{
             if (!HasShield())
-                return;
+            { FinishSequence(); return; }
 
             Mobile protectee = o as Mobile;
             Mobile master = null;
@@ -101,6 +105,8 @@ namespace Server.Spells.SkillMasteries
 				if(spell != null)
 				{
 					Caster.SendLocalizedMessage(1156094); // Your target is already under the effect of this ability.
+                    FinishSequence();
+                    return;
 				}
                 if (!protectee.Alive)
 				{
@@ -113,6 +119,9 @@ namespace Server.Spells.SkillMasteries
                 else if (protectee != Caster)
 				{
                     Mobile responsible = master != null ? master : protectee;
+                    _offeredTo = protectee;
+                    _offeredOwner = responsible;
+                    _offerUntil = Core.Now + TimeSpan.FromSeconds(10);
 
                     Caster.FixedParticles( 0x376A, 9, 32, 5030, 1168, 0, EffectLayer.Waist, 0 );
 
@@ -127,24 +136,32 @@ namespace Server.Spells.SkillMasteries
 
                     if (Caster is PlayerMobile)
                     {
-                        protectee.SendGump(new AcceptBodyguardGump(Caster, protectee, this));
+                        responsible.SendGump(new AcceptBodyguardGump(Caster, protectee, this));
                         AddGumpTimer(responsible, Caster);
                     }
                     else
                     {
-                        AcceptBodyGuard(responsible);
+                        AcceptBodyGuard(protectee);
                     }
 				}
 			}
+            if (_offeredTo == null) { FinishSequence(); }
 		}
 
 		public void AcceptBodyGuard(Mobile toGuard)
 		{
-            RemoveGumpTimer(toGuard, Caster);
+            if (toGuard == null || toGuard != _offeredTo || toGuard.Deleted || !toGuard.Alive || Caster.Deleted ||
+                Core.Now > _offerUntil || Caster.Map != toGuard.Map || !Caster.InRange(toGuard, 8) || !Caster.InLOS(toGuard) ||
+                (toGuard is BaseCreature pet && pet.GetMaster() != _offeredOwner) ||
+                GetSpell(s => s is BodyGuardSpell && s.Target == toGuard) != null)
+            { FinishSequence(); return; }
+            RemoveGumpTimer(_offeredOwner, Caster);
+            _offeredTo = null;
+            _offeredOwner = null;
 
 			if(CheckBSequence(toGuard))
 			{
-				_Block = ((Caster.Skills[CastSkill].Value + GetWeaponSkill() + (GetMasteryLevel() * 40)) / 3) / 2.4;
+				_Block = Math.Clamp(((Caster.Skills[CastSkill].Value + GetWeaponSkill() + (GetMasteryLevel() * 40)) / 3) / 2.4, 0, 95);
                 Target = toGuard;
 
 				Expires = Core.Now + TimeSpan.FromSeconds(90);
@@ -205,7 +222,9 @@ namespace Server.Spells.SkillMasteries
             Caster.SendLocalizedMessage(1049454, "\t" + protectee.Name); // ~2_NAME~ has declined your protection.
             protectee.SendLocalizedMessage(1049453, Caster.Name); // You have declined protection from ~1_NAME~.
 
-            RemoveGumpTimer(protectee, Caster);
+            RemoveGumpTimer(_offeredOwner ?? protectee, Caster);
+            _offeredTo = null;
+            _offeredOwner = null;
             FinishSequence();
         }
 
@@ -213,10 +232,10 @@ namespace Server.Spells.SkillMasteries
 		{
             if (defender == Target && Caster.InRange(defender, 2))
 			{
-				double mod = (double)PropertyBonus() / 100.0;
+			double mod = Math.Clamp((double)PropertyBonus() / 100.0, 0, 0.95);
 
+                int casterDamage = (int)(damage * (mod + .05));
 				damage = damage - (int)((double)damage * mod);
-                int casterDamage = damage - (int)((double)damage * (mod - .05));
 
                 if (type >= DamageType.Spell)
                     casterDamage /= 2;
@@ -245,9 +264,12 @@ namespace Server.Spells.SkillMasteries
 
             _Table[caster] = m;
 
+            var pendingSpell = caster.Spell;
             Server.Timer.DelayCall(TimeSpan.FromSeconds(10), () =>
             {
+                if (caster.Spell != pendingSpell) { return; }
                 RemoveGumpTimer(m, caster);
+                pendingSpell?.FinishSequence();
             });
         }
 
@@ -309,6 +331,8 @@ namespace Server.Spells.SkillMasteries
 
 		public override void OnResponse( Server.Network.NetState sender, in RelayInfo info )
 		{
+            var expected = m_Protectee is BaseCreature pet ? pet.GetMaster() : m_Protectee;
+            if (sender.Mobile != expected) { return; }
 			if ( info.ButtonID == 2 )
 			{
 				bool okay = info.IsSwitched( 1 );

@@ -17,7 +17,7 @@ public partial class HavenPetPool : BaseAddon
     public override BaseAddonDeed Deed => null;
     internal static int Theme(BaseCreature pet) => pet switch
     {
-        HavenEmberwing => 1, HavenFrostmane => 2, HavenVerdantLlama => 3,
+        HavenEmberwing => 1, HavenFrostmane or HavenSnowBear => 2, HavenVerdantLlama => 3,
         HavenMoonfang or HavenStormhorn or HavenStormscale => 4, _ => 0
     };
     [Constructible]

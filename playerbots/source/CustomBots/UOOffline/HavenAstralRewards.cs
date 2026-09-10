@@ -46,7 +46,10 @@ public static class HavenAstralRewards
 {
     public static void OnMonsterKilled(BaseCreature creature, Mobile player)
     {
+        HavenWorldDiscoveries.Award(creature, player, Utility.RandomDouble());
+        HavenDoom.AwardRecipe(creature, player);
         if (!Eligible(creature, player)) { return; }
+        HavenLegendaryDrops.TryAward(creature, player, Utility.RandomDouble());
         var chance = creature.HitsMax >= 4000 ? 1.0 : creature.HitsMax >= 1000 ? 0.15 : 0.05;
         if (Utility.RandomDouble() >= chance) { return; }
         Award(player, creature.HitsMax >= 4000 ? 3 : 1);

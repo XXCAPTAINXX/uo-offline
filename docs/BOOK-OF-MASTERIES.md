@@ -1,6 +1,6 @@
-# Book of Masteries — staged Haven implementation
+# Book of Masteries — Haven compatibility implementation
 
-**Deployment hold:** prepared locally while the player is AFK. Do not install or restart the live server until the player returns. This has not been tested in their live client.
+The deployment hold was released by the player. The compatibility book and paired companion songs are installed; current status and evidence are in [the implementation tracker](IMPLEMENTATION-TRACKER.md). Client presentation and gameplay acceptance still need the [test checklist](PLAYER-TEST-CHECKLIST.md).
 
 ## Getting started after installation
 
@@ -32,8 +32,8 @@ This is a Haven/ML compatibility port, not a full later-expansion upgrade. The b
 - Conduit spreads damage from Pain Spike, Poison Strike, and Strangle to valid enemies inside its field, at most once per second. It does not clone every necromancy debuff.
 - Summon Reaper uses this engine's mage AI with an immobile poison aura; the engine has no separate Spellweaving AI implementation. Doom's Skeletal Dragon is excluded from Command Undead so its event ownership cannot be broken.
 - Shadow improves the Detect Hidden difficulty calculation. The engine's other reveal paths have not been changed.
-- Resilience's regeneration works. Its later-era bleed/mortal/curse duration interactions are not all ported.
-- Saving Throw provides the port's stat/accuracy bonuses; a later-era disarm-blocking implementation is not included.
+- Resilience provides regeneration, a 25% chance to resist poison, and skill-scaled 10–60% reductions to new bleed, Mortal Strike and Curse effects. Bleed rounds up to the next two-second tick. Native PlayerMobile and BaseCreature poison paths are covered, so eligible party pets benefit. Existing effects are not retroactively shortened when a song starts. Other spell-specific curses remain unchanged.
+- Saving Throw adds a disarm-block chance to its existing bonuses: 10/20/30% at mastery tiers I/II/III with 120 base weapon skill and Tactics. Lower training scales the chance down; overcapped skills do not exceed 30%. This is an explicit Haven balance choice, not an assertion of the official hidden formula.
 
 These differences must remain visible in release notes. Do not present this as a verified exact reproduction of every official mastery effect.
 
@@ -43,10 +43,16 @@ An eligible bard companion maintains both effects of its selected mastery. It se
 
 Grouped player bots stop pulling fresh encounters and recognize party-owned pets as allies. The shared behavior tick visits a construction/load registry instead of scanning every mobile in the world. Deletion unregisters the bot, and tick processing uses a snapshot so spawning or deleting bots during a behavior does not invalidate iteration.
 
-The guild-worker proposal is in [GUILD-CREWS-PLAN.md](GUILD-CREWS-PLAN.md). The persistent guild roster and automatic guild jobs are designed, not implemented by this patch.
+The persistent roster and timed gathering baseline are now staged; implemented controls and remaining design work are distinguished in [GUILD-CREWS-PLAN.md](GUILD-CREWS-PLAN.md).
+
+## Follow-up review fixes
+
+Upkeep cannot become zero or negative from overcapped skills. Collective bard bonuses use the correct Peacemaking and Discordance skills. Fully absorbed damage stays zero through the native AOS damage path (patch 0046). Thrust tracks and cancels its target timer. Bodyguard validates the pet owner's acceptance, rejects duplicate coverage, and redirects damage using the original damage amount. Overlapping Invigorate effects preserve the strongest surviving bonus. The integration suite casts real paired bard songs and verifies overlap cleanup.
 
 ## Verification
 
 The isolated verification tree is `verification/HavenMasteryVerify`, based on the current released patch set through 0044. Added checks cover every active spell/move registration, unlearned casting rejection, shop entries/prices, primer consumption, saved mastery levels and cooldown, real Mana Shield damage/expiry, party-pet membership/range cleanup, bard choice/proficiency, and bot registration/deletion and pull policy.
 
-The complete local Haven suite is run after changes. A passing suite is not proof of every ability's balance or client presentation; live installation and play testing remain on hold.
+The complete local content suite is run after changes. Native defense hooks are in patch 0051; tests cast actual paired Peacemaking songs and inspect native bleed, wound and curse timers, pet range cleanup and mastery eligibility. A passing suite is not proof of every ability's balance or client presentation.
+
+The [official bard mastery description](https://uo.com/wiki/ultima-online-wiki/skills/bardic-skills/bard-masteries/) supports the intended regeneration and detrimental-effect protection categories. Haven's formula, poison probability and compatibility boundaries above are documented separately rather than presented as an exact official port.

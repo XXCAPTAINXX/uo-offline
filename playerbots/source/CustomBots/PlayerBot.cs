@@ -855,6 +855,8 @@ namespace Server.CustomBots
         // -------------------------------------------------------------------
         public override void OnAfterDelete()
         {
+            _behavior?.OnDetached(this);
+            _behavior = null;
             BehaviorTickManager.Unregister(this);
             BotMountHelper.DismountAndDelete(this);
             BotPackAnimals.Release(this);

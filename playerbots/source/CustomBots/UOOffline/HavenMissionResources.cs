@@ -31,10 +31,10 @@ public static class HavenMissionResources
         }
         return start + 1 + Math.Min(highest - 1, (int)((roll - 0.6) / 0.4 * highest));
     }
-    internal static void Add(Bag bag, HavenExpeditionKind kind, int minutes, double skill, double? roll = null)
+    internal static void Add(Bag bag, HavenExpeditionKind kind, int minutes, double skill, double? roll = null,int percent=100)
     {
         var basic = kind switch { HavenExpeditionKind.Ore => 0, HavenExpeditionKind.Wood => 9, _ => 23 };
-        var amount = minutes * (kind == HavenExpeditionKind.Wood ? 40 : 20);
+        var amount = HavenMissionDuration.Scale(minutes * (kind == HavenExpeditionKind.Wood ? 40 : 20),percent);
         var selected = SelectIndex(kind, skill, roll ?? Utility.RandomDouble());
         if (selected == basic) { bag.DropItem(Deed(basic, amount)); return; }
         bag.DropItem(Deed(basic, amount / 2));

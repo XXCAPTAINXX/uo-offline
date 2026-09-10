@@ -23,6 +23,88 @@ namespace UOContent.Tests;
 public class HavenWorldTests
 {
     [SkippableFact]
+    public void CompanionSkinsEarnedKillsAndCutsLeatherOnlyOnce()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var companion = new HavenCompanion { BoundOwner = owner };
+        var cow = new Cow();
+        Corpse corpse = null;
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel);
+            companion.MoveToWorld(owner.Location, owner.Map);
+            companion.SetControlMaster(owner);
+            companion.ControlOrder = OrderType.Follow;
+            companion.Hits = companion.HitsMax;
+            owner.Hits = owner.HitsMax;
+            corpse = new Corpse(cow, new List<Item>());
+            corpse.MoveToWorld(owner.Location, owner.Map);
+            corpse.Aggressors.Add(owner);
+            Assert.True(companion.CanSkinWhileHunting());
+            Assert.True(companion.CanSkinCorpse(corpse));
+            Assert.True(companion.SkinCorpse(corpse));
+            Assert.True(corpse.Carved);
+            var leather = companion.Backpack.FindItemByType<Leather>();
+            Assert.NotNull(leather);
+            Assert.True(leather.Amount >= cow.Hides);
+            var amount = leather.Amount;
+            Assert.False(companion.SkinCorpse(corpse));
+            Assert.Equal(amount, leather.Amount);
+            Assert.Null(companion.Backpack.FindItemByType<BaseHides>());
+            Assert.NotEmpty(corpse.Items); // Meat and other loot remain for the player.
+        }
+        finally { corpse?.Delete(); cow.Delete(); companion.Delete(); owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompanionSkinningRespectsOwnershipCombatOrdersAndLeatherTypes()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Player = true, Body = 0x190 };
+        var stranger = new PlayerMobile { Player = true, Body = 0x190 };
+        var companion = new HavenCompanion { BoundOwner = owner };
+        var cow = new Cow();
+        Corpse corpse = null;
+        try
+        {
+            owner.MoveToWorld(HavenRecovery.BankLocation, Map.Felucca);
+            companion.MoveToWorld(owner.Location, owner.Map);
+            companion.SetControlMaster(owner);
+            companion.ControlOrder = OrderType.Follow;
+            companion.Hits = companion.HitsMax;
+            owner.Hits = owner.HitsMax;
+            corpse = new Corpse(cow, new List<Item>());
+            corpse.MoveToWorld(owner.Location, owner.Map);
+            corpse.Aggressors.Add(stranger);
+            Assert.False(companion.CanSkinCorpse(corpse));
+            corpse.Aggressors.Add(owner);
+            corpse.Carved = true;
+            corpse.DropItem(new SpinedHides(7));
+            corpse.DropItem(new HornedHides(8));
+            corpse.DropItem(new BarbedHides(9));
+            companion.ControlOrder = OrderType.Stay;
+            Assert.False(companion.SkinCorpse(corpse));
+            companion.ControlOrder = OrderType.Follow;
+            owner.Combatant = cow;
+            Assert.False(companion.SkinCorpse(corpse));
+            owner.Combatant = null;
+            var ballast = new Item(0x1) { Weight = 50000 };
+            companion.Backpack.DropItem(ballast);
+            Assert.False(companion.SkinCorpse(corpse));
+            Assert.Equal(3, corpse.Items.Count);
+            ballast.Delete();
+            Assert.True(companion.SkinCorpse(corpse));
+            Assert.Equal(7, companion.Backpack.FindItemByType<SpinedLeather>().Amount);
+            Assert.Equal(8, companion.Backpack.FindItemByType<HornedLeather>().Amount);
+            Assert.Equal(9, companion.Backpack.FindItemByType<BarbedLeather>().Amount);
+            cow.Controlled = true;
+            Assert.False(companion.CanSkinCorpse(corpse));
+        }
+        finally { corpse?.Delete(); cow.Delete(); companion.Delete(); owner.Delete(); stranger.Delete(); }
+    }
+
+    [SkippableFact]
     public void HavenSteedsMoveToWalkableWildernessWithoutMovingPetsOrWeakeningStats()
     {
         TileDataRequirement.SkipIfMissing();
@@ -756,7 +838,14 @@ public class HavenWorldTests
         try
         {
             var menu = new HavenCompanionGump(companion, tab);
-            CheckBounds(menu, 370, 370);
+            CheckBounds(menu, tab == 1 ? 820 : 370, tab == 1 ? 280 + (companion.Skills.Length + 2) / 3 * 22 : 370);
+            if (tab == 1)
+            {
+                for (var i = 0; i < companion.Skills.Length; i++)
+                {
+                    Assert.Single(menu.Entries.OfType<GumpLabel>(), label => label.Text == companion.Skills[i].Name);
+                }
+            }
             foreach (var id in new[] { 100, 101, 102, 110, 0 })
             {
                 Assert.Contains(menu.Entries.OfType<GumpButton>(), b => b.ButtonID == id);
@@ -2235,7 +2324,7 @@ public class HavenWorldTests
                 }
                 finally { loot.Delete(); }
             }
-            CheckBounds(new HavenCompanionGump(companion, 4), 370, 370);
+            CheckBounds(new HavenCompanionGump(companion, 4), 370, 410);
         }
         finally { companion.Delete(); owner.Delete(); other.Delete(); }
     }
@@ -2335,7 +2424,7 @@ public class HavenWorldTests
     }
 
     [SkippableFact]
-    public void RarePetAbilitiesSupportOwnerAndRespectCooldownAndPetProtection()
+    public void MoonfangSignatureMarksPreyAndRespectsCooldownAndPetProtection()
     {
         TileDataRequirement.SkipIfMissing();
         var owner = new PlayerMobile { Player = true, Body = 0x190 };
@@ -2351,11 +2440,11 @@ public class HavenWorldTests
             wolf.SetControlMaster(owner);
             friendly.SetControlMaster(owner);
             owner.Hits = 1;
-            var next = DateTime.MinValue;
-            Assert.False(HavenRarePetAbility.Activate(wolf, friendly, 2, ref next));
-            Assert.True(HavenRarePetAbility.Activate(wolf, enemy, 2, ref next));
-            Assert.True(owner.Hits > 1);
-            Assert.False(HavenRarePetAbility.Activate(wolf, enemy, 2, ref next));
+            var resist=enemy.PhysicalResistance;
+            Assert.False(HavenPetSignatures.Activate(wolf,friendly));
+            Assert.True(HavenPetSignatures.Activate(wolf,enemy));
+            Assert.Equal(resist-5,enemy.PhysicalResistance);Assert.Equal(1,owner.Hits);
+            Assert.False(HavenPetSignatures.Activate(wolf,enemy));
             Assert.Equal(110, wolf.Skills.Wrestling.Cap);
         }
         finally { friendly.Delete(); enemy.Delete(); wolf.Delete(); owner.Delete(); }

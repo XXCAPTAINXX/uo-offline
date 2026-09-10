@@ -7,7 +7,7 @@ namespace Server.UOOffline;
 [SerializationGenerator(0)]
 public partial class HavenFrostmane : Horse
 {
-    private DateTime _nextAbility;
+
     [Constructible]
     public HavenFrostmane()
     {
@@ -16,16 +16,12 @@ public partial class HavenFrostmane : Horse
         SetResistance(ResistanceType.Cold, 70);
         HavenRarePetAbility.Skills(this, 100);
     }
-    public override void OnGaveMeleeAttack(Mobile defender, int damage)
-    { base.OnGaveMeleeAttack(defender, damage); HavenRarePetAbility.Activate(this, defender, 4, ref _nextAbility); }
-    public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Custom mount:"} {"Frost strike: extra cold damage in combat, 12-second cooldown while tamed"}"); }
 }
 
 [SerializationGenerator(0)]
 public partial class HavenVerdantLlama : RidableLlama
 {
-    private DateTime _nextAbility;
+
     [Constructible]
     public HavenVerdantLlama()
     {
@@ -33,16 +29,12 @@ public partial class HavenVerdantLlama : RidableLlama
         SetStr(240); SetDex(140); SetInt(160); SetHits(320); SetDamage(9, 14);
         HavenRarePetAbility.Skills(this, 110);
     }
-    public override void OnGaveMeleeAttack(Mobile defender, int damage)
-    { base.OnGaveMeleeAttack(defender, damage); HavenRarePetAbility.Activate(this, defender, 2, ref _nextAbility); }
-    public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Custom mount:"} {"Verdant mend: heals itself and nearby owner in combat, 12-second cooldown"}"); }
 }
 
 [SerializationGenerator(0)]
 public partial class HavenStormhorn : Kirin
 {
-    private DateTime _nextAbility;
+
     [Constructible]
     public HavenStormhorn()
     {
@@ -53,8 +45,4 @@ public partial class HavenStormhorn : Kirin
         Skills.Magery.Base = Skills.EvalInt.Base = 110;
     }
     public override bool AllowFemaleRider => true;
-    public override void OnGaveMeleeAttack(Mobile defender, int damage)
-    { base.OnGaveMeleeAttack(defender, damage); HavenRarePetAbility.Activate(this, defender, 3, ref _nextAbility); }
-    public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Custom mount:"} {"Storm strike: energy damage and nearby owner's mana recovery, 12-second cooldown"}"); }
 }

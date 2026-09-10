@@ -49,12 +49,12 @@ namespace Server.Spells.SkillMasteries
                         if (disc >= 100) bonus += 1 + ((disc - 100) / 10);
 						break;
 					case SkillName.Peacemaking:
-                        if (prov >= 100) bonus += 1 + ((peac - 100) / 10);
+                        if (prov >= 100) bonus += 1 + ((prov - 100) / 10);
                         if (disc >= 100) bonus += 1 + ((disc - 100) / 10);
 						break;
 					case SkillName.Discordance:
-                        if (prov >= 100) bonus += 1 + ((peac - 100) / 10);
-                        if (peac >= 100) bonus += 1 + ((disc - 100) / 10);
+                        if (prov >= 100) bonus += 1 + ((prov - 100) / 10);
+                        if (peac >= 100) bonus += 1 + ((peac - 100) / 10);
 						break;
 				}
 

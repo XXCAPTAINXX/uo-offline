@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ModernUO.Serialization;
 using Server.Engines.PartySystem;
 using Server.Items;
@@ -59,9 +60,10 @@ public partial class HavenTrialParticipants : Item
             bag.DropItem(HavenTrialTheme.ResourceDeed(theme, true));
             if (player.Backpack == null) { player.AddItem(new Backpack()); }
             // Earned event rewards must not disappear or spill onto the ground when a pack is full.
-            player.Backpack.DropItem(bag);
+            foreach (var item in bag.Items.ToArray()) { player.Backpack.DropItem(item); }
+            bag.Delete();
             player.Backpack.FindItemByType<AdventurersWallet>()?.DepositBackpackShards(player);
-            player.SendMessage("Trial complete! Your reward bag holds gold, five power scrolls, Alacrity, Transcendence, 20 Haven marks, five Astral shards and crafting materials. Shards enter your wallet when present.");
+            player.SendMessage("Trial complete! Gold, five power scrolls, Alacrity, Transcendence, 20 Haven marks, five Astral shards and crafting materials are in your pack. Shards enter your wallet when present.");
         }
     }
     public override void OnAfterDelete() { Players.Clear(); base.OnAfterDelete(); }

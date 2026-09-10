@@ -34,7 +34,7 @@ public partial class HavenPetAbilities : Item
         12 => WeaponAbility.DoubleStrike, 13 => WeaponAbility.MortalStrike, 14 => WeaponAbility.ParalyzingBlow,
         15 => WeaponAbility.Feint, 16 => WeaponAbility.WhirlwindAttack, 17 => WeaponAbility.FrenziedWhirlwind, _ => null
     };
-    internal static bool Knows(BaseCreature pet, int id) => id == 4 ? HavenPetTraining.HealingRank(pet) > 0 : Find(pet)?.Learned.Contains(id) == true;
+    internal static bool Knows(BaseCreature pet, int id) => id == 4 ? pet.CanHealOwner || HavenPetTraining.HealingRank(pet) > 0 : Find(pet)?.Learned.Contains(id) == true;
     internal static bool HasRoom(BaseCreature pet, int id)
     {
         var count = HavenPetTraining.HealingRank(pet) > 0 ? 1 : 0;
@@ -111,6 +111,7 @@ public partial class HavenPetAbilities : Item
     }
     public static void Think(BaseCreature pet)
     {
+        HavenPetSignatures.Think(pet);
         if (!pet.Controlled || pet.Summoned || pet.IsDeadPet || pet is HavenCompanion) { return; }
         var record = Find(pet);
         if (record == null || pet.Combatant is not Mobile enemy || !CanAct(pet, enemy) || !pet.InRange(enemy, 12)) { return; }
@@ -173,7 +174,7 @@ public sealed class HavenPetAbilitiesGump : Gump
             AddLabel(25, y, 53, categories[HavenPetAbilities.Category(id)]);
             AddLabel(110, y, 1152, HavenPetAbilities.Names[id]);
             AddLabel(350, y, 1152, $"{HavenPetAbilities.Cost(id) / 10} points");
-            if (HavenPetAbilities.Knows(pet, id)) { AddLabel(505, y, 53, "Learned"); }
+            if (HavenPetAbilities.Knows(pet, id)) { AddLabel(505, y, 53, id == 4 && HavenPetTraining.HealingRank(pet) == 0 ? "Innate" : "Learned"); }
             else if (id == 18 && !HavenTamingMissions.IsCustomPet(pet)) { AddLabel(505, y, 1152, "Custom pets only"); }
             else if (HavenPetAbilities.HasRoom(pet, id))
             { AddButton(500, y, 4005, 4007, 100 + id); AddLabel(535, y, 1152, "Learn"); }

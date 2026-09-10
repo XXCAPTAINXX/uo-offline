@@ -24,8 +24,11 @@ public sealed class HavenCompanionGump : Gump
     {
         _companion = companion;
         _tab = tab;
-        AddBackground(0, 0, 370, 370, 5054);
-        AddBackground(10, 10, 350, 350, 3000);
+        var skillRows = (companion.Skills.Length + 2) / 3;
+        var width = tab == 1 ? 820 : 370;
+        var height = tab == 1 ? 280 + skillRows * 22 : tab==4?410:370;
+        AddBackground(0, 0, width, height, 5054);
+        AddBackground(10, 10, width - 20, height - 20, 3000);
         AddLabel(20, 20, 0, companion.Name);
         AddLabel(20, 43, 0, $"{companion.Role} | Level {companion.TrainingLevel:N0} | {companion.ControlOrder}");
         if (companion.Expedition is { } trip) { AddLabel(20, 65, 0, trip.Status); }
@@ -40,12 +43,26 @@ public sealed class HavenCompanionGump : Gump
                 AddLabel(20, 130, 0, $"Str {companion.Str}  Dex {companion.Dex}  Int {companion.Int}");
                 AddLabel(20, 152, 0, $"Stamina {companion.Stam}/{companion.StamMax}  Damage {companion.DamageMin}-{companion.DamageMax}");
                 AddLabel(20, 174, 0, $"Resists P/F/C/P/E: {companion.PhysicalResistance}/{companion.FireResistance}/{companion.ColdResistance}/{companion.PoisonResistance}/{companion.EnergyResistance}");
-                AddLabel(20, 196, 0, $"Swords {companion.Skills.Swords.Value:F1}  Tactics {companion.Skills.Tactics.Value:F1}");
-                AddLabel(20, 218, 0, $"Healing {companion.Skills.Healing.Value:F1}  Resist {companion.Skills.MagicResist.Value:F1}");
-                AddLabel(20, 240, 0, $"Music {companion.Skills.Musicianship.Value:F1}  Discord {companion.Skills.Discordance.Value:F1}");
-                AddLabel(20, 262, 0, $"Peace {companion.Skills.Peacemaking.Value:F1}  Provoke {companion.Skills.Provocation.Value:F1}");
-                AddLabel(20, 284, 0, $"Magery {companion.Skills.Magery.Value:F1}  Weaving {companion.Skills.Spellweaving.Value:F1}");
-                AddLabel(20, 306, 0, $"Base stats: {companion.RawStr} Str / {companion.RawDex} Dex / {companion.RawInt} Int");
+                AddLabel(20, 196, 0, $"Base stats: {companion.RawStr} Str / {companion.RawDex} Dex / {companion.RawInt} Int");
+                AddLabel(410, 130, 0, "All skills: trained base / effective value / cap");
+                AddLabel(410, 152, 0, "Gathering and taming improve through missions.");
+                AddLabel(410, 174, 0, companion.AutoSkinning ? "Hunting: skinning and leather cutting ON" : "Hunting: skinning and leather cutting OFF");
+                var skills = Enumerable.Range(0, companion.Skills.Length)
+                    .Select(i => companion.Skills[i]).OrderBy(skill => skill.Name).ToArray();
+                for (var column = 0; column < 3; column++)
+                {
+                    var x = 20 + column * 265;
+                    AddLabel(x, 220, 0, "Skill");
+                    AddLabel(x + 137, 220, 0, "Base / Now / Cap");
+                }
+                for (var i = 0; i < skills.Length; i++)
+                {
+                    var skill = skills[i];
+                    var x = 20 + i / skillRows * 265;
+                    var y = 243 + i % skillRows * 22;
+                    AddLabel(x, y, 0, skill.Name);
+                    AddLabel(x + 137, y, 0, $"{skill.Base:F1}/{skill.Value:F1}/{skill.Cap:F1}");
+                }
                 break;
             case 2:
                 Button(20, 133, 10, "Fighter - melee support");
@@ -62,7 +79,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(20, 290, 18, "Claim evolving arms");
                 break;
             case 4:
-                AddHtml(20, 130, 330, 30, "Five-minute expeditions; returns automatically.");
+                AddHtml(20, 130, 330, 30, "Choose a mission, then its length: 5–60 minutes.");
                 Button(20, 170, 20, "Grind for loot");
                 Button(195, 170, 21, "Gather ore");
                 Button(20, 207, 22, "Gather wood");
@@ -71,22 +88,24 @@ public sealed class HavenCompanionGump : Gump
                 Button(195, 244, 25, "Return now");
                 Button(20, 280, 26, "Taming missions...");
                 Button(195, 280, 29, "AFK / auto...");
+                Button(20, 307, 28, companion.AutoSkinning ? "Hunting: skin + cut ON" : "Hunting: skin + cut OFF");
+                Button(20,339,44,"Resource routes...");Button(195,339,45,"Reports");
                 break;
             case 5:
                 AddLabel(20, 128, 0, $"Taming {companion.Skills.AnimalTaming.Base:F1} / Lore {companion.Skills.AnimalLore.Base:F1}");
                 for (var i = 0; i < 6; i++)
                 {
                     var kind = (HavenExpeditionKind)(5 + i);
-                    Button(20, 151 + i * 25, 30 + i, $"{HavenTamingMissions.PetName(kind)} {HavenTamingMissions.Requirement(kind):F1} both skills");
+                    MissionButton(companion, kind, 151 + i * 25, 30 + i);
                 }
                 Button(20, 307, 27, "Rare custom pets...");
                 break;
             case 6:
-                AddLabel(20, 128, 0, "Required Taming AND Lore; rarity is random");
+                AddLabel(20, 128, 0, $"Your Taming {companion.Skills.AnimalTaming.Base:F1} | Lore {companion.Skills.AnimalLore.Base:F1}");
                 for (var i = 6; i < 12; i++)
                 {
                     var kind = (HavenExpeditionKind)(5 + i);
-                    Button(20, 151 + (i - 6) * 25, 30 + i, $"{HavenTamingMissions.PetName(kind)} {HavenTamingMissions.Requirement(kind):F1} both skills");
+                    MissionButton(companion, kind, 151 + (i - 6) * 25, 30 + i);
                 }
                 AddHtml(20, 307, 330, 20, "Mounts: Emberwing, Frostmane, Verdant, Stormhorn.");
                 break;
@@ -101,13 +120,27 @@ public sealed class HavenCompanionGump : Gump
                 Button(195, 244, 7, CompanionParty.Get(companion)?.Contains(companion.BoundOwner) == true ? "Leave party" : "Join party");
                 Button(20, 280, 16, companion.TamingAssistActive ? "Stop assist" : "Tame assist...");
                 Button(195, 280, 17, "Tasks");
-                AddHtml(20, 310, 330, 20, "All roles auto-heal within 12 tiles and sight.");
+                Button(20, 307, 43, "Dungeon puzzle assistance...");
                 break;
         }
-        Button(20, 332, 110, "Refresh");
-        Button(240, 332, 0, "Close");
+        Button(20, height - 38, 110, "Refresh");
+        Button(width - 130, height - 38, 0, "Close");
     }
 
+    internal static string MissionStatus(HavenCompanion companion, HavenExpeditionKind kind)
+    {
+        var required = HavenTamingMissions.Requirement(kind);
+        var taming = companion.Skills.AnimalTaming.Base >= required;
+        var lore = companion.Skills.AnimalLore.Base >= required;
+        return taming && lore ? "Ready" : taming ? "Need Lore" : lore ? "Need Tame" : "Need both";
+    }
+    private void MissionButton(HavenCompanion companion, HavenExpeditionKind kind, int y, int id)
+    {
+        Button(20, y, id, $"{HavenTamingMissions.PetName(kind)} ({HavenTamingMissions.Requirement(kind):F1})");
+        var status = MissionStatus(companion, kind);
+        AddLabel(282, y + 2, status == "Ready" ? 0x44 : 0x21, status);
+        AddTooltip(1042971, $"Requires {HavenTamingMissions.Requirement(kind):F1} in BOTH Taming and Lore. Your companion: {companion.Skills.AnimalTaming.Base:F1} Taming, {companion.Skills.AnimalLore.Base:F1} Lore.");
+    }
     private void Button(int x, int y, int id, string text)
     {
         AddButton(x, y, 4005, 4007, id);
@@ -122,8 +155,20 @@ public sealed class HavenCompanionGump : Gump
         if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
         if (button == 29) { from.SendGump(new HavenCompanionAfkGump(HavenCompanionIdleMissions.Ensure(_companion))); return; }
         if (button == 17) { DisplayTo(from, _companion, 4); return; }
+        if(button==44) { from.SendGump(new HavenRegionalMissionGump(_companion));return; }
+        if(button==45)
+        { var journal=HavenMissionJournal.Find(_companion);if(journal==null) { from.SendMessage("No mission report recorded yet."); }else { journal.Show(from); }return; }
         if (button == 26) { DisplayTo(from, _companion, 5); return; }
         if (button == 27) { DisplayTo(from, _companion, 6); return; }
+        if (button == 43)
+        {
+            foreach (var chamber in HavenShadowChamber.Registry)
+            {
+                if (chamber.Participant(from)) { from.SendGump(new HavenShadowMenu(from, chamber)); return; }
+            }
+            from.SendMessage("Enter a supported dungeon room together. The room menu lets your companion solve or stop its puzzle.");
+            DisplayTo(from, _companion, _tab); return;
+        }
         if (button == 25 || button == 9 && _companion.Expedition != null)
         { if (_companion.Expedition?.Return(from, Core.Now) != true) { DisplayTo(from, _companion, 4); } return; }
         if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab); return; }
@@ -142,12 +187,18 @@ public sealed class HavenCompanionGump : Gump
         if (button is >= 20 and <= 24 or >= 30 and <= 41)
         {
             var kind = (HavenExpeditionKind)(button >= 30 ? button - 25 : button - 20);
-            if (HavenCompanionExpedition.Start(_companion, from, kind)) { return; }
-            from.SendMessage("Your companion must meet the mission skills and be alive, nearby and ready.");
-            DisplayTo(from, _companion, 4); return;
+            from.CloseGump<HavenMissionDurationGump>();
+            from.SendGump(new HavenMissionDurationGump(_companion,kind)); return;
         }
         switch (button)
         {
+            case 28:
+                _companion.AutoSkinning = !_companion.AutoSkinning;
+                from.SendMessage(_companion.AutoSkinning
+                    ? "I will skin our kills between fights and keep the cut leather in my pack."
+                    : "I will leave corpses unskinned while we hunt.");
+                DisplayTo(from, _companion, 4);
+                return;
             case 1:
                 _companion.Combatant = null;
                 _companion.ControlTarget = from;

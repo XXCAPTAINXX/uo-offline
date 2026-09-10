@@ -72,14 +72,15 @@ public class HavenWorldTestsIslandTrial
             var boss = trial.Creatures[0];
             boss.DamageEntries.Add(new DamageEntry(owner) { DamageGiven = 450, LastDamage = Core.Now });
             owner.Backpack.DropItem(new AstralShard(1)); // Unrelated shard drops must not be mistaken for the reward bundle.
+            var helperBefore = helper.Backpack.GetAmount(typeof(AstralShard));
             boss.Kill();
             Assert.Equal(0, trial.Stage); Assert.Empty(trial.Creatures);
-            Bag rewards = null; Bag helperRewards = null;
-            foreach (var item in owner.Backpack.Items) { if (item is Bag bag && bag.Name == "island trial rewards") { rewards = bag; } }
-            foreach (var item in helper.Backpack.Items) { if (item is Bag bag && bag.Name == "island trial rewards") { helperRewards = bag; } }
-            Assert.NotNull(rewards); Assert.NotNull(helperRewards);
-            Assert.Equal(5, rewards.FindItemByType<AstralShard>().Amount);
-            Assert.Equal(5, helperRewards.FindItemByType<AstralShard>().Amount);
+            var rewards = owner.Backpack; var helperRewards = helper.Backpack;
+            foreach (var item in rewards.Items) { Assert.False(item is Bag bag && bag.Name == "island trial rewards"); }
+            // The normal monster-drop hook can also award one shard independently of trial completion.
+            var shardsAfter = rewards.GetAmount(typeof(AstralShard));
+            Assert.InRange(shardsAfter, 6, 7);
+            Assert.Equal(helperBefore + 5, helperRewards.GetAmount(typeof(AstralShard)));
             var corpse = Assert.IsAssignableFrom<Container>(boss.Corpse);
             var count = 0; foreach (var scroll in rewards.FindItemsByType<PowerScroll>()) { count++; Assert.InRange(scroll.Value, 105, 110); } Assert.Equal(5, count);
             Assert.Null(corpse.FindItemByType<PowerScroll>());
@@ -88,7 +89,7 @@ public class HavenWorldTestsIslandTrial
             Assert.InRange(rewards.FindItemByType<ScrollofTranscendence>().Value, 0.5, 2.0);
             Assert.NotNull(helperRewards.FindItemByType<ScrollofAlacrity>());
             Assert.InRange(rewards.FindItemByType<Gold>().Amount, 25000, 40000);
-            trial.Defeated(boss); Assert.Equal(5, rewards.FindItemByType<AstralShard>().Amount);
+            trial.Defeated(boss); Assert.Equal(shardsAfter, rewards.GetAmount(typeof(AstralShard)));
             trial.OnDoubleClick(owner); Assert.Equal(0, trial.Stage); corpse.Delete();
         }
         finally { Mobile.CreateCorpseHandler = previous; trial.Delete(); owner.Delete(); helper.Delete(); }
@@ -155,7 +156,7 @@ public class HavenWorldTestsIslandTrial
         Assert.Equal(1, count);
     }
     [SkippableFact]
-    public void LegendaryInnatePowersIncludeHealingAndManaWithoutTraining()
+    public void LegendaryFrostmaneChillsInsteadOfReceivingGenericHealingAndMana()
     {
         TileDataRequirement.SkipIfMissing();
         var owner = new PlayerMobile { Player = true, Body = 0x190, RawInt = 100 };
@@ -165,11 +166,11 @@ public class HavenWorldTestsIslandTrial
             owner.MoveToWorld(new Point3D(3511, 2575, 14), Map.Trammel);
             pet.MoveToWorld(owner.Location, owner.Map); enemy.MoveToWorld(owner.Location, owner.Map); pet.SetControlMaster(owner);
             owner.Hits = 1; owner.Mana = 0; pet.Hits = 1;
-            var next = DateTime.MinValue;
-            Assert.True(HavenRarePetAbility.Activate(pet, enemy, 3, ref next, cumulative: true));
-            Assert.True(owner.Hits > 1); Assert.Equal(8, owner.Mana); Assert.Equal(11, pet.Hits);
+            HavenPetRarity.Apply(pet,3);var dex=enemy.Dex;
+            Assert.True(HavenPetSignatures.Activate(pet,enemy));
+            Assert.Equal(1,owner.Hits);Assert.Equal(0,owner.Mana);Assert.True(enemy.Dex<dex);
             Assert.Null(HavenPetTraining.Find(pet));
-            Assert.False(HavenRarePetAbility.Activate(pet, enemy, 3, ref next, cumulative: true));
+            Assert.False(HavenPetSignatures.Activate(pet,enemy));
         }
         finally { pet.Delete(); enemy.Delete(); owner.Delete(); }
     }

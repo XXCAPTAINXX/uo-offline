@@ -1,5 +1,13 @@
 # UO Offline
 
+## Haven testing branch
+
+This branch contains the **ML-compatible Haven** build: permanent companions, evolving rewards, pet training, wallet/ledger storage, custom encounters, a community market and compatible later dungeon content. For independent friend installs, use [the testing setup guide](docs/FRIENDS-TESTING.md) and [the play-test checklist](docs/PLAYER-TEST-CHECKLIST.md). [The implementation tracker](docs/IMPLEMENTATION-TRACKER.md) distinguishes deployed features from remaining work. The source excludes personal saves/accounts and proprietary UO assets.
+
+The description below documents the original project's T2A baseline; it does not describe this branch's current expansion, population or progression settings. The launcher update channel remains `haven-rc4`; follow the testing guide to avoid replacing a branch test build with an older RC release.
+
+## Original project background
+
 A single-player Ultima Online shard that runs entirely on your own machine. Works on **Windows, Linux, and the Steam Deck**. One installer sets everything up, and after it finishes you never need the internet again.
 
 The point of it is the PlayerBots. The world is full of bots that fight, shop, bank, ride, travel the roads, crawl dungeons, join guilds, run war bands, gossip about things that actually happened, answer you when you talk to them, and log off for dinner. It plays like a busy 1999 shard instead of an empty map.

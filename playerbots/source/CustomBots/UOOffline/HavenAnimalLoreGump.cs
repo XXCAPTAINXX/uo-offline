@@ -14,6 +14,7 @@ public sealed class HavenAnimalLoreGump : Gump
     public static void DisplayTo(Mobile from, BaseCreature pet)
     {
         if (from?.NetState == null || pet?.Deleted != false) { return; }
+        HavenPetAppearance.Refresh(pet);
         if (pet.ControlMaster == from) { HavenLegendaryPetSkills.Roll(pet); }
         from.CloseGump<HavenAnimalLoreGump>();
         from.SendGump(new HavenAnimalLoreGump(from, pet));
@@ -109,6 +110,10 @@ public sealed class HavenAnimalLoreGump : Gump
                 sender.Mobile.SendMessage($"{_pet.Name}: food {_pet.FavoriteFood}; pack instinct {_pet.PackInstinct}; taming requirement {_pet.MinTameSkill:F1}.");
                 sender.Mobile.SendMessage($"Self healing: {(_pet.CanHeal ? "yes" : "no")}; owner healing: {(_pet.CanHealOwner ? "yes" : "no")}; bard immunity: {(_pet.BardImmune ? "yes" : "no")}.");
                 var rarity = _pet.Backpack?.FindItemByType<HavenPetRarity>();
+                if (_pet is HavenSnowBear) { sender.Mobile.SendMessage(HavenSnowBear.RageDescription); }
+                if(HavenPetSignatures.Kind(_pet)!=0) { sender.Mobile.SendMessage(HavenPetSignatures.Describe(_pet)); }
+                var defense = HavenPetDefenses.Describe(_pet);
+                if (defense.Length > 0) { sender.Mobile.SendMessage(defense); }
                 if (rarity != null && HavenTamingMissions.IsCustomPet(_pet)) { sender.Mobile.SendMessage(HavenPetRarity.Describe(rarity.Tier)); }
             }
             DisplayTo(sender.Mobile, _pet);

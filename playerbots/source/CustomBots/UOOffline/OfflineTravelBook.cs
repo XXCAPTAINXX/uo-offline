@@ -1,4 +1,5 @@
 using ModernUO.Serialization;
+using Server.Gumps;
 using Server.Items;
 using Server.Spells;
 
@@ -30,6 +31,7 @@ public partial class OfflineTravelBook : Item
             from.SendMessage("You cannot use the Travel Book while criminal, in combat or casting.");
             return;
         }
-        MoongateGump.DisplayTo(from, this);
+        from.CloseGump<HavenTravelGump>();
+        from.SendGump(new HavenTravelGump(this));
     }
 }

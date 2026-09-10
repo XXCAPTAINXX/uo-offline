@@ -45,7 +45,7 @@ public partial class HavenTrainingStone : Item
             [SkillName.Blacksmith, SkillName.Tailoring, SkillName.Carpentry, SkillName.Alchemy, SkillName.Inscribe]];
         private readonly int _category;
         private static ItemListEntry[] EntriesForShop(int category) => category == 5 ? MasteryEntries() : category == 4
-            ? [new("Pet scroll bundle 105 - 15,000 gold", 0xE76, 0x489), new("Pet scroll bundle 110 - 45,000 gold", 0xE76, 0x489), new("Shard mastery manual - 1,000 gold", 0xEFA, 0x489), new("Bonding potion - 2,500 gold", 0xF0E, 0x489), new("Reusable shrinking leash - 5,000 gold", 0x14F8), new("House shrinking post - 10,000 gold", 0x14E7, 0x59B)]
+            ? [new("Pet scroll bundle 105 - 15,000 gold", 0xE76, 0x489), new("Pet scroll bundle 110 - 45,000 gold", 0xE76, 0x489), new("Shard mastery manual - 1,000 gold", 0xEFA, 0x489), new("Bonding potion - 2,500 gold", 0xF0E, 0x489), new("Reusable shrinking leash - 5,000 gold", 0x14F8), new("House shrinking post - 10,000 gold", 0x14E7, 0x59B), new("Pet dye - choose color - 5,000 gold", 0xFAB, 0x48E)]
             : Groups[category].SelectMany(skill => new[] { new ItemListEntry($"{skill} 105 - 2,500 gold", 0x14F0), new ItemListEntry($"{skill} 110 - 7,500 gold", 0x14F0) }).ToArray();
         private static ItemListEntry[] MasteryEntries()
         {
@@ -67,14 +67,14 @@ public partial class HavenTrainingStone : Item
             new SkillMasteryPrimer(Server.Spells.SkillMasteries.MasteryInfo.Skills[(index - 1) / 3], 1 + (index - 1) % 3);
         public Menu(int category = 0) : base(Categories.Names[category], EntriesForShop(category)) { _category = category; }
         public Item CreateItem(int index) => _category == 5 ? CreateMastery(index) : _category == 4
-            ? index switch { 0 => new HavenPetScrollBundle(105), 1 => new HavenPetScrollBundle(110), 2 => new HavenMasteryManual(), 3 => new HavenBondingPotion(), 4 => new HavenPetLeash(), _ => new HavenHouseHitchingPost() }
+            ? index switch { 0 => new HavenPetScrollBundle(105), 1 => new HavenPetScrollBundle(110), 2 => new HavenMasteryManual(), 3 => new HavenBondingPotion(), 4 => new HavenPetLeash(), 5 => new HavenHouseHitchingPost(), _ => new HavenPetDye() }
             : new PowerScroll(Groups[_category][index / 2], index % 2 == 0 ? 105 : 110);
         public override void OnResponse(NetState state, int index)
         {
             var from = state.Mobile;
             if (index < 0 || index >= Entries.Length || from.Backpack == null) { return; }
             var item = CreateItem(index);
-            var price = _category == 5 ? MasteryPrice(index) : _category == 4 ? index switch { 0 => 15000, 1 => 45000, 2 => 1000, 3 => 2500, 4 => 5000, _ => 10000 } : index % 2 == 0 ? 2500 : 7500;
+            var price = _category == 5 ? MasteryPrice(index) : _category == 4 ? index switch { 0 => 15000, 1 => 45000, 2 => 1000, 3 => 2500, 4 => 5000, 5 => 10000, _ => 5000 } : index % 2 == 0 ? 2500 : 7500;
             if (!from.Backpack.CheckHold(from, item, false)) { item.Delete(); from.SendMessage("Make room in your backpack."); return; }
             if (!HavenEconomy.TryPay(from, price)) { item.Delete(); from.SendMessage($"You need {price:N0} gold."); return; }
             from.Backpack.DropItem(item);

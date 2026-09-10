@@ -409,6 +409,7 @@ namespace Server.CustomBots
             // is supposed to BE one, so the roll sits at the top of it.
             if (goods.Magic)
             {
+                if (Core.AOS) { HavenBotEquipment.RollMagic(item); return item; }
                 switch (item)
                 {
                     case BaseWeapon w:
@@ -461,6 +462,7 @@ namespace Server.CustomBots
         // -----------------------------------------------------------------
         private static string Describe(Item item, Goods goods, int amount)
         {
+            if (Core.AOS && HavenBotEquipment.PropertyValue(item) > 0) { return $"enchanted {goods.Noun}"; }
             // Longest this gets is "250 sulfurous ash" or "invulnerability
             // ringmail tunic" — a 64-char stack buffer covers every row in
             // the table with room to spare.

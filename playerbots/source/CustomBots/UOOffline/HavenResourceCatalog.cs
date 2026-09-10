@@ -62,7 +62,35 @@ public static class HavenResourceCatalog
         new(typeof(Bone), "Bones", "Supplies"),
         new(typeof(Cloth), "Undyed cloth", "Supplies"),
         new(typeof(UncutCloth), "Undyed uncut cloth", "Supplies"),
-        new(typeof(BoltOfCloth), "Undyed cloth bolts", "Supplies")
+        new(typeof(BoltOfCloth), "Undyed cloth bolts", "Supplies"),
+        new(typeof(EssenceAchievement), "Essence of achievement", "Abyss"),
+        new(typeof(EssenceBalance), "Essence of balance", "Abyss"),
+        new(typeof(EssenceControl), "Essence of control", "Abyss"),
+        new(typeof(EssenceDiligence), "Essence of diligence", "Abyss"),
+        new(typeof(EssenceDirection), "Essence of direction", "Abyss"),
+        new(typeof(EssenceFeeling), "Essence of feeling", "Abyss"),
+        new(typeof(EssenceOrder), "Essence of order", "Abyss"),
+        new(typeof(EssencePassion), "Essence of passion", "Abyss"),
+        new(typeof(EssencePersistence), "Essence of persistence", "Abyss"),
+        new(typeof(EssencePrecision), "Essence of precision", "Abyss"),
+        new(typeof(EssenceSingularity), "Essence of singularity", "Abyss"),
+        new(typeof(DaemonClaw), "Daemon Claw", "Abyss"),
+        new(typeof(LavaSerpentCrust), "Lava Serpent Crust", "Abyss"),
+        new(typeof(GoblinBlood), "Goblin Blood", "Abyss"),
+        new(typeof(FaeryDust), "Faery Dust", "Abyss"),
+        new(typeof(FeyWings), "Fey Wings", "Abyss"),
+        new(typeof(VialOfVitriol), "Vial Of Vitriol", "Abyss"),
+        new(typeof(VoidOrb), "Void Orb", "Abyss"),
+        new(typeof(UndyingFlesh), "Undying Flesh", "Abyss"),
+        new(typeof(ReflectiveWolfEye), "Reflective Wolf Eye", "Abyss"),
+        new(typeof(CrystallineBlackrock), "Crystalline Blackrock", "Abyss"),
+        new(typeof(ArcanicRuneStone), "Arcanic Rune Stone", "Abyss"),
+        new(typeof(SeedOfRenewal), "Seed Of Renewal", "Abyss"),
+        new(typeof(SpiderCarapace), "Spider Carapace", "Abyss"),
+        new(typeof(BottleIchor), "Bottle Ichor", "Abyss"),
+        new(typeof(SilverSnakeSkin), "Silver Snake Skin", "Abyss"),
+        new(typeof(DelicateScales), "Delicate Scales", "Abyss"),
+        new(typeof(DaemonBone), "Daemon bones", "Malas")
     ];
     public static CraftResource Material(Item item) => item switch
     {
@@ -74,7 +102,7 @@ public static class HavenResourceCatalog
         if (item?.Deleted != false || item is not ICommodity { IsDeedable: true } || !item.Stackable ||
             item.Name != null || item.LootType != LootType.Regular) { return -1; }
         var material = Material(item);
-        if (item.Hue != (material == CraftResource.None ? 0 : CraftResources.GetHue(material))) { return -1; }
+        if (item.Hue != (item is HavenAbyssMaterial abyss ? abyss.ResourceHue : material == CraftResource.None ? 0 : CraftResources.GetHue(material))) { return -1; }
         for (var i = 0; i < Entries.Length; i++)
         {
             var entry = Entries[i];

@@ -62,6 +62,9 @@ namespace Server.Spells.SkillMasteries
 
         public override void AddPartyEffects(Mobile m)
         {
+            if (!m_Mods.Contains(m)) { m_Mods.Add(m); }
+            var existing = GetSpellForParty(m, typeof(InvigorateSpell)) as InvigorateSpell;
+            if (existing != null && existing != this && existing.StatBonus() >= StatBonus()) { return; }
             m.FixedParticles(0x373A, 10, 15, 5018, EffectLayer.Waist);
             m.SendLocalizedMessage(1115737); // You feel invigorated by the bard's spellsong.
 
@@ -72,7 +75,6 @@ namespace Server.Spells.SkillMasteries
             m.AddStatMod(new StatMod(StatType.Dex, StatModName + "dex", m_StatBonus, TimeSpan.Zero));
             m.AddStatMod(new StatMod(StatType.Int, StatModName + "int", m_StatBonus, TimeSpan.Zero));
 
-            m_Mods.Add(m);
         }
 
         public override void RemovePartyEffects(Mobile m)
@@ -86,6 +88,8 @@ namespace Server.Spells.SkillMasteries
                 m.RemoveStatMod(StatModName + "int");
 
                 m_Mods.Remove(m);
+                var replacement = GetSpellForParty(m, typeof(InvigorateSpell)) as InvigorateSpell;
+                if (replacement != null && replacement != this) { replacement.AddPartyEffects(m); }
             }
         }
 

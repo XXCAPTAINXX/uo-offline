@@ -133,15 +133,18 @@ public partial class HavenPetTraining : Item
         0 => pet.RawStr, 1 => pet.RawDex, 2 => pet.RawInt, 3 => pet.HitsMaxSeed > 0 ? pet.HitsMaxSeed : pet.RawStr, 4 => pet.StamMaxSeed > 0 ? pet.StamMaxSeed : pet.RawDex, 5 => pet.ManaMaxSeed > 0 ? pet.ManaMaxSeed : pet.RawInt,
         6 => pet.BasePhysicalResistance, 7 => pet.BaseFireResistance, 8 => pet.BaseColdResistance, 9 => pet.BasePoisonResistance, 10 => pet.BaseEnergyResistance, _ => 0
     };
+    internal static int DisplayValue(BaseCreature pet, int option) => option is >= 6 and <= 10
+        ? HavenPetDefenses.Resistance(pet, (ResistanceType)(option - 6), Value(pet, option))
+        : Value(pet, option);
     internal bool Upgrade(Mobile owner, BaseCreature pet, int option, int amount)
     {
         if (option < 0 || option >= Labels.Length || amount is not (1 or 10)) { return false; }
-        var value = Value(pet, option);
+        var value = DisplayValue(pet, option);
         var cost = amount * Weights[option];
         if (value + amount > Limits[option] || !CanSpend(owner, pet, cost)) { return false; }
         var start = option < 3 ? 0 : option < 6 ? 3 : 6;
         var end = start == 6 ? 11 : start + 3;
-        var weight = cost;
+        var weight = cost + (value - Value(pet, option)) * Weights[option];
         for (var i = start; i < end; i++) { weight += Value(pet, i) * Weights[i]; }
         if (weight > (start == 0 ? 23000 : start == 3 ? 33000 : 10950)) { return false; }
         // Freeze implicit vitals before raising raw stats, so they cannot bypass the separate vital budget.
@@ -156,11 +159,7 @@ public partial class HavenPetTraining : Item
             case 3: pet.SetHits(value + amount); break;
             case 4: pet.SetStam(value + amount); break;
             case 5: pet.SetMana(value + amount); break;
-            case 6: pet.PhysicalResistanceSeed += amount; break;
-            case 7: pet.FireResistSeed += amount; break;
-            case 8: pet.ColdResistSeed += amount; break;
-            case 9: pet.PoisonResistSeed += amount; break;
-            case 10: pet.EnergyResistSeed += amount; break;
+            case >= 6 and <= 10: pet.SetResistance((ResistanceType)(option - 6), value + amount); break;
         }
         Spend(owner, pet, cost); return true;
     }
@@ -243,10 +242,11 @@ public sealed class HavenPetTrainingGump : Gump
             {
                 var y = 198 + (i - first) * 35;
                 AddLabel(238, y, 1152, HavenPetTraining.Labels[i]);
-                AddLabel(385, y, 1152, $"{HavenPetTraining.Value(pet, i)}");
+                AddLabel(385, y, 1152, $"{HavenPetTraining.DisplayValue(pet, i)}");
                 AddButton(442, y, 4005, 4007, 100 + i); AddLabel(475, y + 2, 1152, $"{HavenPetTraining.Weights[i] / 10.0:F1}");
                 AddButton(555, y, 4005, 4007, 200 + i); AddLabel(588, y + 2, 1152, $"{HavenPetTraining.Weights[i]}");
             }
+            if (_category == 1) { AddLabel(238, 394, 53, "Includes innate defenses; training ceiling is 80%."); }
         }
         else if (_category is 2 or 3)
         {

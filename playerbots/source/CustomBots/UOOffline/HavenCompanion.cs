@@ -377,6 +377,7 @@ public partial class HavenCompanion : BaseCreature
 
     public override void OnThink()
     {
+        CanSwim = BoundOwner?.Mount is HavenTideSteed;
         if (Role != HavenCompanionRole.Bard || IsDeadPet) { ClearSongs(); }
         if (BoundOwner?.NetState != null) { RecoverFromDeath(Core.Now); }
         if (!_configured) { ConfigureCompanion(); }
@@ -384,7 +385,7 @@ public partial class HavenCompanion : BaseCreature
         RecoverResources(Core.Now);
         ProcessCompanionSpell();
         ThinkTamingAssist();
-        base.OnThink();
+        if (!ThinkSkinning()) { base.OnThink(); }
         if (Controlled) { Loyalty = MaxLoyalty; }
         if (Core.Now >= _nextTraining)
         {

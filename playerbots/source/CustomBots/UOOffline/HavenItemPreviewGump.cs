@@ -106,6 +106,7 @@ public sealed class HavenItemPreviewGump : Gump
             HavenMasteryManual => "Custom shard mastery: one 30-minute Warrior, Archer, Caster, Bard, Healer or Beastmaster stat focus. Requires 90 skill; scales at 100/110/120. Focuses do not stack.",
             HavenPetPowerScroll petScroll => $"Raises an owned pet {petScroll.Skill} cap to {petScroll.Cap}. Does not teach new abilities.",
             HavenBondingPotion => "Instantly bonds one living, bondable pet you own. Consumed only on success.",
+            HavenPetDye => "Choose one of eight colors or restore your pet's original color. One use. Works on your pet or its shrunken token. Appearance only; stats and rarity stay the same.",
             HavenPetLeash => "Reusable portable pet shrinking tool. Keep it in your pack. Target your living pet within 3 tiles; no charges.",
             HavenHouseHitchingPost => "Place in a house you own or co-own, then lock it down. Reusable free pet shrinking, with the same safety rules as town posts.",
             HavenPetScrollBundle => "Six pet cap scrolls: Wrestling, Tactics, Anatomy, Magic Resist, Meditation and Focus. Double-click each scroll and target your pet.",

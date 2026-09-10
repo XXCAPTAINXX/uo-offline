@@ -9,6 +9,24 @@ namespace Server.UOOffline;
 public partial class ProgressionArchive : Bag
 {
     public override string DefaultName => "Champion's Codex";
+    public override int DefaultMaxItems => 0;
+    public override int GetTotal(TotalType type) => type == TotalType.Items ? 0 : base.GetTotal(type);
+    public override void UpdateTotal(Item sender, TotalType type, int delta)
+    {
+        // The book occupies one slot; archived items do not propagate slot changes to its parents.
+        if (type != TotalType.Items) { base.UpdateTotal(sender, type, delta); }
+    }
+    public override bool CheckHold(Mobile from, Item item, bool message, bool checkItems, int plusItems, int plusWeight)
+    {
+        if (!Accepts(item)) { return false; }
+        // Retain explicit administrator storage limits, while ordinary books have no internal slot limit.
+        if (checkItems && MaxItems > 0 && Items.Count + plusItems + (item.Parent == this ? 0 : 1) > MaxItems)
+        {
+            if (message) { SendFullItemsMessage(from, item); }
+            return false;
+        }
+        return base.CheckHold(from, item, message, false, plusItems, plusWeight);
+    }
 
     [Constructible]
     public ProgressionArchive()
@@ -137,6 +155,7 @@ public partial class ProgressionArchive : Bag
         list.Add("Stores Power/Stat/Transcendence/Alacrity scrolls");
         list.Add("Stores Champion Skulls, Haven Marks, primers and binders");
         list.Add("Double-click to collect items and open the scroll ledger");
+        list.Add($"{"Stored items use no backpack slots; the codex uses one."}");
     }
 }
 

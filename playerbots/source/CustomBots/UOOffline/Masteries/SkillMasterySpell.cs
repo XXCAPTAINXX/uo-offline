@@ -281,9 +281,9 @@ namespace Server.Spells.SkillMasteries
             double mod = CollectiveBonus;
 
             double upkeep = UpKeep;
-            int mana = (int)(upkeep - ((upkeep * mod) / 4.5));
+            int mana = Math.Max(1, (int)(upkeep - ((upkeep * mod) / 4.5)));
 
-			return ScaleMana(mana);
+			return Math.Max(1, ScaleMana(mana));
 		}
 
 		public virtual void Expire(bool disrupt = false)
@@ -615,22 +615,27 @@ namespace Server.Spells.SkillMasteries
             if (from?.Deleted != false || !from.Alive) { return null; }
             var owner = from is BaseCreature creature ? creature.GetMaster() ?? from : from;
             var party = Party.Get(owner);
+            SkillMasterySpell best = null;
             foreach (var pair in m_Table)
             {
                 foreach (var spell in pair.Value)
                 {
                     if (spell == null || spell.Timer == null || spell.Expires <= Core.Now || spell.GetType() != type ||
                         spell.Caster.Deleted || !spell.Caster.Alive) { continue; }
-                    if (spell.Caster == from) { return spell; }
+                    if (spell.Caster == from)
+                    {
+                        if (best == null || spell.StatBonus() > best.StatBonus()) { best = spell; }
+                        continue;
+                    }
                     if (!spell.PartyEffects || spell.Caster.Map != from.Map || !from.InRange(spell.Caster, spell.PartyRange)) { continue; }
                     var casterOwner = spell.Caster is BaseCreature pet ? pet.GetMaster() ?? spell.Caster : spell.Caster;
                     if ((owner == casterOwner || party != null && Party.Get(casterOwner) == party) && spell.CheckPartyEffects(from))
                     {
-                        return spell;
+                        if (best == null || spell.StatBonus() > best.StatBonus()) { best = spell; }
                     }
                 }
             }
-            return null;
+            return best;
         }
         public static void CheckTable(Mobile m)
         {

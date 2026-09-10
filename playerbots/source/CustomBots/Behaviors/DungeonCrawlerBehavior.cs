@@ -394,6 +394,13 @@ namespace Server.CustomBots
             for (int i = items.Count - 1; i >= 0; i--)
             {
                 var item = items[i];
+                if (Core.AOS && item is IAosItem && HavenBotEquipment.PropertyValue(item) > 0)
+                {
+                    find = BotAppraisal.NameFor(item);
+                    bot.Backpack?.DropItem(item);
+                    Server.UOOffline.HavenMarketProduction.Consign(bot, item);
+                    continue;
+                }
                 switch (item)
                 {
                     case Gold g:

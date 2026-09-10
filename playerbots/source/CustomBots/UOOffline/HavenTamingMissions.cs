@@ -10,7 +10,7 @@ public static class HavenTamingMissions
     public static bool IsTaming(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TamePackHorse and <= HavenExpeditionKind.TameStormhorn;
     internal static int RollRarity(double roll) => roll < 0.40 ? 0 : roll < 0.75 ? 1 : roll < 0.95 ? 2 : 3;
     public static bool IsCustomMission(HavenExpeditionKind kind) => kind is >= HavenExpeditionKind.TameEmberwing and <= HavenExpeditionKind.TameStormhorn;
-    public static bool IsCustomPet(BaseCreature pet) => pet is HavenEmberwing or HavenMoonfang or HavenStormscale or HavenFrostmane or HavenVerdantLlama or HavenStormhorn or VampiricSteed;
+    public static bool IsCustomPet(BaseCreature pet) => pet is HavenEmberwing or HavenMoonfang or HavenStormscale or HavenFrostmane or HavenVerdantLlama or HavenStormhorn or VampiricSteed or HavenAncientHellhound or HavenSnowBear or HavenChelonian;
     public static string PetName(HavenExpeditionKind kind) => kind switch
     {
         HavenExpeditionKind.TamePackHorse => "Pack horse",
@@ -90,6 +90,7 @@ public partial class HavenExpeditionPetClaim : Item
         }
         if (Rarity == 3 && HavenTamingMissions.IsCustomPet(_reservedPet)) { _reservedPet.ControlSlots = 1; }
         HavenLegendaryPetSkills.Roll(_reservedPet);
+        HavenPetAppearance.Refresh(_reservedPet);
         return _reservedPet;
     }
     public void InspectWithAnimalLore(Mobile from)
