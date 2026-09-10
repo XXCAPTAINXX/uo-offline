@@ -16,6 +16,7 @@ public partial class HavenShadowActor : BaseCreature
     [Constructible]
     public HavenShadowActor() : base(AIType.AI_Melee, FightMode.Closest) { }
     public override bool BardImmune => Role == 13;
+    public override bool AlwaysAttackable => true;
     public override bool AutoDispel => Role is >= 10 and <= 13;
     public override bool CanRummageCorpses => false;
     internal void ConfigureRole(int partySize)

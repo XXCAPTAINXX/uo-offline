@@ -250,6 +250,7 @@ public partial class HavenFrontierEnemy : BaseCreature
         Fame = Role == 1 ? 15000 : 2000; Karma = -Fame; _nextPower = Core.Now + TimeSpan.FromSeconds(10);
     }
     public override bool BardImmune => Role == 2;
+    public override bool AlwaysAttackable => true;
     public override void GenerateLoot() { if (Role != 2) { AddLoot(Role == 1 ? LootPack.FilthyRich : LootPack.Average); } }
     public override void OnDamage(int amount, Mobile from, bool willKill)
     { if (amount > 0 && !Blessed) { Battle?.Credit(from); } base.OnDamage(amount, from, willKill); }

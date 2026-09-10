@@ -150,6 +150,25 @@ public class HavenWorldTestsPhysicalMarket
         finally { crew.Delete(); bot.Delete(); }
     }
     [SkippableFact]
+    public void CrewEngagesAnUnshieldedEncounterGuard()
+    {
+        TileDataRequirement.SkipIfMissing(); var bot = Bot(); var battle = new HavenFrontierBattle();
+        var crew = new HavenDungeonCrew { Battle = battle, Started = true };
+        var guard = new HavenFrontierEnemy { Battle = battle, Role = 0 };
+        var harmful = Mobile.AllowHarmfulHandler; var notoriety = Notoriety.Handler;
+        try
+        {
+            Mobile.AllowHarmfulHandler = Server.Misc.NotorietyHandlers.Mobile_AllowHarmful;
+            Notoriety.Handler = Server.Misc.NotorietyHandlers.MobileNotoriety;
+            guard.Setup(); guard.MoveToWorld(bot.Location, bot.Map);
+            Assert.False(guard.Blessed); Assert.False(guard.IsInvulnerable);
+            Assert.True(bot.InLOS(guard)); Assert.True(bot.CanBeHarmful(guard, false));
+            Assert.Same(guard, crew.Enemy(bot));
+            guard.Blessed = true; Assert.False(bot.CanBeHarmful(guard, false)); Assert.Null(crew.Enemy(bot));
+        }
+        finally { Mobile.AllowHarmfulHandler = harmful; Notoriety.Handler = notoriety; crew.Delete(); guard.Delete(); battle.Delete(); bot.Delete(); }
+    }
+    [SkippableFact]
     public void EndingBotCrewDoesNotCancelHumanShadowguardRoom()
     {
         TileDataRequirement.SkipIfMissing(); var player = Player(); var bot = Bot(); var room = new HavenShadowChamber();
