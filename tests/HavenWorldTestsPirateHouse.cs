@@ -80,10 +80,20 @@ public class HavenWorldTestsPirateHouse
             Assert.False(valuables.FindItemByType<HavenGoldenShovel>().Deleted);
             Assert.Equal(31, house.Components.Width); Assert.Equal(32, house.Components.Height);
             Assert.True(house.Components.List.Length > 2000); Assert.Same(owner, house.Owner); Assert.True(house.GetAosMaxSecures() >= 10000);
-            Assert.Equal(3, house.CompanyFixtures.OfType<HavenPirateStair>().Count());
+            Assert.Equal(7, house.CompanyFixtures.OfType<HavenPirateStair>().Count());
+            Assert.All(house.CompanyFixtures.OfType<HavenPirateStair>(), ladder => Assert.Equal(0x8A5,ladder.ItemID));
+            var fixtureCount=house.CompanyFixtures.Count; house.RefineFloorAccess(); Assert.Equal(fixtureCount,house.CompanyFixtures.Count);
             Assert.DoesNotContain(house.CompanyFixtures, i => i is HavenCompanyLadder or HavenCompanyCharter);
             owner.MoveToWorld(new Point3D(house.X, house.Y + 1, 7), house.Map);
-            for (var deck = 0; deck < 3; deck++) { Assert.True(house.ChangeDeck(owner, deck)); Assert.Equal(7 + deck * 20, owner.Z); }
+            for (var deck = 0; deck < 5; deck++)
+            { Assert.True(house.ChangeDeck(owner,deck)); Assert.Equal(HavenPirateHeadquarters.FloorDestinations[deck].Z,owner.Z); }
+            foreach (var ladder in house.CompanyFixtures.OfType<HavenPirateStair>())
+            {
+                var reachable=false;
+                for (var dx=-1;dx<=1;dx++) for (var dy=-1;dy<=1;dy++)
+                { var at=new Point3D(ladder.X+dx,ladder.Y+dy,ladder.Z); if (!house.Map.CanSpawnMobile(at)) { continue; } owner.MoveToWorld(at,house.Map); if (owner.InLOS(ladder)) { reachable=true; } }
+                Assert.True(reachable,$"Ladder inaccessible at {ladder.Location}");
+            }
             foreach (var item in house.CompanyFixtures.Where(i => i is Container or BaseAddon or HavenRepairBench or HavenHouseHitchingPost))
             {
                 var reachable = false;

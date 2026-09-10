@@ -32,10 +32,23 @@ public static class HavenPetLore
         _ => "Every creature has a history beyond its training ledger. Watch where this one rests, what it eats, and how it answers danger; those small habits are the beginning of the story you will share."
     };
 
+    internal readonly record struct Section(int Tab, string Heading, string Text);
     internal static string Details(BaseCreature pet)
     {
         var lines = new List<string>();
-        void Add(string heading, string value) => lines.Add($"<B>{WebUtility.HtmlEncode(heading)}</B><BR>{WebUtility.HtmlEncode(value)}");
+        foreach (var section in Sections(pet))
+        { lines.Add($"<B>{WebUtility.HtmlEncode(section.Heading)}</B><BR>{WebUtility.HtmlEncode(section.Text)}"); }
+        return string.Join("<BR><BR>", lines);
+    }
+    internal static List<Section> Sections(BaseCreature pet)
+    {
+        var lines = new List<Section>();
+        void Add(string heading, string value)
+        {
+            var tab = heading.StartsWith("Rarity:", StringComparison.Ordinal) || heading == "Legendary skill rolls" ? 1 :
+                heading is "Training" or "Learned Healing" or "Trained abilities" ? 2 : heading == "Care and natural abilities" ? 3 : 0;
+            lines.Add(new Section(tab, heading, value));
+        }
         if (HavenPetSignatures.Kind(pet) != 0) { Add("Species signature", HavenPetSignatures.Describe(pet)); }
         var defense = HavenPetDefenses.Describe(pet);
         if (defense.Length > 0) { Add("Innate defenses", defense); }
@@ -59,37 +72,80 @@ public static class HavenPetLore
         var abilities = HavenPetAbilities.Find(pet);
         if (abilities != null)
         {
+            var learned = new List<string>();
             foreach (var id in abilities.Learned)
-            { if (id >= 0 && id < HavenPetAbilities.Names.Length) { Add("Trained ability", HavenPetAbilities.Names[id]); } }
+            { if (id >= 0 && id < HavenPetAbilities.Names.Length) { learned.Add(HavenPetAbilities.Names[id]); } }
+            if (learned.Count > 0) { Add("Trained abilities", string.Join("; ", learned)); }
         }
         if (pet is HavenSnowBear) { Add("Colossal Rage", HavenSnowBear.RageDescription); }
         if (pet is HavenChelonian)
         { Add("Living Shell and cargo", "Walks on land, swims and fights at sea; owner-accessible cargo. Below half health, reduces melee damage by 20–35% depending on rarity."); }
         Add("Care and natural abilities", $"Self healing: {(pet.CanHeal ? "yes" : "no")}; owner healing: {(pet.CanHealOwner ? "yes" : "no")}; bard immunity: {(pet.BardImmune ? "yes" : "no")}. Food: {pet.FavoriteFood}. Pack instinct: {pet.PackInstinct}. Taming requirement: {pet.MinTameSkill:F1}.");
-        return string.Join("<BR><BR>", lines);
+        return lines;
     }
 }
 
 public sealed class HavenPetLoreGump : Gump
 {
     private readonly BaseCreature _pet;
-    internal HavenPetLoreGump(BaseCreature pet, int tab = 0) : base(45, 45)
+    private readonly int _tab;
+    private readonly int _page;
+    private const string Ink = "#181818";
+    internal HavenPetLoreGump(BaseCreature pet, int tab = 0, int page = 0) : base(45, 45)
     {
-        _pet = pet;
-        AddBackground(0, 0, 600, 490, 9270);
-        AddHtml(25, 22, 550, 46, $"<BASEFONT COLOR=#FFFFFF><B>{WebUtility.HtmlEncode(pet.Name)}</B></BASEFONT>");
-        AddButton(25, 80, 4005, 4007, 1); AddLabel(60, 82, 1152, "Abilities and training");
-        AddButton(315, 80, 4005, 4007, 2); AddLabel(350, 82, 1152, "Creature lore");
-        AddHtml(25, 125, 550, 290, tab == 1
-            ? $"<BASEFONT COLOR=#FFFFFF>{WebUtility.HtmlEncode(HavenPetLore.Story(pet))}</BASEFONT>"
-            : $"<BASEFONT COLOR=#FFFFFF>{HavenPetLore.Details(pet)}</BASEFONT>", false, true);
-        AddButton(25, 443, 4014, 4016, 3); AddLabel(60, 445, 1152, "Animal Lore overview");
-        AddButton(465, 443, 4017, 4019, 0); AddLabel(500, 445, 1152, "Close");
+        _pet = pet; _tab = Math.Clamp(tab, 0, 4);
+        AddBackground(0, 0, 650, 530, 9270);
+        AddBackground(10, 10, 630, 510, 3000);
+        Text(28, 24, 594, 28, WebUtility.HtmlEncode(pet.Name), true);
+        var rarity = pet.Backpack?.FindItemByType<HavenPetRarity>();
+        var rank = HavenTamingMissions.IsCustomPet(pet) ? HavenPetRarity.RarityName(rarity?.Tier ?? 0) + "  |  " : "";
+        AddLabel(28, 55, 0, $"{rank}{pet.ControlSlots} follower slot{(pet.ControlSlots == 1 ? "" : "s")}  |  {(pet.IsBonded ? "Bonded" : pet.Controlled ? "Tamed" : "Wild")}");
+        var tabs = new[] { "Abilities", "Rarity", "Training", "Care", "Story" };
+        for (var i = 0; i < tabs.Length; i++)
+        {
+            var x = 24 + i * 121;
+            if (i == _tab) { AddBackground(x - 3, 82, 119, 32, 9200); }
+            AddButton(x, 88, 4005, 4007, 10 + i); AddLabel(x + 36, 90, 0, tabs[i]);
+        }
+        var sections = new List<HavenPetLore.Section>();
+        if (_tab == 4) { sections.Add(new HavenPetLore.Section(4, "A creature's story", HavenPetLore.Story(pet))); }
+        else { foreach (var section in HavenPetLore.Sections(pet)) { if (section.Tab == _tab) { sections.Add(section); } } }
+        if (sections.Count == 0)
+        {
+            sections.Add(new HavenPetLore.Section(_tab, tabs[_tab], _tab switch {
+                1 => "This creature has no custom rarity bonuses.",
+                2 => "No special training has been recorded yet. Open Animal Lore below to view its skills and available training.",
+                _ => "This creature uses its natural species abilities. Open Animal Lore below for its full stats." }));
+        }
+        var pages = (sections.Count + 1) / 2; _page = Math.Clamp(page, 0, pages - 1);
+        var count = Math.Min(2, sections.Count - _page * 2);
+        var height = count == 1 ? 326 : 158;
+        for (var i = 0; i < count; i++)
+        {
+            var section = sections[_page * 2 + i]; var y = 128 + i * 168;
+            AddBackground(24, y, 602, height, 3000);
+            Text(40, y + 12, 566, 25, WebUtility.HtmlEncode(section.Heading), true);
+            var body = WebUtility.HtmlEncode(section.Text);
+            if (_tab != 4) { body = body.Replace("; ", "<BR>").Replace(". ", ".<BR>"); }
+            // Each card owns its overflow. Longer descriptions cannot cover the tabs or footer.
+            AddHtml(40, y + 41, 566, height - 52, $"<BASEFONT COLOR={Ink}>{body}</BASEFONT>", false, true);
+        }
+        if (pages > 1)
+        {
+            if (_page > 0) { AddButton(28, 465, 4014, 4016, 20); AddLabel(65, 467, 0, "Previous"); }
+            AddLabel(281, 467, 0, $"{_page + 1} / {pages}");
+            if (_page + 1 < pages) { AddButton(516, 465, 4005, 4007, 21); AddLabel(553, 467, 0, "Next"); }
+        }
+        AddButton(28, 493, 4014, 4016, 3); AddLabel(65, 495, 0, "Animal Lore overview");
+        AddButton(516, 493, 4017, 4019, 0); AddLabel(553, 495, 0, "Close");
     }
+    private void Text(int x, int y, int width, int height, string encoded, bool bold)
+        => AddHtml(x, y, width, height, $"<BASEFONT COLOR={Ink}>{(bold ? "<B>" : "")}{encoded}{(bold ? "</B>" : "")}</BASEFONT>");
     public override void OnResponse(NetState state, in RelayInfo info)
     {
         if (info.ButtonID == 0 || !HavenAnimalLoreGump.CanInspect(state.Mobile, _pet)) { return; }
         if (info.ButtonID == 3) { HavenAnimalLoreGump.DisplayTo(state.Mobile, _pet); return; }
-        if (info.ButtonID is 1 or 2) { state.Mobile.SendGump(new HavenPetLoreGump(_pet, info.ButtonID - 1)); }
+        if (info.ButtonID is >= 10 and <= 14) { state.Mobile.SendGump(new HavenPetLoreGump(_pet, info.ButtonID - 10)); }
+        else if (info.ButtonID is 20 or 21) { state.Mobile.SendGump(new HavenPetLoreGump(_pet, _tab, _page + (info.ButtonID == 20 ? -1 : 1))); }
     }
 }

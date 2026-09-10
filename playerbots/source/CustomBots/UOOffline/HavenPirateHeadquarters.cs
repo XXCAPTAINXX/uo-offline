@@ -122,14 +122,17 @@ public partial class HavenPirateHeadquarters : HouseFoundation
     }
     internal bool ChangeDeck(Mobile from, int deck)
     {
-        if (!CompanyAccess(from) || !from.Alive || deck is < 0 or > 2 || from.Map != Map || !IsInside(from) ||
+        if (!CompanyAccess(from) || !from.Alive || deck is < 0 or > 4 || from.Map != Map || !IsInside(from) ||
             from.Spell != null || SpellHelper.CheckCombat(from)) { return false; }
-        var z = Z + 7 + deck * 20;
-        for (var x = -1; x <= 1; x++)
+        var target = FloorDestinations[deck];
+        for (var radius = 0; radius <= 2; radius++)
+        for (var x = -radius; x <= radius; x++)
+        for (var y = -radius; y <= radius; y++)
         {
-            var p = new Point3D(X + x, Y + 1, z);
+            var p = new Point3D(X + target.X + x, Y + target.Y + y, Z + target.Z);
             if (!Map.CanSpawnMobile(p) || !IsInside(p, 16)) { continue; }
-            BaseCreature.TeleportPets(from, p, Map); from.MoveToWorld(p, Map); return true;
+            BaseCreature.TeleportPets(from, p, Map); from.MoveToWorld(p, Map);
+            from.SendMessage($"You arrive at {FloorNames[deck]}."); return true;
         }
         return false;
     }
@@ -138,7 +141,7 @@ public partial class HavenPirateHeadquarters : HouseFoundation
 public partial class HavenPirateStair : Item
 {
     [SerializableField(0)] private HavenPirateHeadquarters _headquarters;
-    [Constructible] public HavenPirateStair() : base(0x1DB2) { Name = "Ship's stair - choose a deck"; Movable = false; }
+    [Constructible] public HavenPirateStair() : base(0x8A5) { Name = "R.E.C. rope ladder - choose a floor"; Movable = false; }
     public override void OnDoubleClick(Mobile from)
     {
         if (Headquarters?.Deleted != false || !Headquarters.CompanyAccess(from) || from.Map != Map || !from.InRange(this, 2) || Math.Abs(from.Z - Z) > 5) { return; }
@@ -151,16 +154,17 @@ public sealed class HavenPirateDeckGump : Gump
     private readonly HavenPirateStair _ladder;
     public HavenPirateDeckGump(HavenPirateStair ladder) : base(40,40)
     {
-        _ladder = ladder; AddBackground(0,0,420,235,5054); AddBackground(10,10,400,215,3000);
-        AddLabel(25,24,0,"R.E.C. - Rare Export Company");
-        var labels = new[] { "Workshops, stores and galley", "Guild hall, maps and alchemy", "Captain's quarters and treasury" };
-        for (var i = 0; i < 3; i++) { AddButton(25,65+i*43,4005,4007,i+1); AddLabel(62,67+i*43,0,labels[i]); }
-        AddButton(270,192,4005,4007,0); AddLabel(307,194,0,"Close");
+        _ladder = ladder; AddBackground(0,0,460,345,9270); AddBackground(10,10,440,325,3000);
+        AddLabel(25,24,0,"R.E.C. - Where would you like to go?");
+        for (var i = 0; i < HavenPirateHeadquarters.FloorNames.Length; i++)
+        { AddButton(25,66+i*43,4005,4007,i+1); AddLabel(64,68+i*43,0,HavenPirateHeadquarters.FloorNames[i]); }
+        AddLabel(25,284,0,"Nearby pets and your companion travel with you.");
+        AddButton(325,311,4017,4019,0); AddLabel(363,313,0,"Close");
     }
     public override void OnResponse(NetState sender, in RelayInfo info)
     {
         var from = sender.Mobile;
-        if (info.ButtonID is < 1 or > 3 || _ladder.Deleted || _ladder.Headquarters?.Deleted != false ||
+        if (info.ButtonID is < 1 or > 5 || _ladder.Deleted || _ladder.Headquarters?.Deleted != false ||
             from.Map != _ladder.Map || !from.InRange(_ladder,2) || Math.Abs(from.Z - _ladder.Z)>5) { return; }
         if (!_ladder.Headquarters.ChangeDeck(from,info.ButtonID-1)) { from.SendMessage("The stair is blocked, or you are in combat. Nothing moved."); }
     }
