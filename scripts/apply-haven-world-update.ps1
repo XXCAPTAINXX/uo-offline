@@ -1,6 +1,7 @@
 param(
     [string]$InstallPath = 'D:\Uo Offline\uo-modernuo',
-    [string]$PayloadPath = (Join-Path $PSScriptRoot 'payload')
+    [string]$PayloadPath = (Join-Path $PSScriptRoot 'payload'),
+    [string]$BackupRoot = $(if ($env:HAVEN_BACKUP_ROOT) { $env:HAVEN_BACKUP_ROOT } else { 'E:\Backups\Haven\Deployments' })
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,7 +33,7 @@ if ((Get-FileHash -LiteralPath $newAssembly -Algorithm SHA256).Hash -ne $manifes
     throw 'The update assembly does not match its manifest.'
 }
 
-$backup = Join-Path $installRoot ('haven-world-backups\' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
+$backup = Join-Path $BackupRoot (Get-Date -Format 'yyyyMMdd-HHmmss-fff')
 New-Item -ItemType Directory -Path $backup | Out-Null
 Copy-Item -LiteralPath $assembly -Destination (Join-Path $backup 'UOContent.dll')
 $pdb = Join-Path $distribution 'Assemblies\UOContent.pdb'
