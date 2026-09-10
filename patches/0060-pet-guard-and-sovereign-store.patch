@@ -1,0 +1,57 @@
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
+@@ -292,6 +292,10 @@
+         }
+ 
+         FindCombatant();
++        if (!IsValidCombatant(Mobile.Combatant))
++        {
++            Server.UOOffline.HavenGuardPatrol.TryAcquire(Mobile);
++        }
+ 
+         if (IsValidCombatant(Mobile.Combatant))
+         {
+@@ -331,6 +335,11 @@
+         if (Mobile.IsDeadPet)
+         {
+             return true;
++        }
++
++        if (Server.UOOffline.HavenGuardPatrol.ReturnIfOutOfRange(Mobile))
++        {
++            return DoOrderGuard();
+         }
+ 
+         if (IsInvalidControlTarget(Mobile.ControlTarget))
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
+@@ -26,6 +26,7 @@
+             return;
+         }
+ 
++        Server.UOOffline.HavenGuardPatrol.Clear(Mobile);
+         Activate();
+ 
+         switch (Mobile.ControlOrder)
+--- a/Projects/UOContent/Skills/AnimalTaming.cs
++++ b/Projects/UOContent/Skills/AnimalTaming.cs
+@@ -13,6 +13,8 @@
+     public static class AnimalTaming
+     {
+         private static readonly HashSet<Mobile> m_BeingTamed = new();
++
++        public static bool IsBeingTamed(Mobile creature) => m_BeingTamed.Contains(creature);
+ 
+         public static bool DisableMessage { get; set; }
+ 
+--- a/Projects/UOContent/Engines/UltimaStore/UltimaStorePackets.cs
++++ b/Projects/UOContent/Engines/UltimaStore/UltimaStorePackets.cs
+@@ -12,7 +12,7 @@
+ 
+         public static void UltimaStoreOpenRequest(NetState state, SpanReader reader)
+         {
+-            state.Mobile.SendMessage("Ultima Store is not currently available.");
++            Server.UOOffline.HavenSovereignStore.DisplayTo(state.Mobile);
+         }
+     }
+ }

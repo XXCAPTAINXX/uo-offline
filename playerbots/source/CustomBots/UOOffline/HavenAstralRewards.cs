@@ -46,6 +46,7 @@ public static class HavenAstralRewards
 {
     public static void OnMonsterKilled(BaseCreature creature, Mobile player)
     {
+        HavenSovereigns.OnMonsterKilled(creature, player);
         HavenWorldDiscoveries.Award(creature, player, Utility.RandomDouble());
         HavenDoom.AwardRecipe(creature, player);
         if (!Eligible(creature, player)) { return; }

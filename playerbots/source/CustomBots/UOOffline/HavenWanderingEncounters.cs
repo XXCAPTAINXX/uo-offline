@@ -66,6 +66,7 @@ public partial class HavenEncounterJournal : Item
     internal void KillCredit(int tier) { Kills++; Earn(1 + tier / 5); }
     internal void ClearCredit(int tier, bool assisted)
     {
+        HavenSovereigns.EncounterCleared(Owner, tier);
         var amount = 20 + tier * 5; Earn(amount);
         if (assisted) { Assists++; Log($"Assisted tier {tier} clear; +{amount} points"); }
         else { Log($"Clear bonus: +{amount} encounter points"); }

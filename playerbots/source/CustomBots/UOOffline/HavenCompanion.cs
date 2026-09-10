@@ -397,7 +397,7 @@ public partial class HavenCompanion : BaseCreature
         {
             Combatant = null;
             ControlTarget = BoundOwner;
-            ControlOrder = OrderType.Follow;
+            ControlOrder = AIObject?.PersistentOrder == OrderType.Guard ? OrderType.Guard : OrderType.Follow;
         }
         DefendOwner();
         Support(BoundOwner);
