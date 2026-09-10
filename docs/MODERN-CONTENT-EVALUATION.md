@@ -65,6 +65,8 @@ Haven uses generated serialization, partial classes, ModernUO reader/writer inte
 
 ## Next implementation sequence
 
+Progress: a first companion prototype now has commands, native combat/healing, owner-only inventory, parties and persistent timed missions. See [the buildable prototype](../modern-prototype/README.md) for scope, tests and remaining client/data-conversion gates.
+
 1. **Companion vertical slice in the isolated candidate.** Port one companion's ownership, follow/guard/attack/heal, inventory and mission receipt. Save and reload it. Exercise party loot routing with a real player. Reuse candidate combat APIs rather than copying the whole Haven combat stack. Failure here can change the foundation recommendation.
 2. **Explicit data-conversion contract.** Inventory all custom serialized types in a copied save. Export stable identifiers, ownership and relationships plus accounts/characters, skills, equipment, pets, bonded state, currencies, ledgers, scroll balances, houses, storage, guilds and quest state. Dry-run imports must report every unsupported type and reconcile totals and references. No silent dropping of items.
 3. **One complete modern dungeon and one naval loop.** Generate the necessary stock world content in the candidate. Complete Shadowguard with two players/companions and verify rewards and re-entry. Complete fishing/net/boss/loot with a ship. Test real client art and movement. Only then broaden the world setup.

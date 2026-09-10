@@ -1,0 +1,38 @@
+PHASE fresh
+PASS create player fixture on traversable modern map
+PASS claim binds owner and one follower slot
+PASS repeat claim does not duplicate
+PASS stranger cannot issue orders
+PASS transfer release and drop-all blocked
+PASS pet speech guard stay and follow
+PASS owner can deposit and withdraw nested items
+PASS remote pack access and stale command denied
+PASS companion joins owner party idempotently
+PASS all kill shares native target with ordinary pet
+PASS guard chooses hostile and excludes wild tameable
+PASS follow order starts native movement
+PASS native follow closes distance
+PASS native greater heal starts
+PASS native spell heals owner and spends mana
+PASS direct attack starts native combat
+PASS native melee damages target
+PASS companion damage credit belongs to real owner
+PASS gold rewards merge existing pile
+PASS full pack queues rewards without loss
+PASS mission rejects invalid length and stranger
+PASS mission blocks duplicate starts and early rewards
+PASS due mission rewards once and reports
+PASS second reward keeps one gold pile
+PASS save pending mission and companion
+COMPLETE failures=0
+PHASE reload
+PASS owner and companion references persist
+PASS overdue mission completes while owner is offline
+PASS mission report persists
+PASS inventory and stacked gold persist
+PASS restart does not duplicate rewards
+PASS simulate native login location restoration
+PASS claim after login returns same companion
+PASS owner can recall recovered companion
+PASS custom AI restored
+COMPLETE failures=0
