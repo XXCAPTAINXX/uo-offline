@@ -17,8 +17,10 @@ for x in range(38,45):
 for x in (45,46):
     for y in range(93,97):
         add('porch deck',0x4A9,x,y)
-        add('porch roof',0x5C3,x,y,23 if x==45 else 20)
+        # Roof art covers the ground tile one coordinate back on each axis.
+        add('porch roof',0x5C3,x+1,y+1,23 if x==45 else 20)
 for y in (93,96): add('porch support',0x9,46,y)
+for y in (94,95,96): add('porch front beam',0x143,46,y,17)
 # Native LAND transitions, not dirt statics placed on grass. These edits need
 # matching server/client map generation when installed; this authoring preview
 # does not modify either map. 0x89/0x87 feather opposite grass-facing edges.
@@ -31,9 +33,8 @@ for y in range(94,105):
         land(0x76+(x+y)%3,x,y)
     land(0x89,45 if y>=97 else 46,y)
     land(0x87,48,y)
-# Gravel joins packed dirt to the stone junction instead of isolated square
-# paving tiles within the lane.
-for x in (46,47): land(0xE1,x,104)
+# Keep one earth palette through the junction; the unrelated gravel patch
+# previously made the end of the path look like a separate square insert.
 for x,y in ((45,100),(49,96),(49,101)):
     add('lane grass',0xCAC if y%2 else 0xCAD,x,y)
 add('tracked straw',0xF35,43,94)
@@ -43,10 +44,10 @@ add('foundation stone',0x1364,39,100)
 add('signpost grass',0xCAC,45,91)
 for x in range(39,45):
     add('wall',0xE if x in (40,43) else 0x7,x,91)
-    if x!=44: add('wall',0x7,x,98)
+    if x!=44: add('wall',0xE if x in (40,42) else 0x7,x,98)
 for y in range(92,99):
     add('wall',0xF if y in (92,96) else 0x8,38,y)
-    if y not in (94,95,98): add('wall',0x8,44,y)
+    if y not in (94,95,98): add('wall',0xF if y in (92,97) else 0x8,44,y)
 add('corner',0x9,38,91)
 add('corner',0x6,44,98)
 for y in (94,95): add('door lintel',0x143,44,y,17)
