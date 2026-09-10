@@ -132,12 +132,14 @@ public partial class ApprenticeGrimoire : Spellbook
         caster.SendMessage($"Your apprentice grimoire has reached level {Level}.");
     }
 
+    [AfterDeserialization] private void RefreshManaSustain() => Attributes.RegenMana = Math.Max(Attributes.RegenMana,1 + Math.Clamp(Level,1,20)/3);
+
     private void ApplyLevelBonuses()
     {
         Attributes.Luck = 25 + Math.Min(Level, 10) * 10;
         Attributes.BonusMana = Math.Min(10, Level / 2);
         Attributes.LowerManaCost = Math.Min(10, Level / 2);
-        Attributes.RegenMana = Math.Min(3, Level / 6);
+        Attributes.RegenMana = Math.Max(Attributes.RegenMana, 1 + Math.Clamp(Level,1,20) / 3);
         Attributes.CastRecovery = Level >= 10 ? 1 : 0;
         Attributes.CastSpeed = Level >= 20 ? 1 : 0;
     }

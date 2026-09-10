@@ -99,7 +99,7 @@ public partial class HavenPirateEstate : Item
         CommandSystem.Register("home", AccessLevel.Player, e =>
         { if (!GoHome(e.Mobile)) { e.Mobile.SendMessage("No accessible island home was found. You must own the island, be alive, and be outside combat and travel restrictions."); } });
         Timer.StartTimer(TimeSpan.FromSeconds(35), () =>
-        { foreach (var estate in Registry) { estate.DecorateSettlement(); estate.EnsureHomeTrial(); } });
+        { foreach (var estate in Registry) { estate.DecorateSettlement(); estate.EnsureHomeTrial(); estate.EnsureHomePatrol(); } });
         CommandSystem.Register("HavenIslandsBuild", AccessLevel.GameMaster, e =>
         {
             if (Registry.Count != 0 || HavenCommunityCenter.Registry.Count != 0) { e.Mobile.SendMessage("An island or Commons already exists; saved structures were preserved."); return; }

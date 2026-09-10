@@ -23,7 +23,7 @@ public partial class HavenFrontierBattle : Item
     private Timer _timer;
     private Server.Regions.DungeonRegion _originalRegion;
     internal bool Original => !Pirate && X > 6200;
-    internal Point3D Center => Pirate ? new Point3D(4090, 3580, -2) : Original ? new Point3D(6317, 2555, 0) : new Point3D(4888, 3416, 0);
+    internal Point3D Center => Pirate ? new Point3D(4090, 3580, 13) : Original ? new Point3D(6317, 2555, 0) : new Point3D(4888, 3416, 0);
     internal Point3D SafeExit => Pirate ? HavenChelonia.Landing : HavenFrontierSupport.RiftLanding;
     internal bool Active => Phase > 0;
     [Constructible]
@@ -61,24 +61,27 @@ public partial class HavenFrontierBattle : Item
     }
     [AfterDeserialization(false)]
     internal void Recover() { if (!Deleted) { Register(); Cancel(); } }
-    internal bool Start(Mobile from)
+    internal bool AtDispatch(Mobile from, HavenHomePatrolBoard access = null)
+        => access == null ? from.Map == Map && from.InRange(this, 4)
+            : Pirate && Map == access.Map && access.CanUse(from) && HavenHomePatrolBoard.Patrol == this;
+    internal bool Start(Mobile from, HavenHomePatrolBoard access = null)
     {
         if (Deleted || Active || Core.Now < NextRun || from?.Deleted != false || !from.Alive || from.Map != Map ||
-            !from.InRange(this, 4) || from.Criminal || from.Spell != null || Server.Spells.SpellHelper.CheckCombat(from)) { return false; }
+            !AtDispatch(from, access) || from.Criminal || from.Spell != null || Server.Spells.SpellHelper.CheckCombat(from)) { return false; }
         if (Pirate)
         {
-            var vessel = new LargeBoat(); var water = new Point3D(Center.X, Center.Y, -5);
+            var vessel = new HavenCorsairGalleon(); var water = new Point3D(Center.X, Center.Y, -5);
             if (!vessel.CanFit(water, Map, vessel.NorthID)) { vessel.Delete(); from.SendMessage("The patrol's water is occupied. Move any boat out of the marked waters first."); return false; }
             vessel.MoveToWorld(water, Map); vessel.Anchored = true; vessel.ShipName = "The Saltfang"; Vessel = vessel;
         }
         Phase = 1; Deadline = Core.Now + TimeSpan.FromMinutes(30); Participants.Clear(); SpawnWave();
-        if (Pirate) { Board(from); } else { from.SendMessage("Defeat each captain's guards, then the captain. Clear both crews to expose the rift beacon. Three waves seal the breach."); }
+        if (Pirate) { Board(from, access); } else { from.SendMessage("Defeat each captain's guards, then the captain. Clear both crews to expose the rift beacon. Three waves seal the breach."); }
         return true;
     }
-    internal bool Board(Mobile from)
+    internal bool Board(Mobile from, HavenHomePatrolBoard access = null)
     {
         if (!Pirate || !Active || Vessel?.Deleted != false || from?.Deleted != false || !from.Alive ||
-            from.Map != Map || !from.InRange(this, 4) || from.Criminal || Server.Spells.SpellHelper.CheckCombat(from)) { return false; }
+            from.Map != Map || !AtDispatch(from, access) || from.Criminal || from.Spell != null || Server.Spells.SpellHelper.CheckCombat(from)) { return false; }
         var point = new Point3D(Center.X, Center.Y + 3, Center.Z);
         if (!Map.CanFit(point, 16, checkMobiles: false)) { return false; }
         BaseCreature.TeleportPets(from, point, Map); from.MoveToWorld(point, Map);
@@ -278,16 +281,15 @@ public partial class HavenMaritimeCargo : Item
     [Constructible]
     public HavenMaritimeCargo() : base(0x1EA5) { Name = "sealed maritime cargo"; Weight = 1; LootType = LootType.Blessed; }
     public override void GetProperties(IPropertyList list)
-    { base.GetProperties(list); list.Add($"{"Turn-in:"} {Math.Clamp(Value, 1, 100)} {"doubloons at Chelonia's dispatch board"}"); }
+    { base.GetProperties(list); list.Add($"{"Turn-in:"} {Math.Clamp(Value, 1, 100)} {"doubloons at a Corsair patrol board"}"); }
     public override void OnDoubleClick(Mobile from)
     {
         if (!IsChildOf(from.Backpack) || !from.Alive || Deleted) { return; }
+        var nearby = HavenHomePatrolBoard.Nearby(from);
         foreach (var board in HavenFrontierBattle.Registry)
-        {
-            if (!board.Pirate || board.Map != from.Map || !from.InRange(board, 4)) { continue; }
-            var value = Math.Clamp(Value, 1, 100); Delete(); HavenFrontierRecord.Get(from).Doubloons += value;
-            from.SendMessage($"Cargo delivered: {value} doubloons. Spend them with [expeditions."); return;
-        }
-        from.SendMessage("Take this cargo to Chelonia's corsair dispatch board.");
+        { if (board.Pirate && board.Map == from.Map && from.InRange(board, 4)) { nearby = true; break; } }
+        if (!nearby) { from.SendMessage("Take this cargo to a Corsair patrol board at Chelonia or your island home."); return; }
+        var value = Math.Clamp(Value, 1, 100); Delete(); HavenFrontierRecord.Get(from).Doubloons += value;
+        from.SendMessage($"Cargo delivered: {value} doubloons. Spend them with [expeditions.");
     }
 }

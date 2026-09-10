@@ -133,6 +133,7 @@ public static class HavenReleaseOperations
             HavenPirateHeadquarters house = null;
             foreach (var candidate in HavenPirateHeadquarters.Registry) { if (!candidate.Deleted && candidate.Owner == estate.Owner) { house = candidate; break; } }
             estates.Add(new { Owner = estate.Owner?.Name, OwnerSerial = (estate.Owner?.Serial ?? Serial.Zero).Value, Fixtures = estate.Fixtures.Count,
+                PatrolBoard = estate.HomePatrol == null ? null : new { Serial = estate.HomePatrol.Serial.Value, estate.HomePatrol.X, estate.HomePatrol.Y, estate.HomePatrol.Z },
                 MiniChampion = estate.HomeTrial == null ? null : new { Serial = estate.HomeTrial.Serial.Value, estate.HomeTrial.Name, estate.HomeTrial.X, estate.HomeTrial.Y, estate.HomeTrial.Stage },
                 Headquarters = house == null ? null : new { Serial = house.Serial.Value, house.Name, house.X, house.Y, house.Z,
                     Customizable = true, Width = house.Components.Width, Height = house.Components.Height, DesignTiles = house.Components.List.Length, StorageItems = house.Secures.Sum(s => s.Item.TotalItems), Fixtures = house.CompanyFixtures.Count, MasterChest = house.MasterStorage?.Serial.Value, Stores = house.MasterStorage?.FindLinked().Count } });

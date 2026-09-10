@@ -17,7 +17,11 @@ public partial class HavenGearExperience : Item
         HavenCompanionBlade or HavenCompanionBow or StarterFortuneEarrings or AstralFortuneEarrings or AstralWeaversRing or AstralGuardianMantle || HavenJewelrySets.BraceletTheme(gear) >= 0 ||
         gear is Longsword { Parent: HavenCompanion, Movable: false } && gear.GetType() == typeof(Longsword);
     [AfterDeserialization]
-    private void CheckLegacyGear() => _cleanup = Timer.DelayCall(TimeSpan.FromSeconds(1), RemoveOrdinaryBonuses);
+    private void CheckLegacyGear() => _cleanup = Timer.DelayCall(TimeSpan.FromSeconds(1), () =>
+    {
+        RemoveOrdinaryBonuses();
+        if (!Deleted && Parent is BaseWeapon weapon && IsSpecial(weapon)) { HavenWeaponManaSustain.Apply(weapon,Level); }
+    });
     internal void RemoveOrdinaryBonuses()
     {
         if (Parent is not Item gear || IsSpecial(gear)) { return; }
@@ -63,6 +67,7 @@ public partial class HavenGearExperience : Item
             progress.AppliedLevel = progress.Level;
         }
         HavenAstralGrowth.Apply(gear, progress.Level);
+        if (gear is BaseWeapon weapon) { HavenWeaponManaSustain.Apply(weapon, progress.Level); }
         if (gear is HavenConcordTalisman talisman && gear.Parent is Mobile wearer) { talisman.UnlockFollower(wearer); }
         gear.InvalidateProperties();
     }

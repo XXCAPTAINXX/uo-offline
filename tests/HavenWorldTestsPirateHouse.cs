@@ -17,6 +17,50 @@ namespace UOContent.Tests;
 public class HavenWorldTestsPirateHouse
 {
     public HavenWorldTestsPirateHouse() { _ = new HavenWorldTestsMarket(); BaseHouse.Configure(); }
+    [Fact]
+    public void ManaLeechStartsUsefulScalesTo100AndNeverAddsTwice()
+    {
+        var weapon = new ApprenticeBlade();
+        try
+        {
+            Assert.Equal(20,weapon.WeaponAttributes.HitLeechMana);
+            weapon.Level=10; StarterWeaponProgression.ApplyBonuses(weapon,weapon); Assert.Equal(57,weapon.WeaponAttributes.HitLeechMana);
+            weapon.Level=20; StarterWeaponProgression.ApplyBonuses(weapon,weapon); Assert.Equal(100,weapon.WeaponAttributes.HitLeechMana);
+            StarterWeaponProgression.ApplyBonuses(weapon,weapon); Assert.Equal(100,weapon.WeaponAttributes.HitLeechMana);
+        }
+        finally { weapon.Delete(); }
+        var ordinary = new Longsword(); var legendary = new Longsword(); legendary.AddItem(new HavenLegendaryArtifact());
+        try { HavenGearExperience.Gain(ordinary,1900); Assert.Equal(0,ordinary.WeaponAttributes.HitLeechMana); HavenGearExperience.Gain(legendary,1900); Assert.Equal(100,legendary.WeaponAttributes.HitLeechMana); }
+        finally { ordinary.Delete(); legendary.Delete(); }
+    }
+
+    [SkippableFact]
+    public void HomePatrolIsSupportedAccessibleIdempotentAndRedeemsCargo()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = new PlayerMobile { Body = 400 }; owner.AddItem(new Backpack());
+        var estate = new HavenPirateEstate(); estate.MoveToWorld(HavenPirateEstate.Site, Map.Trammel); estate.Fixtures.Add(new Item(1));
+        try
+        {
+            estate.EnsureHomePatrol(); var board = estate.HomePatrol; Assert.NotNull(board);
+            var count = estate.Fixtures.Count; estate.EnsureHomePatrol(); Assert.Equal(count, estate.Fixtures.Count);
+            Assert.Contains(estate.Fixtures, i => i is Static && i.ItemID == 9 && i.X == board.X && i.Y == board.Y && i.Z == 0);
+            Assert.Equal(4, board.Z);
+            owner.MoveToWorld(new Point3D(estate.X + 78, estate.Y + 124, 0), estate.Map);
+            Assert.True(estate.Map.CanFit(owner.Location,16,checkMobiles:false)); Assert.True(board.CanUse(owner));
+            for (var x = 78; x <= 82; x++)
+            for (var y = 126; y <= 130; y++) { Assert.True(estate.Map.CanSpawnMobile(new Point3D(estate.X + x, estate.Y + y, 0))); }
+            var cargo = new HavenMaritimeCargo { Value = 17 }; owner.Backpack.DropItem(cargo);
+            var before = HavenFrontierRecord.Get(owner).Doubloons; cargo.OnDoubleClick(owner);
+            Assert.True(cargo.Deleted); Assert.Equal(before + 17, HavenFrontierRecord.Get(owner).Doubloons);
+            cargo.OnDoubleClick(owner); Assert.Equal(before + 17, HavenFrontierRecord.Get(owner).Doubloons);
+            owner.MoveToWorld(new Point3D(estate.X + 90, estate.Y + 128, 0), estate.Map);
+            Assert.False(board.CanUse(owner)); Assert.False(HavenHomePatrolBoard.Nearby(owner));
+            File.WriteAllText("E:/(Offline UO)/uo-offline-haven-rc4/artifacts/home-patrol-design.json", JsonSerializer.Serialize(estate.Fixtures.Where(i => i.Visible && i.Map == estate.Map).Select(i => new { id = i.ItemID, x = i.X - estate.X - 75, y = i.Y - estate.Y - 124, z = i.Z })));
+        }
+        finally { estate.Delete(); owner.Delete(); }
+    }
+
     [SkippableFact]
     public void CastleMigrationPreservesRealStorageAndBuildsEditableThreeFloorHouse()
     {
@@ -61,7 +105,7 @@ public class HavenWorldTestsPirateHouse
             // Review artifact: exact custom components and retained furnishings.
             File.WriteAllText("E:/(Offline UO)/uo-offline-haven-rc4/artifacts/pirate-house-design.json", JsonSerializer.Serialize(new {
                 components = house.Components.List.Select(t => new { id = t.ItemId, x = t.OffsetX, y = t.OffsetY, z = t.OffsetZ }),
-                fixtures = house.CompanyFixtures.Select(i => new { id = i.ItemID, x = i.X - house.X, y = i.Y - house.Y, z = i.Z - house.Z, name = i.Name })
+                fixtures = house.CompanyFixtures.Where(i => i.Visible && i is not BaseAddon).Concat(house.CompanyFixtures.OfType<BaseAddon>().SelectMany(a => a.Components)).Select(i => new { id = i.ItemID, x = i.X - house.X, y = i.Y - house.Y, z = i.Z - house.Z, name = i.Name })
             }));
         }
         finally

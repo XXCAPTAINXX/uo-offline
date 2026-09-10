@@ -16,7 +16,7 @@ public static class HavenCompanionWeaponEvolution
         weapon.Attributes.WeaponSpeed = Math.Max(weapon.Attributes.WeaponSpeed, level / 5 * 5);
         weapon.WeaponAttributes.HitLowerAttack = Math.Max(weapon.WeaponAttributes.HitLowerAttack, chance);
         weapon.WeaponAttributes.HitLowerDefend = Math.Max(weapon.WeaponAttributes.HitLowerDefend, chance);
-        weapon.WeaponAttributes.HitLeechMana = Math.Max(weapon.WeaponAttributes.HitLeechMana, chance);
+        HavenWeaponManaSustain.Apply(weapon, level);
         weapon.WeaponAttributes.HitLeechHits = Math.Max(weapon.WeaponAttributes.HitLeechHits, chance);
         weapon.WeaponAttributes.HitEnergyArea = Math.Max(weapon.WeaponAttributes.HitEnergyArea, chance);
     }

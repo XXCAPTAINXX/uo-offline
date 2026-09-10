@@ -276,13 +276,7 @@ public sealed class HavenCompanionGump : Gump
         public CompanionAttackTarget(HavenCompanion companion) : base(10, false, TargetFlags.None) => _companion = companion;
         protected override void OnTarget(Mobile from, object targeted)
         {
-            if (_companion.Deleted || _companion.IsDeadPet || _companion.BoundOwner != from ||
-                from.Map != _companion.Map || !from.InRange(_companion, 18) || targeted is not Mobile enemy ||
-                enemy.Deleted || !enemy.Alive || enemy.Map != _companion.Map || !_companion.InRange(enemy, 10) ||
-                !_companion.CanBeHarmful(enemy, false) || !_companion.InLOS(enemy)) { return; }
-            _companion.ControlTarget = enemy;
-            _companion.ControlOrder = OrderType.Attack;
-            _companion.Combatant = enemy;
+            if (targeted is Mobile enemy) { _companion.OrderAttack(from, enemy); }
         }
     }
 }

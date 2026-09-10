@@ -2143,7 +2143,7 @@ public class HavenWorldTests
             Assert.Equal(20, weapon.Attributes.WeaponSpeed);
             Assert.Equal(40, weapon.WeaponAttributes.HitLowerAttack);
             Assert.Equal(40, weapon.WeaponAttributes.HitLowerDefend);
-            Assert.Equal(40, weapon.WeaponAttributes.HitLeechMana);
+            Assert.Equal(100, weapon.WeaponAttributes.HitLeechMana);
             Assert.Equal(40, weapon.WeaponAttributes.HitLeechHits);
             Assert.Equal(CheckSlayerResult.Slayer, weapon.CheckSlayers(companion, enemy));
             Assert.False(HavenCompanionWeaponEvolution.Slays(weapon, owner, enemy));

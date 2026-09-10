@@ -12,7 +12,7 @@ public partial class HavenPirateHeadquarters
     internal static HavenPirateHeadquarters Install(Mobile owner)
     {
         if (owner?.Deleted != false || owner.Account == null) { throw new InvalidOperationException("An existing player is required."); }
-        foreach (var ready in Registry) { if (!ready.Deleted && ready.Owner == owner) { ready.Estate?.MoveTrialToNorthwest(); return ready; } }
+        foreach (var ready in Registry) { if (!ready.Deleted && ready.Owner == owner) { ready.RebuildCompound(); ready.Estate?.MoveTrialToNorthwest(); ready.Estate?.EnsureHomePatrol(); return ready; } }
         HavenGuildCastle old = null;
         foreach (var house in HavenGuildCastle.Registry) { if (!house.Deleted && house.Owner == owner) { old = house; break; } }
         if (old == null) { throw new InvalidOperationException("The existing island headquarters was not found; no property was changed."); }
@@ -78,7 +78,7 @@ public partial class HavenPirateHeadquarters
                 var safe = new Point3D(location.X, location.Y + 1, location.Z + 7 + deck * 20);
                 person.MoveToWorld(safe, map);
             }
-            house.Estate?.MoveTrialToNorthwest();
+            house.RebuildCompound(); house.Estate?.MoveTrialToNorthwest(); house.Estate?.EnsureHomePatrol();
             house.Delta(ItemDelta.Update); house.MarkDirty(); return house;
         }
         catch

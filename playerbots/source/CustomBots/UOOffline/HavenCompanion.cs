@@ -329,7 +329,7 @@ public partial class HavenCompanion : BaseCreature
     public override bool CanBeControlledBy(Mobile m) => m == BoundOwner;
 
     public override bool CanBeHarmful(Mobile target, bool message, bool ignoreOurBlessedness) =>
-        (!TamingAssistActive || _calmingAnimal) && target?.Player != true && target is not BaseCreature { ControlMaster.Player: true } &&
+        (!TamingAssistActive || _calmingAnimal || _checkingExplicitAttack) && MayHarmWildPet(target) && target?.Player != true && target is not BaseCreature { ControlMaster.Player: true } &&
         base.CanBeHarmful(target, message, ignoreOurBlessedness);
 
     private DateTime _reviveAt;
@@ -377,6 +377,7 @@ public partial class HavenCompanion : BaseCreature
 
     public override void OnThink()
     {
+        RespectWildPets();
         CanSwim = BoundOwner?.Mount is HavenTideSteed;
         if (Role != HavenCompanionRole.Bard || IsDeadPet) { ClearSongs(); }
         if (BoundOwner?.NetState != null) { RecoverFromDeath(Core.Now); }
@@ -433,6 +434,7 @@ public partial class HavenCompanion : BaseCreature
 
     public override void OnDelete()
     {
+        _explicitWildTarget = null;
         StopTamingAssist();
         ClearSongs();
         CompanionParty.Get(this)?.Remove(this);

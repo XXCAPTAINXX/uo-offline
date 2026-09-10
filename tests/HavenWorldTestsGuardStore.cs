@@ -25,6 +25,34 @@ public class HavenWorldTestsGuardStore
     }
 
     [SkippableFact]
+    public void CompanionSpeechCommandsAndExplicitWildPetAttackRespectOwnerAndSplashSafety()
+    {
+        TileDataRequirement.SkipIfMissing(); var owner=Owner(); var stranger=Owner();
+        var companion=new HavenCompanion { BoundOwner=owner }; var wild=new HavenMoonfang(); var other=new HavenMoonfang(); var enemy=Enemy(owner,3);
+        var weapon=new HavenCompanionBlade();
+        try
+        {
+            companion.SetControlMaster(owner); companion.MoveToWorld(owner.Location,owner.Map);
+            wild.MoveToWorld(new Point3D(owner.X+2,owner.Y,owner.Z),owner.Map);
+            other.MoveToWorld(new Point3D(owner.X+2,owner.Y+1,owner.Z),owner.Map);
+            companion.OnSpeech(new SpeechEventArgs(owner,"all guard me",MessageType.Regular,0,Array.Empty<int>()));
+            Assert.Equal(OrderType.Guard,companion.ControlOrder); Assert.False(companion.CanBeHarmful(wild,false));
+            owner.Combatant=wild; Assert.False(companion.DefendOwner());
+            Assert.False(HavenGuardPatrol.Hostile(companion,wild,8)); Assert.False(companion.OrderAttack(stranger,wild));
+            var health=wild.Hits; weapon.DoAreaAttack(companion,enemy,0x1F1,120,0,0,0,0,100); Assert.Equal(health,wild.Hits);
+            companion.AIObject.EndPickTarget(owner,wild,OrderType.Attack);
+            Assert.Same(wild,companion.ControlTarget); Assert.True(companion.CanBeHarmful(wild,false)); Assert.False(companion.CanBeHarmful(other,false));
+            companion.OnSpeech(new SpeechEventArgs(owner,"all follow me",MessageType.Regular,0,Array.Empty<int>()));
+            Assert.Equal(OrderType.Follow,companion.ControlOrder); Assert.False(companion.CanBeHarmful(wild,false));
+            companion.OnSpeech(new SpeechEventArgs(owner,"all stay",MessageType.Regular,0,Array.Empty<int>())); Assert.Equal(OrderType.Stay,companion.ControlOrder);
+            companion.OnSpeech(new SpeechEventArgs(owner,"all kill",MessageType.Regular,0,Array.Empty<int>())); Assert.NotNull(owner.Target);
+            owner.Target.Invoke(owner,wild); Assert.True(companion.CanBeHarmful(wild,false));
+            companion.OnSpeech(new SpeechEventArgs(owner,"all stop",MessageType.Regular,0,Array.Empty<int>())); Assert.False(companion.CanBeHarmful(wild,false));
+        }
+        finally { weapon.Delete(); companion.Delete(); wild.Delete(); other.Delete(); enemy.Delete(); stranger.Delete(); owner.Delete(); }
+    }
+
+    [SkippableFact]
     public void GuardFindsClosestToOwnerAndReturnsAfterAutoTargetDies()
     {
         TileDataRequirement.SkipIfMissing();

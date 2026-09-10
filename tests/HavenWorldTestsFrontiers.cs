@@ -332,6 +332,9 @@ public class HavenWorldTestsFrontiers
         try
         {
             Assert.True(battle.Start(player)); battle.Credit(player);
+            Assert.IsType<HavenCorsairGalleon>(battle.Vessel); Assert.Equal(13,player.Z);
+            Assert.True(battle.Map.CanFit(player.Location,16,checkMobiles:false));
+            Assert.All(battle.Enemies,e => Assert.True(battle.Map.CanFit(e.Location,16,checkMobiles:false), $"Invalid galleon spawn {e.Location}"));
             for (var phase = 0; phase < 2; phase++)
             {
                 foreach (var guard in battle.Enemies.Where(e => e.Role == 0).ToArray()) { battle.Killed(guard); guard.Delete(); }
