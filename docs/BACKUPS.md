@@ -10,6 +10,7 @@ world saves and private client data; share the separate friend-test source ZIP.
 | `World/Archives` | Built-in hourly/daily/monthly compressed world archives |
 | `World/Temp` | Temporary archive work only |
 | `Deployments` | Future pre-update backups from the standard update script |
+| `Releases` | Tested post-update payloads, source archives and deployment evidence retained alongside their pre-update backups |
 | `LATEST.json` | Most recent complete snapshot and verification result |
 
 The existing server retention settings remain: 30 days for raw backups, 24 hourly,
