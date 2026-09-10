@@ -12,18 +12,30 @@ def add(name, art, x, y, z=0):
 for x in range(38,45):
     for y in range(91,99):
         add('stable deck',0x4AB if (x,y) in ((42,94),(43,95)) else 0x4A9,x,y)
-# A timber threshold keeps the doorway dry. The stable lane is packed earth,
-# joining the paved main route at y=105. Its shoulders vary with foot traffic.
-for y in (94,95): add('timber threshold',0x4A9,45,y)
-lane={(46,y) for y in range(94,105)} | {(47,y) for y in range(94,105)}
-lane.update((48,y) for y in (95,96,100,103,104))
-for x,y in sorted(lane): add('stable dirt lane',0x31F4+(x*3+y)%4,x,y)
-for x,y in ((46,93),(48,94),(48,97),(48,99),(48,102)):
-    add('worn dirt shoulder',0x914,x,y)
-for x,y in ((45,97),(45,100),(49,96),(49,101)):
+# Covered timber porch: two front posts support the lean-to, leaving the
+# central two-tile entrance unobstructed.
+for x in (45,46):
+    for y in range(93,97):
+        add('porch deck',0x4A9,x,y)
+        add('porch roof',0x5C3,x,y,23 if x==45 else 20)
+for y in (93,96): add('porch support',0x9,46,y)
+# Native LAND transitions, not dirt statics placed on grass. These edits need
+# matching server/client map generation when installed; this authoring preview
+# does not modify either map. 0x89/0x87 feather opposite grass-facing edges.
+def land(art,x,y):
+    add('stable lane terrain',art,x,y)
+    tiles[-1]['type']='Land'
+for y in range(94,105):
+    for x in (46,47):
+        if x==46 and y<=96: continue
+        land(0x76+(x+y)%3,x,y)
+    land(0x89,45 if y>=97 else 46,y)
+    land(0x87,48,y)
+# Gravel joins packed dirt to the stone junction instead of isolated square
+# paving tiles within the lane.
+for x in (46,47): land(0xE1,x,104)
+for x,y in ((45,100),(49,96),(49,101)):
     add('lane grass',0xCAC if y%2 else 0xCAD,x,y)
-# Retain just two stones where the lane meets the town paving.
-for x,y in ((46,104),(48,104)): add('reused stepping stone',0x519,x,y)
 add('tracked straw',0xF35,43,94)
 add('foundation flowers',0xC85,38,99)
 add('foundation grasses',0xCAD,39,99)
