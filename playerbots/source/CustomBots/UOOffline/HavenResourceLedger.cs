@@ -15,6 +15,11 @@ public partial class HavenResourceLedger : Item
     [Constructible]
     public HavenResourceLedger() : base(0xFF1)
     { Name = "Resource Ledger"; Hue = 0x489; Weight = 1; LootType = LootType.Blessed; }
+    public static void Initialize() => CommandSystem.Register("CompanionStore", AccessLevel.Player, e =>
+    {
+        try { e.Mobile.SendMessage($"Stored {StoreCompanionPack(e.Mobile)} resource deeds in your companion's ledger. Unsupported deeds were kept."); }
+        catch (InvalidOperationException ex) { e.Mobile.SendMessage(ex.Message); }
+    });
     private HavenCompanion Carrier => RootParent as HavenCompanion;
     internal bool CanUse(Mobile from) => !Deleted && from?.Deleted == false && from.Alive && from.Backpack != null &&
         (IsChildOf(from.Backpack) || CanUseCarrier(from));
@@ -65,6 +70,20 @@ public partial class HavenResourceLedger : Item
         var pack = CanUseCarrier(from) ? Carrier.Backpack : from.Backpack;
         foreach (var deed in pack.FindItemsByType<CommodityDeed>()) { deeds.Add(deed); }
         var count = 0; foreach (var deed in deeds) { if (Absorb(from, deed)) { count++; } }
+        return count;
+    }
+    internal static int StoreCompanionPack(Mobile owner)
+    {
+        var companion = HavenCompanionGearAssignment.Find(owner);
+        if (owner?.Deleted != false || companion?.Deleted != false || companion.BoundOwner != owner || companion.Backpack == null)
+        { throw new InvalidOperationException("No owned companion pack found."); }
+        if (companion.Backpack.FindItemByType<HavenResourceLedger>() == null)
+        { throw new InvalidOperationException("The companion needs a Resource Ledger in its pack."); }
+        var deeds = new List<CommodityDeed>();
+        foreach (var deed in companion.Backpack.FindItemsByType<CommodityDeed>()) { deeds.Add(deed); }
+        var count = 0;
+        foreach (var deed in deeds)
+        { if (deed.IsChildOf(companion.Backpack) && StoreMissionReward(companion, deed, null)) { count++; } }
         return count;
     }
     internal bool Withdraw(Mobile from, int index, int amount)
@@ -126,7 +145,8 @@ public class HavenResourceLedgerGump : Gump
     public HavenResourceLedgerGump(HavenResourceLedger book, int page, int amount) : base(70, 70)
     {
         _book = book; _page = Math.Clamp(page, 0, (HavenResourceCatalog.Entries.Length - 1) / 8);
-        AddBackground(0, 0, 540, 455, 9270);
+        AddBackground(0, 0, 540, 455, 5054);
+        AddBackground(10, 10, 520, 435, 3000);
         AddLabel(20, 18, 0, "Resource Ledger");
         AddButton(330, 16, 4005, 4007, 5); AddLabel(365, 18, 0, "Transfer all...");
         AddHtml(20, 48, 500, 38, "Matching deeds combine into balances. Set an amount, then choose a resource to withdraw a new deed.");

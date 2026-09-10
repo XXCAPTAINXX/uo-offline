@@ -112,7 +112,7 @@ public class HavenWorldTestsMarketExpansion
             { if (fixture is HavenMarketStall { Trade: >= HavenMarketTrade.Pets }) { fixture.Delete(); } }
             center.EnsureMarketTrades(); var count = center.Fixtures.Count;
             center.EnsureMarketTrades(); Assert.Equal(count, center.Fixtures.Count);
-            Assert.Equal(16, center.Fixtures.FindAll(i => i is HavenMarketStall { Deleted: false }).Count);
+            Assert.Equal(17, center.Fixtures.FindAll(i => i is HavenMarketStall { Deleted: false }).Count);
             Assert.Same(first, item.Parent); Assert.Equal(1234, first.Prices[0]);
         }
         finally { center.Delete(); }

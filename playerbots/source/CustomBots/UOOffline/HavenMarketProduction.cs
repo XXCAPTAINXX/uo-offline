@@ -16,7 +16,7 @@ public static class HavenMarketProduction
         HavenMarketTrade.Alchemist => "Silas Vale", HavenMarketTrade.Cook => "Nora Hearth",
         HavenMarketTrade.Gatherer => "Bram Fieldstone",
         HavenMarketTrade.Pets => "Lydia Wildmere", HavenMarketTrade.PetSupplies => "Finn Bridlewood",
-        HavenMarketTrade.DungeonSupplies => "Darian Ashford",
+        HavenMarketTrade.DungeonSupplies => "Darian Ashford", HavenMarketTrade.Maritime => "Marina Saltwind",
         HavenMarketTrade.Artifacts => "Seraphine Relicward", HavenMarketTrade.Jewelry => "Jasper Silverleaf", HavenMarketTrade.GearSets => "Freya Oathkeeper",
         _ => "Cassian Farwalker"
     };

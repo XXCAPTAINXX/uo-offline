@@ -91,6 +91,9 @@ Capable companions automatically heal and cure, and can help resurrect. Bandage 
 ### If something looks wrong
 Check HP, mana, stamina, role and current order in Stats/Orders. Use Refresh for a stuck companion and Heal / rez for recovery. Check Tasks before recalling: it may be away on a mission. Refresh is a recovery control, not a way to duplicate mission rewards.
 
+### Compact controls
+Orders holds common combat commands. Tasks handles missions and AFK work. Utility holds taming assistance, dungeon puzzles, mission reports and Store deeds in ledger. Stats lists 12 skills per page, with separate trained/effective/limit columns.
+
 ## Missions & AFK
 
 ### Send a mission
@@ -119,6 +122,9 @@ The ledger and codex each count as one backpack item regardless of stored entrie
 ### Resource carrying bags
 Resource satchels reduce weight for their supported resources. Ordinary armor or unrelated items do not receive that reduction. Keep the ledger for bulk stored materials and the satchel for materials you actively carry.
 
+### Tidy your companion pack
+[CompanionStore moves supported resource deeds, including nested deeds, into a Resource Ledger your companion already carries. Unsupported deeds stay in the pack. Repeating it cannot duplicate resources.
+
 ## Pets & training
 
 ### Inspect first
@@ -132,6 +138,9 @@ Custom pets can have distinct attacks, regeneration, defenses, themed ground dam
 
 ### Handling
 Supply stones offer supported bonding/shrinking tools and house posts. Use pet resurrection services near banks/stables. A pet pack belongs to that pet and its owner. For hotkeys, bind a client macro to [PetFollow, [PetGuard or [PetAttack; normal ownership, range and obedience still apply.
+
+### Shared Power Scrolls
+New training bundles and companion mission rewards use standard Power Scrolls, usable by players and pet training. Old pet-only scrolls can be exchanged one-for-one by double-clicking them in your backpack. Pet Training also continues to accept existing pet-only scrolls. No special ability is lost in the exchange.
 
 ## Gear & builds
 
@@ -174,6 +183,9 @@ Each bard mastery has a pair of effects. An eligible bard companion uses both fo
 
 ### Compatibility rules
 This build includes a compatible mastery system. Some formulas are shard-specific: Saving Throw gives a chance to resist disarm, not immunity; Resilience reduces supported harmful durations and provides a poison-resistance chance. It does not remove every negative effect automatically.
+
+### Readable mastery selector
+Double-click the Book of Masteries to see only your learned volumes, eight per page. Select one to see its abilities in the right panel. An empty list means you still need a primer.
 
 ## Travel & recovery
 
@@ -227,6 +239,9 @@ Double-click a purchased Minax credit note to add its exact amount to [expeditio
 
 Deal at least 600 combined damage through yourself and your pets/companion, then remain within 32 tiles on the same facet when the boss dies. Each qualifying participant gets rewards once. Normal respawn is 15 minutes. These special artifacts evolve to level 20. The small soul forge is a placeable forge with Haven Abyss artifice recipes; full official Imbuing remains separate. See THREE-BOSSES.md for the complete reward list and compatibility details.
 
+### Boat fishing crews
+[fishfleet shows the two fishing boats, positions and earned catch totals. Fishermen and mage escorts sail from waters south of the pirate island dock, cast real fishing lines, recover reachable SOS treasure and use earned ordinary nets. Their returned catches are sold under Maritime in [market. Full stalls delay unloading. White nets are sold rather than used to summon Scalis. See FISHING-FLEET.md for limits and testing.
+
 ## Dungeons
 
 ### Doom
@@ -261,6 +276,9 @@ Supported tide mounts provide water travel and cargo/fishing utilities. [tide op
 ### Snow pets
 The snow area has the custom bear encounter. Rarity, training and species powers should be considered together when choosing a mount or combat pet.
 
+### Prize ships
+Scalis, Corgul, Leviathan and pirate boarding captains each offer eligible participants a 5% chance at a ship deed, split evenly between a Britannian ship and an Orcish galleon. These use the actual ship hulls with normal sailing, cargo, keys and dry-docking; cannon combat is not included.
+
 ## Encounters
 
 ### Wandering challenges
@@ -288,6 +306,9 @@ The supply network includes supported pet shrinking posts and other utility item
 
 ### Personal island
 Use [home if an estate has been assigned to you. The current personal-island setup is not yet a full independent-island allocation system for every multiplayer account. Friends installing their own worlds should follow the build's setup guide for their own owner.
+
+### Corsair settlement
+Your private island keeps its original size and house plot. A kitchen garden grows carrots, cabbage, wheat and cotton; the orchard produces fruit. Rainwater, a camp kitchen and dock supplies give the settlement a lived-in feel.
 
 ## Build boundaries
 

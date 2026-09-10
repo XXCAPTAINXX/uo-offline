@@ -11,22 +11,25 @@ public sealed class HavenCompanionGump : Gump
 {
     private readonly HavenCompanion _companion;
     private readonly int _tab;
+    private readonly int _skillPage;
+    internal const int SkillsPerPage = 12;
 
-    public static void DisplayTo(Mobile from, HavenCompanion companion, int tab = 0)
+    public static void DisplayTo(Mobile from, HavenCompanion companion, int tab = 0, int skillPage = 0)
     {
         if (from?.Deleted != false || companion?.Deleted != false || companion.BoundOwner != from) { return; }
         companion.UpdateTraining(Core.Now);
         from.CloseGump<HavenCompanionGump>();
-        from.SendGump(new HavenCompanionGump(companion, tab));
+        from.SendGump(new HavenCompanionGump(companion, tab, skillPage));
     }
 
-    internal HavenCompanionGump(HavenCompanion companion, int tab = 0) : base(20, 60)
+    internal HavenCompanionGump(HavenCompanion companion, int tab = 0, int skillPage = 0) : base(20, 60)
     {
         _companion = companion;
         _tab = tab;
-        var skillRows = (companion.Skills.Length + 2) / 3;
-        var width = tab == 1 ? 820 : 370;
-        var height = tab == 1 ? 280 + skillRows * 22 : tab==4?410:370;
+        var pages = (companion.Skills.Length + SkillsPerPage - 1) / SkillsPerPage;
+        _skillPage = System.Math.Clamp(skillPage, 0, pages - 1);
+        var width = tab == 1 ? 620 : 520;
+        var height = tab == 1 ? 620 : 410;
         AddBackground(0, 0, width, height, 5054);
         AddBackground(10, 10, width - 20, height - 20, 3000);
         AddLabel(20, 20, 0, companion.Name);
@@ -34,9 +37,11 @@ public sealed class HavenCompanionGump : Gump
         if (companion.Expedition is { } trip) { AddLabel(20, 65, 0, trip.Status); }
         else { AddLabel(20, 65, 0, $"HP {companion.Hits}/{companion.HitsMax}  Mana {companion.Mana}/{companion.ManaMax}"); }
         Button(20, 95, 100, "Orders");
-        Button(115, 95, 101, "Stats");
-        Button(205, 95, 102, "Role");
-        Button(285, 95, 103, "Gear");
+        Button(105, 95, 101, "Stats");
+        Button(183, 95, 102, "Role");
+        Button(260, 95, 103, "Gear");
+        Button(335, 95, 17, "Tasks");
+        Button(415, 95, 107, "Utility");
         switch (tab)
         {
             case 1:
@@ -44,25 +49,25 @@ public sealed class HavenCompanionGump : Gump
                 AddLabel(20, 152, 0, $"Stamina {companion.Stam}/{companion.StamMax}  Damage {companion.DamageMin}-{companion.DamageMax}");
                 AddLabel(20, 174, 0, $"Resists P/F/C/P/E: {companion.PhysicalResistance}/{companion.FireResistance}/{companion.ColdResistance}/{companion.PoisonResistance}/{companion.EnergyResistance}");
                 AddLabel(20, 196, 0, $"Base stats: {companion.RawStr} Str / {companion.RawDex} Dex / {companion.RawInt} Int");
-                AddLabel(410, 130, 0, "All skills: trained base / effective value / cap");
-                AddLabel(410, 152, 0, "Gathering and taming improve through missions.");
-                AddLabel(410, 174, 0, companion.AutoSkinning ? "Hunting: skinning and leather cutting ON" : "Hunting: skinning and leather cutting OFF");
+                AddLabel(20, 221, 0, "Skill");
+                AddLabel(270, 221, 0, "Trained");
+                AddLabel(370, 221, 0, "Effective");
+                AddLabel(475, 221, 0, "Limit");
                 var skills = Enumerable.Range(0, companion.Skills.Length)
                     .Select(i => companion.Skills[i]).OrderBy(skill => skill.Name).ToArray();
-                for (var column = 0; column < 3; column++)
+                for (var row = 0; row < SkillsPerPage; row++)
                 {
-                    var x = 20 + column * 265;
-                    AddLabel(x, 220, 0, "Skill");
-                    AddLabel(x + 137, 220, 0, "Base / Now / Cap");
+                    var i = _skillPage * SkillsPerPage + row;
+                    if (i >= skills.Length) { break; }
+                    var skill = skills[i]; var y = 248 + row * 24;
+                    AddLabel(20, y, 0, skill.Name);
+                    AddLabel(270, y, 0, $"{skill.Base:F1}");
+                    AddLabel(370, y, 0, $"{skill.Value:F1}");
+                    AddLabel(475, y, 0, skill.Cap >= 6500 ? "Uncapped" : $"{skill.Cap:F1}");
                 }
-                for (var i = 0; i < skills.Length; i++)
-                {
-                    var skill = skills[i];
-                    var x = 20 + i / skillRows * 265;
-                    var y = 243 + i % skillRows * 22;
-                    AddLabel(x, y, 0, skill.Name);
-                    AddLabel(x + 137, y, 0, $"{skill.Base:F1}/{skill.Value:F1}/{skill.Cap:F1}");
-                }
+                if (_skillPage > 0) { Button(20, 545, 111, "Previous"); }
+                AddLabel(230, 548, 0, $"Skills page {_skillPage + 1} / {pages}");
+                if (_skillPage + 1 < pages) { Button(475, 545, 112, "Next"); }
                 break;
             case 2:
                 Button(20, 133, 10, "Fighter - melee support");
@@ -109,6 +114,13 @@ public sealed class HavenCompanionGump : Gump
                 }
                 AddHtml(20, 307, 330, 20, "Mounts: Emberwing, Frostmane, Verdant, Stormhorn.");
                 break;
+            case 7:
+                Button(20, 140, 16, companion.TamingAssistActive ? "Stop taming assist" : "Taming assistance...");
+                Button(20, 183, 43, "Dungeon puzzle assistance...");
+                Button(20, 226, 46, "Store deeds in ledger");
+                Button(20, 269, 45, "Mission reports");
+                AddHtml(20, 317, 470, 36, "Use Tasks for missions and AFK mode. Common combat commands stay on Orders.");
+                break;
             default:
                 Button(20, 133, 1, "Follow");
                 Button(195, 133, 2, "Guard");
@@ -118,9 +130,7 @@ public sealed class HavenCompanionGump : Gump
                 Button(195, 207, 6, "Pack");
                 Button(20, 244, 9, "Recall");
                 Button(195, 244, 7, CompanionParty.Get(companion)?.Contains(companion.BoundOwner) == true ? "Leave party" : "Join party");
-                Button(20, 280, 16, companion.TamingAssistActive ? "Stop assist" : "Tame assist...");
-                Button(195, 280, 17, "Tasks");
-                Button(20, 307, 43, "Dungeon puzzle assistance...");
+                AddHtml(20, 294, 470, 45, "All roles automatically heal you when able.<BR>Tasks: missions and AFK. Utility: taming, puzzles and ledger.");
                 break;
         }
         Button(20, height - 38, 110, "Refresh");
@@ -153,6 +163,14 @@ public sealed class HavenCompanionGump : Gump
     {
         if (button == 0 || _companion.Deleted || _companion.BoundOwner != from) { return; }
         if (button is >= 100 and <= 103) { DisplayTo(from, _companion, button - 100); return; }
+        if (button == 107) { DisplayTo(from, _companion, 7); return; }
+        if (button is 111 or 112) { DisplayTo(from, _companion, 1, _skillPage + (button == 111 ? -1 : 1)); return; }
+        if (button == 46)
+        {
+            try { from.SendMessage($"Stored {HavenResourceLedger.StoreCompanionPack(from)} resource deeds in the companion ledger."); }
+            catch (System.InvalidOperationException ex) { from.SendMessage(ex.Message); }
+            DisplayTo(from, _companion, 7); return;
+        }
         if (button == 29) { from.SendGump(new HavenCompanionAfkGump(HavenCompanionIdleMissions.Ensure(_companion))); return; }
         if (button == 17) { DisplayTo(from, _companion, 4); return; }
         if(button==44) { from.SendGump(new HavenRegionalMissionGump(_companion));return; }
@@ -167,21 +185,21 @@ public sealed class HavenCompanionGump : Gump
                 if (chamber.Participant(from)) { from.SendGump(new HavenShadowMenu(from, chamber)); return; }
             }
             from.SendMessage("Enter a supported dungeon room together. The room menu lets your companion solve or stop its puzzle.");
-            DisplayTo(from, _companion, _tab); return;
+            DisplayTo(from, _companion, _tab, _skillPage); return;
         }
         if (button == 25 || button == 9 && _companion.Expedition != null)
         { if (_companion.Expedition?.Return(from, Core.Now) != true) { DisplayTo(from, _companion, 4); } return; }
-        if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab); return; }
+        if (button == 110) { _companion.RecoverFromDeath(Core.Now, true); DisplayTo(from, _companion, _tab, _skillPage); return; }
         if (button == 9)
         {
             HavenCompanions.ClaimOrRecall(from);
-            DisplayTo(from, _companion, _tab);
+            DisplayTo(from, _companion, _tab, _skillPage);
             return;
         }
         if (_companion.Map != from.Map || !from.InRange(_companion, 18))
         {
             from.SendMessage("Your companion is out of reach. Use Recall to bring them back.");
-            DisplayTo(from, _companion, _tab);
+            DisplayTo(from, _companion, _tab, _skillPage);
             return;
         }
         if (button is >= 20 and <= 24 or >= 30 and <= 41)
@@ -247,7 +265,7 @@ public sealed class HavenCompanionGump : Gump
                 _companion.Role = (HavenCompanionRole)(button - 10);
                 break;
         }
-        DisplayTo(from, _companion, _tab);
+        DisplayTo(from, _companion, _tab, _skillPage);
     }
 
     private sealed class CompanionAttackTarget : Target

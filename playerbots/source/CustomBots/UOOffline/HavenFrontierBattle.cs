@@ -264,6 +264,7 @@ public partial class HavenFrontierEnemy : BaseCreature
     }
     public override void OnDeath(Container corpse)
     {
+        HavenSeaBossShips.OnDeath(this); // Award before Killed clears the pirate battle association.
         Battle?.Killed(this); base.OnDeath(corpse);
         Timer.DelayCall(TimeSpan.FromSeconds(Role == 1 ? 180 : 45), () => { if (!corpse.Deleted) { corpse.Delete(); } });
     }

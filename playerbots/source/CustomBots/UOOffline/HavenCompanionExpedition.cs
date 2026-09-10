@@ -200,7 +200,7 @@ public partial class HavenCompanionExpedition : Item
     {
         < 0.08 => new HavenBondingPotion(),
         < 0.16 => new HavenPetLeash(),
-        < 0.25 => new HavenPetPowerScroll(Utility.RandomList(SkillName.Wrestling, SkillName.Tactics, SkillName.Anatomy, SkillName.Healing, SkillName.MagicResist), 105),
+        < 0.25 => new PowerScroll(Utility.RandomList(SkillName.Wrestling, SkillName.Tactics, SkillName.Anatomy, SkillName.Healing, SkillName.MagicResist), 105),
         _ => null
     };
     public override void OnDelete() { _timer?.Stop(); _timer = null; Companion = null; base.OnDelete(); }

@@ -18,9 +18,17 @@ public partial class HavenPetPowerScroll : Item
     }
     public override void OnDoubleClick(Mobile from)
     {
-        if (from.Backpack == null || !IsChildOf(from.Backpack)) { return; }
-        from.SendMessage("Choose your living pet within three tiles. This raises a skill cap, not the current skill or abilities.");
-        from.Target = new PetTarget(this);
+        Exchange(from);
+    }
+    internal bool Exchange(Mobile from)
+    {
+        if (Deleted || from?.Backpack == null || !IsChildOf(from.Backpack) || !from.Alive ||
+            Cap is not (105 or 110 or 115 or 120) || (int)Skill < 0 || (int)Skill >= from.Skills.Length) { return false; }
+        var scroll = new PowerScroll(Skill, Cap);
+        if (!from.Backpack.TryDropItem(from, scroll, false))
+        { scroll.Delete(); from.SendMessage("Make room for the matching standard Power Scroll. Your original was kept."); return false; }
+        Delete(); from.SendMessage("Exchanged for the same skill and level of standard Power Scroll. Players and pet training can both use it.");
+        return true;
     }
     internal bool ApplyTo(Mobile from, BaseCreature pet)
     {
@@ -38,8 +46,8 @@ public partial class HavenPetPowerScroll : Item
     public override void GetProperties(IPropertyList list)
     {
         base.GetProperties(list);
-        list.Add($"{"Pet skill cap:"} {Skill} {Cap}");
-        list.Add($"{"Use on your living pet; does not grant skill points or new abilities."}");
+        list.Add($"{"Power Scroll:"} {Skill} {Cap}");
+        list.Add($"{"Double-click to exchange for the matching standard Power Scroll."}");
     }
     private sealed class PetTarget : Target
     {
@@ -61,8 +69,8 @@ public partial class HavenPetScrollBundle : Bag
     [Constructible]
     public HavenPetScrollBundle(int cap = 105)
     {
-        Name = $"Pet training scroll bundle ({cap})"; Hue = 0x489;
-        foreach (var skill in Skills) { DropItem(new HavenPetPowerScroll(skill, cap)); }
+        Name = $"Power Scroll training bundle ({cap})"; Hue = 0x489;
+        foreach (var skill in Skills) { DropItem(new PowerScroll(skill, cap)); }
     }
 }
 

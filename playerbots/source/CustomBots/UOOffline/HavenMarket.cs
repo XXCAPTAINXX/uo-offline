@@ -13,7 +13,7 @@ using Server.Network;
 
 namespace Server.UOOffline;
 
-public enum HavenMarketTrade { Smith, Tailor, Carpenter, Tinker, Fletcher, Scribe, Alchemist, Cook, Adventurer, Gatherer, Artifacts, Jewelry, GearSets, Pets, PetSupplies, DungeonSupplies }
+public enum HavenMarketTrade { Smith, Tailor, Carpenter, Tinker, Fletcher, Scribe, Alchemist, Cook, Adventurer, Gatherer, Artifacts, Jewelry, GearSets, Pets, PetSupplies, DungeonSupplies, Maritime }
 
 // Stock is held by a persistent stall, never by a temporary play-session bot.
 [SerializationGenerator(0)]

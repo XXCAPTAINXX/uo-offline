@@ -838,12 +838,14 @@ public class HavenWorldTests
         try
         {
             var menu = new HavenCompanionGump(companion, tab);
-            CheckBounds(menu, tab == 1 ? 820 : 370, tab == 1 ? 280 + (companion.Skills.Length + 2) / 3 * 22 : 370);
+            CheckBounds(menu, tab == 1 ? 620 : 520, tab == 1 ? 620 : 410);
             if (tab == 1)
             {
+                var labels = Enumerable.Range(0, (companion.Skills.Length + HavenCompanionGump.SkillsPerPage - 1) / HavenCompanionGump.SkillsPerPage)
+                    .SelectMany(page => new HavenCompanionGump(companion, 1, page).Entries.OfType<GumpLabel>()).ToArray();
                 for (var i = 0; i < companion.Skills.Length; i++)
                 {
-                    Assert.Single(menu.Entries.OfType<GumpLabel>(), label => label.Text == companion.Skills[i].Name);
+                    Assert.Single(labels, label => label.Text == companion.Skills[i].Name);
                 }
             }
             foreach (var id in new[] { 100, 101, 102, 110, 0 })
@@ -1617,10 +1619,11 @@ public class HavenWorldTests
         try
         {
             foreach (var mobile in new Mobile[] { owner, other, pet }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
-            var scrolls = bundle.Items.OfType<HavenPetPowerScroll>().ToArray();
+            var scrolls = bundle.Items.OfType<PowerScroll>().ToArray();
             Assert.Equal(6, scrolls.Length);
             Assert.DoesNotContain(scrolls, s => s.Skill is SkillName.Magery or SkillName.EvalInt);
-            var scroll = scrolls[0];
+            var scroll = new HavenPetPowerScroll(scrolls[0].Skill, 110);
+            owner.Backpack.DropItem(scroll);
             pet.SetControlMaster(other);
             Assert.False(scroll.ApplyTo(owner, pet));
             pet.SetControlMaster(owner);
@@ -2324,7 +2327,7 @@ public class HavenWorldTests
                 }
                 finally { loot.Delete(); }
             }
-            CheckBounds(new HavenCompanionGump(companion, 4), 370, 410);
+            CheckBounds(new HavenCompanionGump(companion, 4), 520, 410);
         }
         finally { companion.Delete(); owner.Delete(); other.Delete(); }
     }
@@ -2418,7 +2421,7 @@ public class HavenWorldTests
             Assert.Equal(3, claimedPet.ControlSlots);
             loot = HavenCompanionExpedition.CreateLoot(HavenExpeditionKind.TameHorse, 4, owner);
             Assert.Null(loot.FindItemByType<HavenExpeditionPetClaim>());
-            CheckBounds(new HavenCompanionGump(companion, 5), 370, 370);
+            CheckBounds(new HavenCompanionGump(companion, 5), 520, 410);
         }
         finally { claimedPet?.Delete(); loot?.Delete(); companion.Delete(); owner.Delete(); other.Delete(); }
     }

@@ -26,7 +26,7 @@ public partial class HavenTrainingStone : Item
             _stone = stone;
             AddBackground(0, 0, 440, 370, 5054);
             AddLabel(24, 24, 0, "Training Supplies");
-            AddHtml(24, 56, 390, 38, "Choose a category. Player scrolls are 105/110.<BR>Pet bundles contain six pet-only scrolls.");
+            AddHtml(24, 56, 390, 38, "Standard 105/110 Power Scrolls work for players and pets.<BR>Training bundles contain six standard scrolls.");
             for (var i = 0; i < Names.Length; i++) { AddButton(24, 105 + i * 36, 4005, 4007, i + 1); AddLabel(64, 107 + i * 36, 0, Names[i]); }
             AddButton(300, 334, 4005, 4007, 0); AddLabel(337, 336, 0, "Close");
         }
@@ -45,7 +45,7 @@ public partial class HavenTrainingStone : Item
             [SkillName.Blacksmith, SkillName.Tailoring, SkillName.Carpentry, SkillName.Alchemy, SkillName.Inscribe]];
         private readonly int _category;
         private static ItemListEntry[] EntriesForShop(int category) => category == 5 ? MasteryEntries() : category == 4
-            ? [new("Pet scroll bundle 105 - 15,000 gold", 0xE76, 0x489), new("Pet scroll bundle 110 - 45,000 gold", 0xE76, 0x489), new("Shard mastery manual - 1,000 gold", 0xEFA, 0x489), new("Bonding potion - 2,500 gold", 0xF0E, 0x489), new("Reusable shrinking leash - 5,000 gold", 0x14F8), new("House shrinking post - 10,000 gold", 0x14E7, 0x59B), new("Pet dye - choose color - 5,000 gold", 0xFAB, 0x48E)]
+            ? [new("Power Scroll bundle 105 - 15,000 gold", 0xE76, 0x489), new("Power Scroll bundle 110 - 45,000 gold", 0xE76, 0x489), new("Shard mastery manual - 1,000 gold", 0xEFA, 0x489), new("Bonding potion - 2,500 gold", 0xF0E, 0x489), new("Reusable shrinking leash - 5,000 gold", 0x14F8), new("House shrinking post - 10,000 gold", 0x14E7, 0x59B), new("Pet dye - choose color - 5,000 gold", 0xFAB, 0x48E)]
             : Groups[category].SelectMany(skill => new[] { new ItemListEntry($"{skill} 105 - 2,500 gold", 0x14F0), new ItemListEntry($"{skill} 110 - 7,500 gold", 0x14F0) }).ToArray();
         private static ItemListEntry[] MasteryEntries()
         {

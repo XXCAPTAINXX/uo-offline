@@ -104,7 +104,7 @@ public sealed class HavenItemPreviewGump : Gump
             PeerlessKeyVault => "Collects recognized Peerless keys from your backpack. Keys do not expire.",
             OfflineTravelBook => "Reusable travel book. Opens the moongate destination and facet selector from your backpack. No charges or reagents. Normal moongate eligibility applies; unavailable while dead, criminal, in combat or casting.",
             HavenMasteryManual => "Custom shard mastery: one 30-minute Warrior, Archer, Caster, Bard, Healer or Beastmaster stat focus. Requires 90 skill; scales at 100/110/120. Focuses do not stack.",
-            HavenPetPowerScroll petScroll => $"Raises an owned pet {petScroll.Skill} cap to {petScroll.Cap}. Does not teach new abilities.",
+            HavenPetPowerScroll petScroll => $"Exchange for a standard {petScroll.Skill} {petScroll.Cap} Power Scroll. No special pet-only effect.",
             HavenBondingPotion => "Instantly bonds one living, bondable pet you own. Consumed only on success.",
             HavenPetDye => "Choose one of eight colors or restore your pet's original color. One use. Works on your pet or its shrunken token. Appearance only; stats and rarity stay the same.",
             HavenPetLeash => "Reusable portable pet shrinking tool. Keep it in your pack. Target your living pet within 3 tiles; no charges.",
