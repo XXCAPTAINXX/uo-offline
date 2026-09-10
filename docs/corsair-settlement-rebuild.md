@@ -2,7 +2,7 @@
 
 ## Visual revision in progress
 
-The owner rejected the open-sided sheds and isolated ivy as unfinished-looking. The next pass begins with one enclosed harbor storehouse, before repeating its style elsewhere. `tools/plan-corsair-storehouse.py OUTPUT.json` authors the review sample: four perimeter walls with a two-tile loading doorway, windows, a continuous pitched roof with gable infill, rear cargo stacks, a shipping desk and a net-mending bench. The eastern doorway meets the existing pier path; the centre stays clear.
+The owner rejected the open-sided sheds and isolated ivy as unfinished-looking. The next pass begins with one enclosed harbor storehouse, before repeating its style elsewhere. `tools/plan-corsair-storehouse.py OUTPUT.json` authors the review sample: weathered timber perimeter walls with a two-tile loading doorway, windows, a continuous pitched roof with gable infill, stacked exports, stocked rigging shelves, grouped provisions, a shipping desk and a net-mending bench. A supported sign and outgoing shipment mark the loading frontage. The eastern doorway meets the existing pier path; the centre stays clear.
 
 This sample is **not yet installed** and does not run at server startup. It is being shown for visual review before a property-preserving world migration. Its native-art placement manifest contains no client artwork. The deployed design described below remains in place until that migration is tested.
 
