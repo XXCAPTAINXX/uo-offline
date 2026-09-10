@@ -126,7 +126,8 @@ public static class HavenReleaseOperations
                             MissionJournal=journal==null ? null : new { journal.Active,journal.Unread,Reports=journal.Reports.Count,Latest=journal.Reports[0] } });
                     }
                     characters.Add(new { Serial = player.Serial.Value, player.Name, Access = player.AccessLevel.ToString(),
-                        Guild=player.Guild?.Name, Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive });
+                        Guild=player.Guild?.Name, Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive,
+                        HomeTravel = HavenPirateEstate.HomeStatus(player) });
                 }
             }
         }

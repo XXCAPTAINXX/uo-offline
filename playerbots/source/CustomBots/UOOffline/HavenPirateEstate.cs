@@ -62,8 +62,16 @@ public partial class HavenPirateEstate : Item
     { item.Movable = false; item.MoveToWorld(new Point3D(X + x, Y + y, 0), Map); Fixtures.Add(item); }
     internal bool Travel(Mobile from)
     {
-        if (Deleted || from != Owner || !from.Alive || from.Criminal || from.Spell != null || SpellHelper.CheckCombat(from) ||
-            Map == null || Map == Map.Internal || !SpellHelper.CheckTravel(from, TravelCheckType.RecallFrom, out _)) { return false; }
+        var reason = TravelBlockReason(from);
+        if (reason != null) { from?.SendMessage(reason); return false; }
+        if (!TryFindHomeLanding(from, out var point))
+        { from.SendMessage("Your island landing is obstructed or travel to it is restricted."); return false; }
+        BaseCreature.TeleportPets(from, point, Map); from.MoveToWorld(point, Map); from.PlaySound(0x1FE); return true;
+    }
+    internal bool TryFindHomeLanding(Mobile from, out Point3D landing)
+    {
+        landing = Point3D.Zero;
+        if (Map == null || Map == Map.Internal) { return false; }
         for (var radius = 0; radius <= 3; radius++)
         {
             for (var dx = -radius; dx <= radius; dx++)
@@ -74,15 +82,16 @@ public partial class HavenPirateEstate : Item
                     var point = new Point3D(X + 80 + dx, Y + 128 + dy, 0);
                     if (!Map.CanSpawnMobile(point) || Server.Multis.BaseHouse.FindHouseAt(point, Map, 16) != null ||
                         !SpellHelper.CheckTravel(from, Map, point, TravelCheckType.RecallTo, out _)) { continue; }
-                    BaseCreature.TeleportPets(from, point, Map); from.MoveToWorld(point, Map); from.PlaySound(0x1FE); return true;
+                    landing = point; return true;
                 }
             }
         }
-        from.SendMessage("Your island landing is obstructed."); return false;
+        return false;
     }
     internal static bool GoHome(Mobile from)
     {
         foreach (var estate in Registry) { if (!estate.Deleted && estate.Owner == from) { return estate.Travel(from); } }
+        from?.SendMessage("No island is registered to this character.");
         return false;
     }
     public override void OnDelete()
@@ -97,7 +106,7 @@ public partial class HavenPirateEstate : Item
     public static void Initialize()
     {
         CommandSystem.Register("home", AccessLevel.Player, e =>
-        { if (!GoHome(e.Mobile)) { e.Mobile.SendMessage("No accessible island home was found. You must own the island, be alive, and be outside combat and travel restrictions."); } });
+        { GoHome(e.Mobile); });
         Timer.StartTimer(TimeSpan.FromSeconds(35), () =>
         { foreach (var estate in Registry) { estate.DecorateSettlement(); estate.EnsureHomeTrial(); estate.EnsureHomePatrol(); } });
         CommandSystem.Register("HavenIslandsBuild", AccessLevel.GameMaster, e =>
@@ -118,7 +127,11 @@ public partial class HavenEstateChart : Item
     [SerializableField(0)] private HavenPirateEstate _estate;
     [Constructible] public HavenEstateChart() : base(0x14EB) { Name = "Chart to Corsair's Rest"; Weight = 1; LootType = LootType.Blessed; }
     public override void OnDoubleClick(Mobile from)
-    { if (IsChildOf(from.Backpack) && Estate?.Travel(from) != true) { from.SendMessage("Only this island's owner can use its chart, while alive and outside combat, casting and travel restrictions."); } }
+    {
+        if (!IsChildOf(from.Backpack)) { return; }
+        if (Estate == null) { from.SendMessage("This chart is not linked to an island."); return; }
+        Estate.Travel(from);
+    }
 }
 
 [SerializationGenerator(0)]
