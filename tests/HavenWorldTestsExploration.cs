@@ -57,6 +57,49 @@ public class HavenWorldTestsExploration
         finally { pack.Delete(); gear.Delete(); }
     }
     [SkippableFact]
+    public void SatchelAcceptsGemDropsAndKeepsReducedWeightWhenStacksChange()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var player = new PlayerMobile { Body = 400, RawStr = 100 };
+        player.AddItem(new Backpack());
+        var satchel = new HavenResourceSatchel(); player.Backpack.DropItem(satchel);
+        var types = new[] { typeof(Amber), typeof(Amethyst), typeof(Citrine), typeof(Diamond), typeof(Emerald),
+            typeof(Ruby), typeof(Sapphire), typeof(StarSapphire), typeof(Tourmaline), typeof(BlueDiamond),
+            typeof(BrilliantAmber), typeof(DarkSapphire), typeof(EcruCitrine), typeof(FireRuby), typeof(PerfectEmerald), typeof(ArcaneGem) };
+        try
+        {
+            for (var index = 0; index < types.Length; index++)
+            {
+                var gem = types[index].CreateInstance<Item>();
+                Assert.NotNull(gem);
+                gem.Amount = 100;
+                player.Backpack.DropItem(gem);
+                try
+                {
+                    var baseline = player.Backpack.TotalWeight - gem.PileWeight;
+                    var accepted = (index % 3) switch
+                    {
+                        0 => satchel.TryDropItem(player, gem, false),
+                        1 => satchel.TryDropItem(player, gem, false, false),
+                        _ => satchel.OnDragDropInto(player, gem, new Point3D(50, 50, 0))
+                    };
+                    Assert.True(accepted, types[index].Name);
+                    Assert.Same(satchel, gem.Parent);
+                    Assert.Equal(100, gem.Amount);
+                    Assert.Equal(baseline + (gem.PileWeight + 9) / 10, player.Backpack.TotalWeight);
+                    gem.Amount = 37;
+                    player.Backpack.UpdateTotals();
+                    Assert.Equal(baseline + (gem.PileWeight + 9) / 10, player.Backpack.TotalWeight);
+                    player.Backpack.DropItem(gem);
+                    Assert.Equal(baseline + gem.PileWeight, player.Backpack.TotalWeight);
+                    Assert.Equal(0, satchel.TotalWeight);
+                }
+                finally { gem.Delete(); }
+            }
+        }
+        finally { player.Delete(); }
+    }
+    [SkippableFact]
     public void SatchelIsAvailableForWalletGold()
     {
         TileDataRequirement.SkipIfMissing();
