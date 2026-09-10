@@ -11,9 +11,24 @@ def add(name, art, x, y, z=0):
 # aligned with the settlement path. Timber walls match the approved chandlery.
 for x in range(38,45):
     for y in range(91,99):
-        add('stable deck',0x4A9+(x+y)%4,x,y)
-for x in (45,46):
-    for y in (94,95): add('entrance paving',0x519+(x+y)%4,x,y)
+        add('stable deck',0x4AB if (x,y) in ((42,94),(43,95)) else 0x4A9,x,y)
+# A timber threshold keeps the doorway dry. The stable lane is packed earth,
+# joining the paved main route at y=105. Its shoulders vary with foot traffic.
+for y in (94,95): add('timber threshold',0x4A9,45,y)
+lane={(46,y) for y in range(94,105)} | {(47,y) for y in range(94,105)}
+lane.update((48,y) for y in (95,96,100,103,104))
+for x,y in sorted(lane): add('stable dirt lane',0x31F4+(x*3+y)%4,x,y)
+for x,y in ((46,93),(48,94),(48,97),(48,99),(48,102)):
+    add('worn dirt shoulder',0x914,x,y)
+for x,y in ((45,97),(45,100),(49,96),(49,101)):
+    add('lane grass',0xCAC if y%2 else 0xCAD,x,y)
+# Retain just two stones where the lane meets the town paving.
+for x,y in ((46,104),(48,104)): add('reused stepping stone',0x519,x,y)
+add('tracked straw',0xF35,43,94)
+add('foundation flowers',0xC85,38,99)
+add('foundation grasses',0xCAD,39,99)
+add('foundation stone',0x1364,39,100)
+add('signpost grass',0xCAC,45,91)
 for x in range(39,45):
     add('wall',0xE if x in (40,43) else 0x7,x,91)
     if x!=44: add('wall',0x7,x,98)
