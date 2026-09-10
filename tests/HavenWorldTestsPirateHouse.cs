@@ -111,19 +111,25 @@ public class HavenWorldTestsPirateHouse
 
             Assert.Equal(31, house.Components.Width); Assert.Equal(32, house.Components.Height);
             Assert.True(house.Components.List.Length > 2000); Assert.Same(owner, house.Owner); Assert.True(house.GetAosMaxSecures() >= 10000);
-            Assert.Equal(7, house.CompanyFixtures.OfType<HavenPirateStair>().Count());
+            Assert.Equal(8, house.CompanyFixtures.OfType<HavenPirateStair>().Count());
             Assert.All(house.CompanyFixtures.OfType<HavenPirateStair>(), ladder => Assert.Equal(0x8A5,ladder.ItemID));
-            var fixtureCount=house.CompanyFixtures.Count; house.RefineFloorAccess(); Assert.Equal(fixtureCount,house.CompanyFixtures.Count);
+            var fixtureCount=house.CompanyFixtures.Count; house.RefineFloorAccess(); house.RefineDirectLadders(); Assert.Equal(fixtureCount,house.CompanyFixtures.Count);
             Assert.DoesNotContain(house.CompanyFixtures, i => i is HavenCompanyLadder or HavenCompanyCharter);
             owner.MoveToWorld(new Point3D(house.X, house.Y + 1, 7), house.Map);
             for (var deck = 0; deck < 5; deck++)
             { Assert.True(house.ChangeDeck(owner,deck)); Assert.Equal(HavenPirateHeadquarters.FloorDestinations[deck].Z,owner.Z); }
             foreach (var ladder in house.CompanyFixtures.OfType<HavenPirateStair>())
             {
-                var reachable=false;
-                for (var dx=-1;dx<=1;dx++) for (var dy=-1;dy<=1;dy++)
-                { var at=new Point3D(ladder.X+dx,ladder.Y+dy,ladder.Z); if (!house.Map.CanSpawnMobile(at)) { continue; } owner.MoveToWorld(at,house.Map); if (owner.InLOS(ladder)) { reachable=true; } }
-                Assert.True(reachable,$"Ladder inaccessible at {ladder.Location}");
+                var approach = new Point3D(ladder.X,ladder.Y+1,ladder.Z);
+                Assert.True(house.Map.CanFit(approach,16,checkMobiles:false),$"Blocked front of ladder {ladder.Name} at {approach}");
+                owner.MoveToWorld(approach,house.Map);
+                Assert.True(owner.InLOS(ladder),$"Ladder not visible from its front: {ladder.Name}");
+                var index=Array.IndexOf(HavenPirateHeadquarters.DirectLadderSites,new Point3D(ladder.X-house.X,ladder.Y-house.Y,ladder.Z-house.Z));
+                Assert.True(index>=0);
+                var target=HavenPirateHeadquarters.DirectLadderLandings[index];
+                ladder.OnDoubleClick(owner);
+                Assert.Equal(new Point3D(house.X+target.X,house.Y+target.Y,house.Z+target.Z),owner.Location);
+
             }
             foreach (var item in house.CompanyFixtures.Where(i => i is Container or BaseAddon or HavenRepairBench or HavenHouseHitchingPost))
             {
