@@ -78,6 +78,37 @@ public class HavenWorldTestsPirateHouse
             Assert.All(chests, chest => { Assert.False(chest.Deleted); Assert.True(chest.IsSecure); Assert.Same(house, BaseHouse.FindHouseAt(chest)); });
             Assert.Same(chests[0], valuables.Parent); Assert.Equal(8765, valuables.FindItemByType<Gold>().Amount);
             Assert.False(valuables.FindItemByType<HavenGoldenShovel>().Deleted);
+            // The custom foundation must retain player storage access before a guild exists.
+            var coOwner = new PlayerMobile { Body = 400 };
+            var stranger = new PlayerMobile { Body = 400 };
+            house.CoOwners.Add(coOwner);
+            try
+            {
+                Assert.Null(owner.Guild);
+                foreach (var container in house.CompanyFixtures.OfType<Container>())
+                {
+                    Assert.True(container.IsAccessibleTo(owner), $"Owner cannot access {container.Name}");
+                    Assert.True(container.IsAccessibleTo(coOwner), $"Co-owner cannot access {container.Name}");
+                    Assert.False(container.IsAccessibleTo(stranger));
+                }
+                var gold = valuables.FindItemByType<Gold>();
+                Assert.True(valuables.IsAccessibleTo(owner));
+                Assert.True(gold.IsAccessibleTo(owner));
+                Assert.False(gold.IsAccessibleTo(stranger));
+                Assert.True(gold.CheckLift(owner));
+                Assert.True(owner.Backpack.TryDropItem(owner, gold, false));
+                Assert.Same(owner.Backpack, gold.Parent);
+                Assert.True(chests[0].TryDropItem(owner, gold, false));
+                Assert.Same(chests[0], gold.Parent);
+                Assert.Equal(8765, gold.Amount);
+            }
+            finally
+            {
+                house.CoOwners.Remove(coOwner);
+                coOwner.Delete();
+                stranger.Delete();
+            }
+
             Assert.Equal(31, house.Components.Width); Assert.Equal(32, house.Components.Height);
             Assert.True(house.Components.List.Length > 2000); Assert.Same(owner, house.Owner); Assert.True(house.GetAosMaxSecures() >= 10000);
             Assert.Equal(7, house.CompanyFixtures.OfType<HavenPirateStair>().Count());
