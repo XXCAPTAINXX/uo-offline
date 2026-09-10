@@ -356,7 +356,7 @@ public partial class HavenCompanion : BaseCreature
     {
         if (TamingAssistActive || IsDeadPet || BoundOwner == null || BoundOwner.Map != Map || !InRange(BoundOwner, 12) ||
             ControlOrder is not (OrderType.Follow or OrderType.Guard)) { return false; }
-        bool Valid(Mobile target) => target is { Deleted: false, Alive: true } &&
+        bool Valid(Mobile target) => target is { Deleted: false, Alive: true, Hidden: false } && CanSee(target) &&
             target is not BaseCreature { IsDeadPet: true } && target is not BaseCreature { BardPacified: true } && target.Map == Map &&
             InRange(target, 10) && InLOS(target) && CanBeHarmful(target, false);
         var enemy = BoundOwner.Combatant as Mobile;
