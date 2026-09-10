@@ -67,7 +67,7 @@ Start the new server and create your own accounts through its first-start flow. 
 
 Read each response. Missing terrain, occupied footprints or partial installations should be reported, not worked around by deleting world objects. The island belongs to the character running its creation command; choose that character deliberately. Once setup is complete, use a character with **Player** access for the gameplay tests. Staff access can bypass ownership, skill, money and travel checks.
 
-Start with `[bank`, `[c`, `[market`, `[frontiers` and the normal travel book. `[home` requires ownership of the private island. Each fresh server currently has one Commons/private-estate installation, not an automatically generated island for every account.
+Start with `[guide` for the searchable Haven Field Guide and its free book. The matching [written guide](PLAYER-GUIDE.md) covers commands and custom systems. Then try `[bank`, `[c`, `[market`, `[frontiers` and the normal travel book. `[home` requires ownership of the private island. Each fresh server currently has one Commons/private-estate installation, not an automatically generated island for every account.
 
 ## Verified here and still requiring friend testing
 

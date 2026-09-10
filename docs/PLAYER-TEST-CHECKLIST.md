@@ -4,6 +4,8 @@ Use a normal **Player** character for gameplay checks. Staff accounts bypass res
 
 ## Start here — one short session
 
+- [ ] **S00 — Field guide.** Use `[guide`, select chapters and search for wallet, pet, mastery and repair. Clear restores all chapters. Claim the free book once, reopen it, and confirm a second claim does not duplicate an existing pack/bank book. Check readability and scrolling at your usual client resolution. Existing characters can open the guide after previously claiming their starter bundle.
+
 - [ ] **S01 — Bank recovery.** Use `[bank` and `[ohshit`. Arrive beside the New Haven resurrection NPC, on a reachable tile. Confirm the corpse summoner and pet resurrection service are reachable.
 - [ ] **S02 — Free starter claims.** Use `[StarterKit`, `[Cape`, `[Sash` and `[HavenRewards` where eligible. Inspect earrings, caster and fighter items. Repeating a claim must follow its eligibility rules rather than produce unlimited rewards.
 - [ ] **S03 — Shop previews and wallet.** Inspect a bracelet, spellbook and power scroll before buying. See useful stats rather than weight alone; one purchase deducts the displayed wallet amount once and delivers the item.

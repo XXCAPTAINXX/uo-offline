@@ -2,6 +2,8 @@
 
 ## Haven testing branch
 
+New to Haven? Read the [Haven Field Guide](docs/PLAYER-GUIDE.md), or type `[guide` in game for searchable help and a free guidebook. It covers the quick start, commands and custom systems.
+
 This branch contains the **ML-compatible Haven** build: permanent companions, evolving rewards, pet training, wallet/ledger storage, custom encounters, a community market and compatible later dungeon content. For independent friend installs, use [the testing setup guide](docs/FRIENDS-TESTING.md) and [the play-test checklist](docs/PLAYER-TEST-CHECKLIST.md). [The implementation tracker](docs/IMPLEMENTATION-TRACKER.md) distinguishes deployed features from remaining work. The source excludes personal saves/accounts and proprietary UO assets.
 
 The description below documents the original project's T2A baseline; it does not describe this branch's current expansion, population or progression settings. The launcher update channel remains `haven-rc4`; follow the testing guide to avoid replacing a branch test build with an older RC release.

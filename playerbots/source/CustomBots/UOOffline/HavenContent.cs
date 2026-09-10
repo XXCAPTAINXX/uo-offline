@@ -545,6 +545,7 @@ public static class StarterProvisioner
         mobile.Backpack.DropItem(weapon);
         mobile.Backpack.DropItem(new AdventurersWallet());
         mobile.Backpack.DropItem(new CleanupTrashBag());
+        mobile.Backpack.DropItem(new HavenFieldGuideBook());
         mobile.Backpack.DropItem(house);
         mobile.Backpack.DropItem(new Bandage(50));
         mobile.Backpack.DropItem(new StarterFortuneEarrings());
