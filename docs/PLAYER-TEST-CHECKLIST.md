@@ -87,3 +87,8 @@ Use a normal **Player** character for gameplay checks. Staff accounts bypass res
 Send: test ID, exact steps, expected/actual result, character and companion names, approximate time, map/coordinates, item name/serial if available, screenshot or journal text, and whether it repeats. Include the source commit from `git rev-parse --short HEAD`. If an item duplicates/disappears or the server crashes, keep the save/logs and report it before repeating that action extensively.
 
 The automated suite verifies mechanics and persistence; it does not certify all client artwork, pacing, pathfinding or multiplayer fairness. Official-complete Shadowguard/Blackthorn loot ports, native Imbuing, moving ship/cannon AI and a private island for every multiplayer account remain future work.
+
+
+## Scalis, Cora and Corgul
+
+See [THREE-BOSSES.md](THREE-BOSSES.md) for commands, reward tables and the five in-game checks. Automated validation covers terrain routes, offerings, reward eligibility, artifact growth, persistence and forge recipes; visual combat balance still needs play-testing.

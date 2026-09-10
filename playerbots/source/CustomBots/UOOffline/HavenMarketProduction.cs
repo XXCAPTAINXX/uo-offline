@@ -94,14 +94,14 @@ public static class HavenMarketProduction
         if (HavenBotEquipment.EquipIfBetter((PlayerBot)producer, item)) { return false; }
         var trade = item is HavenMinaxCreditNote or HavenMaritimeCargo or HavenDoomRecipe or PowerScroll or CommodityDeed or HavenMark or AstralShard ? HavenMarketTrade.DungeonSupplies :
             item is HavenBondingPotion or HavenPetLeash or HavenHouseHitchingPost ? HavenMarketTrade.PetSupplies :
-            HavenDoom.IsArtifact(item) || HavenLegendaryArtifact.IsLegendary(item) ? HavenMarketTrade.Artifacts :
+            HavenBossArtifact.IsArtifact(item) || item is HavenSmallSoulForgeDeed || HavenDoom.IsArtifact(item) || HavenLegendaryArtifact.IsLegendary(item) ? HavenMarketTrade.Artifacts :
             item is HavenSetRing or ValorGauntlets or SpiritualityHelm || HavenJewelrySets.BraceletTheme(item) >= 0 ? HavenMarketTrade.GearSets :
             item is BaseJewel ? HavenMarketTrade.Jewelry : HavenMarketTrade.Adventurer;
         foreach (var stall in HavenMarketStall.Registry)
         {
             if (!stall.Deleted && stall.Trade == trade && stall.Stock.Count < 24)
             {
-                var floor = item is HavenMinaxCreditNote note ? 1000 * note.Amount : item is HavenMaritimeCargo cargo ? 1000 * cargo.Value :
+                var floor = item is HavenSmallSoulForgeDeed ? 250000 : HavenBossArtifact.IsArtifact(item) ? 75000 : item is HavenMinaxCreditNote note ? 1000 * note.Amount : item is HavenMaritimeCargo cargo ? 1000 * cargo.Value :
                     item is HavenDoomRecipe ? 12000 : item is HavenTideSteedDeed ? 100000 : item is HavenGoldenShovel or HavenEndlessBandage || HavenDoom.IsArtifact(item) ? 50000 : item is HavenResourceSatchel ? 15000 : 100;
                 if (!stall.ListItem(item, Math.Max(floor, BotAppraisal.Value(item)))) { return false; }
                 HavenMarketProvenance.Attach(item, "Adventuring loot", producer.Name);

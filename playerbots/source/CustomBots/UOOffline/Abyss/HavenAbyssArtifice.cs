@@ -28,14 +28,16 @@ public partial class HavenAbyssArtifice : Item
     ];
     [Constructible]
     public HavenAbyssArtifice() : base(0xFB1) { Name="Abyss artificer's forge"; Movable=false; }
-    internal bool CanUse(Mobile from) => !Deleted && from?.Deleted==false && from.Alive && from.Map==Map && from.InRange(this,3) && from.InLOS(this);
+    internal bool CanUse(Mobile from) => CanUse(this, from);
+    internal static bool CanUse(Item station, Mobile from) => station?.Deleted == false && station.Parent == null && from?.Deleted == false && from.Alive && from.Map == station.Map && from.InRange(station, 3) && from.InLOS(station);
     internal static bool Eligible(Mobile from, Item item) => item?.Deleted==false && item.Movable && item.IsChildOf(from.Backpack) && item is IAosItem &&
         !HavenGearExperience.IsSpecial(item) && !Attuned(item);
     internal static bool Attuned(Item item)
     { foreach(var child in item.Items) { if(child is HavenAbyssAttunement) { return true; } } return false; }
-    internal bool Apply(Mobile from,Item item,int index)
+    internal bool Apply(Mobile from,Item item,int index) => Apply(this, from, item, index);
+    internal static bool Apply(Item station, Mobile from, Item item, int index)
     {
-        if(!CanUse(from) || !Eligible(from,item) || index<0 || index>=Recipes.Length || CraftSkill(from)<80) { return false; }
+        if(!CanUse(station, from) || !Eligible(from,item) || index<0 || index>=Recipes.Length || CraftSkill(from)<80) { return false; }
         var recipe=Recipes[index]; var attributes=((IAosItem)item).Attributes;
         if(recipe.Attribute==AosAttribute.WeaponDamage && item is not BaseWeapon || attributes[recipe.Attribute]+recipe.Bonus>recipe.Cap) { return false; }
         if(from.Backpack.GetAmount(recipe.Essence)<8 || from.Backpack.GetAmount(recipe.First)<2 || from.Backpack.GetAmount(recipe.Second)<2) { return false; }
@@ -45,26 +47,27 @@ public partial class HavenAbyssArtifice : Item
         from.SendMessage($"Attuned: {recipe.Name}. This equipment keeps its normal progression rules."); return true;
     }
     private static double CraftSkill(Mobile from) => Math.Max(Math.Max(from.Skills.Blacksmith.Base,from.Skills.Tailoring.Base),Math.Max(from.Skills.Tinkering.Base,from.Skills.Inscribe.Base));
-    public override void OnDoubleClick(Mobile from)
+    public override void OnDoubleClick(Mobile from) => Open(this, from);
+    internal static void Open(Item station, Mobile from)
     {
-        if(!CanUse(from)) { return; }
+        if(!CanUse(station, from)) { return; }
         from.SendMessage("Select ordinary equipment in your backpack. Attunement needs 80 Blacksmithing, Tailoring, Tinkering or Inscription. One permanent attunement per item.");
-        from.Target=new GearTarget(this);
+        from.Target=new GearTarget(station);
     }
     private sealed class GearTarget : Target
     {
-        private readonly HavenAbyssArtifice _forge;
-        public GearTarget(HavenAbyssArtifice forge):base(3,false,TargetFlags.None) { _forge=forge; }
+        private readonly Item _forge;
+        public GearTarget(Item forge):base(3,false,TargetFlags.None) { _forge=forge; }
         protected override void OnTarget(Mobile from,object targeted)
         {
-            if(_forge.CanUse(from) && targeted is Item item && Eligible(from,item)) { from.SendGump(new ArtificeGump(_forge,item)); }
+            if(CanUse(_forge, from) && targeted is Item item && Eligible(from,item)) { from.SendGump(new ArtificeGump(_forge,item)); }
             else { from.SendMessage("Choose unattuned ordinary equipment in your pack. Evolving rewards keep their own upgrade system."); }
         }
     }
     private sealed class ArtificeGump : Gump
     {
-        private readonly HavenAbyssArtifice _forge; private readonly Item _gear; private readonly int _page;
-        public ArtificeGump(HavenAbyssArtifice forge,Item gear,int page=0):base(45,45)
+        private readonly Item _forge; private readonly Item _gear; private readonly int _page;
+        public ArtificeGump(Item forge,Item gear,int page=0):base(45,45)
         {
             _forge=forge; _gear=gear; _page=Math.Clamp(page,0,1); AddBackground(0,0,670,440,9270); AddLabel(25,20,1152,"Abyss artifice — one permanent attunement");
             AddHtml(25,50,620,42,"<BASEFONT COLOR=#FFFFFF>Each choice uses 8 essences and 2 of each listed material.<BR>Requires 80 in a crafting skill. This is Haven's compatible crafting system.</BASEFONT>");
@@ -81,9 +84,9 @@ public partial class HavenAbyssArtifice : Item
         public override void OnResponse(NetState state,in RelayInfo info)
         {
             if(info.ButtonID==0) { return; }
-            if(info.ButtonID==1 && _forge.CanUse(state.Mobile) && Eligible(state.Mobile,_gear))
+            if(info.ButtonID==1 && CanUse(_forge, state.Mobile) && Eligible(state.Mobile,_gear))
             { state.Mobile.SendGump(new ArtificeGump(_forge,_gear,1-_page)); return; }
-            if(!_forge.Apply(state.Mobile,_gear,info.ButtonID-100))
+            if(!Apply(_forge,state.Mobile,_gear,info.ButtonID-100))
             { state.Mobile.SendMessage("Check your crafting skill, materials, item eligibility and property cap. Nothing was consumed."); }
         }
     }

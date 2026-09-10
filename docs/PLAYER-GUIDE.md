@@ -218,6 +218,15 @@ Solo bot crews can sell earned Minax credit notes, pirate cargo, Doom recipes an
 
 Double-click a purchased Minax credit note to add its exact amount to [expeditions. Type [minax 10 to withdraw ten of your earned credits as a tradeable note. Doom recipes require their matching artifact and the stated crafting materials. Pirate cargo is redeemed at the corsair dispatch board.
 
+### Scalis, Cora and Corgul
+[scalis shows the roaming sea boss and Chelonia sea access. White Fabled Fishing Nets cost 25,000 wallet gold at Arcane Supplies and have a 25% summon chance at 100 Fishing when no Scalis is alive on that facet. An existing boss is reported without consuming the net. Scalis grants qualifying contributors 40,000 gold, 20 marks, 10 shards and fishing supplies, with separate 25% artifact and 5% small soul forge chances.
+
+[cora opens her Covetous final-chamber approach. Move away from violet mana-draining rifts. Her personal rewards include 30,000 gold, 20 marks, 10 shards and a treasure map, plus a 25% chance at a Covetous artifact. This does not install the separate endless Void Pool event.
+
+[corgul leads to Haven's altar beside the Covetous entrance. Offer a treasure map and world map for a three-hour island chart; the sacrifice leaves 1 HP. Heal, then use the chart from safety. World maps cost 500 gold at Arcane Supplies. The original Soulbinder island has Corgul, guards and an exit. Rewards include 50,000 gold, 20 marks, 10 shards, a map and Transcendence scroll, plus a 25% artifact chance.
+
+Deal at least 600 combined damage through yourself and your pets/companion, then remain within 32 tiles on the same facet when the boss dies. Each qualifying participant gets rewards once. Normal respawn is 15 minutes. These special artifacts evolve to level 20. The small soul forge is a placeable forge with Haven Abyss artifice recipes; full official Imbuing remains separate. See THREE-BOSSES.md for the complete reward list and compatibility details.
+
 ## Dungeons
 
 ### Doom

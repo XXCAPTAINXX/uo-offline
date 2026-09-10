@@ -139,7 +139,12 @@ public static class HavenReleaseOperations
             market.Add(new { Serial = stall.Serial.Value, Trade = stall.Trade.ToString(), Artisan = stall.Artisan?.Name, Stock = stock,
                 Job = job == null ? null : new { Route = HavenMarketExpedition.RouteName(job.Route), job.Progress, job.Completed, job.Failed, job.Credits }, stall.NextWork });
         }
-        var data = new { Id = id, Success = success, Error = error, Time = Core.Now, Market = market, DungeonCrews = dungeonCrews,
+        var bosses = new List<object>();
+        foreach (var hunt in HavenScalisHunt.Registry)
+        { if (!hunt.Deleted) { bosses.Add(new { Kind = "Scalis", Map = hunt.Map?.Name, Serial = hunt.Boss?.Serial.Value, hunt.Boss?.Alive, hunt.Boss?.Hits, hunt.Boss?.X, hunt.Boss?.Y, hunt.Boss?.Z, hunt.NextSpawn }); } }
+        foreach (var lair in HavenBossLair.Registry)
+        { if (!lair.Deleted) { bosses.Add(new { Kind = lair.Kind == 0 ? "Cora" : "Corgul", Map = lair.Map?.Name, Serial = lair.Boss?.Serial.Value, lair.Boss?.Alive, lair.Boss?.Hits, lair.Boss?.X, lair.Boss?.Y, lair.Boss?.Z, lair.NextSpawn, Arrival = lair.Arrival.ToString() }); } }
+        var data = new { Bosses = bosses, Id = id, Success = success, Error = error, Time = Core.Now, Market = market, DungeonCrews = dungeonCrews,
             Mobiles = World.Mobiles.Count, Items = World.Items.Count, Characters = characters, Companions=companions,
             Commons = HavenCommunityCenter.Registry.Count, Estates = estates, DoomControllers = HavenDoom.Controllers().Count,
             AncientHunts = HavenAbyssTrial.Registry.Count, AbyssExpeditions = expeditions, SnowDens = HavenSnowBearDen.Registry.Count,

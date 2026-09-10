@@ -11,7 +11,7 @@ public partial class HavenGearExperience : Item
     [SerializableField(0)] private int _experience;
     [SerializableField(1)] private int _appliedLevel = 1;
     private Timer _cleanup;
-    internal static bool IsSpecial(Item gear) => HavenDoom.Reforged(gear) || HavenLegendaryArtifact.IsLegendary(gear) || HavenQuestGear.IsReward(gear) || gear is IAosItem && gear.RootParent is HavenCompanion ||
+    internal static bool IsSpecial(Item gear) => HavenBossArtifact.IsArtifact(gear) || HavenDoom.Reforged(gear) || HavenLegendaryArtifact.IsLegendary(gear) || HavenQuestGear.IsReward(gear) || gear is IAosItem && gear.RootParent is HavenCompanion ||
         gear is IStarterUpgradeable or IEvolvingStarterWeapon or ApprenticeGrimoire or
         HavenLevelingCape or HavenStarterSash or HavenChampionPendant or HavenSetRing or HavenConcordTalisman or
         HavenCompanionBlade or HavenCompanionBow or StarterFortuneEarrings or AstralFortuneEarrings or AstralWeaversRing or AstralGuardianMantle || HavenJewelrySets.BraceletTheme(gear) >= 0 ||
@@ -59,6 +59,7 @@ public partial class HavenGearExperience : Item
             HavenQuestGear.Grow(gear, levels, milestones);
             HavenLegendaryDrops.Grow(gear, levels, milestones);
             HavenDoom.Grow(gear, levels, milestones);
+            HavenBossArtifact.Grow(gear, levels, milestones);
             progress.AppliedLevel = progress.Level;
         }
         HavenAstralGrowth.Apply(gear, progress.Level);
