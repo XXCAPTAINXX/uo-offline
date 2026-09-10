@@ -50,8 +50,8 @@ for y in (139, 140):
     add('provision barrel', 0xE77, 94, y)
 add('dry provisions', 0x1039, 94, 141)
 add('spare boards', 0x1BDD, 94, 142)
-add('rigging shelf', 0xA9E, 96, 138)
-add('rigging shelf', 0xA9E, 97, 138)
+add('rigging shelf', 0xA9D, 96, 138)
+add('rigging shelf', 0xA9D, 97, 138)
 add('shelf rope', 0x14F8, 96, 138, 6)
 add('shelf cloth', 0xE34, 97, 138, 6)
 add('shelf tools', 0x102A, 96, 138, 12)
@@ -80,3 +80,4 @@ if __name__ == '__main__':
     args=p.parse_args()
     args.output.write_text(json.dumps(tiles,indent=2)+'\n')
     print(f'{len(tiles)} native-art placements written to {args.output}')
+
