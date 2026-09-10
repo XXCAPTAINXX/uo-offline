@@ -18,12 +18,62 @@ internal static partial class HavenIslandDecoration
     {
         if (estate?.Deleted != false || estate.Map != Map.Trammel || estate.Fixtures.Count == 0) { return; }
         ApplyScope(estate, house, false);
+        RefineChandlery(estate, house);
         if (house?.Deleted == false && house.Estate == estate && house.Customizer == null && house.HasCompound)
         { ApplyScope(estate, house, true); }
     }
 
     internal static bool Complete(List<Item> fixtures)
         => fixtures.Any(i => i?.Deleted == false && i.Name == Marker);
+
+    private static void RefineChandlery(HavenPirateEstate estate, HavenPirateHeadquarters house)
+    {
+        const string refinement = "R.E.C. chandlery planting refinement";
+        if (estate.Fixtures.Any(i => i?.Deleted == false && i.Name == refinement)) { return; }
+        var plants = estate.Fixtures.Where(i => i?.Deleted == false && i is Static && i.Name == "Coastal undergrowth" &&
+            i.X-estate.X is >= 93 and <= 99 && i.Y-estate.Y is >= 138 and <= 143).ToArray();
+        var moved = new Dictionary<Item,Point3D>(); var added = new List<Item>();
+        try
+        {
+            foreach (var plant in plants)
+            {
+                var relocated = false;
+                for (var x = 101; x <= 104 && !relocated; x++)
+                {
+                    for (var y = 138; y <= 142 && !relocated; y++)
+                    {
+                        var point = new Point3D(estate.X+x,estate.Y+y,0);
+                        if (!estate.Map.CanFit(point,16,checkMobiles:true)) { continue; }
+                        var occupied = false;
+                        foreach (var item in estate.Map.GetItemsInRange<Item>(point,0))
+                        { if (item.Visible) { occupied = true; break; } }
+                        if (occupied) { continue; }
+                        moved.Add(plant,plant.Location);plant.MoveToWorld(point,estate.Map);relocated=true;
+                    }
+                }
+                if (!relocated) { return; }
+            }
+            foreach (var group in Plan.Where(g => g.Name is "Chandlery shingled awning" or "Chandlery timber deck"))
+            {
+                foreach (var tile in group.Tiles)
+                {
+                    var point = new Point3D(estate.X+tile.X,estate.Y+tile.Y,tile.Z);
+                    if (estate.Fixtures.Any(i => i?.Deleted == false && i.ItemID==tile.Id && i.Location==point && i.Name==group.Name)) { continue; }
+                    if (!CanPlace(group,estate,house)) { continue; }
+                    var item = new Static(tile.Id) { Name=group.Name,Movable=false };
+                    added.Add(item);item.MoveToWorld(point,estate.Map);estate.Fixtures.Add(item);
+                }
+            }
+            var marker = new Static(0x1F14) { Name=refinement,Movable=false,Visible=false };
+            added.Add(marker);marker.MoveToWorld(estate.Location,estate.Map);estate.Fixtures.Add(marker);estate.MarkDirty();
+        }
+        catch
+        {
+            foreach (var item in added) { estate.Fixtures.Remove(item);item.Delete(); }
+            foreach (var pair in moved) { pair.Key.MoveToWorld(pair.Value,estate.Map); }
+            throw;
+        }
+    }
 
     private static void ApplyScope(HavenPirateEstate estate, HavenPirateHeadquarters house, bool indoors)
     {

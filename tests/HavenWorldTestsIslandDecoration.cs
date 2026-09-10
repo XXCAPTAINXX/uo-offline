@@ -25,6 +25,8 @@ public class HavenWorldTestsIslandDecoration
         estate.MoveToWorld(HavenPirateEstate.Site, Map.Trammel);
         var trunk = new Static(0xCCA) { Name = "Corsair's grove" };
         trunk.MoveToWorld(new Point3D(estate.X+108,estate.Y+48,0),estate.Map);estate.Fixtures.Add(trunk);
+        var harborPlant = new Static(0xCC7) { Name="Coastal undergrowth",Movable=false };
+        harborPlant.MoveToWorld(new Point3D(estate.X+94,estate.Y+141,0),estate.Map);estate.Fixtures.Add(harborPlant);
         var treasure = new WoodenChest();var gold = new Gold(1234);treasure.DropItem(gold);
         var treasureSite = new Point3D(estate.X+80,estate.Y+110,0);treasure.MoveToWorld(treasureSite,estate.Map);
         try
@@ -36,6 +38,9 @@ public class HavenWorldTestsIslandDecoration
             Assert.DoesNotContain(estate.Fixtures,i=>i.Location==treasureSite);
             Assert.Equal(0xCCC,trunk.ItemID);
             Assert.Single(estate.Fixtures,i=>i.ItemID==0xCCE && i.Location==trunk.Location);
+            Assert.False(harborPlant.Deleted);Assert.True(harborPlant.X>=estate.X+101);
+            Assert.Equal(42,estate.Fixtures.Count(i=>i.Name=="Chandlery shingled awning"));
+            Assert.Equal(42,estate.Fixtures.Count(i=>i.Name=="Chandlery timber deck"));
             var count=estate.Fixtures.Count;HavenIslandDecoration.Apply(estate,null);Assert.Equal(count,estate.Fixtures.Count);
             foreach(var p in new[] {new Point3D(80,128,0),new Point3D(78,124,0),new Point3D(87,136,0),new Point3D(70,36,0)})
             { Assert.True(estate.Map.CanFit(new Point3D(estate.X+p.X,estate.Y+p.Y,p.Z),16,checkMobiles:false),$"Blocked key site {p}"); }
