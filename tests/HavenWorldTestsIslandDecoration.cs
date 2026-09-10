@@ -23,6 +23,7 @@ public class HavenWorldTestsIslandDecoration
         var owner = new PlayerMobile { Body = 400 }; owner.AddItem(new Backpack());
         var estate = new HavenPirateEstate { Owner = owner };
         estate.MoveToWorld(HavenPirateEstate.Site, Map.Trammel);
+        AddDock(estate);
         var trunk = new Static(0xCCA) { Name = "Corsair's grove" };
         trunk.MoveToWorld(new Point3D(estate.X+108,estate.Y+48,0),estate.Map);estate.Fixtures.Add(trunk);
         var harborPlant = new Static(0xCC7) { Name="Coastal undergrowth",Movable=false };
@@ -38,11 +39,12 @@ public class HavenWorldTestsIslandDecoration
             Assert.DoesNotContain(estate.Fixtures,i=>i.Location==treasureSite);
             Assert.Equal(0xCCC,trunk.ItemID);
             Assert.Single(estate.Fixtures,i=>i.ItemID==0xCCE && i.Location==trunk.Location);
-            Assert.False(harborPlant.Deleted);Assert.True(harborPlant.X>=estate.X+101);
-            Assert.Equal(42,estate.Fixtures.Count(i=>i.Name=="Chandlery shingled awning"));
-            Assert.Equal(42,estate.Fixtures.Count(i=>i.Name=="Chandlery timber deck"));
+            Assert.True(harborPlant.Deleted);
+            Assert.DoesNotContain(estate.Fixtures,i=>i.Name=="Worn shellstone footpath");
+            Assert.Equal(56,estate.Fixtures.Count(i=>i.Name=="R.E.C. cargo store awning"));
+            Assert.All(HavenIslandDecoration.CheckSettlementRoutes(estate),r=>Assert.True(r.Reachable,r.Destination));
             var count=estate.Fixtures.Count;HavenIslandDecoration.Apply(estate,null);Assert.Equal(count,estate.Fixtures.Count);
-            foreach(var p in new[] {new Point3D(80,128,0),new Point3D(78,124,0),new Point3D(87,136,0),new Point3D(70,36,0)})
+            foreach(var p in new[] {new Point3D(80,128,0),new Point3D(78,124,0),new Point3D(87,136,1),new Point3D(70,36,0)})
             { Assert.True(estate.Map.CanFit(new Point3D(estate.X+p.X,estate.Y+p.Y,p.Z),16,checkMobiles:false),$"Blocked key site {p}"); }
         }
         finally { treasure.Delete();estate.Delete();owner.Delete(); }
@@ -54,6 +56,7 @@ public class HavenWorldTestsIslandDecoration
         TileDataRequirement.SkipIfMissing();
         var owner=new PlayerMobile { Body=400 };owner.AddItem(new Backpack());
         var estate=new HavenPirateEstate { Owner=owner };estate.MoveToWorld(HavenPirateEstate.Site,Map.Trammel);estate.Fixtures.Add(new Item(1));
+        AddDock(estate);
         var old=new HavenGuildCastle(owner) { Estate=estate };old.MoveToWorld(new Point3D(4196,2868,0),Map.Trammel);old.Furnish();
         HavenPirateHeadquarters house=null;
         try
@@ -88,5 +91,49 @@ public class HavenWorldTestsIslandDecoration
             if(!old.Deleted) { foreach(var item in old.CompanyFixtures.ToArray()) { item.Delete(); }old.Delete(); }
             estate.Delete();owner.Delete();
         }
+    }
+
+    private static void AddDock(HavenPirateEstate estate)
+    {
+        for(var x=85;x<=89;x++)
+        { for(var y=135;y<=140;y++)
+          { var tile=new Static(0x7CD);tile.MoveToWorld(new Point3D(estate.X+x,estate.Y+y,0),estate.Map);estate.Fixtures.Add(tile); } }
+    }
+
+    [SkippableFact]
+    public void ObstructedTrailRollsBackNewLayoutAndPreservesPlayerProperty()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner=new PlayerMobile { Body=400 };owner.AddItem(new Backpack());
+        var estate=new HavenPirateEstate { Owner=owner };estate.MoveToWorld(HavenPirateEstate.Site,Map.Trammel);AddDock(estate);
+        var obstacle=new Static(0x9) { Name="player placed post" };
+        obstacle.MoveToWorld(new Point3D(estate.X+44,estate.Y+60,0),estate.Map);
+        var site=obstacle.Location;
+        try
+        {
+            Assert.Throws<InvalidOperationException>(()=>HavenIslandDecoration.Apply(estate,null));
+            Assert.False(obstacle.Deleted);Assert.Equal(site,obstacle.Location);
+            Assert.DoesNotContain(estate.Fixtures,i=>i.Name==HavenIslandDecoration.SettlementMarker);
+            Assert.DoesNotContain(estate.Fixtures,i=>i.Name=="R.E.C. connected paving");
+            Assert.Contains(estate.Fixtures,i=>i.Name=="Worn shellstone footpath" && i.Map==estate.Map);
+        }
+        finally { obstacle.Delete();estate.Delete();owner.Delete(); }
+    }
+
+    [SkippableFact]
+    public void CompleteSettlementPreservesWorkingFixturesAndConnectsDestinations()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner=new PlayerMobile { Body=400 };owner.AddItem(new Backpack());
+        var estate=new HavenPirateEstate();estate.MoveToWorld(HavenPirateEstate.Site,Map.Trammel);estate.Build(owner);
+        estate.DecorateSettlement();estate.EnsureHomePatrol();estate.EnsureHomeTrial();
+        var working=estate.Fixtures.Where(i=>i is not Static).ToDictionary(i=>i,i=>i.Location);
+        try
+        {
+            HavenIslandDecoration.Apply(estate,null);
+            Assert.All(working,p=>{Assert.False(p.Key.Deleted);Assert.Equal(p.Value,p.Key.Location);});
+            Assert.All(HavenIslandDecoration.CheckSettlementRoutes(estate),r=>Assert.True(r.Reachable,r.Destination));
+        }
+        finally { estate.Delete();owner.Delete(); }
     }
 }
