@@ -113,7 +113,33 @@ public static class HavenReleaseOperations
         var estates = new List<object>();
         foreach (var estate in HavenPirateEstate.Registry)
         { estates.Add(new { Owner = estate.Owner?.Name, OwnerSerial = (estate.Owner?.Serial ?? Serial.Zero).Value, Fixtures = estate.Fixtures.Count }); }
-        var data = new { Id = id, Success = success, Error = error, Time = Core.Now,
+        var market = new List<object>();
+        var dungeonCrews = new List<object>();
+        var seenCrews = new HashSet<HavenDungeonCrew>();
+        foreach (var crew in HavenDungeonCrew.Registry.Values)
+        {
+            if (crew.Deleted || !seenCrews.Add(crew)) { continue; }
+            var workers = new List<object>();
+            foreach (var worker in crew.Workers)
+            { if (worker?.Deleted == false) { workers.Add(new { worker.Name, Serial = worker.Serial.Value, Map = worker.Map?.Name, worker.X, worker.Y, worker.Z, worker.Alive, worker.Hits, worker.HitsMax, Enemy = (worker.Combatant as Mobile)?.Name, Behavior = worker.Behavior?.SerializableName }); } }
+            dungeonCrews.Add(new { Route = HavenMarketExpedition.RouteName(crew.Route), crew.Room, crew.Started, crew.Ends, Workers = workers });
+        }
+        foreach (var stall in HavenMarketStall.Registry)
+        {
+            if (stall.Deleted) { continue; }
+            HavenMarketExpedition job = null;
+            foreach (var item in stall.Items) { if (item is HavenMarketExpedition found) { job = found; break; } }
+            var stock = new List<object>();
+            for (var i = 0; i < stall.Stock.Count && i < stall.Prices.Count; i++)
+            {
+                var item = stall.Stock[i];
+                if (item?.Deleted == false && item.Parent == stall)
+                { stock.Add(new { Serial = item.Serial.Value, Name = HavenMarketDirectory.Describe(item), Price = stall.Prices[i], Source = HavenMarketProvenance.Describe(item) }); }
+            }
+            market.Add(new { Serial = stall.Serial.Value, Trade = stall.Trade.ToString(), Artisan = stall.Artisan?.Name, Stock = stock,
+                Job = job == null ? null : new { Route = HavenMarketExpedition.RouteName(job.Route), job.Progress, job.Completed, job.Failed, job.Credits }, stall.NextWork });
+        }
+        var data = new { Id = id, Success = success, Error = error, Time = Core.Now, Market = market, DungeonCrews = dungeonCrews,
             Mobiles = World.Mobiles.Count, Items = World.Items.Count, Characters = characters, Companions=companions,
             Commons = HavenCommunityCenter.Registry.Count, Estates = estates, DoomControllers = HavenDoom.Controllers().Count,
             AncientHunts = HavenAbyssTrial.Registry.Count, AbyssExpeditions = expeditions, SnowDens = HavenSnowBearDen.Registry.Count,

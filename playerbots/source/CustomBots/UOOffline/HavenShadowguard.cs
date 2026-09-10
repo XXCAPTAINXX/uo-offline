@@ -113,7 +113,7 @@ public partial class HavenShadowChamber : Item
         {
             if (Server.Spells.SpellHelper.CheckCombat(mobile)) { return false; }
             foreach (var chamber in Registry) { if (chamber.Active && chamber.Member(mobile)) { return false; } }
-            if (Room == HavenShadowRoom.Roof && mobile is PlayerMobile and not PlayerBot && HavenFrontierRecord.Get(mobile).Rooms != 31)
+            if (Room == HavenShadowRoom.Roof && mobile is PlayerMobile && HavenFrontierRecord.Get(mobile).Rooms != 31)
             { from.SendMessage("Each player needs the five room seals before entering the Roof."); return false; }
         }
         Leader = from; Members.AddRange(group); Ends = Core.Now + TimeSpan.FromMinutes(30); Progress = 0; Supplies = 0; Stage = 0;
@@ -237,7 +237,7 @@ public partial class HavenShadowChamber : Item
         if (!Active) { return; }
         var survivor = false;
         foreach (var member in Members)
-        { if (member is PlayerMobile and not PlayerBot && Inside(member) && member.Alive && member.NetState != null) { survivor = true; break; } }
+        { if (member is PlayerMobile && Inside(member) && member.Alive && (member.NetState != null || member is PlayerBot bot && HavenDungeonCrew.For(bot) != null)) { survivor = true; break; } }
         if (!survivor || Core.Now >= Ends) { Finish(false); return; }
         foreach (var member in Members)
         { if (!Inside(member) && member.Map != Map.Internal) { _assist.Remove(member); } }
@@ -259,7 +259,7 @@ public partial class HavenShadowChamber : Item
         {
             foreach (var member in Members)
             {
-                if (member is not PlayerMobile player || player is PlayerBot || !Inside(player)) { continue; }
+                if (member is not PlayerMobile player || !Inside(player)) { continue; }
                 var record = HavenFrontierRecord.Get(player);
                 if (Room != HavenShadowRoom.Roof) { record.Rooms |= 1 << (int)Room; player.SendMessage("Room complete. Your Shadowguard seal is recorded."); }
                 else

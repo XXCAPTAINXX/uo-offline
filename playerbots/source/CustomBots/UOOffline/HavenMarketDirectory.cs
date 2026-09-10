@@ -18,6 +18,8 @@ public static class HavenMarketDirectory
         from.Map != null && from.Map != Map.Internal && !from.Criminal && from.Spell == null && !SpellHelper.CheckCombat(from);
     internal static string Describe(Item item) => item switch
     {
+        HavenMarketPetTicket ticket => ticket.DefaultName,
+        HavenMinaxCreditNote note => $"{note.Amount:N0} Minax credits (redeemable note)",
         SmallBOD bod => $"{(bod.Complete ? "Completed" : "Partial")} BOD: {bod.AmountMax} {bod.Type?.Name} {bod.Material}{(bod.RequireExceptional ? " exceptional" : "")}",
         LargeBOD bod => $"{(bod.Complete ? "Completed" : "Partial")} large BOD: {bod.AmountMax} {bod.Material}{(bod.RequireExceptional ? " exceptional" : "")}",
         CommodityDeed deed when deed.Commodity != null => $"{deed.Commodity.Amount:N0} {deed.Commodity.Name ?? BotAppraisal.NameFor(deed.Commodity)} (deed)",
@@ -120,17 +122,28 @@ public sealed class HavenMarketPurchaseGump : Gump
     internal HavenMarketPurchaseGump(HavenMarketDirectory.Listing listing, string query, int category, int page) : base(90, 90)
     {
         _listing = listing; _query = query; _category = category; _page = page;
-        AddBackground(0, 0, 535, 265, 9270); AddLabel(25, 20, 1152, "Review purchase");
+        AddBackground(0, 0, 535, 325, 9270); AddLabel(25, 20, 1152, "Review purchase");
         AddItem(25, 65, listing.Item.ItemID, listing.Item.Hue); AddItemProperty(listing.Item.Serial);
         AddLabelCropped(75, 62, 430, 22, 1152, listing.Name); AddLabel(75, 95, 2101, $"Price: {listing.Price:N0} gold");
         AddLabel(25, 135, 2101, "Hover over the item for its current properties.");
         AddLabel(25, 166, 2101, "Delivery is free. The price and stock are checked again when buying.");
-        AddButton(25, 218, 4005, 4007, 1); AddLabel(60, 218, 1152, "Buy and deliver");
-        AddButton(365, 218, 4017, 4019, 0); AddLabel(400, 218, 1152, "Back");
+        AddLabelCropped(25, 194, 480, 22, 2101, HavenMarketProvenance.Describe(listing.Item) ?? "Merchant stock");
+        if (listing.Item is HavenMarketPetTicket)
+        { AddButton(25, 230, 4005, 4007, 2); AddLabel(60, 230, 1152, "Inspect pet stats before buying"); }
+        AddButton(25, 278, 4005, 4007, 1); AddLabel(60, 278, 1152, "Buy and deliver");
+        AddButton(365, 278, 4017, 4019, 0); AddLabel(400, 278, 1152, "Back");
     }
     public override void OnResponse(NetState state, in RelayInfo info)
     {
         if (_used) { return; } _used = true;
+        if (info.ButtonID == 2 && HavenMarketDirectory.CanShop(state.Mobile) && !_listing.Stall.Deleted &&
+            _listing.Item is HavenMarketPetTicket { Deleted: false, Pet: { Deleted: false } pet } &&
+            _listing.Item.Parent == _listing.Stall && _listing.Stall.Stock.Contains(_listing.Item))
+        {
+            state.Mobile.SendGump(new HavenMarketPurchaseGump(_listing, _query, _category, _page));
+            HavenAnimalLoreGump.DisplayTo(state.Mobile, pet);
+            return;
+        }
         if (info.ButtonID == 1)
         { state.Mobile.SendMessage(_listing.Stall.Buy(state.Mobile, _listing.Item, _listing.Price, true) ? "Purchase delivered to your backpack." : "Purchase could not complete. Check stock, price, funds, pack space and combat status."); }
         HavenMarketDirectory.Open(state.Mobile, _query, _category, _page);

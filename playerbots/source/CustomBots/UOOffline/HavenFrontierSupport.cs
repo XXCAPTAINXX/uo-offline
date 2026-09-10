@@ -21,7 +21,7 @@ public static class HavenFrontierSupport
     {
         if (actor is HavenCompanion companion) { return companion.BoundOwner as PlayerMobile; }
         if (actor is BaseCreature pet) { return pet.GetMaster() as PlayerMobile; }
-        return actor is PlayerBot ? null : actor as PlayerMobile;
+        return actor is PlayerBot bot ? HavenBotLoot.PlayerOwner(bot) ?? bot : actor as PlayerMobile;
     }
     internal static bool Travel(Mobile from, Point3D point, Map map = null)
     {
@@ -53,6 +53,7 @@ public static class HavenFrontierSupport
     internal static void Deliver(PlayerMobile player, Item reward)
     {
         if (player?.Deleted != false) { reward.Delete(); return; }
+        if (player is PlayerBot bot) { HavenBotLoot.Receive(bot, reward); return; }
         if (player.Backpack == null) { player.AddItem(new Backpack()); }
         // Earned event deliveries survive a full pack and never spill at an offline location.
         player.Backpack.DropItem(reward);

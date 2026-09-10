@@ -50,6 +50,7 @@ public static class HavenDoom
         var index = Utility.Random(count);
         var recipe = new HavenDoomRecipe { ArtifactType = index < DemonKnight.ArtifactRarity10.Length ? DemonKnight.ArtifactRarity10[index] : DemonKnight.ArtifactRarity11[index - DemonKnight.ArtifactRarity10.Length] };
         player.Backpack.DropItem(recipe);
+        HavenMarketProduction.Consign(player, recipe);
         player.SendMessage("You earned a Doom reforging recipe. It upgrades its matching artifact and unlocks equipment evolution.");
     }
     internal static bool Reforged(Item item)

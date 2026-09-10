@@ -67,7 +67,7 @@ public partial class HavenCommunityCenter : Item
         var trades = Enum.GetValues<HavenMarketTrade>();
         for (var i = 0; i < trades.Length; i++)
         {
-            var stall = new HavenMarketStall(); Place(stall, 4 + i % 3 * 7, 4 + i / 3 * 5, 1); stall.Setup(trades[i]);
+            AddMarketTrade(trades[i]);
         }
         Place(new HavenTravelLibrary(), 27, 5, 1);
         Place(new HavenMarketDirectoryBoard(), 16, 35, 1);
@@ -97,6 +97,23 @@ public partial class HavenCommunityCenter : Item
             Place(new Static(0xB20) { Light = LightType.Circle300 }, 22, 80, 0);
         }
         this.MarkDirty();
+    }
+    internal void EnsureMarketTrades()
+    {
+        if (Deleted || Map == null || Map == Map.Internal || Fixtures.Count == 0) { return; }
+        foreach (var trade in Enum.GetValues<HavenMarketTrade>())
+        {
+            if (!Fixtures.Exists(i => i is HavenMarketStall stall && !stall.Deleted && stall.Trade == trade))
+            { AddMarketTrade(trade); }
+        }
+        this.MarkDirty();
+    }
+    private void AddMarketTrade(HavenMarketTrade trade)
+    {
+        var i = (int)trade;
+        var stall = new HavenMarketStall();
+        Place(stall, i == 15 ? 18 : 4 + i % 3 * 7, 4 + i / 3 * 5, 1);
+        stall.Setup(trade);
     }
     private void Place(Item item, int x, int y, int z)
     { item.Movable = false; item.MoveToWorld(new Point3D(X + x, Y + y, Z + (z == 1 ? FloorHeight : z)), Map); Fixtures.Add(item); }

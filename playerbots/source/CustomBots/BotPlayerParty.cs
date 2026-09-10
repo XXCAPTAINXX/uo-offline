@@ -215,6 +215,7 @@ namespace Server.CustomBots
             }
 
             // Working classes are working.
+            if (bot.Behavior is DungeonCrawlerBehavior && !Server.UOOffline.HavenGuildCrew.Retained(bot)) { return true; }
             if (BotClassHelper.IsArtisan(bot.Class) ||
                 BotClassHelper.IsGatherer(bot.Class) ||
                 bot.Class == BotClass.Crafter)

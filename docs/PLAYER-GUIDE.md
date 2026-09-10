@@ -32,6 +32,7 @@ Type commands in ordinary game speech, starting with [. Do not add a closing bra
 [wallet - wallet balances and controls.
 [withdraw 1000 - withdraw physical gold.
 [tithe 1000 - convert wallet gold to Chivalry tithing points.
+[minax 10 - withdraw earned Minax credits as a tradeable note.
 [market - search and buy listed merchant goods.
 
 ### Claims and companions
@@ -194,13 +195,28 @@ The golden-shovel reward can use a decoded treasure map to reach a suitable dig 
 [market searches the Commons merchant directory. Filter by trade or type an item name. Inspect the actual item and price before buying. Supported purchases spend wallet gold and deliver to your backpack; you must be out of combat and have space.
 
 ### Finite, produced stock
-Artisans perform timed gathering/crafting steps and list their results. Smiths and tailors also work on bulk orders. Gatherers sell resource deeds. Adventurers consign eligible surplus equipment. Artifact and gear-set stalls can be empty until bots supply qualifying loot; they do not print free artifacts on a restock timer. Each stall has limited listing space.
+Artisans perform timed gathering/crafting steps and list their results. Smiths and tailors also work on bulk orders. Gatherers sell resource deeds. Adventurers consign eligible surplus equipment. Artifact and gear-set stalls can be empty until bots supply qualifying loot. Dungeon crews fight real encounters; elapsed mission time never creates dungeon rewards. Each stall has limited listing space.
 
 ### Community services
 Visit the Commons for merchants, travel/rune services and supported training utilities. A market item is a real listing, so another buyer can purchase it first.
 
 ### Guild crews
 [guildcrew provides the supported recruitment, job and history controls for your guild workers. Assign gathering, crafting or training, or take workers into supported party adventures. Ownership and guild permissions matter. Some crafting recipes still lack automatic supplies; check work history when production stalls.
+
+### Pets and pet supplies
+Tamer bots consign eligible wild pets they actually tame, while leaving previously owned pets and nearby players alone. Search Pets for transferable tickets. Select Inspect pet stats before buying. The ticket preserves that exact animal and its rarity. Buy with wallet gold, then claim from your pack with enough follower slots. Feed the pet to bond when you meet its normal taming requirement. Pet Supplies makes bonding potions, reusable leashes and house shrinking posts through timed gathering and crafting.
+
+### Physical dungeon crews
+The Commons recruits available, skilled bots for Blackthorn, Shadowguard, Doom, the Stygian Abyss and pirate encounters. They travel to the entrance, fight and use supported room mechanics in the actual world. They can die or fail. There is no timed dungeon reward generator. Existing dungeon crawlers continue adventuring as well.
+
+When a player arrives, unassigned dungeon bots offer to join or leave. Accept within 30 seconds as party leader with enough free slots; decline or ignore to make them leave. Guild workers and bots already helping another player are protected. Shadowguard currently has reserved rooms for one group at a time, rather than unlimited private copies. Bot crews yield their reserved room when a player arrives at the entrance.
+
+### Party loot and dungeon stock
+While grouped with bots, their collected loot goes to the real party leader's nearby, owned companion when its pack can accept it; otherwise it goes to the player's backpack. With multiple human players, the human party leader receives the bot loot. Bots do not take unrelated corpses or player-owned pets.
+
+Solo bot crews can sell earned Minax credit notes, pirate cargo, Doom recipes and artifacts, power scrolls and compatible dungeon materials. Stock depends on real kills and completed encounters. Full stalls and failed runs can delay new listings. The market preview identifies the producer.
+
+Double-click a purchased Minax credit note to add its exact amount to [expeditions. Type [minax 10 to withdraw ten of your earned credits as a tradeable note. Doom recipes require their matching artifact and the stated crafting materials. Pirate cargo is redeemed at the corsair dispatch board.
 
 ## Dungeons
 

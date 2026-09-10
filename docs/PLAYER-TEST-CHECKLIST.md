@@ -73,6 +73,15 @@ Use a normal **Player** character for gameplay checks. Staff accounts bypass res
 - [ ] **N04 — Contention.** Both players try to buy the last market item. Exactly one purchase succeeds and only that buyer pays. Try competing dungeon entry and leadership changes.
 - [ ] **N05 — Disconnects.** One player disconnects during a mission or encounter. Confirm cleanup, return location, credit and saved ownership; one player's departure must not silently corrupt the other's progress.
 
+## Bot market and dungeon courtesy
+
+- [ ] **M01 — Pet market.** Inspect a ticket before buying, purchase using wallet gold, claim with free slots, and confirm identical stats. A full follower allowance must preserve the ticket.
+- [ ] **M02 — Minax notes.** Withdraw with `[minax 10`, redeem it, and confirm an exact round trip. A full backpack must not consume credits.
+- [ ] **M03 — Join or leave.** Meet an unassigned dungeon bot. Accept once and check native party membership. Decline another offer or let it expire; that crew should leave.
+- [ ] **M04 — Loot delivery.** Kill enemies with grouped bots. Their collected loot should reach your nearby companion, then your own pack when the companion cannot accept it. They must not loot an unrelated player's corpse.
+- [ ] **M05 — Real dungeon work.** Observe a bot crew fighting or solving its room; inspect market stock after successful encounters. Time alone must not create dungeon rewards.
+- [ ] **M06 — Room ownership.** Confirm a bot-only Shadowguard room yields when you arrive at the entrance, and that a human-owned room is never reset by bot cleanup.
+
 ## Report a problem
 
 Send: test ID, exact steps, expected/actual result, character and companion names, approximate time, map/coordinates, item name/serial if available, screenshot or journal text, and whether it repeats. Include the source commit from `git rev-parse --short HEAD`. If an item duplicates/disappears or the server crashes, keep the save/logs and report it before repeating that action extensively.

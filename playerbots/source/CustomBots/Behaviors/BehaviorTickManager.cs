@@ -23,8 +23,9 @@ namespace Server.CustomBots
         private static Timer _timer;
         private static readonly HashSet<PlayerBot> _registered = new();
         internal static int RegisteredCount => _registered.Count;
+        internal static IEnumerable<PlayerBot> Registered => _registered;
         internal static void Register(PlayerBot bot) { if (!bot.Deleted) { _registered.Add(bot); } }
-        internal static void Unregister(PlayerBot bot) { _registered.Remove(bot); }
+        internal static void Unregister(PlayerBot bot) { _registered.Remove(bot); Server.UOOffline.HavenDungeonCourtesy.Forget(bot); }
 
         // Reusable buffer for snapshot — saves on GC churn since we'd
         // otherwise allocate a new array every 2 seconds.
@@ -59,6 +60,7 @@ namespace Server.CustomBots
                     // A real player may have invited this bot to a party
                     // since the last tick — answer before acting.
                     BotPlayerParty.CheckInvite(bot);
+                    if (Server.UOOffline.HavenDungeonCourtesy.Tick(bot)) { continue; }
                     if (Server.UOOffline.HavenGuildCrew.Working(bot)) { continue; }
                     bot.Behavior?.Tick(bot);
 

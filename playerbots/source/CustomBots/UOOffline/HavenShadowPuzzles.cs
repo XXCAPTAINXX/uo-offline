@@ -76,6 +76,15 @@ public static class HavenShadowPuzzles
     internal static bool Assist(HavenShadowChamber chamber, HavenCompanion companion)
     {
         if (!chamber.Participant(companion) || companion.IsDeadPet || companion.Hits <= 0 || companion.Combatant is Mobile { Alive: true }) { return false; }
+        return AssistActor(chamber, companion);
+    }
+    internal static bool AssistBot(HavenShadowChamber chamber, Server.CustomBots.PlayerBot bot)
+    {
+        if (!chamber.Participant(bot) || !bot.Alive || bot.Combatant is Mobile { Alive: true, Deleted: false }) { return false; }
+        return AssistActor(chamber, bot);
+    }
+    private static bool AssistActor(HavenShadowChamber chamber, Mobile companion)
+    {
         HavenShadowNode next = null; object target = null;
         foreach (var item in chamber.Puzzle)
         {
@@ -91,12 +100,15 @@ public static class HavenShadowPuzzles
                 { if (candidate is HavenShadowNode pair && pair.Kind == 1 && pair.Key == (node.Key ^ 1)) { next = node; target = pair; break; } }
             }
             else if (node.Kind == 3 && node.State == 0 && chamber.Supplies > 0 || node.Kind == 4 && chamber.Progress == 16 ||
-                     node.Kind == 5 && (chamber.Stage == 0 || chamber.Stage == 1 && chamber.Supplies >= 3)) { next = node; }
+                     node.Kind == 5 && (chamber.Stage == 0 || chamber.Stage == 1 && chamber.Supplies >= 3 || chamber.Stage == 2 && companion is Server.CustomBots.PlayerBot && companion.Z < chamber.Z + (chamber.Original ? 20 : 10))) { next = node; }
             if (next != null) { break; }
         }
         if (next == null)
-        { companion.ControlOrder = OrderType.Guard; companion.ControlTarget = companion.BoundOwner; return false; }
-        companion.ControlOrder = OrderType.Stay;
+        {
+            if (companion is HavenCompanion follower) { follower.ControlOrder = OrderType.Guard; follower.ControlTarget = follower.BoundOwner; }
+            return false;
+        }
+        if (companion is HavenCompanion helper) { helper.ControlOrder = OrderType.Stay; }
         if (chamber.Original)
         {
             if (Use(chamber, companion, next, target, Utility.RandomDouble())) { return true; }
@@ -115,13 +127,13 @@ public static class HavenShadowPuzzles
                         if (!chamber.Map.LineOfSight(eye,new Point3D(next.X,next.Y,next.Z+1))) { continue; }
                         if (target is Mobile victim && (!Utility.InRange(p,victim.Location,next.Kind == 0 ? 22 : 18) ||
                             !chamber.Map.LineOfSight(eye,new Point3D(victim.X,victim.Y,victim.Z+14)))) { continue; }
-                        new PathFollower(companion,p).Follow(false,0); return false;
+                        new PathFollower(companion,p).Follow(false,0); return companion is Server.CustomBots.PlayerBot;
                     }
                 }
             }
             return false;
         }
-        if (!companion.InRange(next, 2)) { new PathFollower(companion, next).Follow(false, 2); return false; }
+        if (!companion.InRange(next, 2)) { new PathFollower(companion, next).Follow(false, 2); return companion is Server.CustomBots.PlayerBot; }
         return Use(chamber, companion, next, target, Utility.RandomDouble());
     }
     public static void Initialize()

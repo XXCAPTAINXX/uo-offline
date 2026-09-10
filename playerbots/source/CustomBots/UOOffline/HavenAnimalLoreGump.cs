@@ -85,6 +85,15 @@ public sealed class HavenAnimalLoreGump : Gump
     internal bool CanRefresh(Mobile owner)
     {
         if (_pet.Deleted || !owner.Alive) { return false; }
+        if (HavenMarketDirectory.CanShop(owner))
+        {
+            foreach (var stall in HavenMarketStall.Registry)
+            {
+                if (stall.Deleted) { continue; }
+                foreach (var stock in stall.Stock)
+                { if (stock is HavenMarketPetTicket { Deleted: false } ticket && ticket.Parent == stall && ticket.Pet == _pet) { return true; } }
+            }
+        }
         if (_pet.Map == owner.Map && owner.InRange(_pet, 12) && owner.InLOS(_pet)) { return true; }
         if (owner.Backpack != null)
         {

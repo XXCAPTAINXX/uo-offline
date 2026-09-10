@@ -92,7 +92,7 @@ public class HavenWorldTestsMarket
             center.MoveToWorld(new Point3D(1000, 1000, 100), Map.Malas);
             unrelated.MoveToWorld(center.Location, center.Map);
             center.Build();
-            Assert.Equal(13, center.Fixtures.FindAll(i => i is HavenMarketStall).Count);
+            Assert.Equal(16, center.Fixtures.FindAll(i => i is HavenMarketStall).Count);
             Assert.Contains(center.Fixtures, i => i is HavenTravelLibrary);
             Assert.Equal(5, center.Fixtures.FindAll(i => i is HavenPracticeChest).Count);
             Assert.True(HavenCommunityCenter.Travel(visitor));

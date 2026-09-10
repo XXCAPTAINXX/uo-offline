@@ -15,6 +15,8 @@ public static class HavenMarketProduction
         HavenMarketTrade.Fletcher => "Fenn Reed", HavenMarketTrade.Scribe => "Mira Quill",
         HavenMarketTrade.Alchemist => "Silas Vale", HavenMarketTrade.Cook => "Nora Hearth",
         HavenMarketTrade.Gatherer => "Bram Fieldstone",
+        HavenMarketTrade.Pets => "Lydia Wildmere", HavenMarketTrade.PetSupplies => "Finn Bridlewood",
+        HavenMarketTrade.DungeonSupplies => "Darian Ashford",
         HavenMarketTrade.Artifacts => "Seraphine Relicward", HavenMarketTrade.Jewelry => "Jasper Silverleaf", HavenMarketTrade.GearSets => "Freya Oathkeeper",
         _ => "Cassian Farwalker"
     };
@@ -28,6 +30,8 @@ public static class HavenMarketProduction
     };
     internal static void Work(HavenMarketStall stall)
     {
+        if (stall.Trade is HavenMarketTrade.PetSupplies or HavenMarketTrade.DungeonSupplies)
+        { HavenMarketExpansion.Work(stall); return; }
         if (stall.Trade == HavenMarketTrade.Gatherer)
         {
             if (stall.Stock.Count >= 24) { return; }
@@ -84,17 +88,24 @@ public static class HavenMarketProduction
     }
     public static bool Consign(Mobile producer, Item item)
     {
-        if (producer is not PlayerBot || item?.Deleted != false || item.RootParent != producer || !item.Movable || item.IsVirtualItem || item is Gold) { return false; }
+        if (producer is not PlayerBot bot || item?.Deleted != false || item.RootParent != producer || !item.Movable || item.IsVirtualItem) { return false; }
+        if (HavenBotLoot.PlayerOwner(bot) != null) { HavenBotLoot.Receive(bot, item); return true; }
+        if (HavenGuildCrew.Retained(bot) || item is Gold) { return false; }
         if (HavenBotEquipment.EquipIfBetter((PlayerBot)producer, item)) { return false; }
-        var trade = HavenDoom.IsArtifact(item) || HavenLegendaryArtifact.IsLegendary(item) ? HavenMarketTrade.Artifacts :
+        var trade = item is HavenMinaxCreditNote or HavenMaritimeCargo or HavenDoomRecipe or PowerScroll or CommodityDeed or HavenMark or AstralShard ? HavenMarketTrade.DungeonSupplies :
+            item is HavenBondingPotion or HavenPetLeash or HavenHouseHitchingPost ? HavenMarketTrade.PetSupplies :
+            HavenDoom.IsArtifact(item) || HavenLegendaryArtifact.IsLegendary(item) ? HavenMarketTrade.Artifacts :
             item is HavenSetRing or ValorGauntlets or SpiritualityHelm || HavenJewelrySets.BraceletTheme(item) >= 0 ? HavenMarketTrade.GearSets :
             item is BaseJewel ? HavenMarketTrade.Jewelry : HavenMarketTrade.Adventurer;
         foreach (var stall in HavenMarketStall.Registry)
         {
             if (!stall.Deleted && stall.Trade == trade && stall.Stock.Count < 24)
             {
-                var floor = item is HavenTideSteedDeed ? 100000 : item is HavenGoldenShovel or HavenEndlessBandage || HavenDoom.IsArtifact(item) ? 50000 : item is HavenResourceSatchel ? 15000 : 100;
-                return stall.ListItem(item, Math.Max(floor, BotAppraisal.Value(item)));
+                var floor = item is HavenMinaxCreditNote note ? 1000 * note.Amount : item is HavenMaritimeCargo cargo ? 1000 * cargo.Value :
+                    item is HavenDoomRecipe ? 12000 : item is HavenTideSteedDeed ? 100000 : item is HavenGoldenShovel or HavenEndlessBandage || HavenDoom.IsArtifact(item) ? 50000 : item is HavenResourceSatchel ? 15000 : 100;
+                if (!stall.ListItem(item, Math.Max(floor, BotAppraisal.Value(item)))) { return false; }
+                HavenMarketProvenance.Attach(item, "Adventuring loot", producer.Name);
+                return true;
             }
         }
         return false;

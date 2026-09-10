@@ -13,7 +13,7 @@ using Server.Network;
 
 namespace Server.UOOffline;
 
-public enum HavenMarketTrade { Smith, Tailor, Carpenter, Tinker, Fletcher, Scribe, Alchemist, Cook, Adventurer, Gatherer, Artifacts, Jewelry, GearSets }
+public enum HavenMarketTrade { Smith, Tailor, Carpenter, Tinker, Fletcher, Scribe, Alchemist, Cook, Adventurer, Gatherer, Artifacts, Jewelry, GearSets, Pets, PetSupplies, DungeonSupplies }
 
 // Stock is held by a persistent stall, never by a temporary play-session bot.
 [SerializationGenerator(0)]
@@ -59,6 +59,11 @@ public partial class HavenMarketStall : Item
         artisan.Skills[skill].Cap = 120;
         artisan.MoveToWorld(new Point3D(X, Y + 1, Z), Map);
         artisan.Stall = this;
+        if (trade == HavenMarketTrade.DungeonSupplies)
+        {
+            foreach (var combat in new[] { SkillName.Tactics, SkillName.Swords, SkillName.Magery })
+            { artisan.Skills[combat].Cap = 120; artisan.Skills[combat].Base = 100; }
+        }
         NextWork = Core.Now + TimeSpan.FromMinutes(1);
         Schedule();
     }
@@ -250,7 +255,7 @@ public class HavenMarketGump : Gump
         {
             var item = _items[i]; var y = 76 + i * 37;
             AddItem(20, y, item.ItemID, item.Hue); AddItemProperty(item.Serial);
-            AddLabelCropped(65, y, 310, 22, 0, item is SmallBOD bod ? $"{(bod.Complete ? "Completed" : "Partial")} order: {bod.AmountMax} {bod.Type?.Name}" : item.Name ?? BotAppraisal.NameFor(item));
+            AddLabelCropped(65, y, 310, 22, 0, HavenMarketDirectory.Describe(item));
             AddLabel(370, y, 0, $"{_prices[i]:N0}g"); AddButton(470, y, 4005, 4007, i + 1);
         }
         AddButton(20, 395, 4014, 4016, 100); AddLabel(55, 395, 0, "Previous");
@@ -264,8 +269,16 @@ public class HavenMarketGump : Gump
         var page = _page;
         if (info.ButtonID == 100) { page--; }
         else if (info.ButtonID == 101) { page++; }
-        else if (info.ButtonID > 0 && info.ButtonID <= _items.Length && !_stall.Buy(from, _items[info.ButtonID - 1], _prices[info.ButtonID - 1]))
-        { from.SendMessage("That purchase could not complete. Check funds, space, and whether the item has sold."); }
+        else if (info.ButtonID > 0 && info.ButtonID <= _items.Length)
+        {
+            var index = info.ButtonID - 1;
+            if (_items[index]?.Deleted != false || _items[index].Parent != _stall) { from.SendMessage("That item is no longer available."); }
+            else
+            {
+                var listing = new HavenMarketDirectory.Listing(_stall, _items[index], _prices[index], HavenMarketDirectory.Describe(_items[index]));
+                from.SendGump(new HavenMarketPurchaseGump(listing, "", (int)_stall.Trade, 0)); return;
+            }
+        }
         from.SendGump(new HavenMarketGump(_stall, page));
     }
 }

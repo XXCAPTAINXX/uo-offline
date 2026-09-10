@@ -107,6 +107,8 @@ public partial class HavenFrontierBattle : Item
         var source = actor is BaseCreature pet ? pet.GetMaster() : actor;
         if (source is Server.CustomBots.PlayerBot bot)
         {
+            if (!Active || !Nearby(bot)) { return; }
+            if (!Server.CustomBots.BotPlayerParty.InPlayerParty(bot) && !HavenGuildCrew.Retained(bot)) { Add(bot); }
             var group = Party.Get(bot);
             if (!Active || group == null) { return; }
             foreach (var member in group.Members)
@@ -165,6 +167,12 @@ public partial class HavenFrontierBattle : Item
                 player.SendMessage("The Saltfang is taken! Cargo and salvaged material deeds are in your pack. Redeem cargo at the island dispatch board.");
             }
             else { record.Rifts++; record.MinaxCredits += 12; player.SendMessage("Blackthorn's rift is sealed. Your Minax credits are available in [expeditions."); }
+            if (player is Server.CustomBots.PlayerBot)
+            {
+                if (!Pirate && record.MinaxCredits > 0) { HavenMinaxCreditNote.Withdraw(player, Math.Min(60000, record.MinaxCredits)); }
+                foreach (var item in player.Backpack.Items.ToArray())
+                { if (item is HavenMinaxCreditNote or HavenMaritimeCargo) { HavenMarketProduction.Consign(player, item); } }
+            }
         }
         Cleanup(); NextRun = Core.Now + TimeSpan.FromMinutes(5);
     }
