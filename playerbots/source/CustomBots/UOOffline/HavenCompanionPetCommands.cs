@@ -26,8 +26,19 @@ public partial class HavenCompanion
     private void RespectWildPets()
     {
         if (ControlOrder != OrderType.Attack || ControlTarget != _explicitWildTarget || _explicitWildTarget?.Deleted == true) { _explicitWildTarget=null; }
-        if (Combatant is Mobile target && !MayHarmWildPet(target) || ControlTarget is Mobile control && !MayHarmWildPet(control))
-        { Combatant=null; FocusMob=null; ControlTarget=BoundOwner; ControlOrder=OrderType.Guard; }
+        // A follow target is also used to approach an animal for taming. Only
+        // combat targets are attacks; do not turn harmless following into Guard.
+        if (Combatant is Mobile target && !MayHarmWildPet(target) ||
+            ControlOrder == OrderType.Attack && ControlTarget is Mobile control && !MayHarmWildPet(control))
+        {
+            Combatant = null;
+            FocusMob = null;
+            if (ControlOrder == OrderType.Attack)
+            {
+                ControlTarget = BoundOwner;
+                ControlOrder = TamingAssistActive ? OrderType.Follow : OrderType.Guard;
+            }
+        }
     }
     public override bool HandlesOnSpeech(Mobile from) => from == BoundOwner && from.Alive && from.Map == Map && from.InRange(this,14) || base.HandlesOnSpeech(from);
     public override void OnSpeech(SpeechEventArgs e)

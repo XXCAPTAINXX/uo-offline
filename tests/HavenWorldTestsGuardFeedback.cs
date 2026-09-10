@@ -121,6 +121,86 @@ public class HavenWorldTestsGuardFeedback
         }
     }
 
+    [SkippableTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TamingAssistFollowsProtectedAnimalWithoutGuardMessages(bool incomingCombatant)
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = CreateOwner();
+        var companion = new HavenCompanion { BoundOwner = owner, Role = HavenCompanionRole.Bard };
+        var animal = new HavenVerdantLlama();
+        using var state = PacketTestUtilities.CreateTestNetState();
+        try
+        {
+            companion.SetControlMaster(owner);
+            companion.MoveToWorld(owner.Location, owner.Map);
+            animal.MoveToWorld(new Point3D(owner.X + 2, owner.Y, owner.Z), owner.Map);
+            companion.Skills.AnimalTaming.Base = 120;
+            companion.Skills.AnimalLore.Base = 120;
+            // Keep the attempt pending so every iteration exercises the approach to the animal.
+            companion.Backpack.FindItemByType<HavenCompanionLute>()?.Delete();
+            state.Mobile = owner;
+            owner.NetState = state;
+            Assert.True(companion.StartTamingAssist(owner, animal));
+            for (var tick = 0; tick < 12; tick++)
+            {
+                if (incomingCombatant) { companion.Combatant = animal; }
+                companion.OnThink();
+                Assert.True(companion.TamingAssistActive);
+                Assert.Equal(OrderType.Follow, companion.ControlOrder);
+                Assert.Equal(OrderType.Follow, companion.AIObject.PersistentOrder);
+                Assert.Same(animal, companion.ControlTarget);
+                Assert.Null(companion.Combatant);
+                Assert.False(companion.CanBeHarmful(animal, false));
+                Assert.Equal(0, GuardMessages(state, companion));
+            }
+        }
+        finally
+        {
+            owner.NetState = null;
+            state.Mobile = null;
+            animal.Delete();
+            companion.Delete();
+            owner.Delete();
+        }
+    }
+
+    [SkippableFact]
+    public void WildPetProtectionAllowsFollowingButStillRequiresAnExplicitAttack()
+    {
+        TileDataRequirement.SkipIfMissing();
+        var owner = CreateOwner();
+        var companion = new HavenCompanion { BoundOwner = owner };
+        var animal = new HavenVerdantLlama();
+        try
+        {
+            companion.SetControlMaster(owner);
+            companion.MoveToWorld(owner.Location, owner.Map);
+            animal.MoveToWorld(new Point3D(owner.X + 2, owner.Y, owner.Z), owner.Map);
+            companion.ControlTarget = animal;
+            companion.ControlOrder = OrderType.Follow;
+            companion.OnThink();
+            Assert.Equal(OrderType.Follow, companion.ControlOrder);
+            Assert.Same(animal, companion.ControlTarget);
+
+            // An AI-assigned attack must be stopped; a deliberate owner's attack must remain.
+            companion.ControlTarget = animal;
+            companion.ControlOrder = OrderType.Attack;
+            companion.Combatant = animal;
+            companion.OnThink();
+            Assert.Equal(OrderType.Guard, companion.ControlOrder);
+            Assert.Null(companion.Combatant);
+            Assert.Same(owner, companion.ControlTarget);
+            Assert.True(companion.OrderAttack(owner, animal));
+            companion.OnThink();
+            Assert.Equal(OrderType.Attack, companion.ControlOrder);
+            Assert.Same(animal, companion.ControlTarget);
+            Assert.Same(animal, companion.Combatant);
+        }
+        finally { animal.Delete(); companion.Delete(); owner.Delete(); }
+    }
+
     private static PlayerMobile CreateOwner()
     {
         var owner = new PlayerMobile { Player = true, Body = 0x190, RawStr = 100 };
