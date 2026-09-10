@@ -14,7 +14,7 @@ cd haven-testing
 .\install.bat
 ```
 
-Alternatively, extract the matching source ZIP and run `install.bat`. Choose a new install directory. The installer downloads/builds its pinned ModernUO version and applies the numbered patches, including 0051. Allow it to finish, then close the client and stop that new server normally before changing its data configuration.
+Alternatively, download the [testing-branch source ZIP](https://github.com/XXCAPTAINXX/uo-offline/archive/refs/heads/fix/haven-world-services.zip), extract it and run `install.bat`. Choose a new install directory. The installer downloads/builds its pinned ModernUO version and applies the committed numbered patches. Gaps in patch numbering are intentional; do not obtain missing numbers from other branches. Allow it to finish, then close the client and stop that new server normally before changing its data configuration.
 
 The launcher updater currently follows **`haven-rc4`**, not this testing branch. Decline update prompts during this test cycle; otherwise an RC update may replace the build you are testing. Test updates should come from this same branch/source snapshot and use a normal saved-world backup. Do not mix files from different release snapshots.
 
@@ -72,7 +72,7 @@ Start with `[guide` for the searchable Haven Field Guide and its free book. The 
 ## Verified here and still requiring friend testing
 
 - The full content suite passes against freshly generated private maps, including native combat hooks, book balances/slots, mission receipts and dungeon geometry checks.
-- All 51 native patches apply to a fresh pinned-engine checkout, whose native source matches the tested tree. This check caught and fixed a patch line-ending problem before sharing.
+- September 10 sharing audit: all 66 committed native patches apply to a fresh pinned-engine checkout. The resulting native source and committed CustomBots source match the running server, and its content suite passed 1,159 tests with no failures or skips. Unfinished local changes are excluded from this testing snapshot.
 - Private server/client geometry copies are hash-verified by the preparation tool.
 - The running personal server receives a backed-up save/restart deployment separately.
 - A full first-time install on a friend's computer, their client profile/graphics and every real dungeon play-through still need the checklist. This is a test build, not a claim that the whole installer-to-gameplay flow has been certified on another PC.
@@ -82,3 +82,5 @@ Start with `[guide` for the searchable Haven Field Guide and its free book. The 
 Before changing network access, finish the checklist's two-player section. We still need to choose hosting, account creation policy, backup/restore procedure, update windows, supported client build and how new players receive island/home access. Then configure the server listener and advertised address, test connectivity, and open only the chosen game port. Avoid exposing the local release inbox, remote desktop or administrative tools. No network exposure is enabled by this package.
 
 Known feature limits include compatible rather than complete official Shadowguard/Blackthorn encounter and artifact tables, incomplete native SA Imbuing/boss systems, anchored rather than moving cannon/naval raids, remaining bot pathfinding and guild recipe provisioning work, and shared-server fairness tests that are not yet complete.
+
+Island decoration is still being revised. The current connected paths and working fixtures are included, but the open-sided outbuildings are not the final visual design. This source does not clone the owner's personal island furnishings or possessions into a friend's world.
