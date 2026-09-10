@@ -107,6 +107,9 @@ else:
             if (args.workspace / name).is_dir():
                 copy_tree(args.workspace / name, snapshot / 'workspace' / name, records,
                           ['__pycache__'])
+        # Include loose project scripts without entering the unrelated/rehearsal trees.
+        copy_tree(args.workspace, snapshot / 'workspace', records,
+                  [p.name for p in args.workspace.iterdir() if p.is_dir()])
         copy_tree(args.client, snapshot / 'client-launcher', records)
         repo = args.workspace / 'haven-fixes'
         state = dict(head=subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip(),
