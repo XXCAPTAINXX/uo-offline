@@ -30,15 +30,23 @@ for x in range(39,46):
     for y in (91,98):
         for z in range(20,20+rise,3): add('gable infill',0x18,x,y,z)
 
-# Low partitions keep both stalls visible. Each has its own clear opening.
-for x in (39,40,41): add('stall divider',0x3B4,x,94)
-for y in (93,94,97): add('stall front rail',0x3B5,41,y)
+# Complete matching rails enclose each stall. Real native LightWoodGate doors
+# replace the former gaps. The preview shows them closed to make the two pens
+# legible; the world installer must instantiate doors, not immovable statics.
+for x in (39,40): add('stall divider',0x836,x,94)
+add('stall divider corner',0x835,41,94)
+for y in (92,95,97): add('stall front rail',0x837,41,y)
+for number,y in ((1,93),(2,96)):
+    add(f'stall {number} gate',0x843,41,y)
+    tiles[-1].update(type='LightWoodGate',facing='NorthCCW',open=False)
 for y in (92,95,96):
-    for x in (39,40): add('stall bedding',0xF34+(x+y)%2,x,y)
+    add('light straw bedding',0xF35,40,y)
 # Feed stays in each back corner, away from the openings and working aisle.
-for y in (92,96): add('fresh hay',0x100C,39,y)
+for y in (92,96):
+    add('fresh hay',0x100C,39,y)
+    add('feed basket',0x9AC,39,y+1)
+# Supplies are grouped at the head of the aisle, leaving the length clear.
 add('feed barrel',0xE77,43,93)
-add('feed sack',0x1039,43,96)
 add('tack shelf',0xA9D,43,92)
 add('tack saddle',0xF37,43,92,12)
 add('tack rope',0x14F8,43,92,6)
@@ -46,8 +54,6 @@ add('tack rope',0x14F8,43,92,6)
 # working addon rather than two decorative statics.
 add('water trough west',0xB43,42,97)
 add('water trough east',0xB44,43,97)
-add('bedding reserve',0x100D,39,97)
-add('mucking fork',0xE87,40,97)
 
 # A proper supported sign sits beside, not in, the two-tile entrance.
 add('stable signpost',0x9,45,92)
