@@ -46,8 +46,30 @@ for x in range(94,100):
     for y in range(84,87): add('porch roof',0x5CF,x,y,26-3*(y-84))
 for x in (93,98): add('porch post',0x9,x,85)
 for x in range(94,99): add('porch beam',0x142,x,85,17)
-for y in (86,87,88,89):
-    for x in (95,96): add('entrance paving',0x519+(x+y)%4,x,y)
+# Earth approaches join the doorway and grove route; no paved perimeter.
+# These are private-map edits, requiring matching server and client data.
+def land(art,x,y): add('workshop approach terrain',art,x,y,type='Land')
+for y in range(86,90):
+    for x in (95,96): land(0x76+(x+y)%3,x,y)
+    land(0x89,94,y)
+    land(0x87,97,y)
+# The grove bypass runs away from the walls instead of outlining the building.
+for y in range(73,90):
+    land(0x77,88,y)
+    land(0x89,87,y)
+    land(0x87,89,y)
+for x in range(89,98):
+    land(0x77,x,89)
+    land(0x86,x,90)
+for x in range(89,101):
+    land(0x77,x,73)
+    land(0x8A,x,72)
+    land(0x86,x,74)
+for y in (74,75): land(0x77,100,y)
+for x,y in ((93,86),(98,87),(92,88),(99,77),(105,82)):
+    add('path-edge grass',0xCAD,x,y)
+add('porch corner flowers',0xC85,92,85)
+add('wing foundation grass',0xCAC,101,84)
 
 # Material stores against walls; a clear central route joins both workrooms.
 for x in (93,94): add('lumber stock',0x1BDD,x,77)
@@ -56,24 +78,28 @@ add('small fittings crate',0xE3F,95,77,3)
 add('tool shelf',0xA9D,96,77)
 add('saw',0x1034,96,77,6)
 add('hammer',0x102A,96,77,12)
-add('joinery table',0xB90,94,80)
+add('joinery table',0xB7D,94,80)
 add('cut board',0x1BD7,94,80,6)
 add('work stool',0xA2A,94,79)
 add('hardware barrel',0xE77,93,81)
+add('hardware crate',0xE3D,93,80)
 add('sail cutting table',0xB90,101,81)
 add('sailcloth',0x1765,101,81,6)
 add('shears',0xF9E,101,81,6)
 add('cloth shelf',0xA9D,103,80)
 add('cloth reserve',0x1767,103,80,6)
 add('sewing kit',0xF9D,103,80,12)
-add('spare thread',0xFA0,102,80)
+add('thread tray',0xFA0,103,80,6)
+add('sailmakers stool',0xA2A,101,82)
+add('cloth chest',0xE3D,100,80)
+add('cloth bundle',0x1767,100,80,3)
 add('net repair table',0xB90,94,84)
 add('net repair',0xDC8,94,84,6)
 add('rigging barrel',0xE77,97,84)
 add('rigging coil',0x14F8,97,84,5)
-add('porch signpost',0x9,99,85)
-add('sign bracket',0xB98,99,85,5)
-add('R.E.C. Shipwright & Sailmaker',0xBD0,99,85,5)
+# Use the existing porch corner post rather than a third, mismatched upright.
+add('sign bracket',0xB97,98,85,7)
+add('R.E.C. Shipwright & Sailmaker',0xBCF,98,85,7)
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
