@@ -15,6 +15,7 @@ public static class HavenStorageAccess
     internal static bool CanUse(Mobile from, Container storage)
     {
         if (storage?.Deleted != false || from?.Deleted != false || !from.Alive) { return false; }
+        if (storage is HavenMapStorageChest) { return HavenHouseMapLibrary.HouseAccess(from,storage) && !((HavenMapStorageChest)storage).Locked; }
         if (storage is GuildMasterChest master) { return master.CanAccess(from); }
         if (storage is GuildProfessionChest chest)
         {
@@ -31,6 +32,8 @@ public static class HavenStorageAccess
         if (storage is GuildMasterChest master)
         {
             var house=BaseHouse.FindHouseAt(master);
+            if(house!=null)
+            { foreach(var secure in house.Secures) { if(secure.Item is HavenMapStorageChest maps && !maps.Deleted && !maps.Locked && BaseHouse.FindHouseAt(maps)==house) { roots.Add(maps); } } }
             foreach (var chest in master.FindLinked())
             { if (house!=null && BaseHouse.FindHouseAt(chest)==house) { roots.Add(chest); } }
         }
@@ -54,6 +57,7 @@ public static class HavenStorageAccess
     internal static bool Accepts(Container storage, Item item) => item is not Container && !item.IsVirtualItem && item.Movable &&
         !item.IsSecure && !item.IsLockedDown && storage switch
         {
+            HavenMapStorageChest => HavenMapStorageChest.Accepts(item),
             HavenResourceSatchel => HavenResourceSatchel.Accepts(item),
             GuildProfessionChest chest => chest.Role==GuildStorageRole.Overflow || GuildStorageClassifier.Classify(item)==chest.Role,
             GuildMasterChest => item is not GuildStorageKit,
@@ -106,11 +110,12 @@ public static class HavenStorageAccess
         }
         return moved;
     }
-    internal static string DisplayName(Item item) => item is CommodityDeed { Commodity: not null } deed
+    internal static string DisplayName(Item item) => item is TreasureMap map ? $"{map.ChestMap?.Name} | Level {map.Level} | {(map.Completed ? "Completed" : map.Decoder==null ? "Undecoded" : $"{map.ChestLocation.X}, {map.ChestLocation.Y}")}" : item is CommodityDeed { Commodity: not null } deed
         ? $"{HavenMissionJournal.ItemName(deed.Commodity)} deed ({deed.Commodity.Amount:N0})"
         : HavenMissionJournal.ItemName(item);
     internal static string Description(Container storage) => storage switch
     {
+        HavenMapStorageChest => "Treasure maps, SOS messages and message bottles. Search by facet, level or coordinates. Target a bag to collect matching items, including sub-bags.",
         HavenResourceSatchel => "Crafting resources, gems, fish and bandages. Equipment, deeds and bags stay outside. Resource weight is reduced by 90%.",
         GuildProfessionChest chest => RoleDescription(chest.Role),
         _ => "Receiving chest: targets loose items and sorts them into the linked profession stores. Unknown items go to Unsorted; unavailable destinations use Overflow."
@@ -215,7 +220,7 @@ public sealed class HavenStorageHelp : Gump
     {
         _storage=storage; AddBackground(0,0,690,575,9270);AddBackground(10,10,670,555,3000);
         AddLabel(25,25,0,"What belongs in storage");
-        var text=storage is HavenResourceSatchel ? HavenStorageAccess.Description(storage) : string.Join("<BR><BR>",Enum.GetValues<GuildStorageRole>().Select(role=>$"<B>{GuildStorageNames.For(role)}</B><BR>{HavenStorageAccess.RoleDescription(role)}"));
+        var text=storage is HavenResourceSatchel or HavenMapStorageChest ? HavenStorageAccess.Description(storage) : string.Join("<BR><BR>",Enum.GetValues<GuildStorageRole>().Select(role=>$"<B>{GuildStorageNames.For(role)}</B><BR>{HavenStorageAccess.RoleDescription(role)}"));
         AddHtml(25,65,635,430,$"<BASEFONT COLOR=#181818>{text}</BASEFONT>",false,true);
         AddButton(25,530,4005,4007,1);AddLabel(65,532,0,"Back to storage");
     }

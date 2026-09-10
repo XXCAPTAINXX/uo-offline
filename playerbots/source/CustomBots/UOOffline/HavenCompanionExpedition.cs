@@ -212,7 +212,7 @@ public partial class HavenCompanion
     internal HavenCompanionExpedition Expedition => Backpack?.FindItemByType<HavenCompanionExpedition>();
     internal void PrepareForExpedition()
     {
-        StopTamingAssist(); ClearSongs(); CancelCompanionSpell();
+        StopTamingAssist(); ParkAssignedPets(); ClearSongs(); CancelCompanionSpell();
         Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
     }
     internal void AwardExpeditionProgress(int minutes, DateTime now)

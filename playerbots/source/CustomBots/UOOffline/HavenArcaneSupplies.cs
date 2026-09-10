@@ -24,7 +24,7 @@ public partial class ArcaneSupplyStone : Item
     internal sealed class Menu : ItemListMenu, IHavenShop
     {
         private static readonly string[] Names = ["Full Magery spellbook", "Full Necromancy spellbook", "Full Chivalry book", "Full Spellweaving book", "Full Bushido book", "Full Ninjitsu book", "Runebook", "Runic atlas — 48 locations", "Bag of sending — 30 charges", "Translocation powder — 10 doses", "Fortification powder — 10 uses", "Clothing bless deed", "Equipment bless deed", "Blank recall rune", "Reagent bundle — 100 of each", "Bandages — 500", "Arrows — 500", "Bolts — 500", "Recall scrolls — 50", "Potion bundle — 10 of each", "Resource Ledger — combine commodity deeds", "Resource satchel — 90% lighter resources", "White Fabled Fishing Net — Scalis chance", "World map — Soulbinder altar offering", "Wayfarer rune pouch — compact blank runes"];
-        private static readonly int[] Prices = [500, 1500, 1000, 2000, 1000, 1000, 500, 5000, 2500, 1000, 5000, 10000, 50000, 50, 3000, 500, 1000, 1000, 2000, 1500, 1000, 15000, 25000, 500, 250];
+        private static readonly int[] Prices = [500, 1500, 1000, 2000, 1000, 1000, 500, 5000, 2500, 1000, 5000, 10000, 50000, 50, 3000, 500, 1000, 1000, 2000, 1500, 1000, 15000, 25000, 500, 250, 15000, 5000];
         public Menu() : base("Arcane supplies — wallet gold accepted", Names.Select((name, index) => new ItemListEntry($"{name} — {Prices[index]:N0} gold", 0xEFA)).ToArray()) { }
         public Item CreateItem(int index)
         {
@@ -36,7 +36,7 @@ public partial class ArcaneSupplyStone : Item
                 9 => new PowderOfTranslocation(10), 10 => new PowderOfTemperament(10),
                 11 => new ClothingBlessDeed(), 12 => new HavenEquipmentBlessDeed(), 13 => new RecallRune(),
                 14 => ReagentBundle(), 15 => new Bandage(500), 16 => new Arrow(500), 17 => new Bolt(500),
-                18 => new RecallScroll(50), 20 => new HavenResourceLedger(), 21 => new HavenResourceSatchel(), 22 => new FabledFishingNet(), 23 => new WorldMap(), 24 => new HavenRunePouch(), _ => PotionBundle()
+                18 => new RecallScroll(50), 20 => new HavenResourceLedger(), 21 => new HavenResourceSatchel(), 22 => new FabledFishingNet(), 23 => new WorldMap(), 24 => new HavenRunePouch(), 25 => new HavenHouseMapLibrary(), 26 => new HavenMapStorageChest(), _ => PotionBundle()
             };
             if (item is Spellbook book) { book.Content = book.BookCount == 64 ? ulong.MaxValue : (1UL << book.BookCount) - 1; }
             return item;

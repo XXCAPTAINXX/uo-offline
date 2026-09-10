@@ -117,6 +117,21 @@ public class HavenWorldTestsPirateHouse
             Assert.DoesNotContain(house.CompanyFixtures, i => i is HavenCompanyLadder or HavenCompanyCharter);
             Assert.Equal(11,house.CompanyFixtures.OfType<HavenCraftStation>().Count());
             var stationCount=house.CompanyFixtures.Count;house.FurnishCraftStations();Assert.Equal(stationCount,house.CompanyFixtures.Count);
+            var library=Assert.Single(house.CompanyFixtures.OfType<HavenHouseMapLibrary>());
+            var mapChest=Assert.Single(house.CompanyFixtures.OfType<HavenMapStorageChest>());
+            house.FurnishMapLibrary();Assert.Equal(stationCount,house.CompanyFixtures.Count);
+            owner.MoveToWorld(new Point3D(library.X-1,library.Y+1,library.Z),house.Map);
+            Assert.True(HavenHouseMapLibrary.HouseAccess(owner,library),$"Owner {owner.Location}, library {library.Location}, LOS {owner.InLOS(library)}, accessible {library.IsAccessibleTo(owner)}, same house {BaseHouse.FindHouseAt(library)==house}, owner {house.IsOwner(owner)}");
+            var chart=new TreasureMap(1,Map.Trammel) { Decoder=owner,ChestLocation=new Point2D(1438,1690) };owner.Backpack.DropItem(chart);
+            Assert.True(library.Match(owner,chart));chart.Completed=true;Assert.False(library.Match(owner,chart));chart.Completed=false;
+            _=new HavenHouseMapLibraryGump(library);_=new HavenMatchedChartGump(library,chart);
+            owner.MoveToWorld(new Point3D(mapChest.X-1,mapChest.Y,mapChest.Z),house.Map);
+            var mapBag=new Bag();owner.Backpack.DropItem(mapBag);mapBag.DropItem(chart);var unrelatedMapGold=new Gold(10);mapBag.DropItem(unrelatedMapGold);
+            Assert.Equal(1,HavenStorageAccess.Collect(owner,mapChest,mapBag));Assert.Same(mapChest,chart.Parent);Assert.Same(mapBag,unrelatedMapGold.Parent);
+            owner.MoveToWorld(new Point3D(master.X,master.Y-1,master.Z),house.Map);
+            Assert.Contains(chart,HavenStorageAccess.Contents(master));Assert.Equal(1,HavenStorageAccess.Withdraw(owner,master,new[]{chart},1));
+            Assert.Same(owner.Backpack,chart.Parent);
+
             foreach(var station in house.CompanyFixtures.OfType<HavenCraftStation>())
             {
                 var reachable=false;

@@ -120,29 +120,60 @@ public partial class HavenFrontierRecord : Item
 
 public sealed class HavenFrontierJournal : Gump
 {
-    public HavenFrontierJournal(Mobile from) : base(60, 60)
+    public HavenFrontierJournal(Mobile from) : base(45,45)
     {
-        var record = HavenFrontierRecord.Get(from); AddBackground(0, 0, 490, 365, 9270);
-        AddLabel(25, 20, 1152, "Frontier expeditions");
-        AddLabel(25, 52, 2101, $"Shadowguard roofs {record.Roofs} · Blackthorn rifts {record.Rifts} · Voyages {record.Voyages}");
-        AddLabel(25, 80, 1152, $"Minax credits: {record.MinaxCredits}     Doubloons: {record.Doubloons}");
-        AddLabel(25, 111, 2101, "Relics evolve. Each costs 50 of its event currency.");
-        var names = new[] { "Grimoire", "Signet", "Wayfarer's boots" };
-        for (var i = 0; i < 3; i++)
+        var record=HavenFrontierRecord.Get(from);
+        AddBackground(0,0,680,480,9270);AddBackground(10,10,660,460,3000);
+        AddLabel(25,25,0,"Frontier expeditions | Reward catalog");
+        AddLabel(25,60,0,$"Shadowguard roofs: {record.Roofs}   Blackthorn rifts: {record.Rifts}   Voyages: {record.Voyages}");
+        AddLabel(25,90,0,$"Minax credits: {record.MinaxCredits}       Doubloons: {record.Doubloons}");
+        AddLabel(25,125,0,"Select a reward to see every starting stat before buying.");
+        string[] names=["Grimoire - full Magery spellbook","Signet - ring for weapon and caster builds","Wayfarer's boots - luck and regeneration"];
+        int[] icons=[0xEFA,0x108A,0x170B];
+        for(var i=0;i<3;i++)
         {
-            var y = 151 + i * 45; AddLabel(25, y, 1152, names[i]);
-            AddButton(180, y, 4005, 4007, 10 + i); AddLabel(218, y, 2101, "Minax");
-            AddButton(312, y, 4005, 4007, 20 + i); AddLabel(350, y, 2101, "Doubloons");
+            var y=175+i*85;AddItem(30,y,icons[i]);AddLabel(85,y,0,names[i]);
+            AddButton(85,y+30,4005,4007,10+i);AddLabel(125,y+32,0,"Preview: 50 Minax credits");
+            AddButton(365,y+30,4005,4007,20+i);AddLabel(405,y+32,0,"Preview: 50 doubloons");
         }
-        AddLabel(25, 302, 1152, "Rewards require participation; companion kills count for you.");
-        AddButton(365, 330, 4017, 4019, 0); AddLabel(402, 330, 1152, "Close");
+        AddLabel(25,435,0,"Relics gain experience while equipped. Companion kills count for you.");
+        AddButton(585,435,4017,4019,0);
     }
-    public override void OnResponse(NetState state, in RelayInfo info)
+    public override void OnResponse(NetState state,in RelayInfo info)
     {
-        if (info.ButtonID == 0) { return; }
-        var pirate = info.ButtonID >= 20; var choice = info.ButtonID - (pirate ? 20 : 10);
-        if (!HavenFrontierRecord.Get(state.Mobile).Buy(state.Mobile, choice, pirate))
-        { state.Mobile.SendMessage("You need 50 credits and room in your pack."); }
+        var pirate=info.ButtonID>=20;var choice=info.ButtonID-(pirate ? 20 : 10);
+        if(choice is >=0 and <=2) { state.Mobile.SendGump(new HavenFrontierRewardPreview(state.Mobile,choice,pirate)); }
+    }
+}
+public sealed class HavenFrontierRewardPreview : Gump
+{
+    private readonly int _choice;private readonly bool _pirate;
+    public HavenFrontierRewardPreview(Mobile from,int choice,bool pirate) : base(50,50)
+    {
+        _choice=choice;_pirate=pirate;var record=HavenFrontierRecord.Get(from);
+        AddBackground(0,0,620,555,9270);AddBackground(10,10,600,535,3000);
+        var item=HavenFrontierSupport.Relic(choice,pirate ? "Corsair's" : "Blackthorn's");
+        try
+        {
+            AddLabel(25,25,0,item.Name);AddItem(30,85,item.ItemID,item.Hue);
+            var description=HavenItemPreviewGump.Describe(item);
+            AddHtml(110,65,475,320,$"<BASEFONT COLOR=#181818><B>Starting properties</B><BR>{description}</BASEFONT>",false,true);
+        }
+        finally { item.Delete(); }
+        AddHtml(25,395,565,60,"<BASEFONT COLOR=#181818>Evolution: each level adds +1 spell damage and +1 weapon damage. Milestones add +1 health and mana regeneration. Equip the relic to earn experience.</BASEFONT>",false,false);
+        AddLabel(25,468,0,$"Cost: 50 {(pirate ? "doubloons" : "Minax credits")}   |   You have: {(pirate ? record.Doubloons : record.MinaxCredits)}");
+        AddButton(25,510,4014,4016,1);AddLabel(65,512,0,"Back");
+        AddButton(375,510,4005,4007,2);AddLabel(415,512,0,"Buy this reward");
+    }
+    public override void OnResponse(NetState state,in RelayInfo info)
+    {
+        if(info.ButtonID==0) { return; }
+        if(info.ButtonID==2)
+        {
+            if(!HavenFrontierRecord.Get(state.Mobile).Buy(state.Mobile,_choice,_pirate))
+            { state.Mobile.SendMessage("Purchase failed: you need 50 of the selected currency and room in your pack."); }
+            else { state.Mobile.SendMessage("Your relic is in your backpack."); }
+        }
         state.Mobile.SendGump(new HavenFrontierJournal(state.Mobile));
     }
 }

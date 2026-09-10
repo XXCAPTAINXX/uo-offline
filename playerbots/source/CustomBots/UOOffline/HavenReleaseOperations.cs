@@ -126,7 +126,7 @@ public static class HavenReleaseOperations
                             MissionJournal=journal==null ? null : new { journal.Active,journal.Unread,Reports=journal.Reports.Count,Latest=journal.Reports[0] } });
                     }
                     characters.Add(new { Serial = player.Serial.Value, player.Name, Access = player.AccessLevel.ToString(),
-                        Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive });
+                        Guild=player.Guild?.Name, Map = player.Map?.Name, player.X, player.Y, player.Z, player.Alive });
                 }
             }
         }
@@ -186,7 +186,7 @@ public static class HavenReleaseOperations
                 Passenger = passenger == null ? null : new { passenger.Name, Serial = passenger.Serial.Value, passenger.Z } });
         }
         var data = new { Operation = _operation, FishingFleet = fleets, Bosses = bosses, Id = id, Success = success, Error = error, Time = Core.Now, Market = market, DungeonCrews = dungeonCrews,
-            Mobiles = World.Mobiles.Count, Items = World.Items.Count, Characters = characters, Companions=companions,
+            RareExportGuild = Server.Guilds.BaseGuild.FindByName("Rare Export Company")?.Name, Mobiles = World.Mobiles.Count, Items = World.Items.Count, Characters = characters, Companions=companions,
             Commons = HavenCommunityCenter.Registry.Count, Estates = estates, DoomControllers = HavenDoom.Controllers().Count,
             AncientHunts = HavenAbyssTrial.Registry.Count, AbyssExpeditions = expeditions, SnowDens = HavenSnowBearDen.Registry.Count,
             FrontierHubs = HavenFrontierHub.Registry.Count, ShadowRooms = HavenShadowChamber.Registry.Count,

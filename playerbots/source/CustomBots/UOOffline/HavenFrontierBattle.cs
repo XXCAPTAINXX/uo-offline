@@ -95,7 +95,7 @@ public partial class HavenFrontierBattle : Item
             Spawn(1, group, Pirate ? 0 : (group == 0 ? -7 : 7), -2);
             for (var i = 0; i < 3; i++) { Spawn(0, group, Pirate ? i - 1 : (group == 0 ? -8 : 6) + i, Pirate ? i - 2 : i * 3); }
         }
-        Spawn(2, -1, 0, Pirate ? -4 : -8);
+        Spawn(2, -1, Pirate ? 2 : 0, Pirate ? 6 : -8);
     }
     private void Spawn(int role, int group, int dx, int dy)
     {
@@ -145,7 +145,7 @@ public partial class HavenFrontierBattle : Item
         if (enemy.Role == 1)
         {
             var crews = false; foreach (var other in Enemies) { if (other.Role != 2) { crews = true; break; } }
-            if (!crews) { foreach (var beacon in Enemies) { beacon.Blessed = false; beacon.Name = Pirate ? "an exposed cargo seal" : "an exposed rift beacon"; } }
+            if (!crews) { foreach (var beacon in Enemies) { beacon.Blessed = false; beacon.Name = Pirate ? "an exposed cargo seal" : "an exposed rift beacon"; if(Pirate) { beacon.PublicOverheadMessage(MessageType.Regular,0x35,false,"Cargo seal exposed - aft starboard deck!"); } } }
         }
         if (enemy.Role == 2)
         {

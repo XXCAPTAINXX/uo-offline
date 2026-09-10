@@ -1966,6 +1966,7 @@ public class HavenWorldTests
             Mobile.SkillCheckTargetHandler = Server.Misc.SkillCheck.Mobile_SkillCheckTarget;
             foreach (var mobile in new Mobile[] { owner, companion, animal }) { mobile.MoveToWorld(HavenRecovery.BankLocation, Map.Trammel); }
             companion.Skills.Musicianship.Base = companion.Skills.Peacemaking.Base = 120;
+            companion.Skills.AnimalTaming.Base = companion.Skills.AnimalLore.Base = 120;
             Assert.False(companion.StartTamingAssist(stranger, animal));
             Assert.True(companion.StartTamingAssist(owner, animal));
             Assert.False(companion.CanBeHarmful(animal, false));
@@ -1973,6 +1974,7 @@ public class HavenWorldTests
             Assert.False(companion.DefendOwner());
             companion.ThinkTamingAssist();
             Assert.True(animal.BardPacified);
+            Assert.True(Server.SkillHandlers.AnimalTaming.IsBeingTamed(animal));
             Assert.Null(companion.Combatant);
             Assert.False(companion.CanBeHarmful(animal, false));
             owner.Hits = 1;

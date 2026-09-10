@@ -46,6 +46,12 @@ public class HavenWorldTestsFrontiers
             {
                 Assert.True(board.Start(player)); Assert.NotNull(board.Vessel); Assert.Equal(board.Center.Z, player.Z);
                 Assert.True(board.Nearby(player)); Assert.True(board.Vessel.Contains(player.X, player.Y));
+                var seal=board.Enemies.Single(e=>e.Role==2);
+                System.IO.File.WriteAllText("E:/(Offline UO)/uo-offline-haven-rc4/artifacts/corsair-deck.json",System.Text.Json.JsonSerializer.Serialize(board.Vessel.Components.List.Select(t=>new { id=t.ItemId,x=t.OffsetX,y=t.OffsetY,z=t.OffsetZ })));
+
+                Assert.Equal(new Point3D(board.Center.X+2,board.Center.Y+6,board.Center.Z),seal.Location);
+                Assert.True(board.Vessel.Contains(seal.X,seal.Y));
+                Assert.True(board.Map.CanFit(seal.Location,16,checkMobiles:false),"Cargo seal must stand on an accessible deck tile");
                 var visitor = Player(player.Location);
                 try { board.Cancel(); Assert.Equal(HavenChelonia.Landing, visitor.Location); }
                 finally { visitor.Delete(); }
