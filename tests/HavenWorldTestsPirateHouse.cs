@@ -112,7 +112,12 @@ public class HavenWorldTestsPirateHouse
             Assert.Equal(31, house.Components.Width); Assert.Equal(32, house.Components.Height);
             Assert.True(house.Components.List.Length > 2000); Assert.Same(owner, house.Owner); Assert.True(house.GetAosMaxSecures() >= 10000);
             Assert.Equal(8, house.CompanyFixtures.OfType<HavenPirateStair>().Count());
-            Assert.All(house.CompanyFixtures.OfType<HavenPirateStair>(), ladder => Assert.Equal(0x8A5,ladder.ItemID));
+            Assert.Equal(8,house.CompanyFixtures.OfType<HavenPirateStairBase>().Count());
+            var legacyLadder=house.CompanyFixtures.OfType<HavenPirateStair>().First();
+            var legacySerial=legacyLadder.Serial;legacyLadder.ItemID=0x8A5;
+            house.RefineDirectLadders();Assert.Equal(legacySerial,legacyLadder.Serial);
+            Assert.Equal(8,house.CompanyFixtures.OfType<HavenPirateStairBase>().Count());
+            Assert.All(house.CompanyFixtures.OfType<HavenPirateStair>(), ladder => Assert.Equal(HavenPirateStair.LadderArt,ladder.ItemID));
             var fixtureCount=house.CompanyFixtures.Count; house.RefineFloorAccess(); house.RefineDirectLadders(); Assert.Equal(fixtureCount,house.CompanyFixtures.Count);
             Assert.DoesNotContain(house.CompanyFixtures, i => i is HavenCompanyLadder or HavenCompanyCharter);
             Assert.Equal(11,house.CompanyFixtures.OfType<HavenCraftStation>().Count());
@@ -175,6 +180,18 @@ public class HavenWorldTestsPirateHouse
                 var target=HavenPirateHeadquarters.DirectLadderLandings[index];
                 ladder.OnDoubleClick(owner);
                 Assert.Equal(new Point3D(house.X+target.X,house.Y+target.Y,house.Z+target.Z),owner.Location);
+                var steps=Assert.Single(house.CompanyFixtures.OfType<HavenPirateStairBase>(),b=>b.Ladder==ladder);
+                Assert.Equal(ladder.Location,steps.Location);Assert.Equal(0x722,steps.ItemID);
+                owner.MoveToWorld(approach,house.Map);steps.OnDoubleClick(owner);
+                Assert.Equal(new Point3D(house.X+target.X,house.Y+target.Y,house.Z+target.Z),owner.Location);
+                // The ladder is a bridge with a six-Z standing height; it must also work from its own rungs.
+                owner.MoveToWorld(new Point3D(ladder.X,ladder.Y,ladder.Z+6),house.Map);
+                Assert.True(house.Climb(owner,ladder));
+                owner.MoveToWorld(new Point3D(ladder.X,ladder.Y,ladder.Z-7),house.Map);
+                Assert.False(house.Climb(owner,ladder));
+                owner.MoveToWorld(new Point3D(ladder.X,ladder.Y,ladder.Z+20),house.Map);
+                Assert.False(house.Climb(owner,ladder));
+
 
             }
             foreach (var item in house.CompanyFixtures.Where(i => i is Container or BaseAddon or HavenRepairBench or HavenHouseHitchingPost))

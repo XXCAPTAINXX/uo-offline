@@ -469,9 +469,8 @@ public static class HavenEconomy
     public static bool CanPay(Mobile from, int amount)
     {
         if (from?.Backpack == null || amount <= 0) { return false; }
-        var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
-        var remaining = amount - (int)Math.Min(amount, Math.Max(0, wallet?.Balance ?? 0));
-        remaining -= Math.Min(remaining, from.Backpack.GetAmount(typeof(Gold)));
+        var remaining = amount - Math.Min(amount, from.Backpack.GetAmount(typeof(Gold)));
+        // Banker includes carried wallets, so count them only once.
         return remaining <= 0 || Banker.GetBalance(from) >= remaining;
     }
     public static bool HasStableCargo(BaseCreature pet)
@@ -487,18 +486,16 @@ public static class HavenEconomy
             return false;
         }
 
-        var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
-        var walletGold = (int)Math.Min(amount, Math.Max(0, wallet?.Balance ?? 0));
+        var walletGold = Math.Min(amount, HavenBankPayments.WalletBalance(from));
         var backpackGold = Math.Min(amount - walletGold, from.Backpack.GetAmount(typeof(Gold)));
-        var bankGold = amount - walletGold - backpackGold;
-        // Check the complete payment before removing any wallet or loose gold.
-        // All payment operations run together on the game thread.
-        if (bankGold > 0 && !Banker.Withdraw(from, bankGold))
+        var walletAndBankGold = amount - backpackGold;
+        // Banker preflights and spends wallet + account + bank funds together.
+        // Keep the existing wallet, loose backpack gold, then bank priority.
+        if (walletAndBankGold > 0 && !Banker.Withdraw(from, walletAndBankGold))
         {
             return false;
         }
         if (backpackGold > 0) { from.Backpack.ConsumeTotal(typeof(Gold), backpackGold); }
-        if (walletGold > 0) { wallet.TrySpend(walletGold); }
         return true;
     }
 }

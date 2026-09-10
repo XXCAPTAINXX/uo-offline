@@ -26,7 +26,7 @@ public partial class HavenPirateHeadquarters
         {
             var p=sites[i];
             if (i<3)
-            { var ladder=ladders[i]; ladder.ItemID=0x8A5; ladder.Name="R.E.C. rope ladder - choose a floor"; ladder.MoveToWorld(new Point3D(X+p.X,Y+p.Y,Z+p.Z),Map); }
+            { var ladder=ladders[i]; ladder.ItemID=HavenPirateStair.LadderArt; ladder.Name="R.E.C. wooden ladder"; ladder.MoveToWorld(new Point3D(X+p.X,Y+p.Y,Z+p.Z),Map); }
             else { Place(new HavenPirateStair { Headquarters=this },p.X,p.Y,p.Z-1); }
         }
         Place(new Static(1) { Name="R.E.C. marked floor access v3", Visible=false },0,14,6);

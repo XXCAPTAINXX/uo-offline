@@ -28,7 +28,8 @@ public partial class HavenPirateHeadquarters
     };
     internal void RefineDirectLadders()
     {
-        if (Deleted || !HasCompound || CompanyFixtures.Any(i => !i.Deleted && i.Name == "R.E.C. direct ladders v4")) { return; }
+        if (Deleted || !HasCompound) { return; }
+        if (CompanyFixtures.Any(i => !i.Deleted && i.Name == "R.E.C. direct ladders v4")) { RefineBroadLadders(); return; }
         if (Customizer != null) { throw new InvalidOperationException("Finish house customization before adjusting ladders."); }
         var ladders = CompanyFixtures.OfType<HavenPirateStair>().Where(i => !i.Deleted).ToArray();
         if (ladders.Length != 7) { throw new InvalidOperationException("Expected seven existing ladders; property was preserved."); }
@@ -71,13 +72,15 @@ public partial class HavenPirateHeadquarters
             if (index >= 0) { ladder.Name = DirectLadderNames[index]; }
         }
         Place(new Static(1) { Name="R.E.C. direct ladders v4", Visible=false },1,14,6);
+        RefineBroadLadders();
         this.MarkDirty();
     }
     internal bool Climb(Mobile from, HavenPirateStair ladder)
     {
         if (ladder?.Deleted != false || ladder.Headquarters != this || !CompanyAccess(from) || !from.Alive ||
-            Customizer != null || from.Map != Map || !from.InRange(ladder,2) || Math.Abs(from.Z-ladder.Z)>5 ||
-            !from.InLOS(ladder) || from.Spell != null || SpellHelper.CheckCombat(from)) { return false; }
+            Customizer != null || from.Map != Map || !from.InRange(ladder,2) || from.Z<ladder.Z || from.Z-ladder.Z>8 ||
+            ((from.X != ladder.X || from.Y != ladder.Y) && !from.InLOS(ladder)) ||
+            from.Spell != null || SpellHelper.CheckCombat(from)) { return false; }
         var index = Array.IndexOf(DirectLadderSites,new Point3D(ladder.X-X,ladder.Y-Y,ladder.Z-Z));
         if (index < 0) { return false; }
         var landing = DirectLadderLandings[index];

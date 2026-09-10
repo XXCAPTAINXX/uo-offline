@@ -1,4 +1,5 @@
 using Server.Gumps;
+using Server.Mobiles;
 using Server.Network;
 
 namespace Server.UOOffline;
@@ -17,6 +18,8 @@ public sealed class HavenWalletGump : Gump
         AddLabel(30, 109, 0, $"Astral shards: {wallet.AstralShards:N0}");
         AddButton(30, 140, 4005, 4007, 1);
         AddLabel(66, 142, 0, "Deposit backpack gold and marks");
+        var available = wallet.RootParent is Mobile owner ? Banker.GetBalance(owner) : 0;
+        AddLabel(30, 165, 0, $"Wallet + bank available: {available:N0}");
         AddLabel(30, 184, 0, "Amount (gold / marks / tithe):");
         AddBackground(30, 214, 180, 30, 3000);
         AddTextEntry(38, 219, 162, 22, 0, 0, "1000");
@@ -28,7 +31,7 @@ public sealed class HavenWalletGump : Gump
         AddLabel(66, 282, 0, "Haven rewards");
         AddButton(240, 280, 4005, 4007, 3);
         AddLabel(276, 282, 0, "Astral treasures");
-        AddHtml(30, 318, 400, 28, "Stones automatically use wallet marks before gold.");
+        AddHtml(30, 318, 400, 28, "Guild and other bank fees automatically use carried wallet gold.");
         AddButton(30, 350, 4005, 4007, 6);
         AddLabel(66, 352, 0, "Tithe gold for Chivalry (1 gold = 1 point)");
         AddButton(320, 390, 4005, 4007, 0);

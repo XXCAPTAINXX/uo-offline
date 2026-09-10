@@ -141,7 +141,8 @@ public partial class HavenPirateHeadquarters : HouseFoundation
 public partial class HavenPirateStair : Item
 {
     [SerializableField(0)] private HavenPirateHeadquarters _headquarters;
-    [Constructible] public HavenPirateStair() : base(0x8A5) { Name = "R.E.C. rope ladder"; Movable = false; }
+    internal const int LadderArt = 0x89D;
+    [Constructible] public HavenPirateStair() : base(LadderArt) { Name = "R.E.C. wooden ladder"; Movable = false; }
     public override void OnDoubleClick(Mobile from)
     {
         if (Headquarters?.Deleted != false || !Headquarters.Climb(from,this))
