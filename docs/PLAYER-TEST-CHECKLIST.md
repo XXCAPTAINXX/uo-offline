@@ -92,3 +92,7 @@ The automated suite verifies mechanics and persistence; it does not certify all 
 ## Scalis, Cora and Corgul
 
 See [THREE-BOSSES.md](THREE-BOSSES.md) for commands, reward tables and the five in-game checks. Automated validation covers terrain routes, offerings, reward eligibility, artifact growth, persistence and forge recipes; visual combat balance still needs play-testing.
+
+## Companion report readability
+
+Open [CompanionReport: check dark text on parchment, the Overview before/after/change columns, paged Loot/Skills/Gear, and each Stats detail window. Close a detail window to return to the same report page. Older and newer reports must retain their recorded values.
