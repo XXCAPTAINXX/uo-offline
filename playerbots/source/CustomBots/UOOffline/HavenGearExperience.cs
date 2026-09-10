@@ -12,7 +12,7 @@ public partial class HavenGearExperience : Item
     [SerializableField(1)] private int _appliedLevel = 1;
     private Timer _cleanup;
     internal static bool IsSpecial(Item gear) => HavenBossArtifact.IsArtifact(gear) || HavenDoom.Reforged(gear) || HavenLegendaryArtifact.IsLegendary(gear) || HavenQuestGear.IsReward(gear) || gear is IAosItem && gear.RootParent is HavenCompanion ||
-        gear is IStarterUpgradeable or IEvolvingStarterWeapon or ApprenticeGrimoire or
+        gear is IHavenMarkEquipment or IStarterUpgradeable or IEvolvingStarterWeapon or ApprenticeGrimoire or
         HavenLevelingCape or HavenStarterSash or HavenChampionPendant or HavenSetRing or HavenConcordTalisman or
         HavenCompanionBlade or HavenCompanionBow or StarterFortuneEarrings or AstralFortuneEarrings or AstralWeaversRing or AstralGuardianMantle || HavenJewelrySets.BraceletTheme(gear) >= 0 ||
         gear is Longsword { Parent: HavenCompanion, Movable: false } && gear.GetType() == typeof(Longsword);

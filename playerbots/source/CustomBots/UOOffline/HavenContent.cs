@@ -378,7 +378,7 @@ public partial class SpecialRewardStone : Item
         }
 
         from.CloseGump<HavenListGump>();
-        from.SendGump(new HavenListGump(this, new RewardMenu()));
+        HavenMarkRewards.DisplayTo(from, this);
     }
 
     internal sealed class RewardMenu : ItemListMenu, IHavenShop

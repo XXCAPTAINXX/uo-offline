@@ -42,7 +42,7 @@ public sealed class HavenWalletGump : Gump
         var from = sender.Mobile;
         if (info.ButtonID == 0 || _wallet.Deleted || from.Backpack == null || !_wallet.IsChildOf(from.Backpack)) { return; }
         if (info.ButtonID == 3) { from.SendGump(new HavenListGump(_wallet, new HavenAstralRewards.Menu(_wallet))); return; }
-        if (info.ButtonID == 4) { from.SendGump(new HavenListGump(_wallet, new SpecialRewardStone.RewardMenu())); return; }
+        if (info.ButtonID == 4) { HavenMarkRewards.DisplayTo(from, _wallet); return; }
         if (info.ButtonID == 1) { _wallet.DepositBackpackGold(from); _wallet.DepositBackpackMarks(from); }
         else if (info.ButtonID is 2 or 5 or 6)
         {

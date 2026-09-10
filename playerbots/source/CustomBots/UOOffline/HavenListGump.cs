@@ -17,7 +17,7 @@ public sealed class HavenListGump : Gump
 
     public HavenListGump(Item anchor, ItemListMenu menu, int page = 0, bool reopen = true) : base(30, 30)
     {
-        _pageSize = menu is IHavenShop ? 4 : 12;
+        _pageSize = menu is HavenMarkRewards.Menu markMenu ? markMenu.PageSize : menu is IHavenShop ? 4 : 12;
         _anchor = anchor;
         _menu = menu;
         _page = Math.Clamp(page, 0, Math.Max(0, (menu.Entries.Length - 1) / _pageSize));
@@ -39,7 +39,7 @@ public sealed class HavenListGump : Gump
             }
             string tooltip = null;
             string summary = null;
-            var y = 112 + row * (menu is IHavenShop ? 66 : 23);
+            var y = 112 + row * (menu is HavenMarkRewards.Menu markRows ? markRows.RowHeight : menu is IHavenShop ? 66 : 23);
             AddButton(28, y + 5, 4005, 4007, index + 1);
             if (menu is IHavenShop shop)
             {
@@ -48,8 +48,10 @@ public sealed class HavenListGump : Gump
                 {
                     tooltip = HavenItemPreviewGump.Tooltip(item);
                     summary = HavenItemPreviewGump.ShortStats(item);
+                    if (menu is HavenMarkRewards.Menu marks)
+                    { tooltip = HavenMarkRewards.Find(marks.Category,index).Description + "; " + tooltip; }
                     AddTooltip(1042971, tooltip);
-                    AddItem(65, y, item.ItemID, item.Hue);
+                    AddItem(item is HavenBeastkeepersDoublet ? 55 : 65, y, item.ItemID, item.Hue);
                     AddTooltip(1042971, tooltip);
                 }
                 finally { item.Delete(); }
@@ -74,6 +76,7 @@ public sealed class HavenListGump : Gump
         AddButton(390, 420, 4005, 4007, 0);
         AddLabel(428, 422, 0, "Close");
         if (menu is HavenTrainingStone.Menu) { AddButton(28, 420, 4014, 4016, 10004); AddLabel(66, 422, 0, "Categories"); }
+        if (menu is HavenMarkRewards.Menu) { AddButton(28, 420, 4014, 4016, 10004); AddLabel(66, 422, 0, "Categories"); }
         if (anchor is StarterSupplyStone)
         {
             AddButton(28, 420, 4005, 4007, 10003);
@@ -94,6 +97,7 @@ public sealed class HavenListGump : Gump
             return;
         }
         if (info.ButtonID == 10004 && _anchor is HavenTrainingStone training) { training.OnDoubleClick(from); return; }
+        if (info.ButtonID == 10004 && _menu is HavenMarkRewards.Menu) { HavenMarkRewards.DisplayTo(from, _anchor); return; }
         if (info.ButtonID is 10001 or 10002)
         {
             from.SendGump(new HavenListGump(_anchor, _menu, _page + (info.ButtonID == 10001 ? -1 : 1), _reopen));
@@ -112,6 +116,8 @@ public sealed class HavenListGump : Gump
         }
         if (_menu is IHavenShop)
         {
+            if (_menu is HavenMarkRewards.Menu marks)
+            { from.SendGump(new HavenMarkRewardPreview(_anchor, marks, index, _page, from)); return; }
             from.SendGump(new HavenItemPreviewGump(_anchor, _menu, index, _page));
             return;
         }
