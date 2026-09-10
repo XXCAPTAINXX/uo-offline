@@ -1,5 +1,11 @@
 # Corsair settlement rebuild
 
+## Visual revision in progress
+
+The owner rejected the open-sided sheds and isolated ivy as unfinished-looking. The next pass begins with one enclosed harbor storehouse, before repeating its style elsewhere. `tools/plan-corsair-storehouse.py OUTPUT.json` authors the review sample: four perimeter walls with a two-tile loading doorway, windows, a continuous pitched roof with gable infill, rear cargo stacks, a shipping desk and a net-mending bench. The eastern doorway meets the existing pier path; the centre stays clear.
+
+This sample is **not yet installed** and does not run at server startup. It is being shown for visual review before a property-preserving world migration. Its native-art placement manifest contains no client artwork. The deployed design described below remains in place until that migration is tested.
+
 The first decoration pass scattered furniture and foliage and silently omitted blocked paving tiles. This revision replaces that outdoor pass with a connected settlement:
 
 - Pier → arrival square and covered patrol board → main street → house entrance.
