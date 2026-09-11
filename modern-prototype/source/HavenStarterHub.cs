@@ -93,11 +93,11 @@ namespace Server.HavenPrototype
         public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); Service=reader.ReadInt(); }
     }
     public class HavenPlazaPlanter:Item {
-        public HavenServiceStone Stone{get;private set;}
-        public HavenPlazaPlanter(HavenServiceStone stone):base(0x11CA){Stone=stone;Name="Haven plaza flowers";Movable=false;}
+        public Item Stone{get;private set;}
+        public HavenPlazaPlanter(Item stone):base(0x11CA){Stone=stone;Name="Haven plaza flowers";Movable=false;}
         public HavenPlazaPlanter(Serial serial):base(serial){}
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Stone);}
-        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Stone=r.ReadItem() as HavenServiceStone;}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Stone=r.ReadItem();}
     }
     public class HavenServicePost : Item {
         public HavenServiceStone Board {get;private set;}

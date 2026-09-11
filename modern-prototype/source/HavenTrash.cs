@@ -29,6 +29,7 @@ namespace Server.HavenPrototype {
  public static class HavenTrash {
   public static void Initialize(){CommandSystem.Register("trashbag",AccessLevel.Player,e=>Claim(e.Mobile));EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};}
   public static bool Claim(Mobile p){if(!HavenPreview.Enabled||p==null||!p.Alive||p.Backpack==null)return false;if(p.Backpack.FindItemsByType(typeof(HavenTrashBag),true).Any()){p.SendMessage("You already have a trash bag in your pack.");return false;}var bag=new HavenTrashBag();if(!p.Backpack.TryDropItem(p,bag,false)){bag.Delete();return false;}p.SendMessage("Trash bag added. Contents empty three minutes after the last deposit.");return true;}
-  public static void Ensure(){if(!HavenPreview.Enabled||World.Items.Values.OfType<HavenPublicTrashChest>().Any(x=>!x.Deleted&&x.Map==Map.Trammel))return;Point3D location;var site=new HavenPreview.Destination("Public trash",Map.Trammel,3502,2570,Map.Trammel.GetAverageZ(3502,2570));if(HavenPreview.FindLanding(site,out location))new HavenPublicTrashChest().MoveToWorld(location,Map.Trammel);}
+  public static void Ensure(){if(!HavenPreview.Enabled)return;var chest=World.Items.Values.OfType<HavenPublicTrashChest>().FirstOrDefault(x=>!x.Deleted&&x.Map==Map.Trammel);if(chest!=null&&chest.Hue==0x48F)return;Point3D location;var site=new HavenPreview.Destination("Public trash",Map.Trammel,3509,2586,Map.Trammel.GetAverageZ(3509,2586));if(!HavenPreview.FindLanding(site,out location))return;if(chest==null)chest=new HavenPublicTrashChest();chest.Hue=0x48F;chest.Name="PUBLIC TRASH - empties after 3 minutes";chest.MoveToWorld(location,Map.Trammel);}
+
  }
 }

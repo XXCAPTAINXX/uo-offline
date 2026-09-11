@@ -8,11 +8,11 @@ using Server.Network;
 namespace Server.HavenPrototype {
     public static class HavenRecovery {
         public static void Initialize(){CommandSystem.Register("ohshit",AccessLevel.Player,e=>TravelToHealer(e.Mobile));CommandSystem.Register("healer",AccessLevel.Player,e=>TravelToHealer(e.Mobile));CommandSystem.Register("recovery",AccessLevel.Player,e=>{if(HavenPreview.Enabled)e.Mobile.SendGump(new HavenRecoveryGump());});EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};}
-        public static void Ensure(){if(!HavenPreview.Enabled)return;Place<HavenPlazaHealer>(3506,2573,()=>new HavenPlazaHealer());Place<HavenRecoverySteward>(3508,2576,()=>new HavenRecoverySteward());}
+        public static void Ensure(){if(!HavenPreview.Enabled)return;Place<HavenPlazaHealer>(3498,2571,()=>new HavenPlazaHealer());Place<HavenRecoverySteward>(3500,2570,()=>new HavenRecoverySteward());}
         private static void Place<T>(int x,int y,Func<BaseCreature> create) where T:BaseCreature {
-            if(World.Mobiles.Values.OfType<T>().Any(m=>!m.Deleted))return;
+            var existing=World.Mobiles.Values.OfType<T>().FirstOrDefault(m=>!m.Deleted);if(existing!=null&&existing.Map==Map.Trammel&&Math.Abs(existing.Home.X-x)<=3&&Math.Abs(existing.Home.Y-y)<=3)return;
             Point3D p;if(!HavenPreview.FindLanding(new HavenPreview.Destination("Recovery",Map.Trammel,x,y,Map.Trammel.GetAverageZ(x,y)),out p))return;
-            var npc=create();npc.Home=p;npc.RangeHome=0;npc.MoveToWorld(p,Map.Trammel);
+            var npc=existing??create();npc.Home=p;npc.RangeHome=0;npc.MoveToWorld(p,Map.Trammel);
         }
         public static bool TravelToHealer(Mobile p){
             if(!HavenPreview.Enabled||p==null||!p.Player||p.Deleted||p.Account==null||p.Map==Map.Internal||p.Criminal||(p.Alive&&!HavenPreview.CanTravel(p))){if(p!=null)p.SendMessage("Healer travel unavailable: leave combat and clear criminal status.");return false;}
