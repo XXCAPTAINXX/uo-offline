@@ -142,3 +142,7 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Recall now explicitly activates AI and resets movement delay after setting Follow, addressing mission internalization/AI sleep. Ledger double-click was intercepted as snooping on another mobile before item handler: own nearby companion now exempts owner from IsSnoop; pack/range/ownership/trapped-container checks remain.
 - User rates Haven hub2/10: scattered identical stones. Accepted baseline, not polished presentation. Priorities after this bundle: Marks/reward exchange with item previews, mini champion progression; replace scattered-stone presentation with organized signed service stations. Original server remains unchanged.
 - MissionUX112checks passed fresh/reload; live build zero warnings/errors. Backup E:/Backups/Haven/Prototypes/servuo-before-mission-ui-20260911. UI still needs player visual verification; no claim of live click-through testing.
+
+## Compact mission panel refinement
+- User screenshot showed ornate300x120 panel too large. Reduced to220x64 (61% less area), removed repeated companion name, replaced ornate frame with simple inset panel and light text. Mission/countdown plus Open; Recall appears when complete. Countdown/mission behavior unchanged. Compile check only for this presentation change.
+- Player explicitly confirmed ledger access fixed. Small timer backup: E:/Backups/Haven/Prototypes/servuo-before-small-timer-20260911.

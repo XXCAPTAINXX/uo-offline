@@ -16,11 +16,10 @@ namespace Server.HavenPrototype
         public CompanionMissionTimerGump(HavenCompanion companion,Mobile owner):base(35,35)
         {
             _companion=companion;
-            AddBackground(0,0,300,120,0xA28);
-            AddLabel(16,12,0,companion.Name);
-            AddLabel(16,39,0,Remaining(companion));
-            AddButton(16,77,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(50,77,0,"Open");
-            if(!companion.OnMission) {AddButton(140,77,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(174,77,0,"Recall");}
+            AddBackground(0,0,220,64,0x13BE);
+            AddLabel(12,8,1152,Remaining(companion));
+            AddButton(12,35,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(46,35,1152,"Open");
+            if(!companion.OnMission) {AddButton(112,35,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(146,35,1152,"Recall");}
             // One refresh only while this exact panel remains open. Closing/expanding stops updates.
             if(companion.OnMission && owner.NetState!=null) Timer.DelayCall(TimeSpan.FromSeconds(1),()=> {
                 if(!companion.IsOwner(owner) || owner.NetState==null || !owner.NetState.Gumps.Contains(this)) return;
