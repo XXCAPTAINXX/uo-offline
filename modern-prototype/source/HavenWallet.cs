@@ -28,8 +28,23 @@ namespace Server.HavenPrototype {
  }
  public class HavenWalletGump:Gump {
   private readonly HavenWallet _wallet;
-  public HavenWalletGump(HavenWallet w,Mobile p):base(50,50){_wallet=w;AddBackground(0,0,540,380,0x13BE);AddLabel(20,18,1152,"Adventurer's wallet");AddLabel(20,55,1152,"Wallet gold: "+w.Balance.ToString("N0")+"    Haven Marks: "+HavenMarks.Balance(p));AddLabel(20,82,1152,"Chivalry tithing points: "+p.TithingPoints.ToString("N0")+" / 100,000");AddLabel(20,125,1152,"Amount:");AddBackground(110,120,145,30,0xA28);AddTextEntry(118,124,125,22,0,1,"1000");Button(20,173,1,"Deposit pack gold / checks");Button(20,212,2,"Withdraw gold");Button(280,212,3,"Tithe gold (1:1)");Button(20,251,4,"Wallet to bank");Button(280,251,5,"Bank to wallet");AddHtml(20,295,490,45,"<BASEFONT COLOR=#FFFFFF>Transfers and coin withdrawals: 1-60,000. Tithing charges only the points added. Keep this wallet in your pack.</BASEFONT>",false,false);Button(420,344,0,"Close");}
-  private void Button(int x,int y,int id,string text){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,1152,text);}
+  public HavenWalletGump(HavenWallet w,Mobile p):base(50,50){
+   _wallet=w; AddBackground(0,0,460,366,0x13BE); AddImageTiled(12,12,436,342,2624);
+   Text(24,22,400,24,"<B>ADVENTURER'S WALLET</B>");
+   Text(24,56,260,22,"Gold: "+w.Balance.ToString("N0"));
+   Text(295,56,140,22,"Marks: "+HavenMarks.Balance(p).ToString("N0"));
+   Text(24,82,410,22,"Tithing: "+p.TithingPoints.ToString("N0")+" / 100,000");
+   Button(24,116,1,"Deposit all pack gold / checks",360);
+   Text(24,158,85,22,"Amount"); AddBackground(110,151,145,32,0xBB8); AddTextEntry(119,157,127,22,0,1,"1000");
+   Text(269,158,165,22,"Gold per action");
+   Button(24,201,2,"Withdraw to pack",180); Button(242,201,3,"Tithe gold",170);
+   Button(24,236,4,"Wallet to bank",180); Button(242,236,5,"Bank to wallet",170);
+   Text(24,277,410,42,"Transfers: 1-60,000 gold. Tithing: 1 gold per point.<BR>Only the points added are charged.");
+   Button(340,325,0,"Close",70);
+  }
+  private void Text(int x,int y,int width,int height,string text){AddHtml(x,y,width,height,"<BASEFONT COLOR=#F2F2F2>"+text+"</BASEFONT>",false,false);}
+  private void Button(int x,int y,int id,string text,int width){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+34,y+1,width,24,text);}
   public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0||!_wallet.CanUse(p))return;if(info.ButtonID==1)p.SendMessage("Deposited "+_wallet.DepositPack(p)+" gold.");else{int amount;var entry=info.GetTextEntry(1);bool ok=entry!=null&&int.TryParse(entry.Text,out amount);if(!ok){p.SendMessage("Enter a positive whole number.");return;}int.TryParse(entry.Text,out amount);ok=info.ButtonID==2?_wallet.Withdraw(p,amount):info.ButtonID==3?_wallet.Tithe(p,amount):info.ButtonID==4?_wallet.BankDeposit(p,amount):info.ButtonID==5&&_wallet.BankWithdraw(p,amount);p.SendMessage(ok?"Done.":"Could not complete: check amount, funds and backpack capacity.");}p.SendGump(new HavenWalletGump(_wallet,p));}
  }
 }
+
