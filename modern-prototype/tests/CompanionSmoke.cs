@@ -57,6 +57,7 @@ public static class CompanionSmoke
         StarterHomeSmoke.Run(Check, reload);
         MissionRecallSmoke.Run(Check, reload);
         HavenMarksSmoke.Run(Check, reload);
+        PlayerCapsSmoke.Run(Check, reload);
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");

@@ -1,0 +1,148 @@
+--- a/Scripts/Misc/SkillCheck.cs
++++ b/Scripts/Misc/SkillCheck.cs
+@@ -220,7 +220,7 @@
+ 
+         private static double GetGainChance(Mobile from, Skill skill, double gains, double chance)
+         {
+-            var gc = (double)(from.Skills.Cap - (from.Skills.Total + (gains * 10))) / from.Skills.Cap;
++            var gc = (double)(from.Skills.Cap - (Server.HavenPrototype.HavenPlayerCaps.Counted(from.Skills) + (gains * 10))) / from.Skills.Cap;
+ 
+             gc += (skill.Cap - (skill.Base + (gains * 10))) / skill.Cap;
+             gc /= 4;
+@@ -260,7 +260,7 @@
+ 
+         private static double GetGainChance(Mobile from, Skill skill, double chance, bool success)
+         {
+-            var gc = (double)(from.Skills.Cap - from.Skills.Total) / from.Skills.Cap;
++            var gc = (double)(from.Skills.Cap - Server.HavenPrototype.HavenPlayerCaps.Counted(from.Skills)) / from.Skills.Cap;
+ 
+             gc += (skill.Cap - skill.Base) / skill.Cap;
+             gc /= 2;
+@@ -387,7 +387,7 @@
+ 						{
+ 							CheckReduceSkill(skills, toGain, skill);
+ 
+-							if (skills.Total + toGain <= skills.Cap)
++							if (Server.HavenPrototype.HavenPlayerCaps.IsFree(from,skill) || Server.HavenPrototype.HavenPlayerCaps.Counted(skills) + toGain <= skills.Cap)
+ 							{
+ 								skill.BaseFixedPoint += toGain;
+ 							}
+@@ -441,7 +441,7 @@
+ 					CheckReduceSkill(skills, toGain, skill);
+ 				}
+ 
+-				if (!from.Player || (skills.Total + toGain <= skills.Cap))
++				if (!from.Player || (Server.HavenPrototype.HavenPlayerCaps.IsFree(from,skill) || Server.HavenPrototype.HavenPlayerCaps.Counted(skills) + toGain <= skills.Cap))
+ 				{
+ 					skill.BaseFixedPoint = Math.Min(skill.CapFixedPoint, skill.BaseFixedPoint + toGain);
+ 
+@@ -483,11 +483,12 @@
+ 
+ 		private static void CheckReduceSkill(Skills skills, int toGain, Skill gainSKill)
+ 		{
+-			if (skills.Total / skills.Cap >= Utility.RandomDouble())
++            if (Server.HavenPrototype.HavenPlayerCaps.IsFree(skills.Owner,gainSKill)) return;
++			if (Server.HavenPrototype.HavenPlayerCaps.Counted(skills) / skills.Cap >= Utility.RandomDouble())
+ 			{
+ 				foreach (var toLower in skills)
+ 				{
+-					if (toLower != gainSKill && toLower.Lock == SkillLock.Down && toLower.BaseFixedPoint >= toGain)
++					if (!Server.HavenPrototype.HavenPlayerCaps.IsFree(skills.Owner,toLower) && toLower != gainSKill && toLower.Lock == SkillLock.Down && toLower.BaseFixedPoint >= toGain)
+ 					{
+ 						toLower.BaseFixedPoint -= toGain;
+ 						break;
+@@ -790,7 +791,7 @@
+ 				return;
+ 
+ 			var list = (int)Math.Min(GGSTable.Length - 1, skill.Base / 5);
+-			var column = from.Skills.Total >= 7000 ? 2 : from.Skills.Total >= 3500 ? 1 : 0;
++			var column = Server.HavenPrototype.HavenPlayerCaps.Counted(from.Skills) >= 7000 ? 2 : Server.HavenPrototype.HavenPlayerCaps.Counted(from.Skills) >= 3500 ? 1 : 0;
+ 
+ 			skill.NextGGSGain = DateTime.UtcNow + TimeSpan.FromMinutes(GGSTable[list][column]);
+ 		}
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -4325,7 +4325,7 @@
+                 return TeachResult.SkillNotRaisable;
+             }
+ 
+-            int freePoints = m.Skills.Cap - m.Skills.Total;
++            int freePoints = Server.HavenPrototype.HavenPlayerCaps.IsFree(m,theirSkill) ? pointsToLearn : m.Skills.Cap - Server.HavenPrototype.HavenPlayerCaps.Counted(m.Skills);
+             int freeablePoints = 0;
+ 
+             if (freePoints < 0)
+@@ -4337,7 +4337,7 @@
+             {
+                 Skill sk = m.Skills[i];
+ 
+-                if (sk == theirSkill || sk.Lock != SkillLock.Down)
++                if (sk == theirSkill || Server.HavenPrototype.HavenPlayerCaps.IsFree(m,sk) || sk.Lock != SkillLock.Down)
+                 {
+                     continue;
+                 }
+@@ -4364,7 +4364,7 @@
+                 {
+                     Skill sk = m.Skills[i];
+ 
+-                    if (sk == theirSkill || sk.Lock != SkillLock.Down)
++                    if (sk == theirSkill || Server.HavenPrototype.HavenPlayerCaps.IsFree(m,sk) || sk.Lock != SkillLock.Down)
+                     {
+                         continue;
+                     }
+@@ -4382,7 +4382,7 @@
+                 }
+ 
+                 /* Sanity check */
+-                if (baseToSet > theirSkill.CapFixedPoint || (m.Skills.Total - theirSkill.BaseFixedPoint + baseToSet) > m.Skills.Cap)
++                if (baseToSet > theirSkill.CapFixedPoint || (!Server.HavenPrototype.HavenPlayerCaps.IsFree(m,theirSkill) && (Server.HavenPrototype.HavenPlayerCaps.Counted(m.Skills) - theirSkill.BaseFixedPoint + baseToSet) > m.Skills.Cap))
+                 {
+                     // Full refund
+                     m.Backpack.TryDropItem(m, new Gold(maxPointsToLearn), false);
+--- a/Scripts/Items/Consumables/ScrollofTranscendence.cs
++++ b/Scripts/Items/Consumables/ScrollofTranscendence.cs
+@@ -119,14 +119,14 @@
+ 
+             if (tskill < tcap && from.Skills[Skill].Lock == SkillLock.Up)
+             {
+-                if ((from.SkillsTotal + newValue * 10) > from.SkillsCap)
++                if (!Server.HavenPrototype.HavenPlayerCaps.IsFree(from,from.Skills[Skill]) && (Server.HavenPrototype.HavenPlayerCaps.Counted(from.Skills) + newValue * 10) > from.SkillsCap)
+                 {
+                     int ns = from.Skills.Length; // number of items in from.Skills[]
+ 
+                     for (int i = 0; i < ns; i++)
+                     {
+                         // skill must point down and its value must be enough
+-                        if (from.Skills[i].Lock == SkillLock.Down && from.Skills[i].Base >= newValue)
++                        if (!Server.HavenPrototype.HavenPlayerCaps.IsFree(from,from.Skills[i]) && from.Skills[i].Lock == SkillLock.Down && from.Skills[i].Base >= newValue)
+                         {
+                             from.Skills[i].Base -= newValue;
+                             canGain = true;
+--- a/Scripts/Items/Consumables/SoulStone.cs
++++ b/Scripts/Items/Consumables/SoulStone.cs
+@@ -607,7 +607,7 @@
+                 * 11.6 free points. Also, if we're below our skillcap by, say, 8.2 points,
+                 * we only need 11.6 - 8.2 = 3.4 points.
+                 */
+-                int requiredAmount = (int)(skillValue * 10) - fromSkill.BaseFixedPoint - (from.SkillsCap - from.SkillsTotal);
++                int requiredAmount = Server.HavenPrototype.HavenPlayerCaps.IsFree(from,fromSkill) ? 0 : (int)(skillValue * 10) - fromSkill.BaseFixedPoint - (from.SkillsCap - Server.HavenPrototype.HavenPlayerCaps.Counted(from.Skills));
+ 
+                 bool cannotAbsorb = false;
+ 
+@@ -621,7 +621,7 @@
+ 
+                     for (int i = 0; i < from.Skills.Length; ++i)
+                     {
+-                        if (from.Skills[i].Lock != SkillLock.Down)
++                        if (Server.HavenPrototype.HavenPlayerCaps.IsFree(from,from.Skills[i]) || from.Skills[i].Lock != SkillLock.Down)
+                             continue;
+ 
+                         available += from.Skills[i].BaseFixedPoint;
+@@ -684,7 +684,7 @@
+                 {
+                     for (int i = 0; i < from.Skills.Length; ++i)
+                     {
+-                        if (from.Skills[i].Lock != SkillLock.Down)
++                        if (Server.HavenPrototype.HavenPlayerCaps.IsFree(from,from.Skills[i]) || from.Skills[i].Lock != SkillLock.Down)
+                             continue;
+ 
+                         if (requiredAmount >= from.Skills[i].BaseFixedPoint)

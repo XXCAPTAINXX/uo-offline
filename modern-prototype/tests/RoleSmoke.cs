@@ -23,7 +23,7 @@ public static class RoleSmoke
         var movementLock = XmlAttach.FindAttachment(_companion,typeof(XmlData),"NoSpecials");
         if (movementLock != null) movementLock.Delete();
         _companion.MoveToWorld(_owner.Location,_owner.Map);
-        _companion.SetOrder(_owner,OrderType.Stay);
+        Require(_companion.SetOrder(_owner,OrderType.Stay),"Stay command rejected during cleanup");
     }
     public static void Run(HavenCompanion companion,Mobile owner,Mobile stranger,Action<string,Action> check,Action next)
     {
@@ -61,7 +61,7 @@ public static class RoleSmoke
     {
         _check("native mage AI deals damage outside melee range",()=>Require(_enemy.Hits<_hits && !_companion.InRange(_enemy,1),"No ranged spell damage; hits="+_enemy.Hits+" distance="+_companion.GetDistanceToSqrt(_enemy)+" spell="+_companion.Spell));
         Clear();
-        _check("stay cancels queued casting and targets",()=>Require(_companion.Spell==null && _companion.Target==null,"Cast survived stop order"));
+        _check("stay cancels queued casting and targets",()=>Require(_companion.Spell==null && _companion.Target==null,"Cast survived stop order: spell="+_companion.Spell+" state="+(_companion.Spell==null?"null":((Server.Spells.Spell)_companion.Spell).State.ToString())+" target="+_companion.Target));
         Timer.DelayCall(TimeSpan.FromSeconds(3),StartArcher);
     }
     private static void StartArcher()
@@ -79,8 +79,7 @@ public static class RoleSmoke
             var items=_companion.Items.Concat(_companion.Backpack.Items).ToArray();
             Require(items.Count(x=>x is Longsword)==1 && items.Count(x=>x is MetalShield)==1 && items.Count(x=>x is Bow)==1,"Equipment duplicated");
         });
-        _companion.SetOrder(_owner,OrderType.Stay);
+        Require(_companion.SetOrder(_owner,OrderType.Stay),"Stay command rejected during cleanup");
         _next();
     }
 }
-

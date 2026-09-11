@@ -62,3 +62,5 @@ The `[haventest` checklist now spans three pages. Location-dependent service che
 Mission return update: completed missions return automatically when you are online and alive. **Recall now** brings him back early and cancels the unfinished run without its completion rewards. Manual Recall still requires being out of combat. Returned companions follow you.
 
 Use `[cc` for compact companion combat controls. Use `[havenmarks` to preview and buy six progression rewards. Completed missions earn2Marks per minute; a5minute mission earns10. Early recalls earn none. Rewards cost60-100Marks. Old-server Marks are not imported.
+
+Player progression: 300 combined stat cap, 1,200 counted skill points. Animal Taming, Animal Lore, Focus and Snooping do not count toward that total. Individual caps still use normal powerscrolls. Use [skillbudget to check your budget. Existing trained values are preserved.
