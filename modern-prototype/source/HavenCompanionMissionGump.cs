@@ -21,16 +21,16 @@ namespace Server.HavenPrototype
             var names=_tab==0?Gathering:_tab==1?HavenPetMissions.Names:Roles;
             _selection=Math.Max(0,Math.Min(names.Length-1,selection));int page=_selection/6;
             AddBackground(0,0,720,560,0xA28);
-            Text(24,20,660,28,"<B>"+companion.Name+" - "+(_tab==2?"combat role":"missions")+"</B>");
+            Text(24,20,660,28,""+companion.Name+" - "+(_tab==2?"combat role":"missions")+"");
             Text(24,52,664,25,companion.OnMission?"Away: "+MissionName(companion.MissionKind)+" | "+CompanionMissionTimerGump.Remaining(companion):"Ready | Combat role: "+companion.Role);
             Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
             Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
             Button(475,87,12,_tab==2?"[Combat role]":"Combat role",185);
-            Text(24,133,264,25,"<B>"+(_tab==2?"Choose a role":"1. Choose a mission")+"</B>");
+            Text(24,133,264,25,""+(_tab==2?"Choose a role":"1. Choose a mission")+"");
             for(int row=0;row<6&&page*6+row<names.Length;row++)
             {
                 int index=page*6+row,y=174+row*42;
-                Button(24,y,100+index,index==_selection?"<B>&gt; "+names[index]+"</B>":names[index],235,40);
+                Button(24,y,100+index,index==_selection?"Selected: "+names[index]+"":names[index],235,40);
             }
             if(names.Length>6)
             {
@@ -38,7 +38,7 @@ namespace Server.HavenPrototype
                 Text(115,435,95,25,"Page "+(page+1)+" / "+((names.Length+5)/6));
                 if((page+1)*6<names.Length)Button(212,435,31,"Next",58);
             }
-            Text(322,133,365,28,"<B>"+names[_selection]+"</B>");
+            Text(322,133,365,28,""+names[_selection]+"");
             if(_tab==2)
             {
                 string detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Magery and Spellweaving, Wraith Form and automatic Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first.<BR><BR>Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them.<BR><BR>Use Tame assist in Companion pets to calm and tame wild animals.";
@@ -48,12 +48,12 @@ namespace Server.HavenPrototype
             }
             else
             {
-                Text(322,175,365,24,"<B>2. Duration</B>");
+                Text(322,175,365,24,"2. Duration");
                 int[] durations={5,15,30,60};
-                for(int i=0;i<4;i++)Button(322+i*91,204,20+i,(_minutes==durations[i]?"<B>[":"")+durations[i]+"m"+(_minutes==durations[i]?"]</B>":""),53);
-                Text(322,242,365,24,"<B>Requirements</B>");
+                for(int i=0;i<4;i++)Button(322+i*91,204,20+i,(_minutes==durations[i]?"[":"")+durations[i]+"m"+(_minutes==durations[i]?"]":""),53);
+                Text(322,242,365,24,"Requirements");
                 Text(322,268,365,62,Requirement(companion,_tab,_selection));
-                Text(322,334,365,24,"<B>Rewards on completion</B>");
+                Text(322,334,365,24,"Rewards on completion");
                 Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes));
                 if(!companion.OnMission)Button(322,455,1,"Start "+_minutes+"-minute mission",320);
                 else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
