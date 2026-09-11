@@ -30,6 +30,19 @@ public static class MissionSafetySmoke
         Check(companion.MissionStartError(owner,20,CompanionMission.Mining).Contains("5, 15 or 30"),"invalid duration explains allowed options");
         companion.CriminalAction(false);Check(owner.Criminal,"actual companion crime still flags owner");
         var pet=new HavenEmberwing();HavenPetMissions.ApplyRarity(pet,3);int strength=pet.RawStr;HavenPetMissions.ApplyRarity(pet,3);Check(HavenPetRarity.Find(pet).Tier==3&&pet.RawStr==strength,"pet retains rarity identity and cannot stack rarity bonuses");pet.Delete();
+        foreach(var kind in new[]{6,8,9}){
+            var elemental=HavenPetMissions.Create(kind);var element=HavenPetDefenses.Element(elemental).Value;
+            Check(elemental.GetResistance(element)>=75,"common elemental defense "+kind);
+            HavenPetMissions.ApplyRarity(elemental,3);Check(elemental.GetResistance(element)==100,"legendary elemental resistance "+kind);
+            elemental.MoveToWorld(new Point3D(1015,527,-65),Map.Malas);
+            int fire=element==ResistanceType.Fire?100:0,cold=element==ResistanceType.Cold?100:0,energy=element==ResistanceType.Energy?100:0;
+            int health=elemental.Hits;AOS.Damage(elemental,null,50,0,fire,cold,0,energy);
+            Check(elemental.Hits==health,"pure matching damage fully blocked "+kind);
+            AOS.Damage(elemental,null,50,true,0,fire,cold,0,energy);
+            Check(elemental.Hits<health,"armor-ignore bypasses immunity "+kind);
+            Check(!HavenPetDefenses.FullyImmune(elemental,1,fire,cold,0,energy,0)&&!HavenPetDefenses.FullyImmune(elemental,0,fire,cold,0,energy,1),"mixed and direct damage not immune "+kind);
+            elemental.Delete();
+        }
         stranger.Delete();companion.Delete();owner.Delete();
         File.AppendAllText("mission-safety-checks.log","COMPLETE\n");Core.Kill(false);
     }catch(Exception e){File.AppendAllText("mission-safety-checks.log","FAIL "+e+"\n");Core.Kill(false);}}
