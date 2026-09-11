@@ -346,7 +346,9 @@ namespace Server.HavenPrototype
             _pendingGold += gold;
             _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
             DeliverRewards();
-            if (_owner != null && _owner.NetState != null) { _owner.SendMessage(_lastReport); _owner.SendMessage("Use [c and Recall to bring your companion back."); }
+            _missionReturnPending = true;
+            if (_owner != null && _owner.NetState != null) _owner.SendMessage(_lastReport);
+            CheckMissionReturn();
         }
         public void DeliverRewards()
         {
@@ -371,20 +373,35 @@ namespace Server.HavenPrototype
 
         public bool Recall(Mobile from)
         {
-            if (!IsOwner(from) || !from.Alive || !Alive || IsDeadPet || IsStabled || OnMission || from.Map == null || from.Map == Map.Internal ||
+            if (!IsOwner(from) || !from.Alive || !Alive || IsDeadPet || IsStabled || from.Map == null || from.Map == Map.Internal ||
                 from.Combatant != null || Combatant != null || from.Aggressors.Count > 0 || from.Aggressed.Count > 0 || Aggressors.Count > 0 || Aggressed.Count > 0) return false;
             if (!Controlled && !SetControlMaster(from)) return false;
             if (ControlMaster != from) return false;
+            if (OnMission)
+            {
+                if (DateTime.UtcNow >= _missionDue) CompleteDueMission();
+                else
+                {
+                    if (_missionTimer != null) _missionTimer.Stop();
+                    _missionTimer = null;
+                    _missionDue = DateTime.MinValue;
+                    _scheduledResources.Clear();
+                    _lastReport = _missionKind + " mission recalled early. No completion rewards or mission training were awarded.";
+                    from.SendMessage(_lastReport);
+                }
+            }
             MoveToWorld(from.Location, from.Map);
             DeliverRewards();
             if (!SetOrder(from, OrderType.Follow)) return false;
             AIObject.NextMove = Core.TickCount;
             AIObject.Activate();
+            ClearMissionReturn();
             return true;
         }
 
         public override void OnAfterDelete()
         {
+            ClearMissionReturn();
             if (_missionTimer != null) _missionTimer.Stop();
             _missionTimer = null;
             base.OnAfterDelete();
@@ -393,11 +410,12 @@ namespace Server.HavenPrototype
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(2);
+            writer.Write(3);
             writer.Write(_owner); writer.Write(_missionDue); writer.Write(_missionMinutes);
             writer.Write(_pendingGold); writer.Write(_completedMissions); writer.Write(_lastReport);
             writer.Write((int)_role); writer.Write(_roleSword); writer.Write(_roleShield); writer.Write(_roleBow);
             SerializeResourceMissions(writer);
+            writer.Write(_missionReturnPending);
         }
         public override void Deserialize(GenericReader reader)
         {
@@ -409,8 +427,11 @@ namespace Server.HavenPrototype
             else { _roleSword = FindItemOnLayer(Layer.OneHanded); _roleShield = FindItemOnLayer(Layer.TwoHanded); }
             if (_role < CompanionRole.Warrior || _role > CompanionRole.Archer) _role = CompanionRole.Warrior;
             if (version >= 2) DeserializeResourceMissions(reader);
+            _missionReturnPending = version >= 3 ? reader.ReadBool() :
+                !OnMission && _completedMissions > 0 && Map == Map.Internal && !IsStabled;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             ScheduleMission();
+            if (_missionReturnPending) ScheduleMissionReturn();
         }
 
         private sealed class CompanionHealSpell : GreaterHealSpell

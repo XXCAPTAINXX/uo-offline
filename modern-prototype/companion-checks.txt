@@ -54,6 +54,13 @@ PASS lodge doors open for owner and reject strangers including after legacy repa
 PASS pirate lodge shares ownership with account but rejects strangers
 PASS home arrival and secured cargo work without changing progression
 PASS native spiral staircase provides both floor destinations
+PASS early recall cancels Supply without rewards and restores Follow
+PASS early recall cancels Mining without rewards and restores Follow
+PASS early recall cancels Lumber without rewards and restores Follow
+PASS early recall cancels Leather without rewards and restores Follow
+PASS early recall cancels Malas without rewards and restores Follow
+PASS early recall cancels Abyss without rewards and restores Follow
+PASS automatic placement returns completed mission once
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -103,6 +110,7 @@ PASS Haven service stones are complete and setup is idempotent
 PASS starter supply claim persists without replay
 PASS player checklist status survives reload
 PASS pirate lodge owner secure storage and cargo survive reload
+PASS cancelled mission remains cancelled after reload
 PASS owner and companion references persist
 PASS role and native AI persist
 PASS overdue mission completes while owner is offline

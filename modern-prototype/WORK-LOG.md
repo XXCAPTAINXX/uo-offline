@@ -146,3 +146,10 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 ## Compact mission panel refinement
 - User screenshot showed ornate300x120 panel too large. Reduced to220x64 (61% less area), removed repeated companion name, replaced ornate frame with simple inset panel and light text. Mission/countdown plus Open; Recall appears when complete. Countdown/mission behavior unchanged. Compile check only for this presentation change.
 - Player explicitly confirmed ledger access fixed. Small timer backup: E:/Backups/Haven/Prototypes/servuo-before-small-timer-20260911.
+
+## Automatic and early mission return
+- Coordinated with other existing task editing automatic return; it handed off stable source,8dedicated passing checks, no live deployment/commit. Preserved its HavenCompanionMissionReturn.cs and v3 pending-return persistence/migration. Combined deployment owned here.
+- Completion now automatically returns to online owner's current facet/location in Follow. Offline/dead-owner waits retry; v2 completed missions stranded Internal are recovered. No repeat payout. Manual Recall keeps existing alive/combat/stable restrictions.
+- User clarified Recall should work while timer is running: Recall now appears on compact timer; manual Recall cancels unfinished run, clears timer/scheduled resources, awards no completion gold/resources/training and restores Follow. A run already due completes normally. Prior earned pending rewards remain intact.
+- Added cancellation checks for all6mission types, stranger denial, no delayed payout, placement once and cancelled-state reload. Combined suite HavenServUOEarlyReturn2 (first test harness build had local-variable naming collision, corrected).
+- Combined120checks PASS fresh/reload, plus other task8dedicated automatic-return checks. Backup E:/Backups/Haven/Prototypes/servuo-before-mission-return-20260911. This deployment supersedes the earlier manual-only mission return behavior.

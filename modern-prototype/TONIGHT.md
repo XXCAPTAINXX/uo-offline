@@ -58,3 +58,5 @@ Use `[home` and confirm the free lodge claim on your chosen character. Later `[h
 
 The `[haventest` checklist now spans three pages. Location-dependent service checks have **Go to Haven**, and every page has **Return to Haven**. These use the existing safe travel rules and carry nearby eligible pets. Travel and page changes preserve your draft note and never change your result. Dungeon travel starts at the Haven travel stone so you can test that service itself; choose your destination there.
 - Missions now open a compact countdown with Open; expanded companion menu has Minimize. When ready, Recall from timer. His ledger can be used directly in his nearby pack. Please confirm actual following after Recall and timer readability.
+
+Mission return update: completed missions return automatically when you are online and alive. **Recall now** brings him back early and cancels the unfinished run without its completion rewards. Manual Recall still requires being out of combat. Returned companions follow you.
