@@ -46,6 +46,10 @@ PASS full pack preserves unclaimed starter supplies
 PASS normal starter supplies preserve skills and stats and cannot duplicate
 PASS arcane kit preserves progression and repair restores durability only
 PASS player checklist records valid results and rejects invalid indexes
+PASS pirate lodge uses a safe native plot and claim cannot duplicate
+PASS pirate lodge shares ownership with account but rejects strangers
+PASS home arrival and secured cargo work without changing progression
+PASS native spiral staircase provides both floor destinations
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -94,6 +98,7 @@ PASS Britannian ship preserves owner and native hold cargo after reload
 PASS Haven service stones are complete and setup is idempotent
 PASS starter supply claim persists without replay
 PASS player checklist status survives reload
+PASS pirate lodge owner secure storage and cargo survive reload
 PASS owner and companion references persist
 PASS role and native AI persist
 PASS overdue mission completes while owner is offline

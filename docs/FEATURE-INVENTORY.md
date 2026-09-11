@@ -155,3 +155,5 @@ The companion/control/resource suite passed **103 checks** on fresh and reloaded
 - Any requested feature absent from the implemented inventory above should not be assumed complete merely because it appeared in the conversation.
 
 For detailed original behavior, use [PLAYER-GUIDE.md](PLAYER-GUIDE.md), [IMPLEMENTATION-TRACKER.md](IMPLEMENTATION-TRACKER.md), and the linked feature documents. For tonight, use [the modern preview instructions](../modern-prototype/TONIGHT.md).
+
+Modern preview housing addition: [home claims/returns to a new 18x18 lodge with four secure chests, workshop and upstairs quarters. Original island/autosorting remain separate. 108 automated checks passed including housing persistence.

@@ -52,3 +52,6 @@ For any problem, note which server you were using, your location, the command/bu
 The old island/house, wallet, custom pets, gear progression, guild bots, market and full AFK systems have not been migrated. Alden's bard masteries, Spellweaving rotations, dungeon assistance and resurrection are also not in this milestone. The original server retains those existing systems. Check the README for subsequent additions before testing.
 
 For a friend's independent installation, use the repository's `modern-prototype/Build-Prototype.ps1 -PopulateWorld` instructions with their own modern Classic client data. Do not share this PC's client settings, accounts or saves.
+
+## Claim your starter home
+Use `[home` and confirm the free lodge claim on your chosen character. Later `[home` returns you there outside combat/travel restrictions. Four secure chests hold up to 1,000 items each. Characters on the same account share ownership. Try depositing and retrieving an item, then walking onto the spiral stairs to reach the upper quarters. This is a new 18x18 starter lodge on native land, not your old island or its automatic sorting system.

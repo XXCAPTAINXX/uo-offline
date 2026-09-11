@@ -84,3 +84,6 @@ Next gates:
 See [migration gates](MIGRATION.md) for required inventory, ownership, currency reconciliation and rollback checks. This plan does not imply a converter already exists.
 
 The current live Haven server and player saves have not been modified.
+
+## Starter housing
+`[home` offers an explicit free native 18x18 pirate lodge claim, with four owner-secure 1,000-item chests, workshop and upstairs quarters. Native placement, account ownership and automatic spiral staircase behavior are used. The final suite passes 108 checks including house save/reload. Independent design review reached 8/10; client walking remains a player test. The original island is not imported.

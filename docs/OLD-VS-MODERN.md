@@ -181,3 +181,5 @@ These areas still have manual gameplay/multiplayer checks pending. The 94 automa
 
 This is an ordered backlog, not a commitment that each stage fits one session. For tonight's usable subset, see [the playtest checklist](../modern-prototype/TONIGHT.md).
 
+
+Latest housing addition: the modern preview now offers a new native 18x18 starter lodge via [home, four secure chests and native stairs. This does not migrate the original island or autosorting system. Final automated suite: 108 passed.
