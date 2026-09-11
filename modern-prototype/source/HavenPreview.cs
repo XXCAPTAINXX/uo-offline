@@ -50,6 +50,9 @@ namespace Server.HavenPrototype
             new Destination("Isamu-Jima",Map.Tokuno,1169,998,41),
             new Destination("Homare-Jima",Map.Tokuno,270,628,15),
             new Destination("Ilshenar Spirituality",Map.Ilshenar,1532,1340,-3),
+            new Destination("Frostbound bear den",Map.Tokuno,942,116,Map.Tokuno.GetAverageZ(942,116)),
+            new Destination("Ancient Hunt",Map.TerMur,527,758,-92),
+            new Destination("Chelonia sanctuary",Map.Trammel,4094,3475,0),
             HavenWardenPost.Arrival
         };
         public static void Initialize()

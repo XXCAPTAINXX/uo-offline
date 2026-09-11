@@ -1,0 +1,35 @@
+using System;
+using System.Linq;
+using Server;
+using Server.Items;
+using Server.Mobiles;
+using Server.Targeting;
+using Server.SkillHandlers;
+namespace Server.HavenPrototype
+{
+ public class HavenCompanionLute:Lute
+ {
+  public HavenCompanionLute(){Name="Companion's lute";Movable=false;LootType=LootType.Blessed;}
+  public HavenCompanionLute(Serial serial):base(serial){}
+  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
+ }
+ public partial class HavenCompanion
+ {
+  BaseCreature _tamingTarget;bool _calmingAnimal;DateTime _nextTamingPeace,_nextTamingAttempt,_nextBardCombat;
+  internal bool TamingAssistActive {get{return _tamingTarget!=null;}}
+  internal void EnsureBardTools(){if(Backpack==null)return;foreach(var name in new[]{SkillName.Musicianship,SkillName.Peacemaking,SkillName.Discordance,SkillName.Provocation})if(Skills[name].Base<75)Skills[name].Base=75;if(Backpack.FindItemByType(typeof(HavenCompanionLute),true)==null)Backpack.DropItem(new HavenCompanionLute());}
+  public static void InitializeTamingEvents(){EventSink.TameCreature+=e=>{var c=e.Mobile as HavenCompanion;var animal=e.Creature as BaseCreature;if(c!=null&&animal!=null)c.FinishAssistedTame(animal);};}
+  internal bool ContinuingAssistedTame(BaseCreature animal){return !Deleted&&!IsDeadPet&&Alive&&!OnMission&&_tamingTarget==animal&&BoundOwner!=null&&!BoundOwner.Deleted&&BoundOwner.Alive&&BoundOwner.Map==Map&&InRange(BoundOwner,18)&&Role==CompanionRole.Bard;}
+  internal bool StartTamingAssist(Mobile owner,BaseCreature animal){if(!CanCommand(owner)||Role!=CompanionRole.Bard||animal==null||animal.Deleted||!animal.Alive||!animal.Tamable||animal.Controlled||animal.Summoned||animal.BardImmune||animal.Map!=Map||!InRange(animal,12)||!InLOS(animal))return false;if(Skills.AnimalTaming.Value<animal.MinTameSkill||Skills.AnimalLore.Value<animal.MinTameSkill||Followers+animal.ControlSlots>FollowersMax){owner.SendMessage("I need higher Taming/Lore or more free follower slots.");return false;}EnsureBardTools();_tamingTarget=animal;_nextTamingPeace=_nextTamingAttempt=DateTime.UtcNow;Combatant=null;ControlTarget=owner;ControlOrder=OrderType.Follow;return true;}
+  internal void StopTamingAssist(){_tamingTarget=null;}
+  internal bool FinishAssistedTame(BaseCreature animal){if(!ContinuingAssistedTame(animal)||animal.ControlMaster!=this||Backpack==null)return false;var ticket=HavenPetTicket.Store(animal,BoundOwner,Backpack);if(ticket==null)Backpack.DropItem(new HavenCompanionAssignedPet{Companion=this,Owner=BoundOwner,Pet=animal,AutoMount=false});StopTamingAssist();ControlTarget=BoundOwner;ControlOrder=OrderType.Follow;BoundOwner.SendMessage(ticket==null?"Taming succeeded, but my pack is full. Reclaim the pet using Companion pets.":"Taming succeeded. The original animal's claim ticket is in my pack.");return true;}
+  internal void ThinkTamingAssist(){var animal=_tamingTarget;if(animal==null)return;if(!ContinuingAssistedTame(animal)||animal.Deleted||!animal.Alive||animal.Controlled||!animal.Tamable||animal.Map!=Map||!InRange(animal,18)){StopTamingAssist();return;}Combatant=null;ControlTarget=animal;ControlOrder=OrderType.Follow;if(animal.BardPacified){TryAssistedTaming();return;}if(DateTime.UtcNow<_nextTamingPeace||!InRange(animal,10)||!InLOS(animal))return;EnsureBardTools();var lute=Backpack.FindItemByType(typeof(HavenCompanionLute),true) as HavenCompanionLute;_nextTamingPeace=DateTime.UtcNow.AddSeconds(12);lute.UsesRemaining=100;_calmingAnimal=true;try{Peacemaking.OnPickedInstrument(this,lute);if(Target!=null)Target.Invoke(this,animal);if(animal.BardPacified)TryAssistedTaming();}finally{_calmingAnimal=false;}}
+  void TryAssistedTaming(){var animal=_tamingTarget;if(animal==null||!animal.BardPacified||DateTime.UtcNow<_nextTamingAttempt||!InRange(animal,3)||!InLOS(animal)||AnimalTaming.IsBeingTamed(animal))return;_nextTamingAttempt=DateTime.UtcNow.AddSeconds(10);AnimalTaming.OnUse(this);Timer.DelayCall(TimeSpan.Zero,()=>{if(ContinuingAssistedTame(animal)&&animal.BardPacified&&Target!=null)Target.Invoke(this,animal);});}
+  public void RequestTamingAssist(Mobile owner){if(!IsOwner(owner))return;if(TamingAssistActive){StopTamingAssist();owner.SendMessage("Taming assistance stopped.");return;}if(Role!=CompanionRole.Bard){owner.SendMessage("Choose the Bard role before using Tame assist.");return;}owner.Target=new AssistTarget(this);owner.SendMessage("Target a wild animal. I will peace it, tame it and return the actual animal as a claim ticket.");}
+  class AssistTarget:Target{readonly HavenCompanion _c;public AssistTarget(HavenCompanion c):base(12,false,TargetFlags.None){_c=c;}protected override void OnTarget(Mobile owner,object target){if(!(target is BaseCreature)||!_c.StartTamingAssist(owner,(BaseCreature)target))owner.SendMessage("Cannot assist: check role, distance, tameability, Taming/Lore and free follower slots.");}}
+  public override bool IsHarmfulCriminal(IDamageable target){if(_calmingAnimal&&target==_tamingTarget)return false;return base.IsHarmfulCriminal(target);}
+  void ThinkBardCombat(){if(Role!=CompanionRole.Bard||TamingAssistActive||IsDeadPet||!Alive||BoundOwner==null||DateTime.UtcNow<_nextBardCombat)return;var enemy=(Combatant??BoundOwner.Combatant) as BaseCreature;if(enemy==null||enemy.Deleted||!enemy.Alive||enemy.Controlled||enemy.Summoned||enemy.BardImmune||enemy.Karma>=0||enemy.Map!=Map||!InRange(enemy,10)||!InLOS(enemy)||!CanBeHarmful(enemy,false))return;EnsureBardTools();var lute=Backpack.FindItemByType(typeof(HavenCompanionLute),true) as HavenCompanionLute;lute.UsesRemaining=100;_nextBardCombat=DateTime.UtcNow.AddSeconds(20);if(Skills.Peacemaking.Value>=75&&BoundOwner.Hits<BoundOwner.HitsMax*0.4&&!enemy.BardPacified){Peacemaking.OnPickedInstrument(this,lute);if(Target!=null)Target.Invoke(this,enemy);if(enemy.BardPacified){Combatant=null;ControlTarget=BoundOwner;ControlOrder=OrderType.Follow;}return;}if(Skills.Provocation.Value>=75&&!enemy.BardProvoked&&!enemy.Unprovokable){foreach(var other in HavenPetSignatures.NearbyCreatures(Map,Location,10)){if(other==enemy||other.Unprovokable||other.BardProvoked||other.BardImmune||other.Controlled||other.Summoned||other.Karma>=0||(other.Combatant!=BoundOwner&&other.Combatant!=this)||!CanBeHarmful(other,false))continue;Provocation.OnPickedInstrument(this,lute);var first=Target;if(first!=null)first.Invoke(this,enemy);if(Target!=null&&Target!=first)Target.Invoke(this,other);return;}}int effect=0;if(!Discordance.GetEffect(enemy,ref effect)){Discordance.OnPickedInstrument(this,lute);if(Target!=null)Target.Invoke(this,enemy);}}
+ }
+ public static class HavenTamingEvents {public static void Initialize(){HavenCompanion.InitializeTamingEvents();}}
+}

@@ -13,6 +13,7 @@ internal static class HavenRarePetAbility
 
 public class HavenEmberwing : ForestOstard
 {
+ public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
 
     [Constructable]
     public HavenEmberwing()
@@ -22,7 +23,9 @@ public class HavenEmberwing : ForestOstard
         HavenRarePetAbility.Skills(this, 100);
     }
  public override int GetResistance(ResistanceType type){return HavenPetDefenses.Resistance(this,type,base.GetResistance(type));}
- public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetDefenses.AddProperties(this,list);}
+ public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
+ public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
  public HavenEmberwing(Serial serial):base(serial){}
  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
@@ -30,6 +33,7 @@ public class HavenEmberwing : ForestOstard
 
 public class HavenMoonfang : DireWolf
 {
+ public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
 
     [Constructable]
     public HavenMoonfang()
@@ -38,6 +42,9 @@ public class HavenMoonfang : DireWolf
         SetStr(250); SetDex(150); SetInt(150); SetHits(350); SetDamage(10, 16);
         HavenRarePetAbility.Skills(this, 110);
     }
+ public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
+ public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
  public HavenMoonfang(Serial serial):base(serial){}
  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
@@ -45,6 +52,8 @@ public class HavenMoonfang : DireWolf
 
 public class HavenStormscale : Drake
 {
+ public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
+ protected override BaseAI ForcedAI {get{return AI==AIType.AI_Mage?null:new HavenStormscaleAI(this);}}
 
     [Constructable]
     public HavenStormscale()
@@ -54,7 +63,9 @@ public class HavenStormscale : Drake
         HavenRarePetAbility.Skills(this, 120);
     }
  public override int GetResistance(ResistanceType type){return HavenPetDefenses.Resistance(this,type,base.GetResistance(type));}
- public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetDefenses.AddProperties(this,list);}
+ public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
+ public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
  public HavenStormscale(Serial serial):base(serial){}
  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
@@ -62,6 +73,7 @@ public class HavenStormscale : Drake
 
 public class HavenFrostmane : Horse
 {
+ public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
 
     [Constructable]
     public HavenFrostmane()
@@ -72,7 +84,9 @@ public class HavenFrostmane : Horse
         HavenRarePetAbility.Skills(this, 100);
     }
  public override int GetResistance(ResistanceType type){return HavenPetDefenses.Resistance(this,type,base.GetResistance(type));}
- public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetDefenses.AddProperties(this,list);}
+ public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
+ public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
  public HavenFrostmane(Serial serial):base(serial){}
  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
@@ -80,6 +94,7 @@ public class HavenFrostmane : Horse
 
 public class HavenVerdantLlama : RidableLlama
 {
+ public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
 
     [Constructable]
     public HavenVerdantLlama()
@@ -88,6 +103,9 @@ public class HavenVerdantLlama : RidableLlama
         SetStr(240); SetDex(140); SetInt(160); SetHits(320); SetDamage(9, 14);
         HavenRarePetAbility.Skills(this, 110);
     }
+ public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
+ public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
  public HavenVerdantLlama(Serial serial):base(serial){}
  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
@@ -95,6 +113,7 @@ public class HavenVerdantLlama : RidableLlama
 
 public class HavenStormhorn : Kirin
 {
+ public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
 
     [Constructable]
     public HavenStormhorn()
@@ -106,6 +125,9 @@ public class HavenStormhorn : Kirin
         Skills.Magery.Base = Skills.EvalInt.Base = 110;
     }
     public override bool AllowFemaleRider => true;
+ public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
+ public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
  public HavenStormhorn(Serial serial):base(serial){}
  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}

@@ -312,3 +312,15 @@ Restored bracelet/pendant progression, Astral currency wallet and reward growth,
 
 ## 2026-09-11 Caster Arcane Focus
 Restored automatic actual strength-6 Arcane Focus for companion caster mode. Native effective focus, immovable/nontransferable state, renewal, no duplication and switching away/back passed in the isolated test world. Mission timer overlap remains queued as requested.
+
+
+### 2026-09-11 pet release preparation
+- Ten custom species, signature effects, rare-tier defenses/appearance and legendary roll persistence; native training bridge with serialized per-enemy quotas.
+- Companion assigned pets/mounts, mission parking/reclaim and native Bard assisted taming restored. Native timer cancellation and exact-pet claim verified; assigned bonded pet resurrection passed.
+- Three habitat encounters plus two steed spawn sites verified; Chelonia relocated to valid modern terrain. Full old trained ability pool and complete Bard masteries remain deferred.
+- PetTamingSmoke completed all nine assertions through actual native taming timers. Existing signature, assignment and habitat test suites passed. Rechecking training quota persistence with the owner explicitly returned to the world before award.
+
+- Strengthened reload fixture exposed native offline auto-stabling (ControlMaster is cleared, StabledBy retains the owner). The regression now invokes native login reclaim before testing active training quota persistence, rather than accepting an inactive pet as evidence.
+
+- Final fresh signature suite and reload passed: native auto-stable owner retained, native login reclaim succeeds, pet active, training/rarity/legendary record unchanged, same-enemy quota still enforced, temporary fields expired.
+- DEPLOYED pet release to D:/Uo Offline/Haven-ServUO-Preview on 2026-09-11. Clean save/stop; backup E:/Backups/Haven/Prototypes/servuo-before-pets-20260911-144023 (every Saves file hash verified). Copied source only, applied native patches 0009–0012, full live rebuild: zero warnings/errors. Started on 127.0.0.1:2699 and verified account-login/server-list/game-relay handshake. No verification scripts, markers or saved fixtures copied to live. Original server unchanged.

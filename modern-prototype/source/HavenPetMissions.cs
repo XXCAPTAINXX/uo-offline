@@ -28,12 +28,13 @@ namespace Server.HavenPrototype
         {
             if(HavenPetRarity.Find(pet)!=null)return;
             HavenPetRarity.Attach(pet,tier);
+            HavenPetAppearance.ApplyNaturalHue(pet);
             if(tier<=0)return;
             pet.Name=(tier==1?"Rare ":tier==2?"Epic ":"Legendary ")+pet.Name;
             pet.RawStr+=pet.RawStr*tier/10;pet.RawDex+=pet.RawDex*tier/10;pet.RawInt+=pet.RawInt*tier/10;
             pet.HitsMaxSeed=pet.HitsMax+pet.HitsMax*tier/10;pet.Hits=pet.HitsMax;
             foreach(var skill in new[]{SkillName.Wrestling,SkillName.Tactics,SkillName.MagicResist,SkillName.Magery,SkillName.EvalInt})if(pet.Skills[skill].Base>0){pet.Skills[skill].Cap=Math.Max(pet.Skills[skill].Cap,tier==3?120:100+tier*5);pet.Skills[skill].Base=Math.Min(pet.Skills[skill].Cap,pet.Skills[skill].Base+tier*5);}
-            if(tier==3){pet.ControlSlots=1;if(Utility.RandomDouble()<0.5){var eligible=TrainableSkills.Select(name=>pet.Skills[name]).Where(x=>x.Base>0).ToList();int count=Math.Min(eligible.Count,Utility.RandomMinMax(1,3));for(int j=0;j<count;j++){int k=Utility.Random(eligible.Count);var skill=eligible[k];eligible.RemoveAt(k);int value=Utility.RandomMinMax(125,150);skill.Cap=Math.Max(skill.Cap,value);skill.Base=Math.Max(skill.Base,value);}}}
+            if(tier==3){pet.ControlSlots=1;HavenLegendaryPetSkills.Roll(pet); }
         }
     }
     public class HavenPetTicket:Item
@@ -46,6 +47,8 @@ namespace Server.HavenPrototype
             Pet=HavenPetMissions.Create(kind);AnimalTaming.ScaleSkills(Pet,0.90,true);if(Pet.StatLossAfterTame)AnimalTaming.ScaleStats(Pet,0.5);
             HavenPetMissions.ApplyRarity(Pet,Rarity);Pet.Internalize();Name="Pet claim: "+Pet.Name;Internalize();
         }
+        private HavenPetTicket(BaseCreature pet,Mobile owner):base(0x14F0){Pet=pet;Owner=owner;Kind=-1;Rarity=HavenPetDefenses.Tier(pet);Weight=1;Hue=0x59B;LootType=LootType.Blessed;Name="Pet claim: "+pet.Name;}
+        public static HavenPetTicket Store(BaseCreature pet,Mobile owner,Container pack){if(pet==null||pet.Deleted||owner==null||owner.Deleted||pack==null||pack.Deleted||pet.IsDeadPet||pet.Summoned||!(pet.ControlMaster==owner||(pet.ControlMaster is HavenCompanion&&((HavenCompanion)pet.ControlMaster).BoundOwner==owner)))return null;var ticket=new HavenPetTicket(pet,owner);if(!pack.TryDropItem(owner,ticket,false)){ticket.Pet=null;ticket.Delete();return null;}var mount=pet as BaseMount;if(mount!=null)mount.Rider=null;pet.Combatant=null;pet.ControlTarget=null;pet.ControlOrder=OrderType.Stay;pet.Internalize();pet.SetControlMaster(null);pet.SummonMaster=null;return ticket;}
         public HavenPetTicket(Serial serial):base(serial){}
         public bool Claim(Mobile p)
         {

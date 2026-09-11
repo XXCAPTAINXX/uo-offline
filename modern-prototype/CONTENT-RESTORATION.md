@@ -53,3 +53,9 @@ AdvancedGearSmoke passed exact currency deposits/purchase/capacity rollback, fir
 
 ## Companion Arcane Focus
 Caster mode supplies a real, immovable/nontransferable strength-6 Arcane Focus. Native Spellweaving uses this gem; no general spell-damage multiplier is added. Maintenance renews it before expiry, does not duplicate it, and removes the supplied gem when leaving caster mode. Existing caster companions receive it at startup through equipment maintenance. FocusSmoke verified native lookup, renewal, uniqueness, role switching and save/reload.
+
+
+### Pet release — live 2026-09-11
+Ten custom species, signature abilities and tier defenses; twelve taming mission routes; persistent rarity/legendary skill rolls; native pet training with original triple-damage pace and per-enemy quotas. Companion Pets supports assignment, riding toggle, mission parking and exact-pet reclaim tickets. Bard Tame assist uses native peace/taming and returns a ticket. Assigned bonded pets can be resurrected. Travel stone: bear den, Ancient Hunt and Chelonia sanctuary; two wild vampiric steed sites.
+
+Validated native tame completion/cancellation, player ticket claim, pet resurrection, mission parking/return, habitat waves/spawns and native login reclaim/training persistence. Original island, complete role/mastery behavior, saved offline mission rotations and custom training ability pools are not complete. See RESTORATION-QUEUE.md.

@@ -12,7 +12,7 @@ using CompanionParty = Server.Engines.PartySystem.Party;
 
 namespace Server.HavenPrototype
 {
-    public enum CompanionRole { Warrior, Caster, Archer }
+    public enum CompanionRole { Warrior, Caster, Archer, Bard }
     // First ServUO vertical slice, not a deserializer for existing ModernUO saves.
     public partial class HavenCompanion : BaseCreature
     {
@@ -132,7 +132,7 @@ namespace Server.HavenPrototype
 
         public bool SetRole(Mobile from, CompanionRole role)
         {
-            if (!CanCommand(from) || role < CompanionRole.Warrior || role > CompanionRole.Archer || Spell != null ||
+            if (!CanCommand(from) || role < CompanionRole.Warrior || role > CompanionRole.Bard || Spell != null ||
                 Combatant != null || from.Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return false;
             if (role == _role) return true;
             var hands = new List<Item>();
@@ -156,7 +156,7 @@ namespace Server.HavenPrototype
                 if (_roleBow == null || _roleBow.Deleted) _roleBow = new Bow { Movable = false };
                 AddItem(_roleBow);
             }
-            _role = role; EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
+            StopTamingAssist();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             return SetOrder(from, OrderType.Follow);
         }
@@ -195,6 +195,7 @@ namespace Server.HavenPrototype
         public bool SetOrder(Mobile from, OrderType order)
         {
             if (!CanCommand(from) || (order != OrderType.Follow && order != OrderType.Guard && order != OrderType.Stay && order != OrderType.Stop)) return false;
+            StopTamingAssist();
             var casting = Spell as Server.Spells.Spell;
             if (casting != null) casting.Disturb(Server.Spells.DisturbType.NewCast);
             if (Target != null) Target.Cancel(this, TargetCancelType.Canceled);
@@ -207,8 +208,9 @@ namespace Server.HavenPrototype
         public bool Attack(Mobile from, Mobile target)
         {
             if (!CanCommand(from) || target == null || target == this || target == from || target.Deleted || !target.Alive || target.Map != Map ||
-                !from.InRange(target, 12) || !InRange(target, 12) || !from.InLOS(target) || !InLOS(target) || !from.CanBeHarmful(target, false) || !CanBeHarmful(target, false)) return false;
-            from.DoHarmful(target);
+                !from.InRange(target, 12) || !InRange(target, 12) || !from.InLOS(target) || !InLOS(target) || !from.CanBeHarmful(target, false)) return false;
+            _checkingPetOrder=true;try{if(!CanBeHarmful(target,false))return false;}finally{_checkingPetOrder=false;}
+            StopTamingAssist();from.DoHarmful(target);_explicitPetTarget=WildCustomPet(target)?target:null;
             ControlTarget = target; ControlOrder = OrderType.Attack; Combatant = target;
             return true;
         }
@@ -255,13 +257,13 @@ namespace Server.HavenPrototype
         internal bool SupportPatient(Mobile patient) {
             if(Deleted||!Alive||IsDeadPet||OnMission||IsStabled||patient==null||patient.Deleted||Map==null||Map==Map.Internal||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient)||DateTime.UtcNow<_nextHeal||Mana<10)return false;
             var pet=patient as BaseCreature;
-            bool allowed=patient==this||patient==_owner||(pet!=null&&pet.ControlMaster==_owner)||(_owner!=null&&patient.Player&&CompanionParty.Get(_owner)!=null&&CompanionParty.Get(_owner).Contains(patient));
+            bool allowed=patient==this||patient==_owner||(pet!=null&&(pet.ControlMaster==_owner||pet.ControlMaster==this))||(_owner!=null&&patient.Player&&CompanionParty.Get(_owner)!=null&&CompanionParty.Get(_owner).Contains(patient));
             if(!allowed)return false;
             if(!patient.Alive) {
                 if(!patient.Player||patient.Map==null||!patient.Map.CanFit(patient.Location,16,false,false)||patient.Region.IsPartOf("Khaldun")||patient.HasGump(typeof(ResurrectGump)))return false;
                 patient.SendGump(new ResurrectGump(patient,this));_nextHeal=DateTime.UtcNow.AddSeconds(10);
             } else if(pet!=null&&pet.IsDeadPet) {
-                if(pet.ControlMaster!=_owner||!patient.Map.CanFit(patient.Location,16,false,false))return false;pet.ResurrectPet();_nextHeal=DateTime.UtcNow.AddSeconds(10);
+                if((pet.ControlMaster!=_owner&&pet.ControlMaster!=this)||!patient.Map.CanFit(patient.Location,16,false,false))return false;pet.ResurrectPet();_nextHeal=DateTime.UtcNow.AddSeconds(10);
             } else if(patient.Poisoned) {if(!patient.CurePoison(this))return false;_nextHeal=DateTime.UtcNow.AddSeconds(2);}
             else {if(patient.Hits>=patient.HitsMax||MortalStrike.IsWounded(patient))return false;patient.Heal(30+(int)(Skills.Healing.Base/5),this);_nextHeal=DateTime.UtcNow.AddSeconds(2);}
             Mana-=10;patient.FixedEffect(0x376A,10,16);patient.PlaySound(0x1F2);CheckSkill(SkillName.Healing,0,125);return true;
@@ -271,6 +273,9 @@ namespace Server.HavenPrototype
         {
             if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
             RecoverResources(DateTime.UtcNow);
+            ThinkAssignedPets();
+            RespectWildPets();
+            ThinkTamingAssist();ThinkBardCombat();
             if (_owner != null && _owner.NetState != null) MaintainSpellweaver();
             base.OnThink();
             if (_owner != null && _owner.NetState != null)
@@ -398,6 +403,7 @@ namespace Server.HavenPrototype
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddMinutes(minutes);
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
+            StopTamingAssist();ParkAssignedPets();
             Internalize();
             EnsureProgressionCaps();
             ScheduleMission();
@@ -528,7 +534,7 @@ namespace Server.HavenPrototype
             _pendingGold = reader.ReadInt(); _completedMissions = reader.ReadInt(); _lastReport = reader.ReadString();
             if (version >= 1) { _role = (CompanionRole)reader.ReadInt(); _roleSword = reader.ReadItem(); _roleShield = reader.ReadItem(); _roleBow = reader.ReadItem(); }
             else { _roleSword = FindItemOnLayer(Layer.OneHanded); _roleShield = FindItemOnLayer(Layer.TwoHanded); }
-            if (_role < CompanionRole.Warrior || _role > CompanionRole.Archer) _role = CompanionRole.Warrior;
+            if (_role < CompanionRole.Warrior || _role > CompanionRole.Bard) _role = CompanionRole.Warrior;
             if (version >= 2) DeserializeResourceMissions(reader);
             _missionReturnPending = version >= 3 ? reader.ReadBool() :
                 !OnMission && _completedMissions > 0 && Map == Map.Internal && !IsStabled;
@@ -653,7 +659,7 @@ namespace Server.HavenPrototype
             Button(250, 379, 13, "Stats / skills");
             AddHtml(24, 291, 430, 76, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
             AddLabel(24, 379, 0, "Pending gold: " + companion.PendingGold);
-            Button(24, 417, 9, "Refresh / collect"); Button(330, 417, 0, "Close");
+            Button(24, 417, 9, "Refresh / collect"); Button(220,417,14,"Pets"); Button(330, 417, 0, "Close");
             if(companion.OnMission) Button(330,72,11,"Minimize");
         }
         private void Button(int x, int y, int id, string text) { AddButton(x, y, 0xFA5, 0xFA7, id, GumpButtonType.Reply, 0); AddLabel(x + 34, y, 0, text); }
@@ -677,6 +683,7 @@ namespace Server.HavenPrototype
                 case 11: _companion.Show(from); return;
                 case 12: _companion.ShowCombatBar(from); return;
                 case 13: from.SendGump(new HavenCompanionStatsGump(_companion)); return;
+                case 14: HavenCompanionPetsGump.Show(from,_companion); return;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
             _companion.Show(from);
