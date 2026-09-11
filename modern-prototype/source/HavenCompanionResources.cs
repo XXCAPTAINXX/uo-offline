@@ -48,16 +48,10 @@ namespace Server.HavenPrototype
             switch (kind)
             {
                 case CompanionMission.Mining:
-                    double mining = Skills.Mining.Base;
-                    int metal = mining >= 99 ? 8 : mining >= 95 ? 7 : mining >= 90 ? 6 : mining >= 85 ? 5 : mining >= 80 ? 4 : mining >= 75 ? 3 : mining >= 70 ? 2 : mining >= 65 ? 1 : 0;
-                    rewards.Add(metal,minutes*20); break;
                 case CompanionMission.Lumber:
-                    double lumber = Skills.Lumberjacking.Base;
-                    int wood = lumber >= 100 ? 15 : lumber >= 95 ? 14 : lumber >= 90 ? 13 : lumber >= 85 ? 12 : lumber >= 80 ? 11 : lumber >= 65 ? 10 : 9;
-                    rewards.Add(wood,minutes*20); break;
                 case CompanionMission.Leather:
-                    double lore = Skills.AnimalLore.Base;
-                    rewards.Add(lore >= 100 ? 19 : lore >= 90 ? 18 : lore >= 70 ? 17 : 16,minutes*10); break;
+                    HavenGatheringMissions.Prepare(this,kind,minutes,rewards,Utility.RandomDouble());
+                    break;
                 case CompanionMission.Malas:
                     if (Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < 60) return false;
                     for (int id=29;id<=35;id++) rewards.Add(id,minutes*2);

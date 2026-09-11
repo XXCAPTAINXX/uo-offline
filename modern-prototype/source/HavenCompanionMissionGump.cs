@@ -50,16 +50,16 @@ namespace Server.HavenPrototype
             if(tab==1){double required=HavenPetMissions.Requirements[selection];return "Taming and Animal Lore: "+required.ToString("0.0")+" each.<BR>Yours: "+c.Skills.AnimalTaming.Base.ToString("0.0")+" / "+c.Skills.AnimalLore.Base.ToString("0.0");}
             if(selection>=6){var kind=GatheringKind(selection);return HavenRegionalMissions.Requirement(kind)+" combat / resist rating.<BR>Yours: "+HavenRegionalMissions.Rating(c).ToString("0.0");}
             if(selection==4||selection==5)return (selection==4?"60":"80")+" Magery or Tactics.<BR>Yours: "+c.Skills.Magery.Base.ToString("0.0")+" / "+c.Skills.Tactics.Base.ToString("0.0");
-            if(selection==1)return "Mining determines the metal collected.";
-            if(selection==2)return "Lumberjacking determines the wood collected.";
-            if(selection==3)return "Animal Lore determines the leather collected.";
+            if(selection==1)return "Mining determines the metal collected. Half basic, half unlocked metal when a special tier is selected.";
+            if(selection==2)return "Lumberjacking determines the wood collected. Half ordinary logs when a special wood is selected.";
+            if(selection==3)return "The lower of Wrestling and Tactics determines leather quality.";
             return "No gathering skill requirement.";
         }
         public static string Reward(int tab,int selection,int minutes)
         {
             if(tab==1)return "One owner-bound pet ticket, delivered to your pack when space permits.";
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
-            switch(selection){case 1:return (minutes*20)+" ingots into the resource ledger.";case 2:return (minutes*20)+" logs into the resource ledger.";case 3:return (minutes*10)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
+            switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
         }
         void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#342B23>"+text+"</BASEFONT>",false,false);}
         void Button(int x,int y,int id,string label,int width){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,27,label);}
