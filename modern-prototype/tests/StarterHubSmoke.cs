@@ -62,5 +62,19 @@ public static class StarterHubSmoke
             Require(HavenPlaytest.Status(player,0)==1 && HavenPlaytest.Status(player,1)==2);
             var other=new PlayerMobile(); Require(HavenPlaytest.Status(other,0)==0); other.Delete();
         });
+        check("checklist travel reaches services without changing test results",()=> {
+            int status=HavenPlaytest.Status(player,0);
+            Require(HavenPlaytest.TravelToTest(player,0));
+            Require(player.Map==Map.Trammel && player.InRange(HavenPreview.Destinations[0].Point,3));
+            Require(HavenPlaytest.Status(player,0)==status);
+            Require(!HavenPlaytest.TravelToTest(player,-1) && !HavenPlaytest.TravelToTest(player,999) && !HavenPlaytest.TravelToTest(player,3));
+        });
+        check("checklist travel obeys combat restriction",()=> {
+            var enemy=new PlayerMobile {Player=true,Body=0x190};
+            enemy.RawStr=100; enemy.Hits=enemy.HitsMax; enemy.MoveToWorld(player.Location,player.Map);
+            player.AggressiveAction(enemy,false); Require(player.Aggressors.Count>0);
+            Require(!HavenPlaytest.TravelToTest(player,8));
+            enemy.Delete(); player.Aggressors.Clear();
+        });
     }
 }

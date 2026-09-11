@@ -105,3 +105,10 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Independent house critic reviewed three actual-client-art design renders: 6.6, 7.6, then 8.0/10. Final score covers starter lodge only. No live graphical walking test claimed.
 - Final HomeReady suite: 108 PASS, two COMPLETE failures=0 (fresh and reload). Live build: zero warnings/errors. Saved preview, backed up Saves/Config with SHA256 to E:/Backups/Haven/Prototypes/servuo-before-house-20260911, installed source, restarted port2699 successfully.
 - Island design steering: irregular shoreline, sheltered cove and dock, curved beach, rocky headlands, connected paths to house/workshop/gardens. Keep usable land; avoid a perfect circle and purposeless paths. Future island requires independent critic review too.
+
+## Checklist travel convenience
+- Added server-whitelisted Go to Haven actions for starter, arcane, recruitment, repair and travel-stone checks, plus Return to Haven on all pages. Existing travel checks and native pet teleport behavior apply. No combat escape or automatic pass recording.
+- Four rows per page (three pages) leave room for travel controls. Paging/travel preserve draft notes; stable saved test IDs unchanged. Other checks explain that no special destination is needed; combat asks the player to choose an ordinary hostile outside town.
+- Added checks for service arrival, unchanged results, invalid destinations and combat restriction. Disposable verification: HavenServUOChecklistTravel.
+- Final corrected fixture uses native aggression records; 110 checks passed across fresh/reload in HavenServUOChecklistTravel3. Initial combat fixtures did not establish combat and failed; production travel code was unchanged. Backed up preview before checklist deployment to E:/Backups/Haven/Prototypes/servuo-before-checklist-travel-20260911.
+- Live build zero warnings/errors; preview restarted on2699 and local login/server-list/relay probe passed. Original2593 unchanged. Client graphical checklist test remains for player.
