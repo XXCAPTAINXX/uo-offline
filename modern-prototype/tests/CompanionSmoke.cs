@@ -48,12 +48,14 @@ public static class CompanionSmoke
     {
         bool reload = File.Exists("companion-fixtures.txt");
         File.AppendAllText(Report, "PHASE " + (reload ? "reload" : "fresh") + Environment.NewLine);
+        PreviewSmoke.Run(Check, reload);
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");
             _owner = World.FindMobile((Serial)Int32.Parse(ids[0])) as PlayerMobile;
             _companion = World.FindMobile((Serial)Int32.Parse(ids[1])) as HavenCompanion;
             Check("owner and companion references persist", () => Require(_companion != null && _owner != null && _companion.BoundOwner == _owner && _companion.ControlMaster == _owner, "Ownership mismatch"));
+            Check("role and native AI persist", () => Require(_companion.Role == CompanionRole.Archer && _companion.AIObject is HavenCompanionArcherAI && _companion.Weapon is Bow, "Role lost"));
             Check("overdue mission completes while owner is offline", () => Require(!_companion.OnMission && _companion.CompletedMissions == 3, "Mission did not recover"));
             Check("mission report persists", () => Require(_companion.LastReport.Contains("Completed runs: 3"), "Report absent"));
             Check("inventory and stacked gold persist", () => Require(_companion.Backpack.FindItemsByType(typeof(Gold), false).Length == 1 && _companion.Backpack.GetAmount(typeof(Gold)) == 2500, "Unexpected rewards"));
@@ -65,7 +67,7 @@ public static class CompanionSmoke
             });
             Check("claim after login returns same companion", () => Require(HavenCompanion.Claim(_owner) == _companion, "Duplicate companion"));
             Check("owner can recall recovered companion", () => Require(_companion.Recall(_owner) && _companion.Map == _owner.Map, "Recall failed"));
-            Check("custom AI restored", () => Require(_companion.AIObject is HavenCompanionAI, "Wrong AI"));
+            Check("reloaded role responds to guard command", () => Require(_companion.SetOrder(_owner, OrderType.Guard) && _companion.AIObject.DoOrderGuard(), "Guard failed after restart"));
             Done(); return;
         }
         Check("create player fixture on traversable modern map", () => {
@@ -172,6 +174,10 @@ public static class CompanionSmoke
         Check("native melee damages target", () => Require(_enemy.Hits < _hitsBefore, "No melee damage"));
         Check("companion damage credit belongs to real owner", () => Require(_enemy.GetLootingRights().Any(x => x.m_Mobile == _owner && x.m_HasRight), "Owner lacks loot rights"));
         _enemy.Delete(); ClearCombat();
+        RoleSmoke.Run(_companion, _owner, _stranger, Check, AfterRoles);
+    }
+    private static void AfterRoles()
+    {
         Check("gold rewards merge existing pile", () => { _companion.Backpack.DropItem(new Gold(100)); Field("_pendingGold", 900); _companion.DeliverRewards(); Require(_companion.Backpack.GetAmount(typeof(Gold)) == 1000 && _companion.Backpack.FindItemsByType(typeof(Gold), false).Length == 1, "Gold fragmentation"); });
         Check("full pack queues rewards without loss", () => {
             var gold = _companion.Backpack.FindItemByType(typeof(Gold)); gold.Delete();

@@ -1,0 +1,55 @@
+2026-09-11T00:32:58.7982815Z BEGIN native staged world generation
+2026-09-11T00:32:58.8138924Z START Moongates [Moongen]
+2026-09-11T00:32:59.6909366Z SAVED Moongates; items=1950; mobiles=65
+2026-09-11T00:33:02.7349986Z START Doors [DoorGen]
+2026-09-11T00:33:06.0127613Z SAVED Doors; items=4982; mobiles=65
+2026-09-11T00:33:09.0672411Z START Signs [SignGen]
+2026-09-11T00:33:09.4659547Z SAVED Signs; items=6384; mobiles=116
+2026-09-11T00:33:12.5021100Z START Teleporters [TelGen]
+2026-09-11T00:33:12.5741628Z SAVED Teleporters; items=7876; mobiles=116
+2026-09-11T00:33:15.5814369Z START Doom Lamp [GenLeverPuzzle]
+2026-09-11T00:33:15.6161937Z SAVED Doom Lamp; items=7887; mobiles=116
+2026-09-11T00:33:18.6516206Z START Doom Gauntlet [GenGauntlet]
+2026-09-11T00:33:18.7089738Z SAVED Doom Gauntlet; items=8110; mobiles=119
+2026-09-11T00:33:21.7525750Z START Khaldun [GenKhaldun]
+2026-09-11T00:33:21.7900036Z SAVED Khaldun; items=8175; mobiles=119
+2026-09-11T00:33:24.8543440Z START Stealables [GenStealArties]
+2026-09-11T00:33:24.8924333Z SAVED Stealables; items=8176; mobiles=119
+2026-09-11T00:33:27.9001128Z START Solen Hives [SHTelGen]
+2026-09-11T00:33:27.9343401Z SAVED Solen Hives; items=8554; mobiles=119
+2026-09-11T00:33:30.9988733Z START Malas Secrets [SecretLocGen]
+2026-09-11T00:33:31.0372743Z SAVED Malas Secrets; items=8609; mobiles=122
+2026-09-11T00:33:34.0524019Z START Decorations [Decorate]
+2026-09-11T00:33:49.4846088Z SAVED Decorations; items=80954; mobiles=122
+2026-09-11T00:33:52.5346110Z START ML Decorations [DecorateML]
+2026-09-11T00:33:52.8068274Z SAVED ML Decorations; items=81445; mobiles=122
+2026-09-11T00:33:55.8573146Z START SA Decorations [DecorateSA]
+2026-09-11T00:33:56.4335907Z SAVED SA Decorations; items=83759; mobiles=222
+2026-09-11T00:33:59.4484626Z START Spawners [XmlLoad Spawns]
+2026-09-11T00:34:23.1987620Z SAVED Spawners; items=90303; mobiles=224
+2026-09-11T00:34:27.3896335Z START New Despise [SetupDespise]
+2026-09-11T00:34:27.5658099Z SAVED New Despise; items=117975; mobiles=6529
+2026-09-11T00:34:30.6396218Z START New Covetous [SetupNewCovetous]
+2026-09-11T00:34:30.8150442Z SAVED New Covetous; items=122888; mobiles=6536
+2026-09-11T00:34:33.8407015Z START New Shame [GenerateNewShame]
+2026-09-11T00:34:35.0578808Z SAVED New Shame; items=121296; mobiles=6606
+2026-09-11T00:34:38.1346051Z START New Magincia [GenNewMagincia]
+2026-09-11T00:34:38.2820643Z SAVED New Magincia; items=127943; mobiles=6975
+2026-09-11T00:34:41.3347092Z START High Seas [DecorateHS]
+2026-09-11T00:34:41.4899961Z SAVED High Seas; items=128403; mobiles=7026
+2026-09-11T00:34:44.5323238Z START City Loyalty [SetupCityLoyaltySystem]
+2026-09-11T00:34:44.6833286Z SAVED City Loyalty; items=128623; mobiles=7060
+2026-09-11T00:34:47.7125776Z START Castle Blackthorn [GenBlackthorn]
+2026-09-11T00:34:48.1877966Z SAVED Castle Blackthorn; items=128773; mobiles=7066
+2026-09-11T00:34:51.2023050Z START TOL Decorations [DecorateTOL]
+2026-09-11T00:34:51.7532822Z SAVED TOL Decorations; items=130850; mobiles=7073
+2026-09-11T00:34:54.8075337Z START New Wrong [GenWrongRevamp]
+2026-09-11T00:34:55.1761614Z SAVED New Wrong; items=131968; mobiles=7310
+2026-09-11T00:34:58.2382896Z START Kotl City [GenerateTreasuresOfKotlCity]
+2026-09-11T00:34:58.4120611Z SAVED Kotl City; items=132501; mobiles=7353
+2026-09-11T00:35:01.4238148Z START Champ Spawns [GenChampSpawns]
+2026-09-11T00:35:01.5733346Z SAVED Champ Spawns; items=134208; mobiles=7360
+2026-09-11T00:35:04.8418465Z VALIDATED items=137991; mobiles=8232; spawners=6835; Doom=6; Blackthorn native links=14; Shadowguard instances=17
+2026-09-11T00:35:04.8428514Z COMPLETE; world saved; ready for separate reload verification
+2026-09-11T00:35:13.1621973Z VALIDATED items=137993; mobiles=8234; spawners=6835; Doom=6; Blackthorn native links=14; Shadowguard instances=17
+2026-09-11T00:35:13.1639157Z RELOAD VALIDATED; no setup commands rerun

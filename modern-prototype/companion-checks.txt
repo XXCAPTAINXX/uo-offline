@@ -1,4 +1,20 @@
 PHASE fresh
+PASS preview conveniences disabled without explicit marker
+PASS preview landing fits modern map: New Haven
+PASS preview landing fits modern map: Luna bank
+PASS preview landing fits modern map: Royal City
+PASS preview landing fits modern map: Underworld entrance
+PASS preview landing fits modern map: Doom entrance
+PASS preview landing fits modern map: Doom Gauntlet
+PASS preview landing fits modern map: Blackthorn - Trammel
+PASS preview landing fits modern map: Blackthorn - Felucca
+PASS preview landing fits modern map: Shadowguard lobby
+PASS preview landing fits modern map: Abyss - Silver Sapling
+PASS full backpack rejects entire preview kit
+PASS preview kit uses native leech gear and skill caps
+PASS preview kit cannot be claimed twice
+PASS preview travel rejects active combat and invalid destinations
+PASS preview travel changes facet
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -17,6 +33,18 @@ PASS native spell heals owner and spends mana
 PASS direct attack starts native combat
 PASS native melee damages target
 PASS companion damage credit belongs to real owner
+PASS role switch rejects stranger and invalid role
+PASS full pack leaves role and equipped gear intact
+PASS caster installs one native mage AI
+PASS ranged role accepts explicit enemy: Caster
+PASS combat prevents changing role
+PASS native mage AI deals damage outside melee range
+PASS stay cancels queued casting and targets
+PASS archer equips native bow and AI
+PASS ranged role accepts explicit enemy: Archer
+PASS combat prevents changing role
+PASS native archer damages target at range
+PASS repeated roles preserve one sword shield and bow
 PASS gold rewards merge existing pile
 PASS full pack queues rewards without loss
 PASS mission rejects invalid length and stranger
@@ -26,7 +54,9 @@ PASS second reward keeps one gold pile
 PASS save pending mission and companion
 COMPLETE failures=0
 PHASE reload
+PASS preview kit claim survives save and restart
 PASS owner and companion references persist
+PASS role and native AI persist
 PASS overdue mission completes while owner is offline
 PASS mission report persists
 PASS inventory and stacked gold persist
@@ -34,5 +64,5 @@ PASS restart does not duplicate rewards
 PASS simulate native login location restoration
 PASS claim after login returns same companion
 PASS owner can recall recovered companion
-PASS custom AI restored
+PASS reloaded role responds to guard command
 COMPLETE failures=0

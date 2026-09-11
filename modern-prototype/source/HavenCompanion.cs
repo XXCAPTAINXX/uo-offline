@@ -12,11 +12,14 @@ using CompanionParty = Server.Engines.PartySystem.Party;
 
 namespace Server.HavenPrototype
 {
+    public enum CompanionRole { Warrior, Caster, Archer }
     // First ServUO vertical slice, not a deserializer for existing ModernUO saves.
     public class HavenCompanion : BaseCreature
     {
         private Mobile _owner;
-        private HavenCompanionAI _companionAI;
+        private BaseAI _companionAI;
+        private CompanionRole _role;
+        private Item _roleSword, _roleShield, _roleBow;
         private Timer _missionTimer;
         private DateTime _missionDue;
         private int _missionMinutes;
@@ -26,6 +29,7 @@ namespace Server.HavenPrototype
         private DateTime _nextHeal;
 
         public Mobile BoundOwner { get { return _owner; } }
+        public CompanionRole Role { get { return _role; } }
         public bool OnMission { get { return _missionDue != DateTime.MinValue; } }
         public DateTime MissionDue { get { return _missionDue; } }
         public int PendingGold { get { return _pendingGold; } }
@@ -34,7 +38,15 @@ namespace Server.HavenPrototype
         public override bool CanAutoStable { get { return false; } }
         public override bool AllowNewPetFriend { get { return false; } }
         public override bool KeepsItemsOnDeath { get { return true; } }
-        protected override BaseAI ForcedAI { get { return _companionAI ?? (_companionAI = new HavenCompanionAI(this)); } }
+        protected override BaseAI ForcedAI
+        {
+            get {
+                if (_companionAI == null)
+                    _companionAI = _role == CompanionRole.Caster ? (BaseAI)new HavenCompanionMageAI(this) :
+                        _role == CompanionRole.Archer ? (BaseAI)new HavenCompanionArcherAI(this) : new HavenCompanionAI(this);
+                return _companionAI;
+            }
+        }
 
         public static void Initialize()
         {
@@ -90,10 +102,43 @@ namespace Server.HavenPrototype
             SetSkill(SkillName.Swords, 75); SetSkill(SkillName.Tactics, 75);
             SetSkill(SkillName.Anatomy, 65); SetSkill(SkillName.MagicResist, 65);
             SetSkill(SkillName.Magery, 100); SetSkill(SkillName.Meditation, 100);
+            SetSkill(SkillName.EvalInt, 100); SetSkill(SkillName.Archery, 100); SetSkill(SkillName.Wrestling, 100);
             AddItem(new ChainChest { Movable = false }); AddItem(new ChainLegs { Movable = false });
-            AddItem(new Boots { Movable = false }); AddItem(new MetalShield { Movable = false });
-            AddItem(new Longsword { Movable = false }); AddItem(new Cloak(0x59B) { Movable = false });
+            AddItem(new Boots { Movable = false }); AddItem(_roleShield = new MetalShield { Movable = false });
+            AddItem(_roleSword = new Longsword { Movable = false });
+            var cloak = new Cloak(0x59B) { Movable = false }; cloak.Attributes.RegenMana = 8; AddItem(cloak);
             AddItem(new HavenCompanionPack());
+        }
+
+        public bool SetRole(Mobile from, CompanionRole role)
+        {
+            if (!CanCommand(from) || role < CompanionRole.Warrior || role > CompanionRole.Archer || Spell != null ||
+                Combatant != null || from.Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return false;
+            if (role == _role) return true;
+            var hands = new List<Item>();
+            var one = FindItemOnLayer(Layer.OneHanded); var two = FindItemOnLayer(Layer.TwoHanded);
+            if (one != null) hands.Add(one); if (two != null) hands.Add(two);
+            int count = 0, weight = 0;
+            foreach (var item in hands)
+            {
+                if (!Backpack.CheckHold(this, item, false, true, count, weight)) return false;
+                count += item.TotalItems + 1; weight += item.TotalWeight + item.PileWeight;
+            }
+            foreach (var item in hands) Backpack.DropItem(item);
+            if (role == CompanionRole.Warrior)
+            {
+                if (_roleSword == null || _roleSword.Deleted) _roleSword = new Longsword { Movable = false };
+                if (_roleShield == null || _roleShield.Deleted) _roleShield = new MetalShield { Movable = false };
+                AddItem(_roleSword); AddItem(_roleShield);
+            }
+            else if (role == CompanionRole.Archer)
+            {
+                if (_roleBow == null || _roleBow.Deleted) _roleBow = new Bow { Movable = false };
+                AddItem(_roleBow);
+            }
+            _role = role; RangeFight = role == CompanionRole.Warrior ? 1 : 6;
+            _companionAI = null; ChangeAIType(AIType.AI_Melee);
+            return SetOrder(from, OrderType.Follow);
         }
 
         public bool IsOwner(Mobile from) { return from != null && !from.Deleted && from == _owner && !Deleted; }
@@ -121,6 +166,9 @@ namespace Server.HavenPrototype
         public bool SetOrder(Mobile from, OrderType order)
         {
             if (!CanCommand(from) || (order != OrderType.Follow && order != OrderType.Guard && order != OrderType.Stay && order != OrderType.Stop)) return false;
+            var casting = Spell as Server.Spells.Spell;
+            if (casting != null) casting.Disturb(Server.Spells.DisturbType.NewCast);
+            Server.Targeting.Target.Cancel(this);
             Combatant = null; FocusMob = null; Warmode = false;
             ControlTarget = order == OrderType.Stay || order == OrderType.Stop ? null : from;
             ControlOrder = order;
@@ -312,9 +360,10 @@ namespace Server.HavenPrototype
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
+            writer.Write(1);
             writer.Write(_owner); writer.Write(_missionDue); writer.Write(_missionMinutes);
             writer.Write(_pendingGold); writer.Write(_completedMissions); writer.Write(_lastReport);
+            writer.Write((int)_role); writer.Write(_roleSword); writer.Write(_roleShield); writer.Write(_roleBow);
         }
         public override void Deserialize(GenericReader reader)
         {
@@ -322,6 +371,10 @@ namespace Server.HavenPrototype
             int version = reader.ReadInt();
             _owner = reader.ReadMobile(); _missionDue = reader.ReadDateTime(); _missionMinutes = reader.ReadInt();
             _pendingGold = reader.ReadInt(); _completedMissions = reader.ReadInt(); _lastReport = reader.ReadString();
+            if (version >= 1) { _role = (CompanionRole)reader.ReadInt(); _roleSword = reader.ReadItem(); _roleShield = reader.ReadItem(); _roleBow = reader.ReadItem(); }
+            else { _roleSword = FindItemOnLayer(Layer.OneHanded); _roleShield = FindItemOnLayer(Layer.TwoHanded); }
+            if (_role < CompanionRole.Warrior || _role > CompanionRole.Archer) _role = CompanionRole.Warrior;
+            _companionAI = null; ChangeAIType(AIType.AI_Melee);
             ScheduleMission();
         }
 
@@ -355,13 +408,41 @@ namespace Server.HavenPrototype
         }
         public override bool DoOrderGuard()
         {
-            if (!_companion.CanCommand(_companion.BoundOwner)) return true;
-            var target = _companion.ClosestHostile();
-            _companion.Combatant = target;
-            _companion.FocusMob = target;
-            if (target != null) { Action = ActionType.Combat; return Think(); }
-            _companion.Warmode = false;
-            return DoOrderFollow();
+            return CompanionGuard.Run(this, _companion);
+        }
+    }
+
+    internal static class CompanionGuard
+    {
+        public static bool Run(BaseAI ai, HavenCompanion companion)
+        {
+            if (!companion.CanCommand(companion.BoundOwner)) return true;
+            var target = companion.ClosestHostile(); companion.Combatant = target; companion.FocusMob = target;
+            if (target != null) { ai.Action = ActionType.Combat; return ai.Think(); }
+            companion.Warmode = false; return ai.DoOrderFollow();
+        }
+    }
+    public class HavenCompanionMageAI : MageAI
+    {
+        private readonly HavenCompanion _companion;
+        public HavenCompanionMageAI(HavenCompanion companion) : base(companion) { _companion = companion; }
+        public override bool SmartAI { get { return true; } }
+        public override bool DoOrderGuard() { return CompanionGuard.Run(this, _companion); }
+        public override void EndPickTarget(Mobile from, IDamageable target, OrderType order)
+        {
+            if (order == OrderType.Attack) _companion.Attack(from, target as Mobile);
+            else if (_companion.CanCommand(from)) base.EndPickTarget(from, target, order);
+        }
+    }
+    public class HavenCompanionArcherAI : ArcherAI
+    {
+        private readonly HavenCompanion _companion;
+        public HavenCompanionArcherAI(HavenCompanion companion) : base(companion) { _companion = companion; }
+        public override bool DoOrderGuard() { return CompanionGuard.Run(this, _companion); }
+        public override void EndPickTarget(Mobile from, IDamageable target, OrderType order)
+        {
+            if (order == OrderType.Attack) _companion.Attack(from, target as Mobile);
+            else if (_companion.CanCommand(from)) base.EndPickTarget(from, target, order);
         }
     }
 
@@ -389,11 +470,11 @@ namespace Server.HavenPrototype
             AddBackground(0, 0, 480, 460, 0xA28);
             AddLabel(24, 18, 0, "Alden Ashford — ServUO prototype");
             AddLabel(24, 45, 0, "HP " + companion.Hits + "/" + companion.HitsMax + "    Mana " + companion.Mana + "/" + companion.ManaMax);
-            AddLabel(24, 72, 0, companion.OnMission ? "Supply run: " + Math.Max(0, Math.Ceiling((companion.MissionDue - DateTime.UtcNow).TotalMinutes)) + " minutes left" : "Orders: " + companion.ControlOrder);
+            AddLabel(24, 72, 0, companion.OnMission ? "Supply run: " + Math.Max(0, Math.Ceiling((companion.MissionDue - DateTime.UtcNow).TotalMinutes)) + " minutes left" : companion.Role + " | Orders: " + companion.ControlOrder);
             Button(24, 110, 1, "Follow"); Button(250, 110, 2, "Guard");
             Button(24, 148, 3, "Stay"); Button(250, 148, 4, "Attack...");
             Button(24, 186, 5, "Heal me"); Button(250, 186, 6, "Open pack");
-            Button(24, 224, 7, "Recall"); Button(250, 224, 8, "5-minute supply run");
+            Button(24, 224, 7, "Recall"); Button(250, 224, 8, "Roles / missions");
             AddLabel(24, 265, 0, "Last mission report");
             Button(250, 262, 10, "Join my party");
             AddHtml(24, 291, 430, 76, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
@@ -415,11 +496,37 @@ namespace Server.HavenPrototype
                 case 5: ok = _companion.HealOwner(from); break;
                 case 6: _companion.OpenPack(from); break;
                 case 7: ok = _companion.Recall(from); break;
-                case 8: ok = _companion.StartMission(from, 5); break;
+                case 8: from.SendGump(new CompanionActivityGump(_companion)); return;
                 case 9: _companion.DeliverRewards(); break;
                 case 10: ok = _companion.JoinOwnerParty(from); break;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
+            _companion.Show(from);
+        }
+    }
+    public class CompanionActivityGump : Gump
+    {
+        private readonly HavenCompanion _companion;
+        public CompanionActivityGump(HavenCompanion companion) : base(70,70)
+        {
+            _companion = companion; AddBackground(0,0,500,420,0xA28);
+            AddLabel(24,20,0,"Alden - role and supply missions");
+            AddLabel(24,55,0,"Current role: " + companion.Role);
+            Button(24,100,1,"Warrior"); Button(185,100,2,"Caster"); Button(340,100,3,"Archer");
+            AddHtml(24,145,450,60,"<BASEFONT COLOR=#202020>Change roles outside combat. All roles can heal you. Caster uses native Magery; Archer uses a bow.</BASEFONT>",false,false);
+            AddLabel(24,225,0,"Supply mission - 100 gold per minute");
+            Button(24,265,10,"5 minutes"); Button(185,265,11,"15 minutes"); Button(340,265,12,"30 minutes");
+            AddLabel(24,315,0,"Missions finish while offline. Use Recall on return.");
+            Button(24,370,0,"Back");
+        }
+        private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
+        public override void OnResponse(NetState sender, RelayInfo info)
+        {
+            var from = sender.Mobile; if (!_companion.IsOwner(from)) return;
+            bool ok = true;
+            if (info.ButtonID >= 1 && info.ButtonID <= 3) ok = _companion.SetRole(from,(CompanionRole)(info.ButtonID-1));
+            else if (info.ButtonID >= 10 && info.ButtonID <= 12) ok = _companion.StartMission(from,info.ButtonID == 10 ? 5 : info.ButtonID == 11 ? 15 : 30);
+            if (!ok) from.SendMessage("Unavailable: check distance, combat, casting, mission status and pack space.");
             _companion.Show(from);
         }
     }
