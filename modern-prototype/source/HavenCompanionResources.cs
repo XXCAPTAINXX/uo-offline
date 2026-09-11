@@ -85,7 +85,7 @@ namespace Server.HavenPrototype
             }
             _scheduledResources.Clear();
             Skill skill = _missionKind == CompanionMission.Mining ? Skills.Mining : _missionKind == CompanionMission.Lumber ? Skills.Lumberjacking : _missionKind == CompanionMission.Leather ? Skills.AnimalLore : null;
-            if (skill != null && skill.Base < skill.Cap) skill.Base = Math.Min(skill.Cap,skill.Base + _missionMinutes*0.2);
+            if (skill != null && skill.Base < skill.Cap) skill.BaseFixedPoint = Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint + HavenCompanionProgression.Amount(this,skill,_missionMinutes*2));
             return _missionKind + " run completed." + (report.Count==0 ? "" : " Resources: " + String.Join(", ",report) + ". Stored in his ledger; overflow waits for space.");
         }
         public override void OnSubItemAdded(Item item)

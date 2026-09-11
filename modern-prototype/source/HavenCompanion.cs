@@ -111,7 +111,7 @@ namespace Server.HavenPrototype
             Tamable = false;
             ControlSlots = 1;
             MinTameSkill = 0;
-            SetStr(100); SetDex(80); SetInt(100); SetHits(180); SetMana(100);
+            SetStr(200); SetDex(150); SetInt(200); SetHits(400); SetStam(150); SetMana(300);
             SetDamage(8, 12);
             SetResistance(ResistanceType.Physical, 40);
             SetResistance(ResistanceType.Fire, 25); SetResistance(ResistanceType.Cold, 25);
@@ -488,7 +488,7 @@ namespace Server.HavenPrototype
             SerializeResourceMissions(writer);
             writer.Write(_missionReturnPending);
         }
-        public void EnsureProgressionCaps() { for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(120.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1200); }
+        public void EnsureProgressionCaps() { for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(125.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1250); RawStr=Math.Max(RawStr,200); RawDex=Math.Max(RawDex,150); RawInt=Math.Max(RawInt,200); HitsMaxSeed=Math.Max(HitsMaxSeed,400); StamMaxSeed=Math.Max(StamMaxSeed,150); ManaMaxSeed=Math.Max(ManaMaxSeed,300); }
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);

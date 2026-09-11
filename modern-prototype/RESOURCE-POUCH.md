@@ -6,6 +6,6 @@ Companion missions still deposit into the existing ledger. Supported loose resou
 
 Ledger controls: Give to me transfers balances to a personal ledger (creating one if needed); Give to guild transfers to a persistent shared guild ledger; Guild ledger opens that shared inventory. All current guild members can withdraw. Nonmembers cannot access it. Existing physical ledger transfers remain available. Balances are checked before transfer, including overflow and self-transfer rejection.
 
-Companions can train to 120 per skill without power scrolls. Existing higher caps and trained values are retained, and the total cap accommodates all skills at 120. Raising a cap does not add trained points or teach unused combat abilities.
+Companions can train to 125 per skill without power scrolls. Existing higher caps and trained values are retained, and the total cap accommodates all skills at 125. Gains above 120 are reduced to 5% of their ordinary amount, including mission gains. Raising a cap does not add trained points or teach unused combat abilities. Minimum companion stats are 200 Strength, 150 Dexterity, 200 Intelligence, 400 health, 150 stamina, and 300 mana; higher existing values are preserved.
 
 Verification: standalone SatchelSmoke checks raw stacks, nested collection, capacity failure, weight changes and reload; companion cap migration; skinning-resource balances; personal/guild transfers, nonmember rejection, and guild persistence. It is enabled only by SATCHEL-TEST-ONLY in an isolated verification server.
