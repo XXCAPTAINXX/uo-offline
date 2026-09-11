@@ -73,6 +73,7 @@ PASS mini champion rewards cannot replay or be collected by stranger
 PASS administratively deleted enemies abort without completion rewards
 PASS save an active undead wave without replaying its spawns
 PASS Haven recovery NPCs are present once
+PASS Healing and Veterinary cap at two seconds for all dex and resurrection
 PASS dead companion returns from another facet with gear and Follow
 PASS companion recovers after five seconds near owner, with full resources
 PASS automatic recovery waits for nearby owner
@@ -116,6 +117,8 @@ PASS ranged role accepts explicit enemy: Archer
 PASS combat prevents changing role
 PASS native archer damages target at range
 PASS repeated roles preserve one sword shield and bow
+PASS warrior starts self heal and respects cooldown
+PASS self heal completes native spell without a cursor
 PASS gold rewards merge existing pile
 PASS full pack queues rewards without loss
 PASS mission rejects invalid length and stranger

@@ -262,7 +262,21 @@ namespace Server.HavenPrototype
         {
             if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
             base.OnThink();
-            if (_owner != null && _owner.NetState != null && _owner.Hits < _owner.HitsMax * 0.65) HealOwner(_owner);
+            if (_owner != null && _owner.NetState != null)
+            {
+                if (_owner.Hits < _owner.HitsMax * 0.65 && HealOwner(_owner)) return;
+                if (Hits < HitsMax * 0.8) HealSelf();
+            }
+        }
+
+        internal bool HealSelf()
+        {
+            if (Deleted || !Alive || IsDeadPet || OnMission || IsStabled || Map == null || Map == Map.Internal ||
+                Hits >= HitsMax || Poisoned || MortalStrike.IsWounded(this) || Spell != null ||
+                DateTime.UtcNow < _nextHeal || Mana < 11) return false;
+            if (!new CompanionHealSpell(this, this).Cast()) return false;
+            _nextHeal = DateTime.UtcNow.AddSeconds(4);
+            return true;
         }
 
         private DateTime _reviveAt;
@@ -470,7 +484,7 @@ namespace Server.HavenPrototype
             public CompanionHealSpell(HavenCompanion companion, Mobile recipient) : base(companion, null) { _companion = companion; _recipient = recipient; }
             public override void OnCast()
             {
-                if (_companion.CanCommand(_recipient)) Target(_recipient);
+                if ((_recipient == _companion && _companion.Alive && !_companion.IsDeadPet && !_companion.OnMission && !_companion.IsStabled) || _companion.CanCommand(_recipient)) Target(_recipient);
                 else FinishSequence();
             }
         }

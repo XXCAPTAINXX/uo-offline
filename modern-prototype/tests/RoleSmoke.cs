@@ -81,7 +81,17 @@ public static class RoleSmoke
             Require(items.Count(x=>x is Longsword)==1 && items.Count(x=>x is MetalShield)==1 && items.Count(x=>x is Bow)==1,"Equipment duplicated");
         });
         Require(_companion.SetOrder(_owner,OrderType.Stay),"Stay command rejected during cleanup");
-        _next();
+        _check("warrior starts self heal and respects cooldown",()=>{
+            Require(_companion.SetRole(_owner,CompanionRole.Warrior),"Warrior failed");
+            _companion.Skills[SkillName.Magery].Base=120;
+            _companion.Hits=20; _companion.Mana=_companion.ManaMax; _hits=_companion.Hits;
+            Require(_companion.HealSelf() && !_companion.HealSelf(),"Self heal or cooldown failed");
+        });
+        Timer.DelayCall(TimeSpan.FromSeconds(5),()=>{
+            _check("self heal completes native spell without a cursor",()=>Require(_companion.Hits>_hits+10 && _companion.Spell==null && _companion.Target==null,"Self healing did not complete"));
+            Require(_companion.SetRole(_owner,CompanionRole.Archer),"Restore archer fixture failed");
+            _next();
+        });
     }
 }
 

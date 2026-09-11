@@ -198,3 +198,17 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - User prioritizes original gear restoration before reward stones. Modern starter kits currently ordinary gear; original evolving starter weapons, robe/grimoire/accessories, quest gear, Marks equipment, Astral rewards and shield-warrior gear need dependency-aware migration. Do not claim these restored yet.
 - Located original missing player boosts: HavenNewcomerLuck +1000 within Trammel x3314..3813/y2345..3094; HavenNewcomerTraining multiplies gain chance5x and gain amount5x below100.0, clamped at100.0. Native patches0023/0024 hook real Luck and skill gains. Not yet ported; preserve current free-skill budget and power scroll progression when implementing.
 - Recovery3:151PASS fresh/reload, including five-second automatic recovery, distance/facet checks, full resources and preserved gear. Automatic recovery deployed after clean save/backup at E:/Backups/Haven/Prototypes/servuo-before-auto-recovery-20260911. Mini champion and recovery source are included in this checkpoint; gear and player newcomer boosts remain next.
+
+## Wounded companion mistaken for dead
+- User reported Mara rejected resurrection. Fresh private save inspection found companion alive, bonded, controlled, Follow,20/180HP beside plaza. No ownership/death flag corruption found. Snapshot contained private saves and remains outside Git.
+- Added explicit already-alive health message and clinic healing for living owned pets/companions; remote resurrection also restores full resources.
+- Custom automatic healing previously checked only owner HP. Added shared native Greater Heal self-target path for all roles below80% HP, with owner below65% given first attempt; eight-second shared cooldown, native mana/casting, poison/mortal-wound restrictions. Pending Recovery4 validation/deployment. Does not add free instant combat healing.
+- Clinic check in an isolated copy of the player's save: alive20/180HP; after placing the offline fixture owner beside Mara, clinic treated exactly1pet and restored180/180HP. Snapshot never saved back to live.
+- Recovery4 proved native warrior self-healing and cooldown, but reload expectation failed because the new test left the fixture Warrior instead of its established Archer role. Restored fixture role after the heal; no production role-persistence bug found.
+- User requested faster self-healing: self-heal cooldown now4seconds (owner-heal cooldown remains8seconds), native casting/mana retained. Recovery5 pending.
+
+## Two-second bandaging
+- User explicitly requested Healing and Veterinary maximum2second application time. Native patch0003 caps BandageContext.GetDelay in enabled Haven preview, covering self/others/pets, enhanced bandages and resurrection attempts. Buff/client countdown uses the same delay. Does not change skill checks, heal amounts, cure/rez eligibility or skill caps.
+- Added native delay checks at Dex10/80/150/300 for self/other Healing and Veterinary, alive/dead cases. Recovery7 pending. Recovery6 patch check failed before build because generated hunk lacked context; added context, clean upstream check now applies.
+- Recovery5 passed153checks with faster self-healing and corrected role fixture. Not deployed yet; combining clinic, self-heal and bandage changes into one saved restart.
+- Recovery7:154PASS fresh/reload. Includes actual native self-heal completion and all bandage delay cases. Deployment backup E:/Backups/Haven/Prototypes/servuo-before-healing-20260911; live sources only, no verification binaries.
