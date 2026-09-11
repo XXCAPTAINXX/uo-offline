@@ -281,3 +281,8 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Reused old test save hit an expired encounter; fresh-suite layout test needed explicit camp setup before checking its decorations. Correcting test initialization, then revalidating.
 
 - Final corrected reload passed all checks including plaza planters/NPC/trash changes, camp stable placement and active encounter, pendant stats/price, existing shops/rewards. Live build/login passed; backed up at servuo-before-plaza-touchups-20260911, source-only deployed. Combat bar Pack uses original OpenPack and keeps bar open. Aesthetic inspection in live client remains pending.
+
+## Skill screen filters and user-specified placements
+- Companion stats now parchment/brown; default Trainable shows current-role/common healing/native combat/mission skills below cap (respects normal locks, mission skill behavior). Used and All views, Name/Base/Gain sorting, baseline retained across paging/filter/sort/refresh. Native skill list/caps unchanged. Filtering/sort and reload checks passed.
+- User corrected healer corner to3500,2583; Ava and Mara target3500,2583/3501,2583 with safe adjacent fallback. Trash targets exact3504,2576,Z18 with fit check ignoring temporary mobile occupancy, retains contents/green hue. No restart for placement alone: bundled with requested stats UI update. Backup servuo-before-skill-filter-20260911; live build/login passed.
+- Explained Power Scrolls can stay in backpack/bank and use from pack; Champion Codex organizer still pending.

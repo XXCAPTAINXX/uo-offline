@@ -8,7 +8,7 @@ using Server.Network;
 namespace Server.HavenPrototype {
     public static class HavenRecovery {
         public static void Initialize(){CommandSystem.Register("ohshit",AccessLevel.Player,e=>TravelToHealer(e.Mobile));CommandSystem.Register("healer",AccessLevel.Player,e=>TravelToHealer(e.Mobile));CommandSystem.Register("recovery",AccessLevel.Player,e=>{if(HavenPreview.Enabled)e.Mobile.SendGump(new HavenRecoveryGump());});EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};}
-        public static void Ensure(){if(!HavenPreview.Enabled)return;Place<HavenPlazaHealer>(3498,2571,()=>new HavenPlazaHealer());Place<HavenRecoverySteward>(3500,2570,()=>new HavenRecoverySteward());}
+        public static void Ensure(){if(!HavenPreview.Enabled)return;Place<HavenPlazaHealer>(3500,2583,()=>new HavenPlazaHealer());Place<HavenRecoverySteward>(3501,2583,()=>new HavenRecoverySteward());}
         private static void Place<T>(int x,int y,Func<BaseCreature> create) where T:BaseCreature {
             var existing=World.Mobiles.Values.OfType<T>().FirstOrDefault(m=>!m.Deleted);if(existing!=null&&existing.Map==Map.Trammel&&Math.Abs(existing.Home.X-x)<=3&&Math.Abs(existing.Home.Y-y)<=3)return;
             Point3D p;if(!HavenPreview.FindLanding(new HavenPreview.Destination("Recovery",Map.Trammel,x,y,Map.Trammel.GetAverageZ(x,y)),out p))return;
@@ -48,6 +48,7 @@ namespace Server.HavenPrototype {
         public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0)return;if(info.ButtonID==4){HavenRecovery.TravelToHealer(p);return;}if(!HavenRecovery.CanUse(p)){p.SendMessage("Stand within three tiles of Mara, alive and out of combat, with no criminal flag.");return;}if(info.ButtonID==1)p.SendMessage("Healed or resurrected "+HavenRecovery.ResurrectPets(p)+" pet(s), including companions.");else if(info.ButtonID==2)p.SendMessage(HavenRecovery.RecoverCompanion(p)?"Your companion is alive and following you.":HavenRecovery.CompanionStatus(p));else if(info.ButtonID==3)p.SendMessage(HavenRecovery.RecallCorpse(p)?"Your corpse is here; loot it normally. It will remain for ten minutes.":"No surviving accessible corpse was found for you.");p.SendGump(new HavenRecoveryGump());}
     }
 }
+
 
 
 
