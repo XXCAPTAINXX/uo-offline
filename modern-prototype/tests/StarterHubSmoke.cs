@@ -14,7 +14,9 @@ public static class StarterHubSmoke
         check("Haven service stones are complete and setup is idempotent",()=> {
             HavenStarterHub.Ensure(); HavenStarterHub.Ensure();
             var stones=World.Items.Values.OfType<HavenServiceStone>().ToArray();
-            Require(stones.Length==7 && stones.Select(s=>s.Service).Distinct().Count()==7 && stones.All(s=>s.Map==Map.Trammel && !s.Movable));
+            Require(World.Items.Values.OfType<HavenServicePost>().Count()==3);
+            Require(new[]{0,3,6}.SelectMany(HavenServiceMenu.Services).Distinct().Count()==9);
+            Require(stones.Length==3 && stones.Select(s=>s.Service).Distinct().Count()==3 && stones.All(s=>s.Map==Map.Trammel && !s.Movable));
         });
         if(reload)
         {

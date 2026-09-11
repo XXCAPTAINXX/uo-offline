@@ -16,7 +16,7 @@ namespace Server.HavenPrototype {
  }
  public static class HavenStarterGear {
   public static void Initialize(){CommandSystem.Register("startergear",AccessLevel.Player,e=>{if(HavenPreview.Enabled)e.Mobile.SendGump(new HavenStarterGearGump(e.Mobile));});EventSink.CreatureDeath+=e=>{var c=e.Creature as BaseCreature;var p=e.Killer==null?null:e.Killer.GetDamageMaster(e.Creature)??e.Killer;if(!Eligible(c,p))return;int xp=Math.Max(1,Math.Min(20,c.HitsMax/100));foreach(var item in p.Items.ToArray()){var gear=item as IHavenStarterGear;if(gear!=null)Gain(gear,p,xp);}};EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};}
-  public static void Ensure(){if(World.Items.Values.OfType<HavenStarterGearStone>().Any(x=>!x.Deleted))return;Point3D p;if(HavenPreview.FindLanding(new HavenPreview.Destination("Evolving starter gear",Map.Trammel,3500,2572,14),out p))new HavenStarterGearStone().MoveToWorld(p,Map.Trammel);}
+  public static void Ensure(){var existing=World.Items.Values.OfType<HavenStarterGearStone>().FirstOrDefault(x=>!x.Deleted);if(existing!=null){existing.ItemID=0x9AA;existing.Hue=0;return;}Point3D p;if(HavenPreview.FindLanding(new HavenPreview.Destination("Evolving starter gear",Map.Trammel,3500,2572,14),out p))new HavenStarterGearStone().MoveToWorld(p,Map.Trammel);}
   public static bool Eligible(BaseCreature c,Mobile p){return HavenPreview.Enabled && c!=null && p is PlayerMobile && p.Alive && p.Map==c.Map && p.InRange(c,18) && !c.Controlled && !c.Summoned && !c.IsBonded && !c.NoKillAwards && !(c is BaseVendor) && c.Owners.Count==0 && c.HitsMax>=100 && c.Karma<0;}
   public static int Level(IHavenStarterGear g){if(g.Kind==4)return 1;if(g.Kind==6)return Math.Min(20,1+(int)Math.Sqrt(Math.Max(0,g.Progress.Experience)/25.0));if(g.Kind>=7)return Math.Min(20,1+g.Progress.Experience/100);int xp=g.Progress.Experience,l=1;while(l<20 && xp>=20+l*10){xp-=20+l*10;l++;}return l;}
   public static int Limit(IHavenStarterGear g){return g.Kind==6?9025:g.Kind>=7?1900:2280;}
@@ -38,7 +38,7 @@ namespace Server.HavenPrototype {
   public static bool Upgrade(Mobile p,int tier){if(!CanUse(p))return false;var robe=Robe(p);if(robe==null || robe.Progress.Owner!=p || robe.Progress.Tier!=tier || tier<0 || tier>=4)return false;int cost=tier+1;if(!HavenMarks.Spend(p,cost) && !HavenWallet.PayGold(p,cost*5000))return false;robe.Progress.Tier++;Apply(robe);robe.InvalidateProperties();return true;}
  }
  public class HavenStarterGearStone:Item {
-  public HavenStarterGearStone():base(0xED4){Name="Evolving starter gear and upgrades";Hue=0x59B;Movable=false;}
+  public HavenStarterGearStone():base(0x9AA){Name="Evolving starter gear and upgrades";Hue=0;Movable=false;}
   public HavenStarterGearStone(Serial s):base(s){}
   public override void OnDoubleClick(Mobile from){if(HavenStarterGear.CanUse(from))from.SendGump(new HavenStarterGearGump(from));}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}

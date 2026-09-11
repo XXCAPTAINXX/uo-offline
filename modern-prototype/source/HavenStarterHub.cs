@@ -23,17 +23,18 @@ namespace Server.HavenPrototype
         public static void Ensure()
         {
             if(!HavenPreview.Enabled) return;
-            for(int i=0;i<Sites.Length;i++)
-            {
-                int service=i;
-                if(World.Items.Values.OfType<HavenServiceStone>().Any(s=>!s.Deleted && s.Service==service && s.Map==Map.Trammel)) continue;
-                Point3D landing;
-                var site=Sites[i];
-                var destination=new HavenPreview.Destination(Names[i],Map.Trammel,site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y));
-                if(!HavenPreview.FindLanding(destination,out landing)) { Console.WriteLine("Haven hub: no safe placement for " + Names[i]); continue; }
-                new HavenServiceStone(i).MoveToWorld(landing,Map.Trammel);
+            int[] services={0,3,6};
+            var sites=new[]{new Point2D(3500,2574),new Point2D(3500,2578),new Point2D(3500,2582)};
+            foreach(var old in World.Items.Values.OfType<HavenServiceStone>().Where(x=>x.Map==Map.Trammel&&!services.Contains(x.Service)).ToArray())old.Delete();
+            for(int i=0;i<services.Length;i++){
+                int service=services[i];var board=World.Items.Values.OfType<HavenServiceStone>().FirstOrDefault(x=>!x.Deleted&&x.Service==service&&x.Map==Map.Trammel);
+                if(board==null||board.ItemID!=0xBD2){
+                    if(board!=null)board.Internalize();Point3D landing;var site=sites[i];
+                    if(!HavenPreview.FindLanding(new HavenPreview.Destination("Haven services",Map.Trammel,site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y)),out landing)){if(board!=null)board.MoveToWorld(new Point3D(site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y)),Map.Trammel);continue;}
+                    if(board==null)board=new HavenServiceStone(service);board.ItemID=0xBD2;board.Hue=0;board.Name=service==0?"Haven supplies and equipment":service==3?"Haven travel and training":"Haven help and companions";board.MoveToWorld(landing,Map.Trammel);
+                }
+                var post=World.Items.Values.OfType<HavenServicePost>().FirstOrDefault(x=>!x.Deleted&&x.Board==board);if(post==null)post=new HavenServicePost(board);post.MoveToWorld(board.Location,board.Map);
             }
-            Console.WriteLine("Haven starter hub: " + World.Items.Values.OfType<HavenServiceStone>().Count(s=>!s.Deleted && s.Map==Map.Trammel) + " service stones available.");
         }
         public static bool CanUse(Mobile from,HavenServiceStone stone)
         {
@@ -85,9 +86,23 @@ namespace Server.HavenPrototype
         public int Service { get; private set; }
         public HavenServiceStone(int service):base(0xED4) { Service=service; Name=HavenStarterHub.Names[service]; Movable=false; Hue=service==5?0x489:0x47E; }
         public HavenServiceStone(Serial serial):base(serial) {}
-        public override void OnDoubleClick(Mobile from) { if(HavenStarterHub.CanUse(from,this)) from.SendGump(new HavenHubGump(this,Service)); else from.SendMessage("Stand within three tiles of the service stone."); }
+        public override void OnDoubleClick(Mobile from) { if(HavenStarterHub.CanUse(from,this)) from.SendGump(new HavenServiceMenu(this)); else from.SendMessage("Stand within three tiles of the service stone."); }
         public override void Serialize(GenericWriter writer) { base.Serialize(writer); writer.Write(0); writer.Write(Service); }
         public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); Service=reader.ReadInt(); }
+    }
+    public class HavenServicePost : Item {
+        public HavenServiceStone Board {get;private set;}
+        public HavenServicePost(HavenServiceStone board):base(0xB98){Board=board;Movable=false;Name=board.Name;}
+        public HavenServicePost(Serial serial):base(serial){}
+        public override void OnDoubleClick(Mobile p){if(Board!=null&&!Board.Deleted)Board.OnDoubleClick(p);}
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Board);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Board=r.ReadItem() as HavenServiceStone;}
+    }
+    public class HavenServiceMenu : Gump {
+        private readonly HavenServiceStone _board;
+        public HavenServiceMenu(HavenServiceStone board):base(50,50){_board=board;AddBackground(0,0,350,270,0x13BE);AddImageTiled(12,12,326,246,2624);AddHtml(24,22,300,30,"<BASEFONT COLOR=#FFFFFF><B>"+board.Name+"</B></BASEFONT>",false,false);int y=65;foreach(int service in Services(board.Service)){AddButton(24,y,0xFA5,0xFA7,service+1,GumpButtonType.Reply,0);AddHtml(60,y,260,25,"<BASEFONT COLOR=#FFFFFF>"+(service==7?"Healers and recovery":service==8?"Evolving gear and upgrades":HavenStarterHub.Names[service])+"</BASEFONT>",false,false);y+=36;}AddButton(245,230,0xFA5,0xFA7,0,GumpButtonType.Reply,0);AddHtml(280,230,60,25,"<BASEFONT COLOR=#FFFFFF>Close</BASEFONT>",false,false);}
+        public static int[] Services(int group){return group==0?new[]{0,1,4,8}:group==3?new[]{3,5}:new[]{2,6,7};}
+        public override void OnResponse(NetState sender,RelayInfo info){int service=info.ButtonID-1;if(!HavenStarterHub.CanUse(sender.Mobile,_board)||!Services(_board.Service).Contains(service))return;if(service==7)sender.Mobile.SendGump(new HavenRecoveryGump());else if(service==8)sender.Mobile.SendGump(new HavenStarterGearGump(sender.Mobile));else sender.Mobile.SendGump(new HavenHubGump(_board,service));}
     }
     public class HavenHubGump : Gump
     {
