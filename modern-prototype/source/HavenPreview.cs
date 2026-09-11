@@ -29,7 +29,27 @@ namespace Server.HavenPrototype
             new Destination("Blackthorn - Trammel", Map.Trammel, 6432,2677,0),
             new Destination("Blackthorn - Felucca", Map.Felucca, 6441,2677,20),
             new Destination("Shadowguard lobby", Map.TerMur, 505,2192,25),
-            new Destination("Abyss - Silver Sapling", Map.TerMur, 341,619,26)
+            new Destination("Abyss - Silver Sapling", Map.TerMur, 341,619,26),
+            new Destination("Britain moongate",Map.Trammel,1336,1997,5),
+            new Destination("Moonglow moongate",Map.Trammel,4467,1283,5),
+            new Destination("Yew moongate",Map.Trammel,771,752,5),
+            new Destination("Minoc moongate",Map.Trammel,2701,692,5),
+            new Destination("Trinsic moongate",Map.Trammel,1828,2948,-20),
+            new Destination("Skara Brae moongate",Map.Trammel,643,2067,5),
+            new Destination("Jhelom moongate",Map.Trammel,1499,3771,5),
+            new Destination("Umbra moongate",Map.Malas,1997,1386,-85),
+            new Destination("Makoto-Jima",Map.Tokuno,802,1204,25),
+            new Destination("Ilshenar Compassion",Map.Ilshenar,1215,467,-13),
+            new Destination("Covetous entrance",Map.Trammel,2499,919,0),
+            new Destination("Deceit entrance",Map.Trammel,4111,432,5),
+            new Destination("Despise entrance",Map.Trammel,1298,1080,0),
+            new Destination("Destard entrance",Map.Trammel,1176,2637,0),
+            new Destination("Hythloth entrance",Map.Trammel,4721,3822,0),
+            new Destination("Shame entrance",Map.Trammel,514,1561,0),
+            new Destination("Wrong entrance",Map.Trammel,2043,238,10),
+            new Destination("Isamu-Jima",Map.Tokuno,1169,998,41),
+            new Destination("Homare-Jima",Map.Tokuno,270,628,15),
+            new Destination("Ilshenar Spirituality",Map.Ilshenar,1532,1340,-3)
         };
         public static void Initialize()
         {
@@ -116,28 +136,31 @@ namespace Server.HavenPrototype
     }
     public class PreviewGump : Gump
     {
-        public PreviewGump() : base(50,50)
+        private readonly int _page;
+        public PreviewGump(int page=0) : base(50,50)
         {
+            _page=Math.Max(0,Math.Min((HavenPreview.Destinations.Length-1)/10,page));
             AddBackground(0,0,590,570,0xA28);
-            AddLabel(24,20,0,"Haven - modern test world");
-            AddHtml(24,50,540,64,"<BASEFONT COLOR=#202020>A separate fresh-world preview. Your existing character, island and possessions remain on the original server.</BASEFONT>",false,false);
+            AddLabel(24,20,0,"Haven travel and test tools");
+            AddHtml(24,50,540,64,"<BASEFONT COLOR=#202020>Travel with nearby followers. Town stops use public moongates; dungeon stops use entrances. Hostile creatures may be nearby.</BASEFONT>",false,false);
             Button(24,122,1,"Prepare test character (once)");
             Button(320,122,2,"Open companion");
             AddLabel(24,165,0,"Test travel - leave combat first; Felucca has PvP rules");
-            for (int i = 0; i < HavenPreview.Destinations.Length; ++i)
-                Button(24 + (i % 2) * 280,205 + (i / 2) * 43,100 + i,HavenPreview.Destinations[i].Name);
-            AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Try companion orders, resource missions and native dungeons. The older custom island, bots and market are not migrated yet. Test skills and gear are conveniences, not final balance.</BASEFONT>",false,false);
-            Button(430,526,0,"Close");
+            for (int row = 0; row < 10; ++row) {int i=_page*10+row;if(i>=HavenPreview.Destinations.Length)break;
+                Button(24 + (row % 2) * 280,205 + (row / 2) * 43,100 + i,HavenPreview.Destinations[i].Name); }
+            AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Pages: 1 - modern adventures; 2 - towns and gateways; 3 - dungeons and hunting. Trammel dungeon entrances use non-PvP rules.</BASEFONT>",false,false);
+            if(_page>0)Button(24,526,3,"Previous");AddLabel(165,526,0,"Page "+(_page+1)+" / "+((HavenPreview.Destinations.Length+9)/10));if((_page+1)*10<HavenPreview.Destinations.Length)Button(280,526,4,"Next");Button(430,526,0,"Close");
         }
         private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
         public override void OnResponse(NetState sender, RelayInfo info)
         {
             if (!HavenPreview.Enabled || sender.Mobile == null || info.ButtonID == 0) return;
             var from = sender.Mobile;
+            if(info.ButtonID==3||info.ButtonID==4){from.SendGump(new PreviewGump(_page+(info.ButtonID==3?-1:1)));return;}
             if (info.ButtonID == 1) HavenPreview.Prepare(from);
             else if (info.ButtonID == 2) { var companion = HavenCompanion.Claim(from); if (companion != null) companion.Show(from); return; }
             else if (!HavenPreview.Travel(from, info.ButtonID - 100)) from.SendMessage("Travel unavailable: leave combat, clear criminal status, and try again.");
-            from.SendGump(new PreviewGump());
+            from.SendGump(new PreviewGump(_page));
         }
     }
 }

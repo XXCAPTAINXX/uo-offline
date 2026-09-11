@@ -10,6 +10,8 @@ public static class SatchelSmoke {
  static void Check(bool value,string name){if(!value)throw new Exception(name);File.AppendAllText("satchel-checks.log","PASS "+name+Environment.NewLine);}
  public static void Initialize(){if(File.Exists("SATCHEL-TEST-ONLY"))EventSink.ServerStarted+=()=>Timer.DelayCall(TimeSpan.FromSeconds(2),Run);}
  static void LedgerChecks(PlayerMobile p) {
+ for(int destination=10;destination<HavenPreview.Destinations.Length;destination++){Point3D landing;Check(HavenPreview.FindLanding(HavenPreview.Destinations[destination],out landing),"walkable travel arrival "+HavenPreview.Destinations[destination].Name);}
+
  for(int kind=0;kind<HavenSupplyShops.Catalogs.Length;kind++)for(int page=0;page*8<HavenSupplyShops.Catalogs[kind].Count;page++) {var menu=new HavenSupplyShopGump(p,kind,page*8);int arrows=0;for(int i=0;i<menu.Entries.Count;i++){var arrow=menu.Entries[i] as Server.Gumps.GumpButton;if(arrow!=null&&(arrow.ButtonID>=100||arrow.ButtonID==1)){Check(i+1<menu.Entries.Count&&menu.Entries[i+1] is Server.Gumps.GumpItemProperty,"shop arrow has adjacent item tooltip");arrows++;}}Check(arrows==Math.Min(8,HavenSupplyShops.Catalogs[kind].Count-page*8)+1,"all visible shop item and purchase arrows covered");menu.OnServerClose(null);}
  var marksMenu=new HavenMarksGump(p,0);Check(marksMenu.Entries.OfType<Server.Gumps.GumpItemProperty>().Count()==HavenMarks.Names.Length+2,"Marks reward arrows and image have tooltips");marksMenu.OnServerClose(null);
 
