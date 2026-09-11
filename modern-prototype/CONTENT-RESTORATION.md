@@ -67,3 +67,13 @@ Missions includes Magery reagents, Malas necromantic reagents, Doom bones, Abyss
 Select a route and duration, then **Save as offline default**. Open **Offline setup** to enable repeat after logout, choose the saved route or an eligible-route cycle, and choose finish/recall on login. This is off until the owner enables it. Existing manual missions finish first. Pausing repeat does not destroy an active trip. Server downtime awards no additional invented trips.
 
 Fresh/reload tests cover exact material credits, ledger withdrawal, ownership/skills, manual-trip preservation, repeated timer ticks, both login choices, rotation and persistent settings. Complete old role/mastery and gear/training/taming bonus parity remains separate.
+
+
+### Companion roles and follower slots - live 2026-09-11
+Companions use zero follower slots, including existing recruits. Ordinary pets keep their normal costs. Recruiting a companion is allowed when all ordinary pet slots are occupied.
+
+Choose **Healer** in Missions > Roles for stronger direct heals (+15), triage, cures/resurrection and support positioning. Emergency recovery heals allied players/owned pets within six tiles for 40 + Healing/5, costs 30 mana and has a 20-second cooldown. It triggers for multiple injured allies or an owner under35% health; poisoned/mortally wounded targets need their conditions handled first. Other roles keep basic healing.
+
+Bard restores encouragement/stat songs and native adaptive masteries. Join the owner's party for native mastery sharing. Role/mission changes and invalid owner state clean up songs and casts; assisted taming pauses mastery casting. Caster adds owner Renewal/Gift of Life and filtered native Thunderstorm while retaining Wraith Form, Arcane Focus and native ranged combat. Gift of Life's companion-owner exception does not allow unrelated player targets.
+
+Passed fresh/reload slot migration and healer tests, native party song/cleanup tests, ranged combat and two-second bandages, actual caster buffs and connected-owner taming/cancellation regression. Broader original gear/stat growth and reward parity, plus the finished island, remain separate work.
