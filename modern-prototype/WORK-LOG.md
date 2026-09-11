@@ -41,3 +41,9 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Socket test account login + serverlist + relay passed. Computer-use client attempts reached a Windows security prompt. Do not interact with/bypass it. User must review later. No graphical playthrough claimed. Local TazUO copy updated to installed26.0909.63 runtime; no user profiles copied.
 - Source/docs ready for commit. Next: ledger-backed resource missions with conservation tests, then dungeon progression checks and final deploy/backup before02:52UTC.
 
+
+## 00:57 UTC resource milestone
+- Added HavenResources.cs: catalog ledger, native commodity deed absorption, resource deeds, nested bag targeting, transfer/withdrawal capacity checks, serialized balances with no extra inventory slots. Preview kit includes ledger.
+- 76 checks passed fresh + reload in verification/HavenServUOResources; one test variable naming compile issue corrected before successful build, zero final warnings/errors. Source still needs deployment to interactive preview.
+- Next: companion resource missions/own ledger integration, then dungeon progression, final deployment/backup. Original2593 remains running; preview2699 still stopped. Keep-awake PID28720 active. Client security prompt remains for user review; do not bypass.
+

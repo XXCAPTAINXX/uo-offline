@@ -37,7 +37,11 @@ Use `[preview` for a one-time test kit and ten travel destinations, or `[c` for 
 
 Omit `-PopulateWorld` for a bare build. `-Test` and `-PopulateWorld` cannot be combined. Do not copy a Haven/ModernUO save into this server.
 
-## Native world
+## Resource storage
+
+The test kit includes a resource ledger for metals, woods, leathers, gems, Malas reagents and Stygian Abyss essences. It accepts native commodity deeds, its own resource deeds and loose stacks, including accessible nested bags. Locked/trapped containers and other players' inventory are excluded. Select an amount to withdraw as a deed or loose items; transfer all balances to another accessible ledger. Balances occupy no additional inventory slots. Companion resource missions are a separate pending addition; current supply missions still award gold.
+
+## Native world setup
 
 The preview's 25 native setup stages cover towns, doors, vendors/spawns, travel links, decorations, Doom, SA/Underworld, High Seas, revamped dungeons, Blackthorn and TOL/Shadowguard. Runtime validation found 6,835 spawners, six Doom Gauntlet controllers, 17 Shadowguard instances and 14 specific Blackthorn entry/exit links. Trammel's native Blackthorn entrance is beneath the castle; Felucca uses the older stairway.
 
@@ -45,7 +49,7 @@ Generation and save/reload validation also passed on a second fresh checkout usi
 
 ## Automated verification
 
-The current milestone passed **64 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
+The current milestone passed **76 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
 
 Add `-Test` with another new destination to build, run fresh-world checks, save, restart and verify recovery. Test mode creates a disposable account with a random password and no client connection, then stops the server. It writes `companion-checks.log`.
 
@@ -59,7 +63,7 @@ Early fixture failures used an unsuitable map patch and omitted native `Player=t
 
 ## Remaining work
 
-This is not a full replacement for live Alden. Bard masteries, Spellweaving rotations, equipment progression, resurrection, taming and dungeon assistance, full AFK missions, ledgers, companion-owned pets, remote inventory, guild/bot economy and the island are not ported here.
+This is not a full replacement for live Alden. Bard masteries, Spellweaving rotations, equipment progression, resurrection, taming and dungeon assistance, full AFK missions, companion-owned pets, remote inventory, guild/bot economy and the island are not ported here.
 
 Next gates:
 

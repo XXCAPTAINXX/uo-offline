@@ -85,7 +85,7 @@ namespace Server.HavenPrototype
             var robe = new Robe(); robe.Attributes.LowerRegCost = 100; robe.Attributes.LowerManaCost = 40; robe.Attributes.RegenMana = 10;
             var kit = new List<Item> { sword, mace, new MetalKiteShield(), robe, new Bow(), new Arrow(500), new Spellbook(ulong.MaxValue),
                 new NecromancerSpellbook(ulong.MaxValue), new SpellweavingBook(ulong.MaxValue), new BookOfChivalry(ulong.MaxValue),
-                new BookOfMasteries(), new Bandage(200), new BankCheck(100000),
+                new BookOfMasteries(), new Bandage(200), new BankCheck(100000), new HavenResourceLedger(),
                 new SkillMasteryPrimer(SkillName.Parry, 3) };
             foreach (BaseArmor armor in new BaseArmor[] { new LeatherChest(), new LeatherLegs(), new LeatherArms(), new LeatherGloves(), new LeatherGorget(), new LeatherCap() })
             {

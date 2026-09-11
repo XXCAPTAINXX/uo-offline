@@ -15,6 +15,17 @@ PASS preview kit uses native leech gear and skill caps
 PASS preview kit cannot be claimed twice
 PASS preview travel rejects active combat and invalid destinations
 PASS preview travel changes facet
+PASS every catalog resource constructs with correct amount
+PASS nested bags absorb supported resources and retain other items
+PASS native commodity deeds deposit exactly once
+PASS withdraw deed and reabsorb conserves resources
+PASS deed redemption produces native stack once
+PASS invalid amounts and insufficient balances cannot withdraw
+PASS foreign inventory and locked bags cannot be consumed
+PASS full pack withdrawal is atomic
+PASS ledger transfer is atomic on target overflow
+PASS ledger transfer preserves each resource and rejects replay
+PASS persist resource fixtures
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -55,6 +66,7 @@ PASS save pending mission and companion
 COMPLETE failures=0
 PHASE reload
 PASS preview kit claim survives save and restart
+PASS ledger and deed balances survive world restart
 PASS owner and companion references persist
 PASS role and native AI persist
 PASS overdue mission completes while owner is offline

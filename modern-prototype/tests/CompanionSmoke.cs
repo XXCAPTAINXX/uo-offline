@@ -49,6 +49,7 @@ public static class CompanionSmoke
         bool reload = File.Exists("companion-fixtures.txt");
         File.AppendAllText(Report, "PHASE " + (reload ? "reload" : "fresh") + Environment.NewLine);
         PreviewSmoke.Run(Check, reload);
+        ResourceSmoke.Run(Check, reload);
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");

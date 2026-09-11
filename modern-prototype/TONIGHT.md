@@ -19,12 +19,13 @@ Use `Stop-Preview.ps1` to save and close this server. Do not copy the original M
 - Change roles outside combat. Check sword attacks, Magery casting and bow attacks. Tell a casting companion to stay and check that he stops.
 - Put an item in his pack and take it out while beside him. This version still uses a two-tile range.
 - Send a five-minute supply mission. Log out and back in after it finishes, then use **Recall**. Expect 500 gold and a report, without duplicate stacks or payment.
+- Open the resource ledger from the test kit. Deposit loose resources or commodity deeds, including nested bags; withdraw a chosen amount as a deed or loose items. Transfer balances to another ledger. Stored balances consume no extra inventory slots.
 - Visit Luna, Royal City, the Underworld, Doom, Blackthorn and Shadowguard from `[preview`. Check doors, stairs, NPCs, ordinary combat and loot. Dungeon completion remains a playtest task.
 - Close and reopen the client. Confirm the same companion and possessions remain.
 
 ## What is verified
 
-- 64 automated companion/preview checks passed with a clean Release build.
+- 76 automated companion/preview checks passed with a clean Release build.
 - Native world generation, all 25 setup stages and save/reload validation also passed from a second fresh checkout.
 - 6,835 spawners, six Doom Gauntlet controllers, 17 Shadowguard instances and 14 specific Blackthorn travel links were validated.
 - A socket test authenticated the prepared account and received the correct server list and game relay. This is not a graphical-client login/playthrough.
