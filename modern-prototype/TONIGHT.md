@@ -70,3 +70,8 @@ Expanded free skills: now25 total, combining InsaneUO/UOAlive lists with origina
 Companion travel: Follow and idle Guard now use a faster travel pace in all three roles. Please walk/run around Haven and check he keeps up, including after a mission.
 
 To test reward purchases without grinding: open [havenmarks, click Claim 100 test Marks (once per account), select a reward, then Buy selected reward. The allowance is optional and separate from mission earnings.
+
+New combat loop: [minichamp -> Travel to camp -> Start a theme. Three waves and boss;20Marks,10,000gold check,250resource deed per damage participant. [haventest page4 has the new checks. See MINI-CHAMP.md.
+
+Recovery: approach Ava at Haven plaza as a ghost for player resurrection. While alive/out of combat, stand beside Mara and double-click her (or use [recovery) to resurrect nearby owned pets, recover a dead companion from another facet, or bring your surviving last corpse to your feet. Services are free; corpse recall cannot recreate a decayed body.
+Companions also automatically resurrect after about five seconds while you are online and within18tiles on the same facet, restoring health/mana/stamina and following you. Mara can recover a stranded dead companion instead.

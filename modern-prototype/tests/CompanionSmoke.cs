@@ -57,6 +57,8 @@ public static class CompanionSmoke
         StarterHomeSmoke.Run(Check, reload);
         MissionRecallSmoke.Run(Check, reload);
         HavenMarksSmoke.Run(Check, reload);
+        MiniChampSmoke.Run(Check, reload);
+        RecoverySmoke.Run(Check, reload);
         PlayerCapsSmoke.Run(Check, reload);        Check("low-Dex companion follows at travel pace in every role",()=>{
             var follower=new HavenCompanion();var leader=new PlayerMobile {Player=true};
             typeof(HavenCompanion).GetField("_owner",BindingFlags.NonPublic|BindingFlags.Instance).SetValue(follower,leader);
@@ -243,4 +245,6 @@ public static class CompanionSmoke
         Timer.DelayCall(TimeSpan.FromMilliseconds(100), () => Core.Kill(false));
     }
 }
+
+
 

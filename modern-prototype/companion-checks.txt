@@ -66,6 +66,19 @@ PASS Marks are per character and awards clamp at cap
 PASS full pack and invalid reward preserve Marks
 PASS purchase spends exact price and supplies advertised weapon
 PASS all reward previews create valid items without charging
+PASS mini champion camp is open unguarded land and setup is idempotent
+PASS mini champion rejects invalid starts and duplicate encounter
+PASS three waves and boss credit companion owner and all damage participants
+PASS mini champion rewards cannot replay or be collected by stranger
+PASS administratively deleted enemies abort without completion rewards
+PASS save an active undead wave without replaying its spawns
+PASS Haven recovery NPCs are present once
+PASS dead companion returns from another facet with gear and Follow
+PASS companion recovers after five seconds near owner, with full resources
+PASS automatic recovery waits for nearby owner
+PASS pet clinic resurrects only owner's nearby ghosts
+PASS player healer accepts ghost and corpse recall preserves contents
+PASS corpse recall denies other owners and remote use
 PASS raising caps preserves trained stats skills and individual caps
 PASS all 25 published free skills gain at counted cap and respect individual caps
 PASS free natural skill gain works at counted cap
@@ -125,6 +138,8 @@ PASS pirate lodge owner secure storage and cargo survive reload
 PASS cancelled mission remains cancelled after reload
 PASS Marks balance and purchased reward survive reload
 PASS test allowance cannot replay after reload
+PASS mini champion active wave and full-pack prize survive reload
+PASS Haven recovery NPCs are present once
 PASS player caps and free skill budget survive reload
 PASS low-Dex companion follows at travel pace in every role
 PASS owner and companion references persist

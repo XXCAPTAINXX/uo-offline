@@ -103,15 +103,17 @@ namespace Server.HavenPrototype
                 "Open travel to New Haven, Luna, Royal City, Underworld, Doom, Blackthorn, Shadowguard and the Abyss. Travel requires leaving combat and clearing criminal status.",
                 "Free preview repair: restores current durability on weapons and armor you wear or carry. Does not increase maximum durability or add properties.",
                 "OPTIONAL TEST BOOST: the next screen offers a one-time test kit that sets all skills to 120 and stats to 100 each. Skip this stone if you want to train a new character normally. Opening the menu alone changes nothing.",
-                "The plaza offers starter supplies, arcane supplies, companion recruitment, dungeon travel, repairs and optional test training.<BR><BR>Use [c for your companion, [home for starter housing and [havenmarks for rewards. Completed companion missions earn 2 Haven Marks per minute. Preview each reward before buying it.<BR><BR>Native vendors, bankers, healers and trainers remain available. Evolving gear, custom pets, mini champs, the market and home island remain upcoming. Original-server progress is separate."};
-            AddHtml(24,58,520,280,"<BASEFONT COLOR=#202020>"+details[service]+"</BASEFONT>",false,true);
+                "The plaza offers starter supplies, arcane supplies, companion recruitment, dungeon travel, repairs and optional test training.<BR><BR>Use [c for your companion, [home for starter housing and [havenmarks for rewards. Completed companion missions earn 2 Haven Marks per minute. Preview each reward before buying it.<BR><BR>Native vendors, bankers, healers and trainers remain available. Use [minichamp for three-wave expeditions and a boss, with rewards for every damage participant. Evolving gear, custom pets, the market and home island remain upcoming. Original-server progress is separate."};
+            AddHtml(24,58,520,240,"<BASEFONT COLOR=#202020>"+details[service]+"</BASEFONT>",false,true);
             if(stone!=null && service!=6) { AddButton(24,362,0xFA5,0xFA7,1,GumpButtonType.Reply,0); AddLabel(60,362,0,service<=1?"Claim supplies":service==4?"Repair carried equipment":"Open service"); }
-            if(service==6) {AddButton(24,362,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(60,362,0,"Browse Haven rewards");}
+            if(service==6) {AddButton(24,315,0xFA5,0xFA7,4,GumpButtonType.Reply,0);AddLabel(60,315,0,"Healers and corpse recovery");AddButton(24,362,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(60,362,0,"Browse Haven rewards");AddButton(245,362,0xFA5,0xFA7,3,GumpButtonType.Reply,0);AddLabel(279,362,0,"Mini champion");}
             AddButton(440,362,0xFA5,0xFA7,0,GumpButtonType.Reply,0); AddLabel(476,362,0,"Close");
         }
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var from=sender.Mobile;
+            if(info.ButtonID==4 && _service==6) {from.SendGump(new HavenRecoveryGump());return;}
+            if(info.ButtonID==3 && _service==6) {var camp=HavenMiniChamp.Find();if(camp!=null)camp.Show(from);return;}
             if(info.ButtonID==2 && _service==6) {HavenMarks.Show(from);return;}
             if(info.ButtonID!=1 || !HavenStarterHub.CanUse(from,_stone)) return;
             switch(_service)
@@ -124,3 +126,5 @@ namespace Server.HavenPrototype
         }
     }
 }
+
+

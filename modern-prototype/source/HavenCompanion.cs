@@ -260,8 +260,26 @@ namespace Server.HavenPrototype
 
         public override void OnThink()
         {
+            if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
             base.OnThink();
             if (_owner != null && _owner.NetState != null && _owner.Hits < _owner.HitsMax * 0.65) HealOwner(_owner);
+        }
+
+        private DateTime _reviveAt;
+        internal bool RecoverFromDeath(DateTime now)
+        {
+            if (!IsDeadPet) { _reviveAt = DateTime.MinValue; return false; }
+            if (_reviveAt == DateTime.MinValue) _reviveAt = now.AddSeconds(5);
+            if (_owner == null || _owner.Deleted || ControlMaster != _owner || IsStabled || OnMission ||
+                Map == null || Map == Map.Internal || _owner.Map != Map || !InRange(_owner, 18) || now < _reviveAt) return false;
+            ResurrectPet();
+            Hits = HitsMax; Stam = StamMax; Mana = ManaMax;
+            Combatant = null; FocusMob = null; Warmode = false;
+            ControlTarget = _owner; ControlOrder = OrderType.Follow;
+            _reviveAt = DateTime.MinValue;
+            AIObject.Activate();
+            _owner.SendMessage("Your companion has recovered and is ready to help again.");
+            return true;
         }
 
         public override bool HandlesOnSpeech(Mobile from) { return CanCommand(from); }
