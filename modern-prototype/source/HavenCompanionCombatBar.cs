@@ -17,7 +17,7 @@ namespace Server.HavenPrototype
             owner.SendGump(new CompanionCombatBarGump(this));
         }
     }
-    public class CompanionCombatBarGump:HavenMenuGump
+    public class CompanionCombatBarGump:Gump
     {
         private readonly HavenCompanion _companion;
         public static void Initialize() {CommandSystem.Register("cc",AccessLevel.Player,e=>{
@@ -27,18 +27,24 @@ namespace Server.HavenPrototype
         {
             _companion=companion;
             Closable=false;
-            AddBackground(0,0,440,124,0xA28);
-            AddLabelCropped(20,12,210,24,0,companion.Name);
-            Button(240,12,7,"Menu");
-            Button(340,12,9,"Close");
-            Button(20,48,1,"Follow");Button(125,48,2,"Guard");
-            Button(230,48,4,"Stay");Button(335,48,3,"Attack");
-            Button(20,86,5,"Heal");
-            Button(125,86,10,companion.TamingAssistActive?"Cancel":"Tame");
-            Button(230,86,6,"Recall");Button(335,86,8,"Pack");
-
+            AddBackground(0,0,350,112,3600);
+            AddAlphaRegion(0,0,350,112);
+            AddLabelCropped(12,8,165,20,53,companion.Name);
+            Button(184,8,7,"Menu");Button(266,8,9,"Close");
+            Button(12,39,1,"Follow");Button(94,39,2,"Guard");
+            Button(176,39,4,"Stay");Button(258,39,3,"Attack");
+            Button(12,69,5,"Heal");Button(94,69,10,companion.TamingAssistActive?"Cancel":"Tame");
+            Button(176,69,6,"Recall");Button(258,69,8,"Pack");
         }
-        private void Button(int x,int y,int id,string label) {AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabelCropped(x+34,y,70,24,0,label);}
+        private void Button(int x,int y,int id,string label)
+        {
+            // Four adjoining native hit areas make the whole labeled rectangle clickable.
+            for(int offset=0;offset<76;offset+=19)AddButton(x+offset,y,210,210,id,GumpButtonType.Reply,0);
+            AddImageTiled(x,y,76,19,5058);
+            bool selected=(id==1&&_companion.ControlOrder==OrderType.Follow)||(id==2&&_companion.ControlOrder==OrderType.Guard)||(id==4&&_companion.ControlOrder==OrderType.Stay)||(id==10&&_companion.TamingAssistActive);
+            AddHtml(x,y+1,76,18,"<CENTER><BASEFONT COLOR="+(selected?"#FFE399":"#FFFFFF")+">"+label+"</BASEFONT></CENTER>",false,false);
+        }
+
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var owner=sender.Mobile;if(!_companion.IsOwner(owner) || info.ButtonID==0)return;
