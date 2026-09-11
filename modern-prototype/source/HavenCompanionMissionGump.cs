@@ -20,31 +20,54 @@ namespace Server.HavenPrototype
             _companion=companion;_tab=Math.Max(0,Math.Min(2,tab));_minutes=minutes==15||minutes==30||minutes==60?minutes:5;
             var names=_tab==0?Gathering:_tab==1?HavenPetMissions.Names:Roles;
             _selection=Math.Max(0,Math.Min(names.Length-1,selection));int page=_selection/6;
-            AddBackground(0,0,720,582,0xA28);
-            Text(24,20,660,28,"<B>"+companion.Name+" - missions & roles</B>");
-            Text(24,53,664,25,companion.OnMission?"Away: "+CompanionMissionTimerGump.Remaining(companion):"Ready | Current role: "+companion.Role);
-            Button(24,88,10,_tab==0?"Gathering [selected]":"Gathering",180);
-            Button(258,88,11,_tab==1?"Taming [selected]":"Taming",165);
-            Button(490,88,12,_tab==2?"Roles [selected]":"Roles",165);
-            if(_tab!=2){Text(24,130,108,25,"Duration");Button(128,130,20,_minutes==5?"5 min [x]":"5 min",100);Button(266,130,21,_minutes==15?"15 min [x]":"15 min",110);Button(410,130,22,_minutes==30?"30 min [x]":"30 min",110);Button(554,130,23,_minutes==60?"60 min [x]":"60 min",110);}
-            else Text(24,130,655,26,"Change roles while nearby and out of combat. All roles can heal.");
-            for(int row=0;row<6&&page*6+row<names.Length;row++){int index=page*6+row,y=181+row*36;if(index==_selection)Text(24,y,266,30,"<B>"+names[index]+"</B>");else Button(24,y,100+index,names[index],233);}
-            if(names.Length>6){if(page>0)Button(24,401,30,"Previous",105);if((page+1)*6<names.Length)Button(165,401,31,"Next",105);}
-            Text(322,180,365,32,"<B>"+names[_selection]+"</B>");
-            string detail;
-            if(_tab==2){detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Magery and Spellweaving, Wraith Form and automatic Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first. Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them. Use Tame assist in Companion pets to calm and tame wild animals.";detail+="<BR><BR>Role changes preserve stored equipment and trained skills.";}
-            else {
-                detail="<B>Requirements</B><BR>"+Requirement(companion,_tab,_selection)+"<BR><BR><B>On completion</B><BR>"+(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes);
-                detail+="<BR><BR>Early recall cancels the trip without completion rewards.";
+            AddBackground(0,0,720,560,0xA28);
+            Text(24,20,660,28,"<B>"+companion.Name+" - "+(_tab==2?"combat role":"missions")+"</B>");
+            Text(24,52,664,25,companion.OnMission?"Away: "+MissionName(companion.MissionKind)+" | "+CompanionMissionTimerGump.Remaining(companion):"Ready | Combat role: "+companion.Role);
+            Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
+            Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
+            Button(475,87,12,_tab==2?"[Combat role]":"Combat role",185);
+            Text(24,133,264,25,"<B>"+(_tab==2?"Choose a role":"1. Choose a mission")+"</B>");
+            for(int row=0;row<6&&page*6+row<names.Length;row++)
+            {
+                int index=page*6+row,y=174+row*42;
+                Button(24,y,100+index,index==_selection?"<B>&gt; "+names[index]+"</B>":names[index],235,40);
             }
-            AddHtml(322,222,363,184,"<BASEFONT COLOR=#342B23>"+detail+"</BASEFONT>",false,true);
-            if(_tab==2)Button(322,423,1,"Use "+names[_selection]+" role",230);
-            else if(!companion.OnMission)Button(322,423,1,"Start "+_minutes+"-minute mission",280);
-            else {Button(322,423,2,"Minimize timer",160);Button(516,423,3,"Recall early",145);}
-            Text(24,467,663,24,_tab==2?"Select a role above, then apply it.":"Select a mission and duration, then Start. Completed trips return automatically.");
-            if(_tab!=2)Button(24,542,6,"Save as offline default",235);Button(365,542,7,"Offline setup",240);
-            Button(24,504,0,"Back",100);Button(184,504,4,"Resource ledger",178);Button(418,504,5,"Collect pet tickets ("+companion.PendingPetTickets+")",259);
+            if(names.Length>6)
+            {
+                if(page>0)Button(24,435,30,"Prev",54);
+                Text(115,435,95,25,"Page "+(page+1)+" / "+((names.Length+5)/6));
+                if((page+1)*6<names.Length)Button(212,435,31,"Next",58);
+            }
+            Text(322,133,365,28,"<B>"+names[_selection]+"</B>");
+            if(_tab==2)
+            {
+                string detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Magery and Spellweaving, Wraith Form and automatic Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first.<BR><BR>Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them.<BR><BR>Use Tame assist in Companion pets to calm and tame wild animals.";
+                Text(322,179,365,200,detail);
+                Text(322,385,365,58,"All roles can heal. Changing role preserves equipment and trained skills.");
+                Button(322,455,1,"Use "+names[_selection]+" role",320);
+            }
+            else
+            {
+                Text(322,175,365,24,"<B>2. Duration</B>");
+                int[] durations={5,15,30,60};
+                for(int i=0;i<4;i++)Button(322+i*91,204,20+i,(_minutes==durations[i]?"<B>[":"")+durations[i]+"m"+(_minutes==durations[i]?"]</B>":""),53);
+                Text(322,242,365,24,"<B>Requirements</B>");
+                Text(322,268,365,62,Requirement(companion,_tab,_selection));
+                Text(322,334,365,24,"<B>Rewards on completion</B>");
+                Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes));
+                if(!companion.OnMission)Button(322,455,1,"Start "+_minutes+"-minute mission",320);
+                else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
+                Text(24,484,670,23,"Auto-returns on completion. Early recall forfeits rewards.");
+            }
+            Button(24,520,0,"Back",65);
+            if(_tab!=2)
+            {
+                Button(139,520,4,"Ledger",85);
+                Button(276,520,5,"Pet tickets ("+companion.PendingPetTickets+")",160);
+                Button(511,520,7,"Offline setup",145);
+            }
         }
+
         public static string Requirement(HavenCompanion c,int tab,int selection)
         {
             if(tab==1){double required=HavenPetMissions.Requirements[selection];return "Taming and Animal Lore: "+required.ToString("0.0")+" each.<BR>Yours: "+c.Skills.AnimalTaming.Base.ToString("0.0")+" / "+c.Skills.AnimalLore.Base.ToString("0.0");}
@@ -61,8 +84,8 @@ namespace Server.HavenPrototype
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
             switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
         }
-        void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#342B23>"+text+"</BASEFONT>",false,false);}
-        void Button(int x,int y,int id,string label,int width){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,27,label);}
+        void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#171511>"+text+"</BASEFONT>",false,false);}
+        void Button(int x,int y,int id,string label,int width,int height=27){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,height,label);}
         public override void OnResponse(NetState state,RelayInfo info)
         {
             var p=state.Mobile;int id=info.ButtonID;if(!_companion.IsOwner(p))return;
@@ -72,8 +95,8 @@ namespace Server.HavenPrototype
             if(id==3&&!_companion.Recall(p))p.SendMessage("Cannot recall while in combat or unable to travel.");
             if(id==4){_companion.OpenResourceLedger(p);return;}
             if(id==5)_companion.DeliverPetTickets();
-            if(id==6&&_tab!=2){var plan=HavenOfflineMissionPlan.Ensure(_companion);if(!plan.Configure(p,_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection),_minutes))p.SendMessage("Recall your companion and stand nearby to save a default.");else p.SendMessage("Offline default saved. Enable it in Offline setup.");}
-            if(id==7){p.SendGump(new HavenOfflineMissionGump(HavenOfflineMissionPlan.Ensure(_companion)));return;}
+
+            if(id==7&&_tab!=2){p.SendGump(new HavenOfflineMissionGump(HavenOfflineMissionPlan.Ensure(_companion),_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection),_minutes));return;}
             int tab=id>=10&&id<=12?id-10:_tab;
             int selected=tab!=_tab?0:id>=100&&id<112?id-100:id==30?Math.Max(0,(_selection/6-1)*6):id==31?(_selection/6+1)*6:_selection;
             int minutes=id==20?5:id==21?15:id==22?30:id==23?60:_minutes;
