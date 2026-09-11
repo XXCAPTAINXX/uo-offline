@@ -245,3 +245,6 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Progression1 compile failed on test lambda shadowing; corrected. Progression2 pending with native kill XP, binding/maxlevels, atomic robe costs, wallet/tithing/bank/full-pack, real Luck and native skill gain tests plus reload.
 - Progression2 wallet/Luck/training checks passed; native kill fixture initially damaged exactly to0HP, while ServUO requires damage below0 to call Kill. Corrected fixture to Hits+1. Added real successful spell cast XP test. Progression3 initially had stray test-edit quotes; fixed before runtime. Current run passes native kill and grimoire cast XP.
 - Progression3:173PASS fresh/reload. Final checklist UI compiled afterward with zero errors. Saved backup E:/Backups/Haven/Prototypes/servuo-before-starter-wallet-20260911. Live source/patch deployment includes nine starter items, upgrades, wallet/tithing and original area boosts. Full special reward catalog still pending.
+
+## Wallet readability cleanup
+- Replaced noisy wallet interior with opaque dark panel and regular HTML text, aligned two-column actions, smaller 460px width, and plain inset amount entry. Backend untouched. Isolated and live builds passed; saved backup servuo-before-wallet-layout-20260911, deployed source-only and restarted. Client visual review remains pending.
