@@ -7,7 +7,7 @@ using Server.Network;
 
 namespace Server.HavenPrototype
 {
-    public enum CompanionMission { Supply, Mining, Lumber, Leather, Malas, Abyss, TamePackHorse, TameHorse, TameOstard, TameBeetle, TameDragon, TameWhiteWyrm, TameEmberwing, TameMoonfang, TameStormscale, TameFrostmane, TameVerdantLlama, TameStormhorn }
+    public enum CompanionMission { Supply, Mining, Lumber, Leather, Malas, Abyss, TamePackHorse, TameHorse, TameOstard, TameBeetle, TameDragon, TameWhiteWyrm, TameEmberwing, TameMoonfang, TameStormscale, TameFrostmane, TameVerdantLlama, TameStormhorn, Reagents, MalasReagents, DoomBones, AbyssEssences, AbyssIngredients }
     public partial class HavenCompanion
     {
         private CompanionMission _missionKind;
@@ -41,9 +41,10 @@ namespace Server.HavenPrototype
         // Snapshot rewards when dispatched: skill or equipment changes during a run cannot reroll them.
         private bool PrepareResourceMission(CompanionMission kind,int minutes)
         {
-            if (kind < CompanionMission.Supply || kind > CompanionMission.TameStormhorn) return false;
+            if (kind < CompanionMission.Supply || kind > CompanionMission.AbyssIngredients) return false;
             if(HavenPetMissions.Valid(kind)&&(!HavenPetMissions.CanStart(this,kind)||PendingPetTickets>=50))return false;
             var rewards = new Dictionary<int,int>();
+            if(HavenRegionalMissions.Valid(kind)) HavenRegionalMissions.Prepare(this,kind,minutes,rewards);
             switch (kind)
             {
                 case CompanionMission.Mining:
@@ -121,7 +122,7 @@ namespace Server.HavenPrototype
         private void DeserializeResourceMissions(GenericReader reader)
         {
             _missionKind=(CompanionMission)reader.ReadInt(); _resourceLedger=reader.ReadItem() as HavenResourceLedger;
-            if(_missionKind<CompanionMission.Supply || _missionKind>CompanionMission.TameStormhorn) throw new InvalidOperationException("Unknown companion mission");
+            if(_missionKind<CompanionMission.Supply || _missionKind>CompanionMission.AbyssIngredients) throw new InvalidOperationException("Unknown companion mission");
             ReadResources(reader,_scheduledResources); ReadResources(reader,_pendingResources);
         }
         private static void WriteResources(GenericWriter writer,Dictionary<int,int> resources)

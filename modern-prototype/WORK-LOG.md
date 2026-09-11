@@ -324,3 +324,9 @@ Restored automatic actual strength-6 Arcane Focus for companion caster mode. Nat
 
 - Final fresh signature suite and reload passed: native auto-stable owner retained, native login reclaim succeeds, pet active, training/rarity/legendary record unchanged, same-enemy quota still enforced, temporary fields expired.
 - DEPLOYED pet release to D:/Uo Offline/Haven-ServUO-Preview on 2026-09-11. Clean save/stop; backup E:/Backups/Haven/Prototypes/servuo-before-pets-20260911-144023 (every Saves file hash verified). Copied source only, applied native patches 0009–0012, full live rebuild: zero warnings/errors. Started on 127.0.0.1:2699 and verified account-login/server-list/game-relay handshake. No verification scripts, markers or saved fixtures copied to live. Original server unchanged.
+
+
+### 2026-09-11 regional/offline mission restoration
+- Compared old HavenRegionalMissions.cs, HavenMissionDuration.cs, HavenCompanionExpedition.cs and idle/gear-assignment flows. Restored five missing resource routes with native materials and original regional rates/gates; appended serialized IDs.
+- Shared offline/manual dispatch retains normal life/control/combat/skill/capacity checks. Only physical owner proximity is waived for an explicitly enabled, offline owner's plan. Offline repetitions use current clock; no invented downtime rewards. Disabled by default.
+- OfflineMissionSmoke: fresh and reload passed, plus rotation and finish-on-login follow-up. Uses a real local SocketState for connected-owner/login gates. Forced completion changes only isolated test due times. Live world has not received test sources or fixtures.

@@ -397,9 +397,15 @@ namespace Server.HavenPrototype
         }
         public bool StartMission(Mobile from, int minutes, CompanionMission kind)
         {
-            string reason = MissionStartError(from, minutes, kind);
+            return StartMissionCore(from,minutes,kind,false);
+        }
+        internal bool StartOfflineMission(int minutes,CompanionMission kind){return StartMissionCore(_owner,minutes,kind,true);}
+        private bool StartMissionCore(Mobile from,int minutes,CompanionMission kind,bool offline)
+        {
+            string reason = MissionStartError(from, minutes, kind,offline);
             if (reason != null) { if (from != null) from.SendMessage(reason); return false; }
             if (!PrepareResourceMission(kind, minutes)) { from.SendMessage("Cannot start: collect pending resources or pet tickets first; reward storage is full."); return false; }
+            ClearMissionReturn();
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddMinutes(minutes);
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
@@ -410,19 +416,23 @@ namespace Server.HavenPrototype
             return true;
         }
 
-        public string MissionStartError(Mobile from, int minutes, CompanionMission kind)
+        public string MissionStartError(Mobile from, int minutes, CompanionMission kind){return MissionStartError(from,minutes,kind,false);}
+        internal string MissionStartError(Mobile from,int minutes,CompanionMission kind,bool offline)
         {
             if (!IsOwner(from)) return "This is not your companion.";
+            if(offline&&(from.NetState!=null||HavenOfflineMissionPlan.Find(this)?.Enabled!=true))return "Offline missions must be enabled and the owner logged out.";
+            if(IsStabled)return "Recall your companion from the stables first.";
             if (OnMission) return "Your companion is already on a mission. Recall early to cancel it first.";
             if (!from.Alive || !Alive || IsDeadPet) return "You and your companion must be alive to start a mission.";
             if (!Controlled || ControlMaster != from) return "Your companion is not currently under your control.";
-            if (Map == Map.Internal || from.Map != Map || !from.InRange(this,14)) return "Move within 14 tiles of your companion before starting a mission.";
-            if (!from.InLOS(this)) return "Move into sight of your companion before starting a mission.";
+            if (!offline&&(Map == Map.Internal || from.Map != Map || !from.InRange(this,14))) return "Move within 14 tiles of your companion before starting a mission.";
+            if (!offline&&!from.InLOS(this)) return "Move into sight of your companion before starting a mission.";
             if (Combatant != null || from.Combatant != null) return "Cannot start while you or your companion have a combat target. Finish combat first.";
             if (Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return "Recent combat is still active. Wait for combat aggression to expire before sending a mission.";
             if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
-            if (minutes != 5 && minutes != 15 && minutes != 30) return "Choose a 5, 15 or 30 minute mission.";
-            if (kind < CompanionMission.Supply || kind > CompanionMission.TameStormhorn) return "That mission is unavailable.";
+            if (minutes != 5 && minutes != 15 && minutes != 30 && minutes != 60) return "Choose a 5, 15, 30 or 60 minute mission.";
+            if (kind < CompanionMission.Supply || kind > CompanionMission.AbyssIngredients) return "That mission is unavailable.";
+            if(HavenRegionalMissions.Valid(kind)&&!HavenRegionalMissions.CanStart(this,kind))return "This route needs "+HavenRegionalMissions.Requirement(kind)+" Magic Resistance AND a combat skill (Tactics, Magery or Archery).";
             if (_pendingGold > Int32.MaxValue - minutes * 100) return "Collect your companion's pending gold before starting another mission.";
             if ((kind == CompanionMission.Malas || kind == CompanionMission.Abyss) && Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < (kind == CompanionMission.Malas ? 60 : 80)) return "Your companion needs " + (kind == CompanionMission.Malas ? "60" : "80") + " trained Magery or Tactics for this route.";
             if (HavenPetMissions.Valid(kind) && !HavenPetMissions.CanStart(this,kind)) return "Your companion needs " + HavenPetMissions.Requirements[(int)kind-6].ToString("0.0") + " trained Animal Taming AND Animal Lore for this pet.";

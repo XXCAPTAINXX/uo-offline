@@ -27,7 +27,7 @@ public static class MissionSafetySmoke
         Check(companion.StartMission(owner,30,CompanionMission.Mining),"30 minute mining dispatch succeeds when eligible");
         Check(companion.MissionStartError(owner,30,CompanionMission.Mining).Contains("already"),"second dispatch explains active mission");
         Check(companion.Recall(owner),"30 minute mission can be canceled early");
-        Check(companion.MissionStartError(owner,20,CompanionMission.Mining).Contains("5, 15 or 30"),"invalid duration explains allowed options");
+        Check(companion.MissionStartError(owner,20,CompanionMission.Mining).Contains("5, 15, 30 or 60"),"invalid duration explains allowed options");
         companion.CriminalAction(false);Check(owner.Criminal,"actual companion crime still flags owner");
         var pet=new HavenEmberwing();HavenPetMissions.ApplyRarity(pet,3);int strength=pet.RawStr;HavenPetMissions.ApplyRarity(pet,3);Check(HavenPetRarity.Find(pet).Tier==3&&pet.RawStr==strength,"pet retains rarity identity and cannot stack rarity bonuses");pet.Delete();
         foreach(var kind in new[]{6,8,9}){

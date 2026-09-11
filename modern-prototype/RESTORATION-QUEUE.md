@@ -45,3 +45,12 @@ Passed isolated runtime checks: ten-species signature/defense/training checks; n
 Still separate work: old custom trained elemental ability pool (this release uses native ServUO training catalogs), pet dyes/shrinking consumables, full Bard songs/masteries and role parity, remaining gathering/advanced mission routes and saved offline rotations, remaining gear systems, and the finished home island. This checkpoint is a usable pet release, not full one-for-one migration completion.
 
 Pet checkpoint deployed 2026-09-11 after the above checks, including native auto-stable/login reclaim and active training quota reload. Existing characters preserved. Remaining scope listed above is still unfinished.
+
+
+## Regional and offline mission checkpoint — staged 2026-09-11
+- Added Magery reagents, Malas necromantic reagents, Doom bones, Abyss essences and Abyss rare ingredients as appended mission IDs; existing active/save IDs retain their meaning.
+- New regional pools, rates, resistance-plus-combat requirements and 15/30/60-minute material bonuses match original HavenRegionalMissions/HavenMissionDuration. Added native reagents/rare ingredients to the resource ledger without reordering existing IDs. Legacy bundled Malas/Abyss routes remain available.
+- Added 60-minute dispatch and UI selection. Material completion bonuses apply to the restored reagent/regional routes; broader original grind/gear/training/taming supply-roll parity remains unfinished.
+- Saved offline plan: selected route and duration, disabled by default, repeat default or cycle eligible routes, finish or recall the active offline trip on login. Manual trips survive logout; the default starts only after completion. One shared mission/reward transaction path handles manual and offline dispatch. No extra simulated trips while server is stopped.
+- Native runtime tests pass for all restored material pools, stackable ledger withdrawal, 60-minute snapshots/exact credits, skill gates, opt-in, manual mission preservation, repeated pulses, stopping repeat, both login choices and unqualified-route skipping. Reload preserves plan/active mission and awards the overdue trip once before dispatching the next.
+- Compact timer separates route name from countdown so long names cannot hide the time.
