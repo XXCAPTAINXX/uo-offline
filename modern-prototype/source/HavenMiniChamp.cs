@@ -178,7 +178,7 @@ namespace Server.HavenPrototype
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_owner);}
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_owner=r.ReadMobile();}
     }
-    public class HavenMiniChampGump : Gump
+    public class HavenMiniChampGump : HavenMenuGump
     {
         private readonly HavenMiniChamp _camp;
         public HavenMiniChampGump(HavenMiniChamp camp,Mobile p):base(45,45){

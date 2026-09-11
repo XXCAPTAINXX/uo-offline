@@ -29,10 +29,10 @@ namespace Server.HavenPrototype {
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Owner);w.Write(_legacyGold);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();_legacyGold=r.ReadLong();Timer.DelayCall(TimeSpan.Zero,()=>{if(!Deleted)MergeLegacy();});}
  }
- public class HavenWalletGump:Gump {
+ public class HavenWalletGump:HavenMenuGump {
   private readonly HavenWallet _wallet;
   public HavenWalletGump(HavenWallet w,Mobile p):base(50,50){
-   _wallet=w; AddBackground(0,0,460,331,0x13BE); AddImageTiled(12,12,436,307,2624);
+   _wallet=w; AddBackground(0,0,460,331,0x13BE);
    Text(24,22,400,24,"<B>ADVENTURER'S WALLET</B>");
    Text(24,56,260,22,"Bank gold: "+w.Balance.ToString("N0"));
    Text(295,56,140,22,"Marks: "+HavenMarks.Balance(p).ToString("N0"));

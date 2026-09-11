@@ -87,12 +87,12 @@ namespace Server.HavenPrototype
             AddBackground(0,0,650,420,0xA28);
             AddLabel(20,16,0,"Haven rewards");AddLabel(400,16,0,"Marks: "+HavenMarks.Balance(owner));
             AddHtml(20,50,610,50,"<BASEFONT COLOR=#342B23>Earn 2 Marks per completed companion mission minute: 10 for a 5-minute run. Recalled-early missions award none.</BASEFONT>",false,false);
-            for(int i=0;i<HavenMarks.Names.Length;i++) {AddButton(20,112+i*39,0xFA5,0xFA7,100+i,GumpButtonType.Reply,0);AddLabel(54,112+i*39,0,HavenMarks.Names[i]);}
-            _holder=new HavenShopPreviewHolder();_preview=HavenMarks.CreateReward(_selected);_holder.DropItem(_preview);
+            _holder=new HavenShopPreviewHolder();
+            for(int i=0;i<HavenMarks.Names.Length;i++) {var item=HavenMarks.CreateReward(i);_holder.DropItem(item);if(i==_selected)_preview=item;HavenMenuGump.ItemArrow(this,owner,item,20,112+i*39,100+i);AddLabel(54,112+i*39,0,HavenMarks.Names[i]);}
             AddItem(300,112,_preview.ItemID,_preview.Hue);_preview.SendPropertiesTo(owner);AddItemProperty(_preview.Serial);
             AddLabel(350,114,0,HavenMarks.Prices[_selected]+" Marks");
             AddHtml(290,165,335,142,"<BASEFONT COLOR=#342B23>"+HavenMarks.Descriptions[_selected]+"</BASEFONT>",false,false);
-            AddButton(290,321,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(324,321,0,"Buy selected reward");
+            HavenMenuGump.ItemArrow(this,owner,_preview,290,321,1);AddLabel(324,321,0,"Buy selected reward");
             if(HavenMarks.CanClaimTestAllowance(owner)) {
                 AddButton(20,370,0xFA5,0xFA7,2,GumpButtonType.Reply,0);
                 AddLabel(54,370,0,"Claim 100 test Marks (once per account)");

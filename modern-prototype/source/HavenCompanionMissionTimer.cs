@@ -4,7 +4,7 @@ using Server.Network;
 
 namespace Server.HavenPrototype
 {
-    public class CompanionMissionTimerGump : Gump
+    public class CompanionMissionTimerGump : HavenMenuGump
     {
         private readonly HavenCompanion _companion;
         public static string Remaining(HavenCompanion companion)

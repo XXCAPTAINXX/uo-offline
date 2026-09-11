@@ -45,7 +45,7 @@ namespace Server.HavenPrototype {
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
  }
- public class HavenStarterGearGump:Gump {
+ public class HavenStarterGearGump:HavenMenuGump {
   private readonly int _tier;
   public HavenStarterGearGump(Mobile p):base(40,40){var robe=HavenStarterGear.Robe(p);_tier=robe==null?-1:robe.Progress.Tier;AddBackground(0,0,570,420,0x13BE);AddLabel(20,18,1152,"Haven evolving starter equipment");AddHtml(20,55,525,240,"<BASEFONT COLOR=#FFFFFF>One free set per character, including existing preview characters.<BR><BR>Four weapons: sword, fencing, mace and bow. Start with 30% mana leech; reach 100% at level 20.<BR>Grimoire: full Magery book with growing mana bonuses.<BR>Cape: growing Luck, regeneration and defenses.<BR>Sash: stats and regeneration.<BR>Fortune Earrings: 100% lower reagent cost and 200 starting Luck.<BR>Robe: four paid upgrade tiers.<BR><BR>Wear equipment to earn XP from credited hostile monster kills. Weapons also gain XP on hits; the grimoire gains XP from successful spell sequences. Bound equipment cannot be worn by another character.</BASEFONT>",false,true);Button(20,315,1,"Claim free evolving set");Button(300,315,3,"Wallet / tithing");AddLabel(20,350,1152,_tier<0?"Carry your starter robe to upgrade it.":_tier>=4?"Robe fully upgraded.":"Next robe tier: "+(_tier+1)+" Marks or "+((_tier+1)*5000)+" wallet/bank gold");if(_tier>=0&&_tier<4)Button(20,382,2,"Upgrade robe");Button(430,382,0,"Close");}
   private void Button(int x,int y,int id,string label){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,1152,label);}
