@@ -332,3 +332,9 @@ Restored automatic actual strength-6 Arcane Focus for companion caster mode. Nat
 - OfflineMissionSmoke: fresh and reload passed, plus rotation and finish-on-login follow-up. Uses a real local SocketState for connected-owner/login gates. Forced completion changes only isolated test due times. Live world has not received test sources or fixtures.
 
 - DEPLOYED regional/offline mission checkpoint 60c5d0a after clean world save. Backup E:/Backups/Haven/Prototypes/servuo-before-offline-missions-20260911-150737; all Saves hashes match. Live source rebuild passed (zero warnings/errors), port2699 startup and native account/server-list/game-relay login passed. Existing characters retained; no test scripts or fixtures deployed.
+
+
+### 2026-09-11 companion roles and follower slots
+- Implemented zero-slot recruitment/migration, appended Healer, original Bard songs/native masteries and caster support restoration. User requested a distinctive healer: stronger direct healing, triage and emergency allied recovery with mana/range/cooldown gates.
+- Found and fixed loading-order migration exception: RemoveFollowers cannot run until PlayerMobile lists initialize. Deferred only the slot migration until after world load; fresh/reload checks pass.
+- CompanionRolesV2Smoke fresh/reload passed. Native combat fixture initially used unsupported floor; corrected fixture to the verified mini-champ clearing and terrain Z. RoleCombatRestoreSmoke then passed with failures=0, including actual native Gift of Life and Renewal on the bound owner. Final connected-owner PetTamingSmoke passed after preventing bard skill/mastery cursor overlap. Isolated build zero warnings/errors.

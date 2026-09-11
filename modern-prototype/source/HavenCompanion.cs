@@ -12,7 +12,7 @@ using CompanionParty = Server.Engines.PartySystem.Party;
 
 namespace Server.HavenPrototype
 {
-    public enum CompanionRole { Warrior, Caster, Archer, Bard }
+    public enum CompanionRole { Warrior, Caster, Archer, Bard, Healer }
     // First ServUO vertical slice, not a deserializer for existing ModernUO saves.
     public partial class HavenCompanion : BaseCreature
     {
@@ -59,7 +59,7 @@ namespace Server.HavenPrototype
             get {
                 if (_companionAI == null)
                     _companionAI = _role == CompanionRole.Caster ? (BaseAI)new HavenCompanionMageAI(this) :
-                        _role == CompanionRole.Archer ? (BaseAI)new HavenCompanionArcherAI(this) : new HavenCompanionAI(this);
+                        _role == CompanionRole.Archer ? (BaseAI)new HavenCompanionArcherAI(this) : _role == CompanionRole.Healer ? (BaseAI)new HavenCompanionHealerAI(this) : new HavenCompanionAI(this);
                 return _companionAI;
             }
         }
@@ -89,7 +89,6 @@ namespace Server.HavenPrototype
                 if (companion._owner != owner || (companion.ControlMaster != null && companion.ControlMaster != owner)) return null;
                 return companion;
             }
-            if (owner.Followers >= owner.FollowersMax) { owner.SendMessage("Your companion needs one free follower slot."); return null; }
             companion = new HavenCompanion();
             companion._owner = owner;
             if (!companion.SetControlMaster(owner)) { companion.Delete(); return null; }
@@ -109,7 +108,7 @@ namespace Server.HavenPrototype
             Body = 0x190;
             Hue = 0x83EA;
             Tamable = false;
-            ControlSlots = 1;
+            ControlSlots = 0;
             MinTameSkill = 0;
             SetStr(200); SetDex(150); SetInt(200); SetHits(400); SetStam(150); SetMana(300);
             SetDamage(8, 12);
@@ -132,7 +131,7 @@ namespace Server.HavenPrototype
 
         public bool SetRole(Mobile from, CompanionRole role)
         {
-            if (!CanCommand(from) || role < CompanionRole.Warrior || role > CompanionRole.Bard || Spell != null ||
+            if (!CanCommand(from) || role < CompanionRole.Warrior || role > CompanionRole.Healer || Spell != null ||
                 Combatant != null || from.Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return false;
             if (role == _role) return true;
             var hands = new List<Item>();
@@ -156,7 +155,7 @@ namespace Server.HavenPrototype
                 if (_roleBow == null || _roleBow.Deleted) _roleBow = new Bow { Movable = false };
                 AddItem(_roleBow);
             }
-            StopTamingAssist();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
+            StopTamingAssist();ClearRoleSupport();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             return SetOrder(from, OrderType.Follow);
         }
@@ -207,6 +206,7 @@ namespace Server.HavenPrototype
 
         public bool Attack(Mobile from, Mobile target)
         {
+            if(Role==CompanionRole.Healer){if(IsOwner(from))from.SendMessage("Your healer stays with the group. Choose a combat role to attack.");return false;}
             if (!CanCommand(from) || target == null || target == this || target == from || target.Deleted || !target.Alive || target.Map != Map ||
                 !from.InRange(target, 12) || !InRange(target, 12) || !from.InLOS(target) || !InLOS(target) || !from.CanBeHarmful(target, false)) return false;
             _checkingPetOrder=true;try{if(!CanBeHarmful(target,false))return false;}finally{_checkingPetOrder=false;}
@@ -265,8 +265,8 @@ namespace Server.HavenPrototype
             } else if(pet!=null&&pet.IsDeadPet) {
                 if((pet.ControlMaster!=_owner&&pet.ControlMaster!=this)||!patient.Map.CanFit(patient.Location,16,false,false))return false;pet.ResurrectPet();_nextHeal=DateTime.UtcNow.AddSeconds(10);
             } else if(patient.Poisoned) {if(!patient.CurePoison(this))return false;_nextHeal=DateTime.UtcNow.AddSeconds(2);}
-            else {if(patient.Hits>=patient.HitsMax||MortalStrike.IsWounded(patient))return false;patient.Heal(30+(int)(Skills.Healing.Base/5),this);_nextHeal=DateTime.UtcNow.AddSeconds(2);}
-            Mana-=10;patient.FixedEffect(0x376A,10,16);patient.PlaySound(0x1F2);CheckSkill(SkillName.Healing,0,125);return true;
+            else {if(patient.Hits>=patient.HitsMax||MortalStrike.IsWounded(patient))return false;patient.Heal(30+(int)(Skills.Healing.Base/5)+(Role==CompanionRole.Healer?15:0),this);_nextHeal=DateTime.UtcNow.AddSeconds(2);}
+            AwardRoleHelp();Mana-=10;patient.FixedEffect(0x376A,10,16);patient.PlaySound(0x1F2);CheckSkill(SkillName.Healing,0,125);return true;
         }
 
         public override void OnThink()
@@ -275,13 +275,13 @@ namespace Server.HavenPrototype
             RecoverResources(DateTime.UtcNow);
             ThinkAssignedPets();
             RespectWildPets();
-            ThinkTamingAssist();ThinkBardCombat();
+            ThinkTamingAssist();ThinkRoleSupport();ThinkBardCombat();
             if (_owner != null && _owner.NetState != null) MaintainSpellweaver();
             base.OnThink();
             if (_owner != null && _owner.NetState != null)
             {
                 if (!TryBandage(_owner)) TryBandage(this);
-                if (HealOwner(_owner) || SupportPatient(this)) return;
+                if (Role==CompanionRole.Healer ? HealMostUrgent() : (HealOwner(_owner) || SupportPatient(this))) return;
                 var patients=GetMobilesInRange(12);try{foreach(Mobile patient in patients)if(SupportPatient(patient))break;}finally{patients.Free();}
             }
         }
@@ -409,7 +409,7 @@ namespace Server.HavenPrototype
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddMinutes(minutes);
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
-            StopTamingAssist();ParkAssignedPets();
+            StopTamingAssist();ClearRoleSupport();ParkAssignedPets();
             Internalize();
             EnsureProgressionCaps();
             ScheduleMission();
@@ -516,6 +516,7 @@ namespace Server.HavenPrototype
 
         public override void OnAfterDelete()
         {
+            ClearRoleSupport();
             ClearMissionReturn();
             CancelPetMission();
             foreach(var ticket in _pendingPets.ToArray())if(ticket!=null&&!ticket.Deleted){if(_owner!=null&&!_owner.Deleted&&_owner.BankBox!=null)_owner.BankBox.DropItem(ticket);else ticket.Delete();}_pendingPets.Clear();
@@ -527,15 +528,16 @@ namespace Server.HavenPrototype
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(4);
+            writer.Write(5);
             writer.Write(_owner); writer.Write(_missionDue); writer.Write(_missionMinutes);
             writer.Write(_pendingGold); writer.Write(_completedMissions); writer.Write(_lastReport);
             writer.Write((int)_role); writer.Write(_roleSword); writer.Write(_roleShield); writer.Write(_roleBow);
             SerializeResourceMissions(writer);
             writer.Write(_missionReturnPending);
             SerializePetMissions(writer);
+            writer.Write(_roleTrainingMinutes);
         }
-        public void EnsureProgressionCaps() { Skills.AnimalTaming.Base=Math.Max(50,Skills.AnimalTaming.Base); for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(125.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1250); RawStr=Math.Max(RawStr,200); RawDex=Math.Max(RawDex,150); RawInt=Math.Max(RawInt,200); HitsMaxSeed=Math.Max(HitsMaxSeed,400); StamMaxSeed=Math.Max(StamMaxSeed,150); ManaMaxSeed=Math.Max(ManaMaxSeed,300); }
+        public void EnsureProgressionCaps() { EnsureFreeFollowerSlots(); Skills.AnimalTaming.Base=Math.Max(50,Skills.AnimalTaming.Base); for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(125.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1250); RawStr=Math.Max(RawStr,200); RawDex=Math.Max(RawDex,150); RawInt=Math.Max(RawInt,200); HitsMaxSeed=Math.Max(HitsMaxSeed,400); StamMaxSeed=Math.Max(StamMaxSeed,150); ManaMaxSeed=Math.Max(ManaMaxSeed,300); }
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
@@ -544,11 +546,12 @@ namespace Server.HavenPrototype
             _pendingGold = reader.ReadInt(); _completedMissions = reader.ReadInt(); _lastReport = reader.ReadString();
             if (version >= 1) { _role = (CompanionRole)reader.ReadInt(); _roleSword = reader.ReadItem(); _roleShield = reader.ReadItem(); _roleBow = reader.ReadItem(); }
             else { _roleSword = FindItemOnLayer(Layer.OneHanded); _roleShield = FindItemOnLayer(Layer.TwoHanded); }
-            if (_role < CompanionRole.Warrior || _role > CompanionRole.Bard) _role = CompanionRole.Warrior;
+            if (_role < CompanionRole.Warrior || _role > CompanionRole.Healer) _role = CompanionRole.Warrior;
             if (version >= 2) DeserializeResourceMissions(reader);
             _missionReturnPending = version >= 3 ? reader.ReadBool() :
                 !OnMission && _completedMissions > 0 && Map == Map.Internal && !IsStabled;
             if(version>=4)DeserializePetMissions(reader);
+            if(version>=5)_roleTrainingMinutes=Math.Max(0,reader.ReadDouble());
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             EnsureProgressionCaps();
             ScheduleMission();
@@ -599,6 +602,7 @@ namespace Server.HavenPrototype
             if (!companion.IsOwner(owner) || !companion.Controlled || companion.ControlMaster != owner ||
                 !owner.Alive || !companion.Alive || companion.IsDeadPet || companion.OnMission ||
                 owner.Map != companion.Map || companion.Map == Map.Internal) return true;
+            if(companion.Role==CompanionRole.Healer){companion.Combatant=null;companion.ControlTarget=owner;return ai.DoOrderFollow();}
             var target = companion.ClosestHostile(); companion.Combatant = target; companion.FocusMob = target;
             if (target != null) { ai.Action = ActionType.Combat; return ai.Think(); }
             // Native OnCurrentOrderChanged clears ControlTarget when Guard is selected.

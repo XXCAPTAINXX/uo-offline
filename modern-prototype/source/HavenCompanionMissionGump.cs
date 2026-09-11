@@ -13,7 +13,7 @@ namespace Server.HavenPrototype
         static readonly string[] BaseGathering={"Supply run","Mining","Lumberjacking","Leather gathering","Malas supplies","Abyss supplies"};
         static readonly string[] Gathering=BaseGathering.Concat(HavenRegionalMissions.Names).ToArray();
         static CompanionMission GatheringKind(int i){return i<6?(CompanionMission)i:HavenRegionalMissions.Kinds[i-6];}
-        static readonly string[] Roles={"Warrior","Caster","Archer","Bard"};
+        static readonly string[] Roles={"Warrior","Caster","Archer","Bard","Healer"};
         public static string MissionName(CompanionMission kind){int i=(int)kind;if(HavenRegionalMissions.Valid(kind))return HavenRegionalMissions.Names[Array.IndexOf(HavenRegionalMissions.Kinds,kind)];return i>=6&&i<18?HavenPetMissions.Names[i-6]:i>=0&&i<Gathering.Length?Gathering[i]:"Mission";}
         public CompanionActivityGump(HavenCompanion companion,int tab=0,int selection=0,int minutes=5):base(50,50)
         {
@@ -32,7 +32,7 @@ namespace Server.HavenPrototype
             if(names.Length>6){if(page>0)Button(24,401,30,"Previous",105);if((page+1)*6<names.Length)Button(165,401,31,"Next",105);}
             Text(322,180,365,32,"<B>"+names[_selection]+"</B>");
             string detail;
-            if(_tab==2){detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Magery and Spellweaving, Wraith Form and automatic Arcane Focus.":_selection==2?"Bow combat from range.":"Peacemaking, provocation and discordance. Use Tame assist in Companion pets to calm and tame wild animals.";detail+="<BR><BR>Role changes preserve stored equipment and trained skills.";}
+            if(_tab==2){detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Magery and Spellweaving, Wraith Form and automatic Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first. Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them. Use Tame assist in Companion pets to calm and tame wild animals.";detail+="<BR><BR>Role changes preserve stored equipment and trained skills.";}
             else {
                 detail="<B>Requirements</B><BR>"+Requirement(companion,_tab,_selection)+"<BR><BR><B>On completion</B><BR>"+(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes);
                 detail+="<BR><BR>Early recall cancels the trip without completion rewards.";

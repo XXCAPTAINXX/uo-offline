@@ -48,7 +48,7 @@ public static class RoleSmoke
         _companion.Hits=_companion.HitsMax; _companion.Mana=_companion.ManaMax;
         _enemy=new Orc(); _enemy.SetHits(3000); _enemy.Hits=_enemy.HitsMax;
         XmlAttach.AttachTo(_enemy,new XmlData("NoSpecials","True"));
-        _enemy.MoveToWorld(new Point3D(_owner.X+3,_owner.Y,_owner.Z),_owner.Map);
+        _enemy.MoveToWorld(new Point3D(_owner.X+3,_owner.Y,_owner.Map.GetAverageZ(_owner.X+3,_owner.Y)),_owner.Map);
         _hits=_enemy.Hits;
         XmlAttach.AttachTo(_companion,new XmlData("NoSpecials","True"));
         // Fixture owner has no network connection, so its sector does not activate a new AI.
