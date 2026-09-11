@@ -30,6 +30,7 @@ public static class MissionRecallSmoke
                 var stranger=new PlayerMobile {Player=true};Require(!c.Recall(stranger) && c.OnMission);stranger.Delete();
                 Require(c.Recall(owner) && !c.OnMission && c.ControlOrder==OrderType.Follow && c.ControlTarget==owner && c.Map==owner.Map);
                 Call(c,"CompleteDueMission");Require(c.CompletedMissions==0 && c.Backpack.GetAmount(typeof(Gold))==0 && c.PendingResources==0);
+                Require(HavenMarks.Balance(owner)==0);
                 Require(Enumerable.Range(0,HavenResources.Types.Length).All(id=>c.ResourceLedger.Balance(id)==0));
             });
         }

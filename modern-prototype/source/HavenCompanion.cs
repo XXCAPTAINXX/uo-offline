@@ -287,6 +287,7 @@ namespace Server.HavenPrototype
             from.CloseGump(typeof(CompanionActivityGump));
             from.CloseGump(typeof(CompanionResourceMissionGump));
             from.CloseGump(typeof(CompanionMissionTimerGump));
+            from.CloseGump(typeof(CompanionCombatBarGump));
             if (OnMission && !expanded) from.SendGump(new CompanionMissionTimerGump(this,from));
             else from.SendGump(new CompanionGump(this));
         }
@@ -345,6 +346,7 @@ namespace Server.HavenPrototype
             _completedMissions++;
             _pendingGold += gold;
             _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
+            _lastReport += " " + HavenMarks.Award(_owner,_missionMinutes*2) + " Haven Marks earned.";
             DeliverRewards();
             _missionReturnPending = true;
             if (_owner != null && _owner.NetState != null) _owner.SendMessage(_lastReport);
@@ -532,6 +534,7 @@ namespace Server.HavenPrototype
             _companion = companion;
             AddBackground(0, 0, 480, 460, 0xA28);
             AddLabel(24, 18, 0, companion.Name + " — Companion");
+            Button(330,18,12,"Combat");
             AddLabel(24, 45, 0, "HP " + companion.Hits + "/" + companion.HitsMax + "    Mana " + companion.Mana + "/" + companion.ManaMax);
             AddLabel(24, 72, 0, companion.OnMission ? companion.MissionKind + ": " + Math.Max(0, Math.Ceiling((companion.MissionDue - DateTime.UtcNow).TotalMinutes)) + " minutes left" : companion.Role + " | Orders: " + companion.ControlOrder);
             Button(24, 110, 1, "Follow"); Button(250, 110, 2, "Guard");
@@ -564,6 +567,7 @@ namespace Server.HavenPrototype
                 case 9: _companion.DeliverRewards(); break;
                 case 10: ok = _companion.JoinOwnerParty(from); break;
                 case 11: _companion.Show(from); return;
+                case 12: _companion.ShowCombatBar(from); return;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
             _companion.Show(from);

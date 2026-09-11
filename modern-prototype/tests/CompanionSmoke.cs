@@ -56,6 +56,7 @@ public static class CompanionSmoke
         StarterHubSmoke.Run(Check, reload);
         StarterHomeSmoke.Run(Check, reload);
         MissionRecallSmoke.Run(Check, reload);
+        HavenMarksSmoke.Run(Check, reload);
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");
@@ -207,6 +208,7 @@ public static class CompanionSmoke
         Check("due mission rewards once and reports", () => {
             Field("_missionDue", DateTime.UtcNow.AddSeconds(-1)); FinishMission(); FinishMission();
             Require(_companion.CompletedMissions == 1 && _companion.Backpack.GetAmount(typeof(Gold)) == 1500 && _companion.LastReport.Contains("500 gold"), "Bad completion");
+            Require(HavenMarks.Balance(_owner)==10,"Mission Marks missing or duplicated");
             Require(_companion.Recall(_owner), "Return failed");
         });
         Check("second reward keeps one gold pile", () => {

@@ -183,3 +183,4 @@ This is an ordered backlog, not a commitment that each stage fits one session. F
 
 
 Latest housing addition: the modern preview now offers a new native 18x18 starter lodge via [home, four secure chests and native stairs. This does not migrate the original island or autosorting system. Final automated suite: 108 passed.
+- Modern preview now has [havenmarks: per-character Marks earned from completed companion missions and six previewable gear rewards; not the complete original reward catalog. [cc provides compact combat controls. Mini champions remain pending.

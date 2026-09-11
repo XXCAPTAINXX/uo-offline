@@ -60,3 +60,5 @@ The `[haventest` checklist now spans three pages. Location-dependent service che
 - Missions now open a compact countdown with Open; expanded companion menu has Minimize. When ready, Recall from timer. His ledger can be used directly in his nearby pack. Please confirm actual following after Recall and timer readability.
 
 Mission return update: completed missions return automatically when you are online and alive. **Recall now** brings him back early and cancels the unfinished run without its completion rewards. Manual Recall still requires being out of combat. Returned companions follow you.
+
+Use `[cc` for compact companion combat controls. Use `[havenmarks` to preview and buy six progression rewards. Completed missions earn2Marks per minute; a5minute mission earns10. Early recalls earn none. Rewards cost60-100Marks. Old-server Marks are not imported.
