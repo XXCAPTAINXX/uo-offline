@@ -95,3 +95,5 @@ The new [haventest checks are Evolving starter equipment (page4), Wallet and tit
 Wallet update: [wallet now uses bank gold directly. Deposit pack gold/checks, withdraw coins, or tithe without wallet-to-bank transfers. Existing wallet gold merges into the bank automatically; failed migrations retain gold and retry when reopened.
 
 Trash: [trashbag or Starter supplies > Get a free trash bag. Public trash chest near Haven3502,2570. Trash empties three minutes after the last deposit; retrieve mistakes before then. Protected items are rejected, including inside nested bags.
+
+Emergency healer travel: [ohshit or [healer, also [recovery > Travel to healer. Ghosts can travel directly beside Ava; normal healer resurrection rules apply. Living players must be out of combat; criminal travel is blocked.

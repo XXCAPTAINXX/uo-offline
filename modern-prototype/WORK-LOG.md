@@ -258,3 +258,7 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 ## Haven plaza cleanup
 - Replaced seven scattered service obelisks with three supported wooden signs along the plaza edge: supplies/equipment, travel/training, help/companions. Grouped menu preserves all seven original services plus gear/recovery entry points. Existing service objects migrate; removed obsolete markers only. Supply gear pillar now a wooden chest. Native center monument and player property untouched.
 - Inspected actual client art contact sheet before selecting sign/post/chest art. Isolated saved-world migration/reload passed, including exactly3boards/3posts and all9menu destinations. Live compile/login passed, saved backup servuo-before-plaza-signs-20260911. In-game overall aesthetic still needs user review; no claimed7/10rating.
+
+## Healer travel
+- Added [healer and user-requested [ohshit alias, plus recovery button. Ghost travel bypasses stale aggression lists; living uses normal CanTravel, criminal travel denied. Chooses fit/LOS landing adjacent to actual Ava and offers native healer resurrection when eligible. Living followers travel via native pet teleport.
+- Isolated reload check passed ghost cross-facet arrival and living-combat rejection. Live build/login passed. Saved backup servuo-before-healer-travel-20260911.

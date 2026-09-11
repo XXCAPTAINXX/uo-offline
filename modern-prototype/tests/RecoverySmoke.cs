@@ -10,6 +10,7 @@ public static class RecoverySmoke {
     public static void Run(Action<string,Action> check,bool reload){
         HavenRecovery.Ensure();
         check("Haven recovery NPCs are present once",()=>{HavenRecovery.Ensure();Require(World.Mobiles.Values.OfType<HavenPlazaHealer>().Count()==1 && World.Mobiles.Values.OfType<HavenRecoverySteward>().Count()==1);});
+        check("healer travel takes ghosts across facets and rejects living combat",()=>{var p=new PlayerMobile {Player=true,Body=0x190,RawStr=100};p.AddItem(new Backpack());new Account("healer-travel-"+Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))[0]=p;p.MoveToWorld(new Point3D(1015,527,-65),Map.Malas);var enemy=new Orc();p.Combatant=enemy;Require(!HavenRecovery.TravelToHealer(p));p.Combatant=null;enemy.Delete();p.Kill();Require(!p.Alive&&HavenRecovery.TravelToHealer(p));var healer=World.Mobiles.Values.OfType<HavenPlazaHealer>().Single();Require(p.Map==healer.Map&&p.InRange(healer,2));if(p.Corpse!=null)p.Corpse.Delete();p.Delete();});
         if(reload)return;
         var steward=HavenRecovery.Steward();var owner=new PlayerMobile {Player=true,Name="Recovery fixture",Body=0x190,RawStr=100};owner.AddItem(new Backpack());new Account("recovery-fixture",Guid.NewGuid().ToString("N"))[0]=owner;owner.MoveToWorld(steward.Location,steward.Map);
         var c=HavenCompanion.Claim(owner);var weapon=c.FindItemOnLayer(Layer.OneHanded);

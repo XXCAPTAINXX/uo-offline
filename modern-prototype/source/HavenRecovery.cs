@@ -7,12 +7,19 @@ using Server.Mobiles;
 using Server.Network;
 namespace Server.HavenPrototype {
     public static class HavenRecovery {
-        public static void Initialize(){CommandSystem.Register("recovery",AccessLevel.Player,e=>{if(HavenPreview.Enabled)e.Mobile.SendGump(new HavenRecoveryGump());});EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};}
+        public static void Initialize(){CommandSystem.Register("ohshit",AccessLevel.Player,e=>TravelToHealer(e.Mobile));CommandSystem.Register("healer",AccessLevel.Player,e=>TravelToHealer(e.Mobile));CommandSystem.Register("recovery",AccessLevel.Player,e=>{if(HavenPreview.Enabled)e.Mobile.SendGump(new HavenRecoveryGump());});EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};}
         public static void Ensure(){if(!HavenPreview.Enabled)return;Place<HavenPlazaHealer>(3506,2573,()=>new HavenPlazaHealer());Place<HavenRecoverySteward>(3508,2576,()=>new HavenRecoverySteward());}
         private static void Place<T>(int x,int y,Func<BaseCreature> create) where T:BaseCreature {
             if(World.Mobiles.Values.OfType<T>().Any(m=>!m.Deleted))return;
             Point3D p;if(!HavenPreview.FindLanding(new HavenPreview.Destination("Recovery",Map.Trammel,x,y,Map.Trammel.GetAverageZ(x,y)),out p))return;
             var npc=create();npc.Home=p;npc.RangeHome=0;npc.MoveToWorld(p,Map.Trammel);
+        }
+        public static bool TravelToHealer(Mobile p){
+            if(!HavenPreview.Enabled||p==null||!p.Player||p.Deleted||p.Account==null||p.Map==Map.Internal||p.Criminal||(p.Alive&&!HavenPreview.CanTravel(p))){if(p!=null)p.SendMessage("Healer travel unavailable: leave combat and clear criminal status.");return false;}
+            Ensure();var healer=World.Mobiles.Values.OfType<HavenPlazaHealer>().FirstOrDefault(x=>!x.Deleted);if(healer==null)return false;
+            Point3D landing=Point3D.Zero;bool found=false;for(int dx=-1;dx<=1&&!found;dx++)for(int dy=-1;dy<=1&&!found;dy++){if(dx==0&&dy==0)continue;var point=new Point3D(healer.X+dx,healer.Y+dy,healer.Z);if(healer.Map.CanFit(point,16,false,true)&&healer.InLOS(point)){landing=point;found=true;}}
+            if(!found){p.SendMessage("The healer's arrival area is blocked. Please try again.");return false;}
+            if(p.Alive)BaseCreature.TeleportPets(p,landing,healer.Map);p.MoveToWorld(landing,healer.Map);if(!p.Alive&&healer.CheckResurrect(p))healer.OfferResurrection(p);p.SendMessage("You are beside Ava, Haven's healer. Mara handles companion and corpse recovery nearby.");return true;
         }
         public static HavenRecoverySteward Steward(){return World.Mobiles.Values.OfType<HavenRecoverySteward>().FirstOrDefault(x=>!x.Deleted);}
         public static bool CanUse(Mobile from){var s=Steward();return HavenPreview.CanTravel(from) && from.Account!=null && s!=null && from.Map==s.Map && from.InRange(s,3) && from.InLOS(s);}
@@ -36,10 +43,11 @@ namespace Server.HavenPrototype {
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
     }
     public class HavenRecoveryGump:Gump {
-        public HavenRecoveryGump():base(50,50){AddBackground(0,0,550,340,0x13BE);AddLabel(20,16,1152,"Haven recovery services");AddHtml(20,50,505,70,"<BASEFONT COLOR=#FFFFFF>Ava resurrects players approaching as ghosts. Stand beside Mara, alive and out of combat, for the free preview services below.</BASEFONT>",false,false);Button(20,128,1,"Heal / resurrect nearby pets");Button(20,170,2,"Recover my dead companion");Button(20,212,3,"Recall my corpse");AddHtml(20,251,505,48,"<BASEFONT COLOR=#FFFFFF>Pets must be yours and nearby. Dead companions can be brought back from elsewhere. Corpse recall moves your existing last corpse; decayed bodies cannot be restored.</BASEFONT>",false,false);Button(420,306,0,"Close");}
+        public HavenRecoveryGump():base(50,50){AddBackground(0,0,550,380,0x13BE);AddLabel(20,16,1152,"Haven recovery services");AddHtml(20,50,505,70,"<BASEFONT COLOR=#FFFFFF>Ava resurrects players approaching as ghosts. Stand beside Mara, alive and out of combat, for the free preview services below.</BASEFONT>",false,false);Button(20,128,4,"Travel to healer (ghosts welcome)");Button(20,170,1,"Heal / resurrect nearby pets");Button(20,212,2,"Recover my dead companion");Button(20,254,3,"Recall my corpse");AddHtml(20,290,505,48,"<BASEFONT COLOR=#FFFFFF>Pets must be yours and nearby. Dead companions can be brought back from elsewhere. Corpse recall moves your existing last corpse; decayed bodies cannot be restored.</BASEFONT>",false,false);Button(420,346,0,"Close");}
         private void Button(int x,int y,int id,string text){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,1152,text);}
-        public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0)return;if(!HavenRecovery.CanUse(p)){p.SendMessage("Stand within three tiles of Mara, alive and out of combat, with no criminal flag.");return;}if(info.ButtonID==1)p.SendMessage("Healed or resurrected "+HavenRecovery.ResurrectPets(p)+" pet(s), including companions.");else if(info.ButtonID==2)p.SendMessage(HavenRecovery.RecoverCompanion(p)?"Your companion is alive and following you.":HavenRecovery.CompanionStatus(p));else if(info.ButtonID==3)p.SendMessage(HavenRecovery.RecallCorpse(p)?"Your corpse is here; loot it normally. It will remain for ten minutes.":"No surviving accessible corpse was found for you.");p.SendGump(new HavenRecoveryGump());}
+        public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0)return;if(info.ButtonID==4){HavenRecovery.TravelToHealer(p);return;}if(!HavenRecovery.CanUse(p)){p.SendMessage("Stand within three tiles of Mara, alive and out of combat, with no criminal flag.");return;}if(info.ButtonID==1)p.SendMessage("Healed or resurrected "+HavenRecovery.ResurrectPets(p)+" pet(s), including companions.");else if(info.ButtonID==2)p.SendMessage(HavenRecovery.RecoverCompanion(p)?"Your companion is alive and following you.":HavenRecovery.CompanionStatus(p));else if(info.ButtonID==3)p.SendMessage(HavenRecovery.RecallCorpse(p)?"Your corpse is here; loot it normally. It will remain for ten minutes.":"No surviving accessible corpse was found for you.");p.SendGump(new HavenRecoveryGump());}
     }
 }
+
 
 
