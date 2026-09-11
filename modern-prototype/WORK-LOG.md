@@ -112,3 +112,8 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Added checks for service arrival, unchanged results, invalid destinations and combat restriction. Disposable verification: HavenServUOChecklistTravel.
 - Final corrected fixture uses native aggression records; 110 checks passed across fresh/reload in HavenServUOChecklistTravel3. Initial combat fixtures did not establish combat and failed; production travel code was unchanged. Backed up preview before checklist deployment to E:/Backups/Haven/Prototypes/servuo-before-checklist-travel-20260911.
 - Live build zero warnings/errors; preview restarted on2699 and local login/server-list/relay probe passed. Original2593 unchanged. Client graphical checklist test remains for player.
+
+## Companion names staged while player tests
+- New recruits choose from256 first/surname combinations, avoiding living existing companion names until the pool is exhausted. Existing companions retain names. Both companion menu titles now display actual name. Named speech smoke uses actual name.
+- HavenServUONames2:110 checks passed fresh/reload; build zero warnings/errors. First attempt could not fetch within network sandbox; approved isolated retry succeeded. This naming update is NOT deployed: player is actively testing, keep preview available.
+- Next gameplay port: Haven Marks/reward exchange and mini-champion participation loop. Review original HavenEstateTrial.cs and HavenAbyssMiniChamp.cs and wallet/reward dependencies before porting. Do not claim original content exists in preview.

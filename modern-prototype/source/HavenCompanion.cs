@@ -16,6 +16,22 @@ namespace Server.HavenPrototype
     // First ServUO vertical slice, not a deserializer for existing ModernUO saves.
     public partial class HavenCompanion : BaseCreature
     {
+        private static readonly string[] GivenNames = { "Alden", "Bram", "Corin", "Darian", "Elias", "Finn", "Gareth", "Jonas", "Kellan", "Luca", "Marek", "Nolan", "Orin", "Rowan", "Silas", "Tobin" };
+        private static readonly string[] FamilyNames = { "Ashford", "Blackwater", "Driftwood", "Fairwind", "Greywake", "Hawthorne", "Ironwood", "Keelward", "Marsh", "Northwood", "Reed", "Saltmere", "Seabrook", "Thorne", "Westfall", "Wick" };
+        private static string RecruitName()
+        {
+            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mobile in World.Mobiles.Values)
+                if (mobile is HavenCompanion && !mobile.Deleted && mobile.Name != null) used.Add(mobile.Name);
+            int start = Utility.Random(GivenNames.Length * FamilyNames.Length);
+            for (int offset = 0; offset < GivenNames.Length * FamilyNames.Length; offset++)
+            {
+                int index = (start + offset) % (GivenNames.Length * FamilyNames.Length);
+                string name = GivenNames[index / FamilyNames.Length] + " " + FamilyNames[index % FamilyNames.Length];
+                if (!used.Contains(name)) return name;
+            }
+            return GivenNames[Utility.Random(GivenNames.Length)] + " " + FamilyNames[Utility.Random(FamilyNames.Length)];
+        }
         private Mobile _owner;
         private BaseAI _companionAI;
         private CompanionRole _role;
@@ -87,7 +103,7 @@ namespace Server.HavenPrototype
         [Constructable]
         public HavenCompanion() : base(AIType.AI_Melee, FightMode.Aggressor, 12, 1, 0.2, 0.4)
         {
-            Name = "Alden Ashford";
+            Name = RecruitName();
             Title = "the faithful companion";
             Body = 0x190;
             Hue = 0x83EA;
@@ -479,7 +495,7 @@ namespace Server.HavenPrototype
         {
             _companion = companion;
             AddBackground(0, 0, 480, 460, 0xA28);
-            AddLabel(24, 18, 0, "Alden Ashford — ServUO prototype");
+            AddLabel(24, 18, 0, companion.Name + " — Companion");
             AddLabel(24, 45, 0, "HP " + companion.Hits + "/" + companion.HitsMax + "    Mana " + companion.Mana + "/" + companion.ManaMax);
             AddLabel(24, 72, 0, companion.OnMission ? companion.MissionKind + ": " + Math.Max(0, Math.Ceiling((companion.MissionDue - DateTime.UtcNow).TotalMinutes)) + " minutes left" : companion.Role + " | Orders: " + companion.ControlOrder);
             Button(24, 110, 1, "Follow"); Button(250, 110, 2, "Guard");
@@ -521,7 +537,7 @@ namespace Server.HavenPrototype
         public CompanionActivityGump(HavenCompanion companion) : base(70,70)
         {
             _companion = companion; AddBackground(0,0,500,460,0xA28);
-            AddLabel(24,20,0,"Alden - role and supply missions");
+            AddLabel(24,20,0,companion.Name + " - missions");
             AddLabel(24,55,0,"Current role: " + companion.Role);
             Button(24,100,1,"Warrior"); Button(185,100,2,"Caster"); Button(340,100,3,"Archer");
             AddHtml(24,145,450,60,"<BASEFONT COLOR=#202020>Change roles outside combat. All roles can heal you. Caster uses native Magery; Archer uses a bow.</BASEFONT>",false,false);

@@ -109,7 +109,7 @@ public static class CompanionSmoke
             Require(_companion.ControlOrder == OrderType.Guard, "Guard speech ignored");
             _companion.OnSpeech(new SpeechEventArgs(_owner, "all stay", MessageType.Regular, 0, new int[0]));
             Require(_companion.ControlOrder == OrderType.Stay, "Stay speech ignored");
-            _companion.OnSpeech(new SpeechEventArgs(_owner, "Alden Ashford follow me", MessageType.Regular, 0, new int[0]));
+            _companion.OnSpeech(new SpeechEventArgs(_owner, _companion.Name + " follow me", MessageType.Regular, 0, new int[0]));
             Require(_companion.ControlOrder == OrderType.Follow, "Named follow ignored");
         });
         Check("owner can deposit and withdraw nested items", () => {
