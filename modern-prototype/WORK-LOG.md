@@ -262,3 +262,9 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 ## Healer travel
 - Added [healer and user-requested [ohshit alias, plus recovery button. Ghost travel bypasses stale aggression lists; living uses normal CanTravel, criminal travel denied. Chooses fit/LOS landing adjacent to actual Ava and offers native healer resurrection when eligible. Living followers travel via native pet teleport.
 - Isolated reload check passed ghost cross-facet arrival and living-combat rejection. Live build/login passed. Saved backup servuo-before-healer-travel-20260911.
+
+## Stone shops, missing mini-champ scrolls, companion status
+- Supplies sign now exposes all five original service categories plus Repair. Added Arcane22native items; Training30skills105/110 and all native mastery primers/books; Special Rewards9original bracelet classes with original attributes/15Marks or25k bankgold plus6previewitems. Paged read-before-buy menus validate proximity, funds and capacity. Custom starter utilities/pet items/Astral/matching reward sets remain unported; GEAR-MIGRATION tracks that limitation.
+- Original HavenTrialParticipants guaranteed5PowerScroll.CreateRandomNoCraft(5,10), Alacrity and Transcendence. Restored that scroll package per mini participant; previous migrated package only rolled15%training scroll. Existing gold/Marks/resources unchanged. Added deleted-parcel repeat-delivery rejection. Native pending/fullpack/reload protections preserved.
+- Companion Stats/Skills page shows real Base/Value/Cap and delta since screen opened, with refresh and pagination. Native SkillCheck.Gain verified on companion; no free skill or cap changes.
+- HavenStoneShops full fresh/reload passed; initial fixture local-name shadowing compile error corrected before running. Final extra reload passed native companion gain, allstats pages and saved shop purchases. Source-only deployment; live build/login passed. Backup servuo-before-stone-shops-20260911.

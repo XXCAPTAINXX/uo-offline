@@ -170,9 +170,9 @@ namespace Server.HavenPrototype
     public class HavenMiniPrize : Container
     {
         private Mobile _owner;
-        public HavenMiniPrize(Mobile owner,int theme):base(0xE76){_owner=owner;Movable=false;Visible=false;DropItem(new BankCheck(10000));DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));if(Utility.RandomDouble()<0.15)DropItem(Utility.RandomBool()?(Item)new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist):new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,0.5));}
+        public HavenMiniPrize(Mobile owner,int theme):base(0xE76){_owner=owner;Movable=false;Visible=false;DropItem(new BankCheck(10000));DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
         public HavenMiniPrize(Serial serial):base(serial){}
-        public bool Deliver(Mobile from){if(from!=_owner || !HavenMarks.CanUse(from) || from.Backpack==null)return false;int count=0,weight=0;foreach(var item in Items){if(!from.Backpack.CheckHold(from,item,false,true,count,weight))return false;count+=1+item.TotalItems;weight+=item.PileWeight+item.TotalWeight;}foreach(var item in Items.ToArray())from.Backpack.DropItem(item);Delete();return true;}
+        public bool Deliver(Mobile from){if(Deleted || from!=_owner || !HavenMarks.CanUse(from) || from.Backpack==null)return false;int count=0,weight=0;foreach(var item in Items){if(!from.Backpack.CheckHold(from,item,false,true,count,weight))return false;count+=1+item.TotalItems;weight+=item.PileWeight+item.TotalWeight;}foreach(var item in Items.ToArray())from.Backpack.DropItem(item);Delete();return true;}
         public static void Collect(Mobile p){foreach(var parcel in World.Items.Values.OfType<HavenMiniPrize>().Where(x=>x._owner==p).ToArray())parcel.Deliver(p);}
         public static int Pending(Mobile p){return World.Items.Values.OfType<HavenMiniPrize>().Count(x=>!x.Deleted && x._owner==p);}
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_owner);}
@@ -186,7 +186,7 @@ namespace Server.HavenPrototype
             AddHtml(20,50,530,70,"<BASEFONT COLOR=#FFFFFF>Three waves of five enemies, then a boss. Everyone who damages an enemy earns the completion reward; companion and pet damage counts for their owner. Run away to abandon the fight.</BASEFONT>",false,false);
             AddLabel(20,127,1152,camp.Active?"Active: wave "+(camp.Stage+1)+" / 4, "+camp.Remaining+" enemies":"Ready in "+Math.Max(0,Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds))+" seconds");
             for(int i=0;i<3;i++){AddButton(20,160+i*30,0xFA5,0xFA7,10+i,GumpButtonType.Reply,0);AddLabel(54,160+i*30,1152,"Start "+HavenMiniChamp.Themes[i]);}
-            AddHtml(300,160,250,100,"<BASEFONT COLOR=#FFFFFF>Each participant: 10,000 gold, 20 Marks, 250 themed resources as a deed. 15% bonus skill-scroll chance. No reward bags in your pack.</BASEFONT>",false,false);
+            AddHtml(300,160,250,105,"<BASEFONT COLOR=#FFFFFF>Each participant: 10,000 gold, 20 Marks, 250 themed resources as a deed. Five 105/110 Power Scrolls, Alacrity and Transcendence. Full packs keep rewards pending.</BASEFONT>",false,false);
             AddLabel(20,266,1152,"Wins: "+HavenMiniChamp.Wins(p)+" | Pending rewards: "+HavenMiniPrize.Pending(p));
             Button(20,306,1,"Travel to camp");Button(300,306,2,"Collect pending rewards");Button(20,344,3,"Refresh");Button(450,344,0,"Close");
         }

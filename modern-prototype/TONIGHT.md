@@ -97,3 +97,5 @@ Wallet update: [wallet now uses bank gold directly. Deposit pack gold/checks, wi
 Trash: [trashbag or Starter supplies > Get a free trash bag. Public trash chest near Haven3502,2570. Trash empties three minutes after the last deposit; retrieve mistakes before then. Protected items are rejected, including inside nested bags.
 
 Emergency healer travel: [ohshit or [healer, also [recovery > Travel to healer. Ghosts can travel directly beside Ava; normal healer resurrection rules apply. Living players must be out of combat; criminal travel is blocked.
+
+Supplies sign: Starter, Arcane, Upgrades, Training, Special rewards, Repair. Browse shops via [arcane, [training, [rewards; buy beside Supplies sign. Arcane22entries, 105/110standard scrolls and mastery primers, original9bracelets plus6previewrewards. Wallet and trash bag buttons in Starter supplies. Companion menu > Stats / skills shows Base/Now/Cap and gains since opening; Refresh updates values. Mini champs now award five105/110Power Scrolls plus Alacrity and Transcendence to each participant, delivered to pack or kept pending if full.

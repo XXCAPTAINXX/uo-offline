@@ -9,3 +9,5 @@ Status: the nine-piece evolving starter set, robe upgrades, wallet/tithing and H
 5. Only expose entries whose item behavior, XP, binding, prices, full-pack handling and reload persistence are verified. Give each item a readable preview. Keep utility items (wallet, codex, key vault) tracked as separate dependencies rather than pretending ordinary bags/books provide their original behavior.
 
 Player progression prerequisite restored: original Haven-area +1000Luck and5x natural gain chance/amount below100.0. Native gain tests cover the100.0cutoff, and existing free-skill/cap tests still pass.
+
+Restored next: nine original special bracelet classes with original native attributes and15Mark/25,000gold pricing. Matching rings, set bonuses, Champion pendant, Concord talisman and Astral progression remain pending. All five original service categories are now reachable from Supplies sign; Arcane and Training use native items where available. Custom codex/key vault/rune pouch/resource satchel and pet utilities are not falsely listed as restored.

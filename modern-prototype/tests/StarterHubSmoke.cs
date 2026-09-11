@@ -15,9 +15,10 @@ public static class StarterHubSmoke
             HavenStarterHub.Ensure(); HavenStarterHub.Ensure();
             var stones=World.Items.Values.OfType<HavenServiceStone>().ToArray();
             Require(World.Items.Values.OfType<HavenServicePost>().Count()==3);
-            Require(new[]{0,3,6}.SelectMany(HavenServiceMenu.Services).Distinct().Count()==9);
+            Require(new[]{0,3,6}.SelectMany(HavenServiceMenu.Services).Distinct().Count()==11);
             Require(stones.Length==3 && stones.Select(s=>s.Service).Distinct().Count()==3 && stones.All(s=>s.Map==Map.Trammel && !s.Movable));
         });
+        SupplyShopSmoke.Run(check,reload);
         if(reload)
         {
             check("starter supply claim persists without replay",()=> {

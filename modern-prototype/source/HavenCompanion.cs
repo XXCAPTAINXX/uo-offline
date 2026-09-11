@@ -613,8 +613,9 @@ namespace Server.HavenPrototype
             Button(24, 224, 7, "Recall"); Button(250, 224, 8, "Roles / missions");
             AddLabel(24, 265, 0, "Last mission report");
             Button(250, 262, 10, "Join my party");
+            Button(250, 379, 13, "Stats / skills");
             AddHtml(24, 291, 430, 76, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
-            AddLabel(24, 379, 0, "Gold waiting for pack space: " + companion.PendingGold);
+            AddLabel(24, 379, 0, "Pending gold: " + companion.PendingGold);
             Button(24, 417, 9, "Refresh / collect"); Button(330, 417, 0, "Close");
             if(companion.OnMission) Button(330,72,11,"Minimize");
         }
@@ -638,6 +639,7 @@ namespace Server.HavenPrototype
                 case 10: ok = _companion.JoinOwnerParty(from); break;
                 case 11: _companion.Show(from); return;
                 case 12: _companion.ShowCombatBar(from); return;
+                case 13: from.SendGump(new HavenCompanionStatsGump(_companion)); return;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
             _companion.Show(from);
