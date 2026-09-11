@@ -32,6 +32,7 @@ namespace Server.HavenPrototype
         }
         public void OpenResourceLedger(Mobile from)
         {
+            if (ShowAwayTimer(from)) return;
             if (!CanOpenPack(from)) { from.SendMessage("Recall your companion and stand beside him to open his ledger."); return; }
             DeliverResourceRewards();
             var ledger = EnsureResourceLedger();

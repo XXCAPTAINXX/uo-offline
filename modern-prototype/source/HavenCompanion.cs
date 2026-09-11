@@ -175,6 +175,17 @@ namespace Server.HavenPrototype
             CurrentSpeed = ActiveSpeed;
         }
         public bool CanOpenPack(Mobile from) { return CanCommand(from) && from.InRange(this, 12); }
+        public override void OnSkillChange(SkillName name,double oldBase)
+        {
+            base.OnSkillChange(name,oldBase);
+            if (_owner == null || World.Loading || (name != SkillName.AnimalTaming && name != SkillName.AnimalLore)) return;
+            var skill=Skills[name];
+            if (skill.Base < oldBase)
+            {
+                System.IO.File.AppendAllText("companion-skill-protection.log",DateTime.UtcNow.ToString("O")+" companion="+Serial+" skill="+name+" blocked "+oldBase+" -> "+skill.Base+"\n"+Environment.StackTrace+"\n");
+                skill.Base=oldBase;
+            }
+        }
         public override bool CheckControlChance(Mobile from) { return IsOwner(from); }
         public override bool CanBeControlledBy(Mobile from) { return IsOwner(from); }
         public override double GetControlChance(Mobile from, bool useBaseSkill) { return IsOwner(from) ? 1.0 : 0.0; }
@@ -372,11 +383,12 @@ namespace Server.HavenPrototype
             from.CloseGump(typeof(CompanionResourceMissionGump));
             from.CloseGump(typeof(CompanionMissionTimerGump));
             if (OnMission && !expanded) from.SendGump(new CompanionMissionTimerGump(this,from));
-            else from.SendGump(new CompanionGump(this));
+            else { from.SendGump(new CompanionGump(this)); ShowAwayTimer(from); }
         }
         public override bool IsSnoop(Mobile from) { return !CanOpenPack(from) && base.IsSnoop(from); }
         public void OpenPack(Mobile from)
         {
+            if (ShowAwayTimer(from)) return;
             if (CanOpenPack(from)) Backpack.DisplayTo(from);
             else if (IsOwner(from)) from.SendMessage("Come within twelve tiles and line of sight to use your companion's pack.");
         }
@@ -514,6 +526,7 @@ namespace Server.HavenPrototype
                     from.SendMessage(_lastReport);
                 }
             }
+            from.CloseGump(typeof(CompanionMissionTimerGump));
             MoveToWorld(from.Location, from.Map);
             DeliverRewards();
             if (!SetOrder(from, OrderType.Follow)) return false;
@@ -690,6 +703,7 @@ namespace Server.HavenPrototype
         {
             var from = sender.Mobile;
             if (!_companion.IsOwner(from) || info.ButtonID == 0) return;
+            _companion.ShowAwayTimer(from);
             bool ok = true;
             switch (info.ButtonID)
             {

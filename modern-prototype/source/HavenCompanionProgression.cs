@@ -2,6 +2,12 @@ using System;
 using Server;
 namespace Server.HavenPrototype {
  public static class HavenCompanionProgression {
+  public static int TamingTraining(int trained,int minutes,double roll) {
+   int budget=minutes*2*HavenRegionalMissions.Bonus(minutes)/100;
+   int fast=Math.Min(Math.Max(0,1000-trained),budget*5);
+   int remainder=Math.Max(0,budget-(fast+4)/5);
+   return fast+Scaled(trained+fast,remainder,roll);
+  }
   public static int Scaled(int trained,int amount,double roll) {
    if(amount<=0)return 0;
    int ordinary=Math.Min(amount,Math.Max(0,1200-trained));

@@ -4,6 +4,16 @@ using Server.Network;
 
 namespace Server.HavenPrototype
 {
+    public partial class HavenCompanion
+    {
+        public bool ShowAwayTimer(Mobile owner)
+        {
+            if (!OnMission || !IsOwner(owner)) return false;
+            owner.CloseGump(typeof(CompanionMissionTimerGump));
+            owner.SendGump(new CompanionMissionTimerGump(this,owner));
+            return true;
+        }
+    }
     public class CompanionMissionTimerGump : HavenMenuGump
     {
         private readonly HavenCompanion _companion;

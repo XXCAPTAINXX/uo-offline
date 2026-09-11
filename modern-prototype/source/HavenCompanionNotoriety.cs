@@ -1,4 +1,5 @@
 using Server;
+using Server.Mobiles;
 
 namespace Server.HavenPrototype
 {
@@ -11,6 +12,9 @@ namespace Server.HavenPrototype
             if (target != null && target == BoundOwner && ControlMaster == target)
                 return false;
 
+            var pet = target as BaseCreature;
+            if (BoundOwner != null && ControlMaster == BoundOwner && pet != null &&
+                (pet.ControlMaster == BoundOwner || pet.ControlMaster == this)) return false;
             return base.IsBeneficialCriminal(target);
         }
     }

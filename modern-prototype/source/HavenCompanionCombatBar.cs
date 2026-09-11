@@ -10,6 +10,7 @@ namespace Server.HavenPrototype
         public void ShowCombatBar(Mobile owner)
         {
             if(!IsOwner(owner))return;
+            if(ShowAwayTimer(owner))return;
             owner.CloseGump(typeof(CompanionGump));
             owner.CloseGump(typeof(CompanionActivityGump));
             owner.CloseGump(typeof(CompanionResourceMissionGump));

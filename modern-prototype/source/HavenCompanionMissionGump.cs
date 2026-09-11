@@ -82,7 +82,7 @@ namespace Server.HavenPrototype
         }
         public static string Reward(int tab,int selection,int minutes)
         {
-            if(tab==1)return "One owner-bound pet ticket, delivered to your pack when space permits.";
+            if(tab==1)return "One pet ticket. Taming/Lore train 5x faster below 100; slower above 100 and very slow above 120.";
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
             switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
         }
@@ -90,7 +90,7 @@ namespace Server.HavenPrototype
         void Button(int x,int y,int id,string label,int width,int height=27){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,height,label);}
         public override void OnResponse(NetState state,RelayInfo info)
         {
-            var p=state.Mobile;int id=info.ButtonID;if(!_companion.IsOwner(p))return;
+            var p=state.Mobile;int id=info.ButtonID;if(!_companion.IsOwner(p))return;_companion.ShowAwayTimer(p);
             if(id==0){_companion.Show(p,true);return;}
             if(id==1){bool ok=_tab==2?_companion.SetRole(p,(CompanionRole)_selection):_companion.StartMission(p,_minutes,(_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection)));if(ok&&_tab!=2){_companion.Show(p);return;}if(!ok&&_tab==2)p.SendMessage("Move near your companion and finish combat before changing roles.");}
             if(id==2){_companion.Show(p);return;}
