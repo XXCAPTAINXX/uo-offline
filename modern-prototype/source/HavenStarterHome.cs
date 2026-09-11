@@ -13,7 +13,10 @@ namespace Server.HavenPrototype
 {
     public static class HavenStarterHome
     {
-        public static void Initialize() { CommandSystem.Register("home",AccessLevel.Player,e=> { if(HavenPreview.Enabled) { if(Find(e.Mobile)!=null) Travel(e.Mobile); else e.Mobile.SendGump(new HavenHomeClaimGump()); } }); }
+        public static void Initialize() {
+            CommandSystem.Register("home",AccessLevel.Player,e=> { if(HavenPreview.Enabled) { if(Find(e.Mobile)!=null) Travel(e.Mobile); else e.Mobile.SendGump(new HavenHomeClaimGump()); } });
+            EventSink.ServerStarted += () => { if(HavenPreview.Enabled) foreach(var house in World.Items.Values.OfType<HavenPirateLodge>().ToArray()) house.RepairLegacyDoors(); };
+        }
         public static HavenPirateLodge Find(Mobile from) { return World.Items.Values.OfType<HavenPirateLodge>().FirstOrDefault(h=>!h.Deleted && h.Owner!=null && h.IsOwner(from)); }
         public static bool FindSite(out Point3D site,out Map siteMap)
         {
@@ -109,7 +112,7 @@ namespace Server.HavenPrototype
         {
             if(Fixtures.Count>0)return;
             Sign.Name="R.E.C. - pirate lodge";
-            AddDoor(new DarkWoodDoor(DoorFacing.WestCW),-1,2,7);AddDoor(new DarkWoodDoor(DoorFacing.WestCW),-1,2,27);AddDoor(new DarkWoodDoor(DoorFacing.WestCW),5,1,7);
+            AddDoor(new DarkWoodHouseDoor(DoorFacing.WestCW){Level=SecureLevel.Owner},-1,2,7);AddDoor(new DarkWoodHouseDoor(DoorFacing.WestCW){Level=SecureLevel.Owner},-1,2,27);AddDoor(new DarkWoodHouseDoor(DoorFacing.WestCW){Level=SecureLevel.Owner},5,1,7);
             Chest("Receiving chest - owner account",-5,0);Chest("Resource stores",-5,-2);Chest("Armory and treasures",-5,-4);Chest("Crafting supplies",5,-1);
             var supply=(Container)Fixtures.First(i=>i.Name=="Crafting supplies");
             foreach(var tool in new Item[]{new SmithHammer(),new SewingKit(),new Scissors(),new DovetailSaw(),new TinkerTools()})supply.DropItem(tool);
@@ -130,6 +133,16 @@ namespace Server.HavenPrototype
             Decor(0x14F7,"Recovered ship's anchor",7,6,7);Decor(0xE3F,"Rigging stores",8,6,7);
             Decor(0xE3F,"Rigging stores",8,6,10);Decor(0xE3F,"Ready export cargo",8,7,7);Decor(0xE3F,"Ready export cargo",7,7,7);
             Decor(0x11CA,"Porch flowers",-6,6,7);Decor(0x11CA,"Porch flowers",2,6,7);
+        }
+        public void RepairLegacyDoors()
+        {
+            foreach(var old in Doors.OfType<DarkWoodDoor>().ToArray())
+            {
+                old.Open=false;
+                var replacement=new DarkWoodHouseDoor(DoorFacing.WestCW){Level=SecureLevel.Owner,Hue=old.Hue};
+                AddDoor(replacement,old.X-X,old.Y-Y,old.Z-Z);
+                Doors.Remove(old); old.Delete();
+            }
         }
         public override void Serialize(GenericWriter writer){base.Serialize(writer);writer.Write(0);}
         public override void Deserialize(GenericReader reader){base.Deserialize(reader);reader.ReadInt();}

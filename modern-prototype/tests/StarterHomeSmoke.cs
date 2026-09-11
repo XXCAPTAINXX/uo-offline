@@ -21,6 +21,7 @@ public static class StarterHomeSmoke
                 Require(house.Owner!=null && house.Secures.Count==4,"Ownership or secures lost");
                 Require(house.Secures[0].Item.Items.OfType<Gold>().Sum(g=>g.Amount)==321,"Stored items lost");
                 Require(HavenStarterHome.Find(house.Owner)==house,"Home lookup lost");
+                Require(house.Doors.OfType<BaseHouseDoor>().Count()==3 && house.Doors.OfType<BaseHouseDoor>().All(d=>d.CheckAccess(house.Owner)),"House door permissions lost");
             });return;
         }
         var owner=new PlayerMobile {Player=true,Name="Home fixture",Body=0x190};owner.RawStr=100;owner.AddItem(new Backpack());
@@ -31,6 +32,19 @@ public static class StarterHomeSmoke
             Require(lodge.Components.Width==18,"Wrong foundation size");
         });
         if(lodge==null)return;
+        check("lodge doors open for owner and reject strangers including after legacy repair",()=>{
+            var old=lodge.Doors[0];var point=old.Location;lodge.Doors.Remove(old);old.Delete();
+            lodge.AddDoor(new DarkWoodDoor(DoorFacing.WestCW),point.X-lodge.X,point.Y-lodge.Y,point.Z-lodge.Z);
+            lodge.RepairLegacyDoors();lodge.RepairLegacyDoors();
+            Require(lodge.Doors.Count==3 && lodge.Doors.All(d=>d is BaseHouseDoor),"Door migration failed");
+            var stranger=new PlayerMobile {Player=true,Body=0x190};
+            foreach(var door in lodge.Doors.OfType<BaseHouseDoor>()) {
+                owner.MoveToWorld(new Point3D(door.X,door.Y+1,door.Z),door.Map);
+                Require(door.CheckAccess(owner) && !door.CheckAccess(stranger),"Door access wrong");
+                door.Use(owner);Require(door.Open,"Owner cannot open door");door.Open=false;
+            }
+            stranger.Delete();
+        });
         check("pirate lodge shares ownership with account but rejects strangers",()=>{
             var alt=new PlayerMobile {Player=true};account[1]=alt;var stranger=new PlayerMobile {Player=true};
             Require(lodge.IsOwner(alt) && HavenStarterHome.Find(alt)==lodge,"Alt ownership missing");

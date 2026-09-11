@@ -49,6 +49,7 @@ PASS player checklist records valid results and rejects invalid indexes
 PASS checklist travel reaches services without changing test results
 PASS checklist travel obeys combat restriction
 PASS pirate lodge uses a safe native plot and claim cannot duplicate
+PASS lodge doors open for owner and reject strangers including after legacy repair
 PASS pirate lodge shares ownership with account but rejects strangers
 PASS home arrival and secured cargo work without changing progression
 PASS native spiral staircase provides both floor destinations

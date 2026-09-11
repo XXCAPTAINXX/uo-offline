@@ -117,3 +117,15 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - New recruits choose from256 first/surname combinations, avoiding living existing companion names until the pool is exhausted. Existing companions retain names. Both companion menu titles now display actual name. Named speech smoke uses actual name.
 - HavenServUONames2:110 checks passed fresh/reload; build zero warnings/errors. First attempt could not fetch within network sandbox; approved isolated retry succeeded. This naming update is NOT deployed: player is actively testing, keep preview available.
 - Next gameplay port: Haven Marks/reward exchange and mini-champion participation loop. Review original HavenEstateTrial.cs and HavenAbyssMiniChamp.cs and wallet/reward dependencies before porting. Do not claim original content exists in preview.
+
+## User's house-tour quality benchmark
+- Reference: C:/Users/juliu/Videos/2026-09-10 23-44-47.mp4 (110.6 seconds). User rates their other-server house7/10. Reviewed sampled frames across the tour; extracted references remain private under artifacts/house-reference-tour.
+- Future reviews must use this benchmark, not the previously generous8/10 starter-lodge score. Visible strengths: connected brick paths from entrance to buildings, timber wings around courtyard, tall stone core, roof planting beds, windows, terraces, kitchen counters grouped along walls, defined garden/display areas, furnishings around room perimeters leaving usable circulation space.
+- Pirate estate should exceed this with coherent cove/beach/dock setting, deliberate connected buildings and purposeful interiors. Do not treat decoration quantity as quality or call the current temporary lodge8/10 relative to this reference. Preserve user's current priority of Haven systems while they test; this reference informs later house/island work.
+
+## Lodge locked-door repair
+- User rates temporary lodge4-5/10 against their7/10 video reference. Earlier8/10 critic score is not the accepted quality benchmark.
+- Root cause: ordinary DarkWoodDoor was registered with BaseHouse.AddDoor, which sets Locked=true. Ordinary doors do not honor house ownership; native DarkWoodHouseDoor does.
+- New lodge doors now use native house access with SecureLevel.Owner. Startup repair replaces only old ordinary DarkWoodDoor entries in HavenPirateLodge.Doors, preserving closed coordinates/hue and removing old door; house, design and storage untouched. Idempotent migration.
+- Added explicit legacy-repair, owner opening, stranger rejection and reload permission checks. Verification/HavenServUODoorFix.
+- Final suite111PASS fresh/reload, zero build warnings/errors. Saved/backed up preview to E:/Backups/Haven/Prototypes/servuo-before-door-fix-20260911. Deploy includes previously staged companion names.
