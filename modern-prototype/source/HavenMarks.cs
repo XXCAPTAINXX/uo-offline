@@ -60,7 +60,7 @@ namespace Server.HavenPrototype
             } else if(index==5) {
                 var gorget=new LeatherGorget();gorget.SkillBonuses.SetValues(0,SkillName.AnimalTaming,5);gorget.SkillBonuses.SetValues(1,SkillName.AnimalLore,5);gorget.SkillBonuses.SetValues(2,SkillName.Veterinary,5);gorget.Attributes.BonusInt=5;item=gorget;
             } else return null;
-            item.Name=Names[index];item.Hue=0x489;if(index==2)HavenEquipmentEvolution.Attach(item,0).Apply();return item;
+            item.Name=Names[index];item.Hue=0x489;HavenGearDurability.Apply(item);if(index==2)HavenEquipmentEvolution.Attach(item,0).Apply();return item;
         }
         public static bool Spend(Mobile owner,int amount) {if(!CanUse(owner) || amount<=0 || Balance(owner)<amount)return false;((Account)owner.Account).SetTag(Key(owner),(Balance(owner)-amount).ToString());return true;}
         public static bool Buy(Mobile owner,int index,Item preview=null) {

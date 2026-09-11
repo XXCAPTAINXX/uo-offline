@@ -36,6 +36,7 @@ namespace Server.HavenPrototype
         public static HavenAdvancedGear Attach(Item item, int kind)
         {
             if (item == null || item.Deleted || Attributes(item) == null || kind < 1 || kind > 5) return null;
+            HavenGearDurability.Apply(item);
             return Find(item) ?? new HavenAdvancedGear(item, kind);
         }
         public HavenAdvancedGear(Item item, int kind) : base(1)

@@ -14,3 +14,16 @@ Offline mission requirement (user addition): persistent per-companion default mi
 Gear progress: Concord/rings/set bonuses, bracelet/pendant leveling, Astral wallet/rewards, Legendary drops, Doom reforging and shield-warrior tiers implemented and tested. Remaining gear work includes retroactive training-quest claims and custom boss-artifact systems. No pet/role/mission/island parity completion is implied.
 
 UI follow-up from player screenshot: compact companion mission timer is cramped; Open and Recall now controls/text overlap the frame and each other. Rework spacing, button hit areas and label widths, keeping the timer compact and checking long mission names. User explicitly requested this be queued without interrupting the gear/pets/roles/missions/island restoration priorities. Reference: codex-clipboard-a42ba74d-7b8e-4d54-8427-5cdc028e3ff6.png.
+
+## Staged recovery, mission UI and pet work (not deployed)
+- Unified Gathering/Taming/Roles mission screen and larger timer compile. Selecting a mission is separate from dispatch.
+- Mission dispatch now reports its specific failed precondition. Thirty-minute duration is supported.
+- Healer travel now distinguishes criminal status, combat target and aggression records. This diagnoses the actual blocking predicate; it does not clear legitimate flags.
+- Companion owner-beneficial action override prevents native BaseCreature criminal propagation from refreshing its own owner's flag through automatic healing. Actual harmful criminal actions retain native propagation. Runtime regression passed, including unrelated criminal aid and actual companion crimes; the player's original flag source is still unconfirmed.
+- Pet ticket fresh tests and overdue reload tests pass: exact reserved pet retained, one ticket delivered, collection does not duplicate.
+- Legendary rolls now use the original 24 trainable skills. Persistent rarity identity is being added to pets rather than relying on the deleted claim ticket.
+- Pet signatures, full species catalog, defenses, native-training compatibility and original mission parity remain incomplete. No live restart yet.
+
+Runtime mission regression passed: eligible 30-minute Mining dispatch, duplicate-dispatch rejection with exact reason, early recall, invalid duration, and idempotent rarity application. Pet mission overdue reload and duplicate collection passed. These are isolated test-world results, not live activation.
+
+Durability fresh and reload tests passed after placing the fixture in the world: 255-cap migration preserves existing missing points, repeated application does not repair wear, higher caps are preserved, and post-upgrade wear remains unchanged after reload. Final staged build passed with zero warnings/errors. Live server remains unchanged.

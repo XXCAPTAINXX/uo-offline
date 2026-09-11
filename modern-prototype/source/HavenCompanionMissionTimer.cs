@@ -11,15 +11,15 @@ namespace Server.HavenPrototype
         {
             if(!companion.OnMission) return companion.Map == Map.Internal ? "Waiting to return" : "Mission complete";
             int seconds=Math.Max(0,(int)Math.Ceiling((companion.MissionDue-DateTime.UtcNow).TotalSeconds));
-            return companion.MissionKind + "  " + (seconds/60).ToString("00") + ":" + (seconds%60).ToString("00");
+            return CompanionActivityGump.MissionName(companion.MissionKind) + "  " + (seconds/60).ToString("00") + ":" + (seconds%60).ToString("00");
         }
         public CompanionMissionTimerGump(HavenCompanion companion,Mobile owner):base(35,35)
         {
             _companion=companion;
-            AddBackground(0,0,220,64,0x13BE);
-            AddLabel(12,8,1152,Remaining(companion));
-            AddButton(12,35,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(46,35,1152,"Open");
-            AddButton(112,35,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(146,35,1152,"Recall now");
+            AddBackground(0,0,310,104,0xA28);
+            AddLabelCropped(20,19,270,25,0,Remaining(companion));
+            AddButton(20,61,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(54,61,0,"Missions");
+            AddButton(170,61,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(204,61,0,"Recall now");
             // One refresh only while this exact panel remains open. Closing/expanding stops updates.
             if(companion.OnMission && owner.NetState!=null) Timer.DelayCall(TimeSpan.FromSeconds(1),()=> {
                 if(!companion.IsOwner(owner) || owner.NetState==null || !owner.NetState.Gumps.Contains(this)) return;
@@ -32,7 +32,7 @@ namespace Server.HavenPrototype
             var owner=sender.Mobile;
             if(!_companion.IsOwner(owner) || info.ButtonID==0) return;
             if(info.ButtonID==2 && !_companion.Recall(owner)) owner.SendMessage("Cannot recall: leave combat and make sure you and your companion are alive.");
-            _companion.Show(owner,true);
+            owner.SendGump(new CompanionActivityGump(_companion));
         }
     }
 }

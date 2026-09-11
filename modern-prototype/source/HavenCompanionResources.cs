@@ -7,7 +7,7 @@ using Server.Network;
 
 namespace Server.HavenPrototype
 {
-    public enum CompanionMission { Supply, Mining, Lumber, Leather, Malas, Abyss }
+    public enum CompanionMission { Supply, Mining, Lumber, Leather, Malas, Abyss, TamePackHorse, TameHorse, TameOstard, TameBeetle, TameDragon, TameWhiteWyrm, TameEmberwing, TameMoonfang, TameStormscale, TameFrostmane, TameVerdantLlama, TameStormhorn }
     public partial class HavenCompanion
     {
         private CompanionMission _missionKind;
@@ -41,7 +41,8 @@ namespace Server.HavenPrototype
         // Snapshot rewards when dispatched: skill or equipment changes during a run cannot reroll them.
         private bool PrepareResourceMission(CompanionMission kind,int minutes)
         {
-            if (kind < CompanionMission.Supply || kind > CompanionMission.Abyss) return false;
+            if (kind < CompanionMission.Supply || kind > CompanionMission.TameStormhorn) return false;
+            if(HavenPetMissions.Valid(kind)&&(!HavenPetMissions.CanStart(this,kind)||PendingPetTickets>=50))return false;
             var rewards = new Dictionary<int,int>();
             switch (kind)
             {
@@ -70,12 +71,14 @@ namespace Server.HavenPrototype
                 int pending; _pendingResources.TryGetValue(pair.Key,out pending);
                 if (pair.Value > HavenResourceLedger.MaxBalance-pending) return false;
             }
+            PreparePetMission(kind);
             _missionKind = kind; _scheduledResources.Clear();
             foreach (var pair in rewards) _scheduledResources.Add(pair.Key,pair.Value);
             return true;
         }
         private string FinishResourceMission()
         {
+            CompletePetMission();
             var report = new List<string>();
             foreach (var pair in _scheduledResources)
             {
@@ -100,6 +103,7 @@ namespace Server.HavenPrototype
         }
         private void DeliverResourceRewards()
         {
+            DeliverPetTickets();
             if (_pendingResources.Count==0) return;
             var ledger = EnsureResourceLedger(); if (ledger==null) return;
             foreach (var pair in _pendingResources.ToArray())
@@ -117,7 +121,7 @@ namespace Server.HavenPrototype
         private void DeserializeResourceMissions(GenericReader reader)
         {
             _missionKind=(CompanionMission)reader.ReadInt(); _resourceLedger=reader.ReadItem() as HavenResourceLedger;
-            if(_missionKind<CompanionMission.Supply || _missionKind>CompanionMission.Abyss) throw new InvalidOperationException("Unknown companion mission");
+            if(_missionKind<CompanionMission.Supply || _missionKind>CompanionMission.TameStormhorn) throw new InvalidOperationException("Unknown companion mission");
             ReadResources(reader,_scheduledResources); ReadResources(reader,_pendingResources);
         }
         private static void WriteResources(GenericWriter writer,Dictionary<int,int> resources)
@@ -157,7 +161,7 @@ namespace Server.HavenPrototype
             var from=sender.Mobile; if(!_companion.IsOwner(from)) return;
             if(info.ButtonID>=1 && info.ButtonID<=3) { from.SendGump(new CompanionResourceMissionGump(_companion,info.ButtonID==1?5:info.ButtonID==2?15:30)); return; }
             if(info.ButtonID==20) { _companion.OpenResourceLedger(from); return; }
-            if(info.ButtonID>=10 && info.ButtonID<=14 && !_companion.StartMission(from,_minutes,(CompanionMission)(info.ButtonID-9))) from.SendMessage("Cannot start: check distance, combat, casting, skill and pending rewards.");
+            if(info.ButtonID>=10 && info.ButtonID<=14) _companion.StartMission(from,_minutes,(CompanionMission)(info.ButtonID-9));
             _companion.Show(from);
         }
     }

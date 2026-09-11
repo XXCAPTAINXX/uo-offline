@@ -1,0 +1,81 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using Server;
+using Server.Items;
+using Server.Mobiles;
+using Server.Gumps;
+using Server.Network;
+using Server.SkillHandlers;
+
+namespace Server.HavenPrototype
+{
+    public static class HavenPetMissions
+    {
+        // Matches the original server's legendary skill roll eligibility exactly.
+        public static readonly SkillName[] TrainableSkills = { SkillName.Wrestling, SkillName.Tactics, SkillName.Anatomy, SkillName.Healing,
+            SkillName.MagicResist, SkillName.Magery, SkillName.EvalInt, SkillName.Meditation, SkillName.Focus,
+            SkillName.Poisoning, SkillName.Parry, SkillName.Hiding, SkillName.DetectHidden,
+            SkillName.Necromancy, SkillName.SpiritSpeak, SkillName.Spellweaving, SkillName.Mysticism,
+            SkillName.Chivalry, SkillName.Bushido, SkillName.Ninjitsu, SkillName.Musicianship, SkillName.Discordance,
+            SkillName.Peacemaking, SkillName.Provocation };
+        public static readonly string[] Names={"Pack horse","Horse","Forest ostard","Giant beetle","Dragon","White wyrm","Emberwing ostard","Moonfang wolf","Stormscale drake","Frostmane steed","Verdant llama","Stormhorn kirin"};
+        public static readonly double[] Requirements={11.1,29.1,29.1,29.1,93.9,96.3,65,95,110,70,80,105};
+        public static bool Valid(CompanionMission kind){return (int)kind>=6&&(int)kind<18;}
+        public static bool CanStart(HavenCompanion c,CompanionMission kind){int i=(int)kind-6;return Valid(kind)&&c.Skills.AnimalTaming.Base>=Requirements[i]&&c.Skills.AnimalLore.Base>=Requirements[i];}
+        public static BaseCreature Create(int i){switch(i){case 0:return new PackHorse();case 1:return new Horse();case 2:return new ForestOstard();case 3:return new Beetle();case 4:return new Dragon();case 5:return new WhiteWyrm();case 6:return new HavenEmberwing();case 7:return new HavenMoonfang();case 8:return new HavenStormscale();case 9:return new HavenFrostmane();case 10:return new HavenVerdantLlama();case 11:return new HavenStormhorn();default:return null;}}
+        public static void ApplyRarity(BaseCreature pet,int tier)
+        {
+            if(HavenPetRarity.Find(pet)!=null)return;
+            HavenPetRarity.Attach(pet,tier);
+            if(tier<=0)return;
+            pet.Name=(tier==1?"Rare ":tier==2?"Epic ":"Legendary ")+pet.Name;
+            pet.RawStr+=pet.RawStr*tier/10;pet.RawDex+=pet.RawDex*tier/10;pet.RawInt+=pet.RawInt*tier/10;
+            pet.HitsMaxSeed=pet.HitsMax+pet.HitsMax*tier/10;pet.Hits=pet.HitsMax;
+            foreach(var skill in new[]{SkillName.Wrestling,SkillName.Tactics,SkillName.MagicResist,SkillName.Magery,SkillName.EvalInt})if(pet.Skills[skill].Base>0){pet.Skills[skill].Cap=Math.Max(pet.Skills[skill].Cap,tier==3?120:100+tier*5);pet.Skills[skill].Base=Math.Min(pet.Skills[skill].Cap,pet.Skills[skill].Base+tier*5);}
+            if(tier==3){pet.ControlSlots=1;if(Utility.RandomDouble()<0.5){var eligible=TrainableSkills.Select(name=>pet.Skills[name]).Where(x=>x.Base>0).ToList();int count=Math.Min(eligible.Count,Utility.RandomMinMax(1,3));for(int j=0;j<count;j++){int k=Utility.Random(eligible.Count);var skill=eligible[k];eligible.RemoveAt(k);int value=Utility.RandomMinMax(125,150);skill.Cap=Math.Max(skill.Cap,value);skill.Base=Math.Max(skill.Base,value);}}}
+        }
+    }
+    public class HavenPetTicket:Item
+    {
+        public Mobile Owner;public BaseCreature Pet;public int Kind,Rarity;
+        public HavenPetTicket(Mobile owner,int kind):base(0x14F0)
+        {
+            Owner=owner;Kind=kind;Weight=1;Hue=0x59B;LootType=LootType.Blessed;
+            double roll=Utility.RandomDouble();Rarity=kind<6?0:roll<0.4?0:roll<0.75?1:roll<0.95?2:3;
+            Pet=HavenPetMissions.Create(kind);AnimalTaming.ScaleSkills(Pet,0.90,true);if(Pet.StatLossAfterTame)AnimalTaming.ScaleStats(Pet,0.5);
+            HavenPetMissions.ApplyRarity(Pet,Rarity);Pet.Internalize();Name="Pet claim: "+Pet.Name;Internalize();
+        }
+        public HavenPetTicket(Serial serial):base(serial){}
+        public bool Claim(Mobile p)
+        {
+            if(Deleted||p!=Owner||p==null||!p.Alive||p.Backpack==null||!IsChildOf(p.Backpack)||!HavenResources.Accessible(p,this)||Pet==null||Pet.Deleted||p.Map==null||p.Map==Map.Internal)return false;
+            if(p.Followers+Pet.ControlSlots>p.FollowersMax||!p.Map.CanFit(p.Location,16,false,false)||!Pet.SetControlMaster(p))return false;
+            var pet=Pet;Pet=null;if(!pet.Owners.Contains(p))pet.Owners.Add(p);pet.Loyalty=BaseCreature.MaxLoyalty;pet.BondingBegin=DateTime.UtcNow-pet.BondingDelay-TimeSpan.FromSeconds(1);
+            pet.ControlTarget=p;pet.ControlOrder=OrderType.Follow;pet.MoveToWorld(p.Location,p.Map);Delete();p.SendMessage("Your pet joined you. Feed it suitable food to bond when you meet its normal taming requirement.");return true;
+        }
+        public override void OnDoubleClick(Mobile p){if(!Claim(p))p.SendMessage("Keep your own ticket in your backpack and free enough follower slots. The ticket is preserved.");}
+        public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Owner: "+(Owner==null?"none":Owner.Name));if(Pet!=null&&!Pet.Deleted){list.Add("Follower slots: "+Pet.ControlSlots+"; taming requirement: "+Pet.MinTameSkill.ToString("0.0"));list.Add("Hits "+Pet.HitsMax+"; Str "+Pet.RawStr+"; Dex "+Pet.RawDex+"; Int "+Pet.RawInt);list.Add("Double-click to claim this exact pet; no rerolls");}}
+        public override void OnDelete(){if(Pet!=null&&!Pet.Deleted)Pet.Delete();base.OnDelete();}
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Owner);w.Write(Pet);w.Write(Kind);w.Write(Rarity);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();Pet=r.ReadMobile() as BaseCreature;Kind=r.ReadInt();Rarity=r.ReadInt();}
+    }
+    public partial class HavenCompanion
+    {
+        HavenPetTicket _scheduledPet;readonly List<HavenPetTicket> _pendingPets=new List<HavenPetTicket>();
+        public int PendingPetTickets{get{return _pendingPets.Count(x=>x!=null&&!x.Deleted);}}
+        void PreparePetMission(CompanionMission kind){if(_scheduledPet!=null&&!_scheduledPet.Deleted)_scheduledPet.Delete();_scheduledPet=HavenPetMissions.Valid(kind)?new HavenPetTicket(BoundOwner,(int)kind-6):null;}
+        void CompletePetMission(){if(_scheduledPet==null||_scheduledPet.Deleted)return;_pendingPets.Add(_scheduledPet);_scheduledPet=null;foreach(var skill in new[]{Skills.AnimalTaming,Skills.AnimalLore})skill.BaseFixedPoint=Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint+HavenCompanionProgression.Amount(this,skill,_missionMinutes*2));}
+        void CancelPetMission(){if(_scheduledPet!=null&&!_scheduledPet.Deleted)_scheduledPet.Delete();_scheduledPet=null;}
+        public void DeliverPetTickets(){var owner=BoundOwner;if(owner==null||owner.Deleted||owner.Backpack==null)return;foreach(var ticket in _pendingPets.ToArray()){if(ticket==null||ticket.Deleted){_pendingPets.Remove(ticket);continue;}if(!owner.Backpack.TryDropItem(owner,ticket,false))break;_pendingPets.Remove(ticket);owner.SendMessage("Your pet mission ticket is in your backpack.");}}
+        void SerializePetMissions(GenericWriter w){w.Write(_scheduledPet);w.Write(_pendingPets.Count);foreach(var ticket in _pendingPets)w.Write(ticket);}
+        void DeserializePetMissions(GenericReader r){_scheduledPet=r.ReadItem() as HavenPetTicket;int count=r.ReadInt();if(count<0||count>50)throw new InvalidOperationException("Invalid pet ticket count");for(int i=0;i<count;i++){var ticket=r.ReadItem() as HavenPetTicket;if(ticket!=null)_pendingPets.Add(ticket);}}
+    }
+    public class HavenPetMissionGump:HavenMenuGump
+    {
+        readonly HavenCompanion _companion;readonly int _minutes;
+        public HavenPetMissionGump(HavenCompanion c,int minutes=5):base(55,55){_companion=c;_minutes=minutes;AddBackground(0,0,610,570,0xA28);AddLabel(24,20,0,"Companion taming missions");AddLabel(24,52,0,"Taming "+c.Skills.AnimalTaming.Base.ToString("0.0")+" / Lore "+c.Skills.AnimalLore.Base.ToString("0.0")+"; both must meet the requirement.");Button(24,89,1,"5 min");Button(160,89,2,"15 min");Button(300,89,3,"30 min");AddLabel(436,89,0,"Selected: "+minutes+" min");for(int i=0;i<12;i++){int y=130+i*29;Button(24,y,100+i,HavenPetMissions.Names[i]);AddLabel(370,y,0,"Needs "+HavenPetMissions.Requirements[i].ToString("0.0")+" both");}AddLabel(24,489,0,"One owner-bound pet ticket per completed trip. Early recall awards none.");Button(24,530,4,"Collect pending ("+c.PendingPetTickets+")");Button(436,530,0,"Back");}
+        void Button(int x,int y,int id,string label){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+33,y,0,label);}
+        public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(!_companion.IsOwner(p))return;int id=info.ButtonID;if(id==0){_companion.Show(p,true);return;}if(id>=1&&id<=3){p.SendGump(new HavenPetMissionGump(_companion,id==1?5:id==2?15:30));return;}if(id==4){_companion.DeliverPetTickets();p.SendGump(new HavenPetMissionGump(_companion,_minutes));return;}if(id>=100&&id<112){if(!_companion.StartMission(p,_minutes,(CompanionMission)(id-94))){p.SendMessage("Check both taming skills, distance, combat and pending ticket space.");p.SendGump(new HavenPetMissionGump(_companion,_minutes));}else _companion.Show(p);}}
+    }
+}

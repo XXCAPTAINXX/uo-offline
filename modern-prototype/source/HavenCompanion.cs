@@ -392,10 +392,9 @@ namespace Server.HavenPrototype
         }
         public bool StartMission(Mobile from, int minutes, CompanionMission kind)
         {
-            if (!CanCommand(from) || Combatant != null || from.Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 ||
-                from.Aggressors.Count > 0 || from.Aggressed.Count > 0 || Spell != null ||
-                (minutes != 5 && minutes != 15 && minutes != 30) || _pendingGold > Int32.MaxValue - minutes * 100) return false;
-            if (!PrepareResourceMission(kind, minutes)) return false;
+            string reason = MissionStartError(from, minutes, kind);
+            if (reason != null) { if (from != null) from.SendMessage(reason); return false; }
+            if (!PrepareResourceMission(kind, minutes)) { from.SendMessage("Cannot start: collect pending resources or pet tickets first; reward storage is full."); return false; }
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddMinutes(minutes);
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
@@ -403,6 +402,26 @@ namespace Server.HavenPrototype
             EnsureProgressionCaps();
             ScheduleMission();
             return true;
+        }
+
+        public string MissionStartError(Mobile from, int minutes, CompanionMission kind)
+        {
+            if (!IsOwner(from)) return "This is not your companion.";
+            if (OnMission) return "Your companion is already on a mission. Recall early to cancel it first.";
+            if (!from.Alive || !Alive || IsDeadPet) return "You and your companion must be alive to start a mission.";
+            if (!Controlled || ControlMaster != from) return "Your companion is not currently under your control.";
+            if (Map == Map.Internal || from.Map != Map || !from.InRange(this,14)) return "Move within 14 tiles of your companion before starting a mission.";
+            if (!from.InLOS(this)) return "Move into sight of your companion before starting a mission.";
+            if (Combatant != null || from.Combatant != null) return "Cannot start while you or your companion have a combat target. Finish combat first.";
+            if (Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return "Recent combat is still active. Wait for combat aggression to expire before sending a mission.";
+            if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
+            if (minutes != 5 && minutes != 15 && minutes != 30) return "Choose a 5, 15 or 30 minute mission.";
+            if (kind < CompanionMission.Supply || kind > CompanionMission.TameStormhorn) return "That mission is unavailable.";
+            if (_pendingGold > Int32.MaxValue - minutes * 100) return "Collect your companion's pending gold before starting another mission.";
+            if ((kind == CompanionMission.Malas || kind == CompanionMission.Abyss) && Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < (kind == CompanionMission.Malas ? 60 : 80)) return "Your companion needs " + (kind == CompanionMission.Malas ? "60" : "80") + " trained Magery or Tactics for this route.";
+            if (HavenPetMissions.Valid(kind) && !HavenPetMissions.CanStart(this,kind)) return "Your companion needs " + HavenPetMissions.Requirements[(int)kind-6].ToString("0.0") + " trained Animal Taming AND Animal Lore for this pet.";
+            if (HavenPetMissions.Valid(kind) && PendingPetTickets >= 50) return "Collect pending pet tickets before starting another taming mission.";
+            return null;
         }
 
         private void ScheduleMission()
@@ -465,6 +484,7 @@ namespace Server.HavenPrototype
                     _missionTimer = null;
                     _missionDue = DateTime.MinValue;
                     _scheduledResources.Clear();
+                    CancelPetMission();
                     _lastReport = _missionKind + " mission recalled early. No completion rewards or mission training were awarded.";
                     from.SendMessage(_lastReport);
                 }
@@ -481,6 +501,8 @@ namespace Server.HavenPrototype
         public override void OnAfterDelete()
         {
             ClearMissionReturn();
+            CancelPetMission();
+            foreach(var ticket in _pendingPets.ToArray())if(ticket!=null&&!ticket.Deleted){if(_owner!=null&&!_owner.Deleted&&_owner.BankBox!=null)_owner.BankBox.DropItem(ticket);else ticket.Delete();}_pendingPets.Clear();
             if (_missionTimer != null) _missionTimer.Stop();
             _missionTimer = null;
             base.OnAfterDelete();
@@ -489,14 +511,15 @@ namespace Server.HavenPrototype
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(3);
+            writer.Write(4);
             writer.Write(_owner); writer.Write(_missionDue); writer.Write(_missionMinutes);
             writer.Write(_pendingGold); writer.Write(_completedMissions); writer.Write(_lastReport);
             writer.Write((int)_role); writer.Write(_roleSword); writer.Write(_roleShield); writer.Write(_roleBow);
             SerializeResourceMissions(writer);
             writer.Write(_missionReturnPending);
+            SerializePetMissions(writer);
         }
-        public void EnsureProgressionCaps() { for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(125.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1250); RawStr=Math.Max(RawStr,200); RawDex=Math.Max(RawDex,150); RawInt=Math.Max(RawInt,200); HitsMaxSeed=Math.Max(HitsMaxSeed,400); StamMaxSeed=Math.Max(StamMaxSeed,150); ManaMaxSeed=Math.Max(ManaMaxSeed,300); }
+        public void EnsureProgressionCaps() { Skills.AnimalTaming.Base=Math.Max(50,Skills.AnimalTaming.Base); for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(125.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1250); RawStr=Math.Max(RawStr,200); RawDex=Math.Max(RawDex,150); RawInt=Math.Max(RawInt,200); HitsMaxSeed=Math.Max(HitsMaxSeed,400); StamMaxSeed=Math.Max(StamMaxSeed,150); ManaMaxSeed=Math.Max(ManaMaxSeed,300); }
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
@@ -509,6 +532,7 @@ namespace Server.HavenPrototype
             if (version >= 2) DeserializeResourceMissions(reader);
             _missionReturnPending = version >= 3 ? reader.ReadBool() :
                 !OnMission && _completedMissions > 0 && Map == Map.Internal && !IsStabled;
+            if(version>=4)DeserializePetMissions(reader);
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             EnsureProgressionCaps();
             ScheduleMission();
@@ -658,35 +682,4 @@ namespace Server.HavenPrototype
             _companion.Show(from);
         }
     }
-    public class CompanionActivityGump : Gump
-    {
-        private readonly HavenCompanion _companion;
-        public CompanionActivityGump(HavenCompanion companion) : base(70,70)
-        {
-            _companion = companion; AddBackground(0,0,500,460,0xA28);
-            AddLabel(24,20,0,companion.Name + " - missions");
-            AddLabel(24,55,0,"Current role: " + companion.Role);
-            Button(24,100,1,"Warrior"); Button(185,100,2,"Caster"); Button(340,100,3,"Archer");
-            AddHtml(24,145,450,60,"<BASEFONT COLOR=#202020>Change roles outside combat. All roles can heal you. Caster uses native Magery; Archer uses a bow.</BASEFONT>",false,false);
-            AddLabel(24,225,0,"Supply mission - 100 gold per minute");
-            Button(24,265,10,"5 minutes"); Button(185,265,11,"15 minutes"); Button(340,265,12,"30 minutes");
-            AddLabel(24,315,0,"Missions finish while offline. Use Recall on return.");
-            Button(24,355,20,"Resource missions"); Button(275,355,21,"Resource ledger");
-            Button(24,410,0,"Back");
-        }
-        private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
-        public override void OnResponse(NetState sender, RelayInfo info)
-        {
-            var from = sender.Mobile; if (!_companion.IsOwner(from)) return;
-            bool ok = true;
-            if (info.ButtonID >= 1 && info.ButtonID <= 3) ok = _companion.SetRole(from,(CompanionRole)(info.ButtonID-1));
-            else if (info.ButtonID >= 10 && info.ButtonID <= 12) ok = _companion.StartMission(from,info.ButtonID == 10 ? 5 : info.ButtonID == 11 ? 15 : 30);
-            else if (info.ButtonID == 20) { from.SendGump(new CompanionResourceMissionGump(_companion,5)); return; }
-            else if (info.ButtonID == 21) { _companion.OpenResourceLedger(from); return; }
-            if (!ok) from.SendMessage("Unavailable: check distance, combat, casting, mission status and pack space.");
-            _companion.Show(from);
-        }
-    }
 }
-
-
