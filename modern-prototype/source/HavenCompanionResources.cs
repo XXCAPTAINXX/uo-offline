@@ -134,7 +134,7 @@ namespace Server.HavenPrototype
             }
         }
     }
-    public class CompanionResourceMissionGump : Gump
+    public class CompanionResourceMissionGump : HavenMenuGump
     {
         private readonly HavenCompanion _companion; private readonly int _minutes;
         public CompanionResourceMissionGump(HavenCompanion companion,int minutes) : base(65,65)

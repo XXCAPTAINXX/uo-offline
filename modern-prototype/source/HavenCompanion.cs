@@ -181,6 +181,8 @@ namespace Server.HavenPrototype
         public override bool CanTransfer(Mobile from) { return false; }
         public override bool CanBeRenamedBy(Mobile from) { return IsOwner(from); }
         public override void OnRelease(Mobile from) { }
+        // Mission parking and native pet release must never scatter player storage.
+        public override void DropBackpack() { }
         public override OrderType ControlOrder
         {
             get { return base.ControlOrder; }
@@ -653,7 +655,7 @@ namespace Server.HavenPrototype
         public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); }
     }
 
-    public class CompanionGump : Gump
+    public class CompanionGump : HavenMenuGump
     {
         private readonly HavenCompanion _companion;
         public CompanionGump(HavenCompanion companion) : base(50, 50)

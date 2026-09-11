@@ -30,7 +30,7 @@ namespace Server.HavenPrototype
         {
             base.GetProperties(list);
             var progress = HavenEquipmentEvolution.Find(this);
-            list.Add("Equipment level: " + (progress == null ? 1 : progress.Level) + "/20; XP: " + (progress == null ? 0 : progress.Experience) + "/1900");
+            list.Add(HavenLevelProperties.Line(progress == null ? 1 : progress.Level, progress == null ? 0 : progress.Experience,1900));
             list.Add("Matching bracelet: " + HavenJewelrySets.Descriptions[Theme]);
             list.Add("With Concord talisman: +250 Luck, +10% weapon/spell damage");
         }
@@ -62,7 +62,7 @@ namespace Server.HavenPrototype
         {
             base.GetProperties(list);
             var progress = HavenEquipmentEvolution.Find(this);
-            list.Add("Equipment level: " + (progress == null ? 1 : progress.Level) + "/20; XP: " + (progress == null ? 0 : progress.Experience) + "/1900");
+            list.Add(HavenLevelProperties.Line(progress == null ? 1 : progress.Level, progress == null ? 0 : progress.Experience,1900));
             list.Add("Matching ring/bracelet: +250 Luck, +10% weapon/spell damage");
             list.Add("Level 20: equip and double-click to unlock follower capacity 6");
         }

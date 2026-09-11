@@ -26,6 +26,8 @@ namespace Server.HavenPrototype
             Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
             Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
             Button(475,87,12,_tab==2?"[Combat role]":"Combat role",185);
+            AddBackground(14,122,282,348,3000);
+            AddBackground(306,122,397,374,3000);
             Text(24,133,264,25,""+(_tab==2?"Choose a role":"1. Choose a mission")+"");
             for(int row=0;row<6&&page*6+row<names.Length;row++)
             {
@@ -57,7 +59,7 @@ namespace Server.HavenPrototype
                 Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes));
                 if(!companion.OnMission)Button(322,455,1,"Start "+_minutes+"-minute mission",320);
                 else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
-                Text(24,484,670,23,"Auto-returns on completion. Early recall forfeits rewards.");
+                Text(24,496,670,22,"Auto-returns on completion. Early recall forfeits rewards.");
             }
             Button(24,520,0,"Back",65);
             if(_tab!=2)
@@ -84,7 +86,7 @@ namespace Server.HavenPrototype
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
             switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
         }
-        void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#171511>"+text+"</BASEFONT>",false,false);}
+        void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#3B2A1A>"+text+"</BASEFONT>",false,false);}
         void Button(int x,int y,int id,string label,int width,int height=27){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,height,label);}
         public override void OnResponse(NetState state,RelayInfo info)
         {

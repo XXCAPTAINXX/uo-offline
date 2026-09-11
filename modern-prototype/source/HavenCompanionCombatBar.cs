@@ -17,7 +17,7 @@ namespace Server.HavenPrototype
             owner.SendGump(new CompanionCombatBarGump(this));
         }
     }
-    public class CompanionCombatBarGump:Gump
+    public class CompanionCombatBarGump:HavenMenuGump
     {
         private readonly HavenCompanion _companion;
         public static void Initialize() {CommandSystem.Register("cc",AccessLevel.Player,e=>{
@@ -27,14 +27,18 @@ namespace Server.HavenPrototype
         {
             _companion=companion;
             Closable=false;
-            AddBackground(0,0,420,104,0xA28);
-            AddLabelCropped(12,9,205,24,0,companion.Name);
-            Button(230,8,9,"Close");
-            Button(320,8,7,"Menu");
-            Button(12,38,1,"Follow");Button(120,38,2,"Guard");Button(230,38,3,"Attack");
-            Button(12,70,4,"Stay");Button(120,70,5,"Heal");Button(230,70,6,"Recall");Button(320,70,8,"Pack");
+            AddBackground(0,0,440,124,0xA28);
+            AddLabelCropped(20,12,210,24,0,companion.Name);
+            Button(240,12,7,"Menu");
+            Button(340,12,9,"Close");
+            Button(20,48,1,"Follow");Button(125,48,2,"Guard");
+            Button(230,48,4,"Stay");Button(335,48,3,"Attack");
+            Button(20,86,5,"Heal");
+            Button(125,86,10,companion.TamingAssistActive?"Cancel":"Tame");
+            Button(230,86,6,"Recall");Button(335,86,8,"Pack");
+
         }
-        private void Button(int x,int y,int id,string label) {AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,0,label);}
+        private void Button(int x,int y,int id,string label) {AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabelCropped(x+34,y,70,24,0,label);}
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var owner=sender.Mobile;if(!_companion.IsOwner(owner) || info.ButtonID==0)return;
@@ -48,6 +52,14 @@ namespace Server.HavenPrototype
                 case 6:ok=_companion.Recall(owner);break;
                 case 7:_companion.ShowCombatBar(owner);_companion.Show(owner,true);return;
                 case 9:return;
+                case 10:
+                    if(!_companion.CanCommand(owner)){ok=false;break;}
+                    if(!_companion.TamingAssistActive&&_companion.Role!=CompanionRole.Bard)
+                    {
+                        if(!_companion.SetRole(owner,CompanionRole.Bard)){owner.SendMessage("Finish combat and stand nearby to switch to Bard for taming.");break;}
+                        owner.SendMessage("Switched to Bard for taming assistance.");
+                    }
+                    _companion.RequestTamingAssist(owner);break;
                 case 8:_companion.OpenPack(owner);break;
                 default:return;
             }

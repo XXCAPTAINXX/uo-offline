@@ -4,7 +4,7 @@ using Server;
 using Server.Gumps;
 using Server.Network;
 namespace Server.HavenPrototype {
- public class HavenCompanionStatsGump:Gump {
+ public class HavenCompanionStatsGump:HavenMenuGump {
   readonly HavenCompanion _c;readonly int _page,_filter,_sort;readonly double[] _baseline;
   public static bool Used(HavenCompanion c,SkillName skill){switch(skill){case SkillName.Swords:case SkillName.Parry:return c.Role==CompanionRole.Warrior;case SkillName.Archery:return c.Role==CompanionRole.Archer;case SkillName.Spellweaving:case SkillName.Necromancy:case SkillName.SpiritSpeak:case SkillName.EvalInt:return c.Role==CompanionRole.Caster;case SkillName.Wrestling:case SkillName.Tactics:case SkillName.Anatomy:case SkillName.MagicResist:case SkillName.Magery:case SkillName.Meditation:case SkillName.Focus:case SkillName.Healing:case SkillName.Mining:case SkillName.Lumberjacking:case SkillName.AnimalLore:return true;default:return false;}}
   public static int[] Rows(HavenCompanion c,int filter,int sort,double[] baseline){var rows=Enumerable.Range(0,c.Skills.Length).Where(i=>filter==2||Used(c,(SkillName)i)&&(filter==1||c.Skills[i].Base<c.Skills[i].Cap&&(c.Skills[i].Lock==SkillLock.Up||i==(int)SkillName.Mining||i==(int)SkillName.Lumberjacking||i==(int)SkillName.AnimalLore)));return (sort==1?rows.OrderByDescending(i=>c.Skills[i].Base).ThenBy(i=>c.Skills[i].Name):sort==2?rows.OrderByDescending(i=>c.Skills[i].Base-baseline[i]).ThenBy(i=>c.Skills[i].Name):rows.OrderBy(i=>c.Skills[i].Name)).ToArray();}
