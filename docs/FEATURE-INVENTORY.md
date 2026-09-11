@@ -18,9 +18,9 @@ This inventory was checked against the implementation tracker, player guide, fea
 | Timed missions | Five-, fifteen- and thirty-minute Supply, Mining, Lumber, Leather, Malas and Abyss jobs. Longer jobs yield more; gathering skills unlock material tiers. These are timed jobs, not physical expeditions. |
 | Mission recovery | Offline deadlines, persistent reports, merged gold and pending rewards; no duplicate payout on restart. |
 | Resource books | Player and companion ledgers; loose resources, native commodity deeds, nested bags, selectable withdrawals and transfers. Virtual balances use no extra pack slots. Overflow remains queued. |
-| Operations | Start/save/stop scripts, separate client configuration, GitHub source and E: backups. Network account authentication and relay passed; the copied client's Windows security prompt still needs user review. |
+| Operations | Start/save/stop scripts, separate client configuration, GitHub source and E: backups. Network account authentication and relay passed; the user approved the Windows prompt, and real-client login, New Haven rendering and the test-kit claim now work. |
 
-The companion/control/resource suite passed **84 checks** on fresh and reloaded test worlds. See [tonight's instructions](../modern-prototype/TONIGHT.md) for the latest deployment status and the [recorded checks](../modern-prototype/companion-checks.txt). A passing automated check is not a substitute for the final graphical playthrough.
+The companion/control/resource suite passed **90 checks** on fresh and reloaded test worlds. See [tonight's instructions](../modern-prototype/TONIGHT.md) for the latest deployment status and the [recorded checks](../modern-prototype/companion-checks.txt). A passing automated check is not a substitute for the final graphical playthrough.
 
 ## Original Haven: accumulated custom work
 

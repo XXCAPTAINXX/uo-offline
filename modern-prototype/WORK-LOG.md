@@ -53,3 +53,16 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - User requested a complete feature reminder: docs/FEATURE-INVENTORY.md now distinguishes original implemented systems, modern preview and remaining gaps.
 - Found native Shadowguard roof gating checks NPC companion as independent player although completion table tracks PlayerMobiles only. Next fix with narrow native integration patch and regression tests before deployment. Graphical client security prompt still pending user review.
 
+
+## 01:31 UTC client and Shadowguard progress
+- User approved Windows prompt. Client launch then failed because Sky launch inherited protected cwd; opening via actual Explorer folder worked. Created private Play Haven Preview.lnk with explicit working directory.
+- Login failed because UI truncated original24-character QA password to16. Private PreviewLoginRepair.cs synchronized only haven-preview, saved, consumed marker; networkprobe passed. User/auto-login subsequently entered Haven Explorer. Real client New Haven rendering, preview gump, kit claim and backpack properties verified. User is remote-viewing/using client: avoid input races.
+- Interactive preview is running2699 with c152590 resources/missions. Original2593 preserved. Login repair source inert in private Scripts, not inpublicpayload. No credentials logged/published.
+- Native Shadowguard roof gate fixed to use qualified owner's record for bound party companion. Test found native Deserialize skips enum when referenced character deleted, corrupting load. Fixed unconditional enum read; previously failing save now reloads with all89checks passing. Fresh combined90-check reproduction is running verification/HavenServUOShadowguardFinal; session4474. Need publish/backup and later deploy native patch when client test is ready for restart.
+
+
+## 01:34 UTC verified milestone
+- Fresh builder + patched native source passed90checks in verification/HavenServUOShadowguardFinal, zero warnings/errors. Previous failed save was also recovered without deleting objects. New patch not yet deployed to interactive session.
+- Real user is connected to2699 (ServUO PID2208), character Haven Explorer. Leave client controls/session alone while user tests. Original2593 unaffected. Private source/Config/Saves backup: E:/Backups/Haven/Prototypes/servuo-client-login-20260910-c152590, save hashes unchanged during copy.
+- Next: stage native Shadowguard patch for planned restart, further native dungeon/naval verification, finish play instructions and deadline deployment. Core test servers all stopped.
+

@@ -5,10 +5,10 @@ Your original Haven remains on port **2593**, with your existing character and i
 ## On this PC
 
 1. Server folder: `D:/Uo Offline/Haven-ServUO-Preview`. Run `Start-Preview.ps1` if the preview is stopped. It detects an already running preview.
-2. Client: `D:/Uo Offline/Haven-ServUO-Preview-Client/TazUO.exe`. This separate copy is configured for the modern EA Classic data and the local preview. A local test account and **Haven Explorer** character are prepared. Your normal TazUO profile was not changed.
-3. Windows displayed a security prompt for the client copy during unattended testing. It was left for your review. Actual client rendering and gameplay have not been verified.
+2. Client: `D:/Uo Offline/Haven-ServUO-Preview-Client/Play Haven Preview.lnk`. Use this shortcut: it sets the correct working folder. This separate copy uses modern EA Classic data and the local preview. The prepared test account contains **Haven Explorer**. Your normal TazUO profile was not changed.
+3. Client login and New Haven rendering now work. The earlier Windows prompt was approved by the user; a launch-folder problem and a password truncated by the classic 16-character login field were corrected. The test-kit claim and backpack item properties were checked in the real client. Full combat/dungeon playthrough remains pending.
 4. In game, type `[preview`. Select **Prepare test character** once, then equip the supplied armor, robe, weapon and shield. Read the Parry III primer to learn the mastery. The kit is deliberately for testing, not progression balance.
-5. Type `[c` to claim Alden. **Roles / missions** offers Warrior, Caster, Archer and 5/15/30-minute supply runs.
+5. Type `[c` to claim Alden. **Roles / missions** offers Warrior, Caster, Archer and 5/15/30-minute supply runs. **Resource missions** offers Mining, Lumber, Leather, Malas and Abyss jobs; **Resource ledger** opens his book when nearby.
 
 Use `Stop-Preview.ps1` to save and close this server. Do not copy the original ModernUO saves into it.
 
@@ -25,7 +25,7 @@ Use `Stop-Preview.ps1` to save and close this server. Do not copy the original M
 
 ## What is verified
 
-- 84 automated companion/preview checks passed with a clean Release build.
+- 90 automated companion/preview checks passed with a clean Release build.
 - Native world generation, all 25 setup stages and save/reload validation also passed from a second fresh checkout.
 - 6,835 spawners, six Doom Gauntlet controllers, 17 Shadowguard instances and 14 specific Blackthorn travel links were validated.
 - A socket test authenticated the prepared account and received the correct server list and game relay. This is not a graphical-client login/playthrough.

@@ -47,9 +47,13 @@ The preview's 25 native setup stages cover towns, doors, vendors/spawns, travel 
 
 Generation and save/reload validation also passed on a second fresh checkout using `-PopulateWorld`. See [world checks](world-checks.txt). This proves setup and persistence; it does not certify every boss, quest or dungeon completion path.
 
+The builder applies a narrow Shadowguard integration patch. A bound companion in its owner's party uses the owner's completed-room eligibility for Roof entry; other human party members must still complete their own rooms. The patch also fixes a native load bug: a deleted character's saved room record must consume its completion value even when the character reference no longer resolves. Otherwise subsequent saved fields are read at the wrong position.
+
+The progression harness exercises native Bar waves, Roof boss sequencing, room credit, cleanup and recovery of an orphaned player record. It skips the Roof introduction delay and kills test enemies directly, so these checks prove encounter callbacks and persistence, not combat balance or graphical puzzle playthrough.
+
 ## Automated verification
 
-The current milestone passed **84 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
+The current milestone passed **90 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
 
 Add `-Test` with another new destination to build, run fresh-world checks, save, restart and verify recovery. Test mode creates a disposable account with a random password and no client connection, then stops the server. It writes `companion-checks.log`.
 

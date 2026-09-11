@@ -18,7 +18,10 @@ public static class PreviewClientFixture
         if (!HavenPreview.Enabled || !File.Exists("preview-world-ready.txt")) throw new InvalidOperationException("Client fixture requires the isolated ready preview.");
         string[] credentials = File.ReadAllLines("PREVIEW-CLIENT-FIXTURE");
         if (credentials.Length != 2 || Accounts.GetAccount(credentials[0]) != null) throw new InvalidOperationException("Refusing to replace an existing account.");
+        if (credentials[1].Length < 12 || credentials[1].Length > 16) throw new InvalidOperationException("Client QA passwords must fit the classic 16-character login field.");
         var player = new PlayerMobile { Name = "Haven Explorer", Player = true, Body = 0x190, Hue = 0x83EA, AccessLevel = AccessLevel.Player };
+        player.RawStr = player.RawDex = player.RawInt = 60;
+        player.Hits = player.HitsMax; player.Mana = player.ManaMax; player.Stam = player.StamMax;
         player.AddItem(new Backpack { Movable = false }); player.AddItem(new Shirt()); player.AddItem(new LongPants()); player.AddItem(new Boots());
         var account = new Account(credentials[0], credentials[1]); account[0] = player;
         player.MoveToWorld(new Point3D(3506,2570,14), Map.Trammel);

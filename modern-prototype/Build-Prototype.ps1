@@ -27,6 +27,7 @@ if ($LASTEXITCODE) { throw 'Source download failed' }
 & git -C $root checkout --detach FETCH_HEAD
 if ($LASTEXITCODE) { throw 'Source checkout failed' }
 Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'source') -Filter '*.cs' | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $root 'Scripts') }
+& (Join-Path $PSScriptRoot 'Apply-NativePatches.ps1') -ServerPath $root
 foreach ($launcher in 'Start-Preview.ps1','Stop-Preview.ps1') { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $launcher) -Destination (Join-Path $root $launcher) }
 if ($Test) {
     Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'tests') -Filter '*.cs' | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $root 'Scripts') }

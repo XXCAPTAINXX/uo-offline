@@ -126,7 +126,7 @@ namespace Server.HavenPrototype
             AddLabel(24,165,0,"Test travel - leave combat first; Felucca has PvP rules");
             for (int i = 0; i < HavenPreview.Destinations.Length; ++i)
                 Button(24 + (i % 2) * 280,205 + (i / 2) * 43,100 + i,HavenPreview.Destinations[i].Name);
-            AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Try companion orders and a supply mission, then native dungeons. The older custom island, bots, market and ledgers are not migrated yet. Test skills and gear are conveniences, not final balance.</BASEFONT>",false,false);
+            AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Try companion orders, resource missions and native dungeons. The older custom island, bots and market are not migrated yet. Test skills and gear are conveniences, not final balance.</BASEFONT>",false,false);
             Button(430,526,0,"Close");
         }
         private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
