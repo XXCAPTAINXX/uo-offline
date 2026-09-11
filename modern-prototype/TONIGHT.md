@@ -82,3 +82,5 @@ Companion baseline regeneration restored: every3seconds,4health (unless poisoned
 
 Mini champion placement now rejects native buildings across the full encounter footprint and relocates the old camp while idle. Reopen [minichamp and choose Travel to camp after the update. Active runs finish before relocation.
 Companions now use bandages you put in their backpack (including sub-bags) to treat you within2tiles or themselves. One bandage is consumed per started attempt; normal Healing/Anatomy checks determine healing, curing and resurrection. All roles can use them, alongside existing spells and regeneration.
+Companion access: stand within12tiles and line of sight to open his pack, use nested bags/ledger, and drag items in or out. Bandages between you and your own companion use12tiles at application and completion. Bandaging unrelated targets keeps its ordinary range. Automatic companion bandaging uses the same extended reach.
+Mini-champ landmark: wooden expedition signpost, supply crate and lit lantern beside the camp. Double-click the marker to open the encounter menu.

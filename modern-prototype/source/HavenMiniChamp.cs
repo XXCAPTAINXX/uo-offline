@@ -54,12 +54,13 @@ namespace Server.HavenPrototype
         }
         public static void Ensure() {
             var existing=Find();
+            if(existing!=null)HavenExpeditionMarker.Ensure(existing);
             if(existing!=null && existing.Active){Timer.DelayCall(TimeSpan.FromSeconds(30),Ensure);return;}
-            if(existing!=null && SafeClearing(existing.Map,existing.Location))return;
+            if(existing!=null && SafeClearing(existing.Map,existing.Location)){HavenExpeditionMarker.Ensure(existing);return;}
             for(int x=3300;x<=3800;x+=10)for(int y=2400;y<=3080;y+=10) {
                 var p=new Point3D(x,y,Map.Trammel.GetAverageZ(x,y));
                 if(!SafeClearing(Map.Trammel,p))continue;
-                var camp=existing ?? new HavenMiniChamp();camp.MoveToWorld(p,Map.Trammel);
+                var camp=existing ?? new HavenMiniChamp();camp.MoveToWorld(p,Map.Trammel);HavenExpeditionMarker.Ensure(camp);
                 Console.WriteLine("Haven mini champion outdoor camp ready: "+p);return;
             }
             Console.WriteLine("Haven mini champion: no building-free wilderness clearing found.");
@@ -140,7 +141,7 @@ namespace Server.HavenPrototype
             else if(_emptySince==DateTime.MinValue)_emptySince=DateTime.UtcNow;
             else if(DateTime.UtcNow-_emptySince>TimeSpan.FromMinutes(2))Abort();
         }
-        public override void OnDelete(){Abort();if(_timer!=null)_timer.Stop();base.OnDelete();}
+        public override void OnDelete(){HavenExpeditionMarker.Remove(this);Abort();if(_timer!=null)_timer.Stop();base.OnDelete();}
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_stage);w.Write(_theme);w.Write(_deadline);w.Write(_cooldown);w.Write(_foes.Count);foreach(var m in _foes)w.Write(m);w.Write(_participants.Count);foreach(var m in _participants)w.Write(m);}
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_stage=r.ReadInt();_theme=r.ReadInt();_deadline=r.ReadDateTime();_cooldown=r.ReadDateTime();int count=r.ReadInt();for(int i=0;i<count;i++)_foes.Add(r.ReadMobile());count=r.ReadInt();for(int i=0;i<count;i++){var p=r.ReadMobile();if(p!=null)_participants.Add(p);}StartTimer();if(Active && _foes.Count==0)Timer.DelayCall(TimeSpan.FromSeconds(3),SpawnWave);}
     }
@@ -193,6 +194,9 @@ namespace Server.HavenPrototype
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and clear criminal status before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=12 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
     }
 }
+
+
+
 
 
 

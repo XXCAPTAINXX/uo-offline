@@ -82,6 +82,11 @@ PASS automatic recovery waits for nearby owner
 PASS pet clinic resurrects only owner's nearby ghosts
 PASS player healer accepts ghost and corpse recall preserves contents
 PASS corpse recall denies other owners and remote use
+PASS owner finds clear twelve-tile test position
+PASS twelve-tile pack nested inventory and ledger access
+PASS companion bandages owner at twelve tiles and completes range check
+PASS strangers and unrelated bags retain ordinary range
+PASS thirteen tiles rejects pack ledger and bandage
 PASS raising caps preserves trained stats skills and individual caps
 PASS all 25 published free skills gain at counted cap and respect individual caps
 PASS free natural skill gain works at counted cap

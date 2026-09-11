@@ -173,7 +173,7 @@ namespace Server.HavenPrototype
             ActiveSpeed = Math.Min(ActiveSpeed, pace);
             CurrentSpeed = ActiveSpeed;
         }
-        public bool CanOpenPack(Mobile from) { return CanCommand(from) && from.InRange(this, 2); }
+        public bool CanOpenPack(Mobile from) { return CanCommand(from) && from.InRange(this, 12); }
         public override bool CheckControlChance(Mobile from) { return IsOwner(from); }
         public override bool CanBeControlledBy(Mobile from) { return IsOwner(from); }
         public override double GetControlChance(Mobile from, bool useBaseSkill) { return IsOwner(from) ? 1.0 : 0.0; }
@@ -275,7 +275,7 @@ namespace Server.HavenPrototype
         {
             if (Deleted || !Alive || IsDeadPet || OnMission || IsStabled || Backpack == null ||
                 patient == null || patient.Deleted || (patient != this && patient != _owner) ||
-                Map == null || Map == Map.Internal || patient.Map != Map || !InRange(patient, 2) || !InLOS(patient) ||
+                Map == null || Map == Map.Internal || patient.Map != Map || !InRange(patient, HavenCompanionAccess.BandageRange(this, patient)) || !InLOS(patient) ||
                 BandageContext.GetContext(this) != null || MortalStrike.IsWounded(patient) ||
                 (patient.Alive && !patient.Poisoned && patient.Hits >= patient.HitsMax * 0.8)) return false;
             var bandages = Backpack.FindItemByType(typeof(Bandage), true) as Bandage;
@@ -362,7 +362,7 @@ namespace Server.HavenPrototype
         public void OpenPack(Mobile from)
         {
             if (CanOpenPack(from)) Backpack.DisplayTo(from);
-            else if (IsOwner(from)) from.SendMessage("Come within two tiles to use the prototype's pack.");
+            else if (IsOwner(from)) from.SendMessage("Come within twelve tiles and line of sight to use your companion's pack.");
         }
         public override bool CheckNonlocalLift(Mobile from, Item item)
         {
