@@ -64,3 +64,7 @@ Mission return update: completed missions return automatically when you are onli
 Use `[cc` for compact companion combat controls. Use `[havenmarks` to preview and buy six progression rewards. Completed missions earn2Marks per minute; a5minute mission earns10. Early recalls earn none. Rewards cost60-100Marks. Old-server Marks are not imported.
 
 Player progression: 300 combined stat cap, 1,200 counted skill points. Animal Taming, Animal Lore, Focus and Snooping do not count toward that total. Individual caps still use normal powerscrolls. Use [skillbudget to check your budget. Existing trained values are preserved.
+
+Expanded free skills: now25 total, combining InsaneUO/UOAlive lists with original Haven exemptions. See FREE-SKILLS.md or [skillbudget; this supersedes the four-skill list above.
+
+Companion travel: Follow and idle Guard now use a faster travel pace in all three roles. Please walk/run around Haven and check he keeps up, including after a mission.

@@ -28,6 +28,18 @@ public static class PlayerCapsSmoke
             if(HavenPlayerCaps.IsFree(owner,skill))continue;
             if(filled++<12)skill.Base=100;else if(blocked==null)blocked=skill;
         }
+        check("all 25 published free skills gain at counted cap and respect individual caps",()=>{
+            var expected=new[]{SkillName.Alchemy,SkillName.AnimalLore,SkillName.AnimalTaming,SkillName.ArmsLore,SkillName.Begging,SkillName.Camping,SkillName.Cartography,SkillName.Cooking,SkillName.DetectHidden,SkillName.Fishing,SkillName.Fletching,SkillName.Focus,SkillName.Forensics,SkillName.Herding,SkillName.Hiding,SkillName.Inscribe,SkillName.ItemID,SkillName.Lockpicking,SkillName.Lumberjacking,SkillName.Mining,SkillName.Musicianship,SkillName.RemoveTrap,SkillName.Snooping,SkillName.TasteID,SkillName.Tracking};
+            Require(owner.Skills.Count(x=>HavenPlayerCaps.IsFree(owner,x))==expected.Length);
+            foreach(var name in expected) {
+                var skill=owner.Skills[name];Require(HavenPlayerCaps.IsFree(owner,skill));
+                skill.SetLockNoRelay(SkillLock.Up);Server.Misc.SkillCheck.Gain(owner,skill,10);
+                Require(skill.Base>0 && HavenPlayerCaps.Counted(owner.Skills)==12000);
+                skill.Base=skill.Cap;Server.Misc.SkillCheck.Gain(owner,skill,10);Require(skill.Base==skill.Cap);
+                skill.Base=0;skill.SetLockNoRelay(SkillLock.Locked);
+            }
+            var creature=new Rat();Require(!HavenPlayerCaps.IsFree(creature,creature.Skills.Mining));creature.Delete();
+        });
         check("free natural skill gain works at counted cap",()=>{
             owner.Skills.AnimalTaming.SetLockNoRelay(SkillLock.Up);
             Server.Misc.SkillCheck.Gain(owner,owner.Skills.AnimalTaming,10);
@@ -49,6 +61,7 @@ public static class PlayerCapsSmoke
         });
     }
 }
+
 
 
 

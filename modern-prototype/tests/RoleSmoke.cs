@@ -60,6 +60,7 @@ public static class RoleSmoke
     private static void AfterCaster()
     {
         _check("native mage AI deals damage outside melee range",()=>Require(_enemy.Hits<_hits && !_companion.InRange(_enemy,1),"No ranged spell damage; hits="+_enemy.Hits+" distance="+_companion.GetDistanceToSqrt(_enemy)+" spell="+_companion.Spell));
+        new Server.Spells.Third.PoisonSpell(_companion,null).OnCast();
         Clear();
         _check("stay cancels queued casting and targets",()=>Require(_companion.Spell==null && _companion.Target==null,"Cast survived stop order: spell="+_companion.Spell+" state="+(_companion.Spell==null?"null":((Server.Spells.Spell)_companion.Spell).State.ToString())+" target="+_companion.Target));
         Timer.DelayCall(TimeSpan.FromSeconds(3),StartArcher);
@@ -83,3 +84,4 @@ public static class RoleSmoke
         _next();
     }
 }
+

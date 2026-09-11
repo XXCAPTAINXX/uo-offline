@@ -66,10 +66,12 @@ PASS full pack and invalid reward preserve Marks
 PASS purchase spends exact price and supplies advertised weapon
 PASS all reward previews create valid items without charging
 PASS raising caps preserves trained stats skills and individual caps
+PASS all 25 published free skills gain at counted cap and respect individual caps
 PASS free natural skill gain works at counted cap
 PASS counted gain cannot consume free skills to bypass cap
 PASS transcendence increases free skill at counted cap
 PASS NPC teaching can raise free skill at counted cap
+PASS low-Dex companion follows at travel pace in every role
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -122,6 +124,7 @@ PASS pirate lodge owner secure storage and cargo survive reload
 PASS cancelled mission remains cancelled after reload
 PASS Marks balance and purchased reward survive reload
 PASS player caps and free skill budget survive reload
+PASS low-Dex companion follows at travel pace in every role
 PASS owner and companion references persist
 PASS role and native AI persist
 PASS overdue mission completes while owner is offline

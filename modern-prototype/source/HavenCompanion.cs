@@ -164,6 +164,15 @@ namespace Server.HavenPrototype
         {
             return IsOwner(from) && Controlled && ControlMaster == from && from.Alive && Alive && !IsDeadPet && !OnMission && from.Map == Map && Map != Map.Internal && from.InRange(this, 14) && from.InLOS(this);
         }
+        internal void PrepareFollowSpeed()
+        {
+            if (_owner == null || !Controlled || ControlMaster != _owner || OnMission) return;
+            // Native AdjustSpeeds recalculates from Dex on order changes. Apply a travel pace
+            // here so all roles and existing saved companions can keep up with their owner.
+            double pace = _owner.Mounted || _owner.Flying ? 0.10 : 0.15;
+            ActiveSpeed = Math.Min(ActiveSpeed, pace);
+            CurrentSpeed = ActiveSpeed;
+        }
         public bool CanOpenPack(Mobile from) { return CanCommand(from) && from.InRange(this, 2); }
         public override bool CheckControlChance(Mobile from) { return IsOwner(from); }
         public override bool CanBeControlledBy(Mobile from) { return IsOwner(from); }
@@ -186,7 +195,7 @@ namespace Server.HavenPrototype
             if (!CanCommand(from) || (order != OrderType.Follow && order != OrderType.Guard && order != OrderType.Stay && order != OrderType.Stop)) return false;
             var casting = Spell as Server.Spells.Spell;
             if (casting != null) casting.Disturb(Server.Spells.DisturbType.NewCast);
-            Server.Targeting.Target.Cancel(this);
+            if (Target != null) Target.Cancel(this, TargetCancelType.Canceled);
             Combatant = null; FocusMob = null; Warmode = false;
             ControlTarget = order == OrderType.Stay || order == OrderType.Stop ? null : from;
             ControlOrder = order;
@@ -459,6 +468,7 @@ namespace Server.HavenPrototype
     {
         private readonly HavenCompanion _companion;
         public HavenCompanionAI(HavenCompanion companion) : base(companion) { _companion = companion; }
+        public override bool DoOrderFollow() { _companion.PrepareFollowSpeed(); return base.DoOrderFollow(); }
         public override void EndPickTarget(Mobile from, IDamageable target, OrderType order)
         {
             if (order == OrderType.Attack) _companion.Attack(from, target as Mobile);
@@ -493,6 +503,7 @@ namespace Server.HavenPrototype
         public HavenCompanionMageAI(HavenCompanion companion) : base(companion) { _companion = companion; }
         public override bool SmartAI { get { return true; } }
         public override bool DoOrderGuard() { return CompanionGuard.Run(this, _companion); }
+        public override bool DoOrderFollow() { _companion.PrepareFollowSpeed(); return base.DoOrderFollow(); }
         public override void EndPickTarget(Mobile from, IDamageable target, OrderType order)
         {
             if (order == OrderType.Attack) _companion.Attack(from, target as Mobile);
@@ -504,6 +515,7 @@ namespace Server.HavenPrototype
         private readonly HavenCompanion _companion;
         public HavenCompanionArcherAI(HavenCompanion companion) : base(companion) { _companion = companion; }
         public override bool DoOrderGuard() { return CompanionGuard.Run(this, _companion); }
+        public override bool DoOrderFollow() { _companion.PrepareFollowSpeed(); return base.DoOrderFollow(); }
         public override void EndPickTarget(Mobile from, IDamageable target, OrderType order)
         {
             if (order == OrderType.Attack) _companion.Attack(from, target as Mobile);
@@ -603,3 +615,5 @@ namespace Server.HavenPrototype
         }
     }
 }
+
+

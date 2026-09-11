@@ -57,7 +57,18 @@ public static class CompanionSmoke
         StarterHomeSmoke.Run(Check, reload);
         MissionRecallSmoke.Run(Check, reload);
         HavenMarksSmoke.Run(Check, reload);
-        PlayerCapsSmoke.Run(Check, reload);
+        PlayerCapsSmoke.Run(Check, reload);        Check("low-Dex companion follows at travel pace in every role",()=>{
+            var follower=new HavenCompanion();var leader=new PlayerMobile {Player=true};
+            typeof(HavenCompanion).GetField("_owner",BindingFlags.NonPublic|BindingFlags.Instance).SetValue(follower,leader);
+            follower.SetControlMaster(leader);follower.RawDex=25;
+            foreach(var role in new[]{CompanionRole.Warrior,CompanionRole.Caster,CompanionRole.Archer}) {
+                typeof(HavenCompanion).GetField("_role",BindingFlags.NonPublic|BindingFlags.Instance).SetValue(follower,role);
+                typeof(HavenCompanion).GetField("_companionAI",BindingFlags.NonPublic|BindingFlags.Instance).SetValue(follower,null);
+                follower.AdjustSpeeds();follower.ControlTarget=leader;follower.ControlOrder=OrderType.Follow;
+                follower.AIObject.DoOrderFollow();Require(follower.CurrentSpeed<=0.15,"Slow follow pace: "+role);
+            }
+            follower.Delete();leader.Delete();
+        });
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");
@@ -232,3 +243,4 @@ public static class CompanionSmoke
         Timer.DelayCall(TimeSpan.FromMilliseconds(100), () => Core.Kill(false));
     }
 }
+
