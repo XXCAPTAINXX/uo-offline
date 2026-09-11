@@ -25,7 +25,7 @@ Use `Stop-Preview.ps1` to save and close this server. Do not copy the original M
 
 ## What is verified
 
-- 76 automated companion/preview checks passed with a clean Release build.
+- 84 automated companion/preview checks passed with a clean Release build.
 - Native world generation, all 25 setup stages and save/reload validation also passed from a second fresh checkout.
 - 6,835 spawners, six Doom Gauntlet controllers, 17 Shadowguard instances and 14 specific Blackthorn travel links were validated.
 - A socket test authenticated the prepared account and received the correct server list and game relay. This is not a graphical-client login/playthrough.

@@ -39,7 +39,7 @@ Omit `-PopulateWorld` for a bare build. `-Test` and `-PopulateWorld` cannot be c
 
 ## Resource storage
 
-The test kit includes a resource ledger for metals, woods, leathers, gems, Malas reagents and Stygian Abyss essences. It accepts native commodity deeds, its own resource deeds and loose stacks, including accessible nested bags. Locked/trapped containers and other players' inventory are excluded. Select an amount to withdraw as a deed or loose items; transfer all balances to another accessible ledger. Balances occupy no additional inventory slots. Companion resource missions are a separate pending addition; current supply missions still award gold.
+The test kit includes a resource ledger for metals, woods, leathers, gems, Malas reagents and Stygian Abyss essences. It accepts native commodity deeds, its own resource deeds and loose stacks, including accessible nested bags. Locked/trapped containers and other players' inventory are excluded. Select an amount to withdraw as a deed or loose items; transfer all balances to another accessible ledger. Balances occupy no additional inventory slots. Companions carry their own ledger. Mining, Lumber, Leather, Malas and Abyss jobs award catalog resources directly into it; overflow stays queued. Missions last 5/15/30 minutes and scale rewards by duration. Gathering jobs train their associated skill and choose an unlocked material tier when dispatched. These are timed missions, not physical resource runs.
 
 ## Native world setup
 
@@ -49,7 +49,7 @@ Generation and save/reload validation also passed on a second fresh checkout usi
 
 ## Automated verification
 
-The current milestone passed **76 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
+The current milestone passed **84 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
 
 Add `-Test` with another new destination to build, run fresh-world checks, save, restart and verify recovery. Test mode creates a disposable account with a random password and no client connection, then stops the server. It writes `companion-checks.log`.
 

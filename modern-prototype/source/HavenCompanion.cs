@@ -14,7 +14,7 @@ namespace Server.HavenPrototype
 {
     public enum CompanionRole { Warrior, Caster, Archer }
     // First ServUO vertical slice, not a deserializer for existing ModernUO saves.
-    public class HavenCompanion : BaseCreature
+    public partial class HavenCompanion : BaseCreature
     {
         private Mobile _owner;
         private BaseAI _companionAI;
@@ -108,6 +108,8 @@ namespace Server.HavenPrototype
             AddItem(_roleSword = new Longsword { Movable = false });
             var cloak = new Cloak(0x59B) { Movable = false }; cloak.Attributes.RegenMana = 8; AddItem(cloak);
             AddItem(new HavenCompanionPack());
+            SetSkill(SkillName.Mining, 50); SetSkill(SkillName.Lumberjacking, 50); SetSkill(SkillName.AnimalLore, 50);
+            EnsureResourceLedger();
         }
 
         public bool SetRole(Mobile from, CompanionRole role)
@@ -288,8 +290,14 @@ namespace Server.HavenPrototype
 
         public bool StartMission(Mobile from, int minutes)
         {
+            return StartMission(from, minutes, CompanionMission.Supply);
+        }
+        public bool StartMission(Mobile from, int minutes, CompanionMission kind)
+        {
             if (!CanCommand(from) || Combatant != null || from.Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 ||
-                from.Aggressors.Count > 0 || from.Aggressed.Count > 0 || (minutes != 5 && minutes != 15 && minutes != 30)) return false;
+                from.Aggressors.Count > 0 || from.Aggressed.Count > 0 || Spell != null ||
+                (minutes != 5 && minutes != 15 && minutes != 30) || _pendingGold > Int32.MaxValue - minutes * 100) return false;
+            if (!PrepareResourceMission(kind, minutes)) return false;
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddMinutes(minutes);
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
@@ -315,12 +323,13 @@ namespace Server.HavenPrototype
             _missionTimer = null;
             _completedMissions++;
             _pendingGold += gold;
-            _lastReport = "Supply run completed: " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
+            _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
             DeliverRewards();
             if (_owner != null && _owner.NetState != null) { _owner.SendMessage(_lastReport); _owner.SendMessage("Use [c and Recall to bring your companion back."); }
         }
         public void DeliverRewards()
         {
+            DeliverResourceRewards();
             if (Backpack == null || _pendingGold <= 0) return;
             foreach (Item item in Backpack.Items)
             {
@@ -360,10 +369,11 @@ namespace Server.HavenPrototype
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(1);
+            writer.Write(2);
             writer.Write(_owner); writer.Write(_missionDue); writer.Write(_missionMinutes);
             writer.Write(_pendingGold); writer.Write(_completedMissions); writer.Write(_lastReport);
             writer.Write((int)_role); writer.Write(_roleSword); writer.Write(_roleShield); writer.Write(_roleBow);
+            SerializeResourceMissions(writer);
         }
         public override void Deserialize(GenericReader reader)
         {
@@ -374,6 +384,7 @@ namespace Server.HavenPrototype
             if (version >= 1) { _role = (CompanionRole)reader.ReadInt(); _roleSword = reader.ReadItem(); _roleShield = reader.ReadItem(); _roleBow = reader.ReadItem(); }
             else { _roleSword = FindItemOnLayer(Layer.OneHanded); _roleShield = FindItemOnLayer(Layer.TwoHanded); }
             if (_role < CompanionRole.Warrior || _role > CompanionRole.Archer) _role = CompanionRole.Warrior;
+            if (version >= 2) DeserializeResourceMissions(reader);
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             ScheduleMission();
         }
@@ -470,7 +481,7 @@ namespace Server.HavenPrototype
             AddBackground(0, 0, 480, 460, 0xA28);
             AddLabel(24, 18, 0, "Alden Ashford — ServUO prototype");
             AddLabel(24, 45, 0, "HP " + companion.Hits + "/" + companion.HitsMax + "    Mana " + companion.Mana + "/" + companion.ManaMax);
-            AddLabel(24, 72, 0, companion.OnMission ? "Supply run: " + Math.Max(0, Math.Ceiling((companion.MissionDue - DateTime.UtcNow).TotalMinutes)) + " minutes left" : companion.Role + " | Orders: " + companion.ControlOrder);
+            AddLabel(24, 72, 0, companion.OnMission ? companion.MissionKind + ": " + Math.Max(0, Math.Ceiling((companion.MissionDue - DateTime.UtcNow).TotalMinutes)) + " minutes left" : companion.Role + " | Orders: " + companion.ControlOrder);
             Button(24, 110, 1, "Follow"); Button(250, 110, 2, "Guard");
             Button(24, 148, 3, "Stay"); Button(250, 148, 4, "Attack...");
             Button(24, 186, 5, "Heal me"); Button(250, 186, 6, "Open pack");
@@ -509,7 +520,7 @@ namespace Server.HavenPrototype
         private readonly HavenCompanion _companion;
         public CompanionActivityGump(HavenCompanion companion) : base(70,70)
         {
-            _companion = companion; AddBackground(0,0,500,420,0xA28);
+            _companion = companion; AddBackground(0,0,500,460,0xA28);
             AddLabel(24,20,0,"Alden - role and supply missions");
             AddLabel(24,55,0,"Current role: " + companion.Role);
             Button(24,100,1,"Warrior"); Button(185,100,2,"Caster"); Button(340,100,3,"Archer");
@@ -517,7 +528,8 @@ namespace Server.HavenPrototype
             AddLabel(24,225,0,"Supply mission - 100 gold per minute");
             Button(24,265,10,"5 minutes"); Button(185,265,11,"15 minutes"); Button(340,265,12,"30 minutes");
             AddLabel(24,315,0,"Missions finish while offline. Use Recall on return.");
-            Button(24,370,0,"Back");
+            Button(24,355,20,"Resource missions"); Button(275,355,21,"Resource ledger");
+            Button(24,410,0,"Back");
         }
         private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -526,6 +538,8 @@ namespace Server.HavenPrototype
             bool ok = true;
             if (info.ButtonID >= 1 && info.ButtonID <= 3) ok = _companion.SetRole(from,(CompanionRole)(info.ButtonID-1));
             else if (info.ButtonID >= 10 && info.ButtonID <= 12) ok = _companion.StartMission(from,info.ButtonID == 10 ? 5 : info.ButtonID == 11 ? 15 : 30);
+            else if (info.ButtonID == 20) { from.SendGump(new CompanionResourceMissionGump(_companion,5)); return; }
+            else if (info.ButtonID == 21) { _companion.OpenResourceLedger(from); return; }
             if (!ok) from.SendMessage("Unavailable: check distance, combat, casting, mission status and pack space.");
             _companion.Show(from);
         }

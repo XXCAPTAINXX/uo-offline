@@ -50,6 +50,7 @@ public static class CompanionSmoke
         File.AppendAllText(Report, "PHASE " + (reload ? "reload" : "fresh") + Environment.NewLine);
         PreviewSmoke.Run(Check, reload);
         ResourceSmoke.Run(Check, reload);
+        ResourceMissionSmoke.Run(Check, reload);
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");
@@ -206,6 +207,7 @@ public static class CompanionSmoke
         Check("save pending mission and companion", () => {
             Require(_companion.StartMission(_owner, 5), "Pending mission start failed");
             Field("_missionDue", DateTime.UtcNow.AddSeconds(1));
+            ResourceMissionSmoke.PrepareForSave();
             World.Save(false, false);
             File.WriteAllLines("companion-fixtures.txt", new[] { _owner.Serial.Value.ToString(), _companion.Serial.Value.ToString(), _owner.X.ToString(), _owner.Y.ToString(), _owner.Z.ToString() });
         });

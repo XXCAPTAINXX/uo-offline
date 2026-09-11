@@ -26,6 +26,13 @@ PASS full pack withdrawal is atomic
 PASS ledger transfer is atomic on target overflow
 PASS ledger transfer preserves each resource and rejects replay
 PASS persist resource fixtures
+PASS companion begins with accessible ledger
+PASS resource mission snapshots tier and scales by duration
+PASS companion ledger transfers to owner's book
+PASS wood and leather missions unlock higher resource types
+PASS regional missions enforce skill and award native catalog resources
+PASS full pack still receives resources into existing ledger
+PASS ledger overflow remains pending and delivers only available room
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -67,6 +74,7 @@ COMPLETE failures=0
 PHASE reload
 PASS preview kit claim survives save and restart
 PASS ledger and deed balances survive world restart
+PASS resource mission rewards and ledger persist without replay
 PASS owner and companion references persist
 PASS role and native AI persist
 PASS overdue mission completes while owner is offline

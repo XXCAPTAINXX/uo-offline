@@ -47,3 +47,9 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - 76 checks passed fresh + reload in verification/HavenServUOResources; one test variable naming compile issue corrected before successful build, zero final warnings/errors. Source still needs deployment to interactive preview.
 - Next: companion resource missions/own ledger integration, then dungeon progression, final deployment/backup. Original2593 remains running; preview2699 still stopped. Keep-awake PID28720 active. Client security prompt remains for user review; do not bypass.
 
+
+## 01:09 UTC mission milestone
+- Companion-owned ledgers and Mining/Lumber/Leather/Malas/Abyss jobs added. Version2 serialization retains resource snapshots and pending balances; v0/v1 remain readable. 84 fresh/reload checks passed, zero warnings/errors. Resource overflow and offline recovery covered.
+- User requested a complete feature reminder: docs/FEATURE-INVENTORY.md now distinguishes original implemented systems, modern preview and remaining gaps.
+- Found native Shadowguard roof gating checks NPC companion as independent player although completion table tracks PlayerMobiles only. Next fix with narrow native integration patch and regression tests before deployment. Graphical client security prompt still pending user review.
+
