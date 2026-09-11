@@ -9,6 +9,9 @@ using Server.Network;
 namespace Server.HavenPrototype {
  public class HavenWallet:Item {
   private long _legacyGold;
+  public long AstralShards { get; private set; }
+  public bool DepositShard(Mobile p,AstralShard shard){if(!CanUse(p)||shard==null||shard.Deleted||!shard.IsChildOf(p.Backpack)||!HavenResources.Accessible(p,shard)||shard.Amount>long.MaxValue-AstralShards)return false;AstralShards+=shard.Amount;shard.Delete();InvalidateProperties();return true;}
+  public bool SpendShards(Mobile p,int amount){if(!CanUse(p)||amount<=0||AstralShards<amount)return false;AstralShards-=amount;InvalidateProperties();return true;}
   public long Balance{get{return Owner==null?0:Banker.GetBalance(Owner);}} public Mobile Owner{get;private set;}
   public bool MergeLegacy(){if(_legacyGold<=0)return true;if(Owner==null||Owner.Deleted)return false;while(_legacyGold>0){int amount=(int)Math.Min(_legacyGold,1000000);if(!Banker.Deposit(Owner,amount))return false;_legacyGold-=amount;}InvalidateProperties();return true;}
   public HavenWallet(Mobile owner):base(0xEEF){Owner=owner;Name="adventurer's wallet";Hue=0x8A5;Weight=1;LootType=LootType.Blessed;}
@@ -17,7 +20,7 @@ namespace Server.HavenPrototype {
   public static void Initialize(){CommandSystem.Register("wallet",AccessLevel.Player,e=>Open(e.Mobile));CommandSystem.Register("tithe",AccessLevel.Player,e=>{int amount;var w=Find(e.Mobile);if(w==null || !int.TryParse(e.ArgString,out amount) || !w.Tithe(e.Mobile,amount))e.Mobile.SendMessage("Use [wallet, deposit gold, then choose Tithe or use [tithe 1000.");});}
   public static HavenWallet Find(Mobile p){return p==null||p.Backpack==null?null:p.Backpack.FindItemsByType(typeof(HavenWallet),true).Cast<HavenWallet>().FirstOrDefault(x=>x.Owner==p);}
   public bool CanUse(Mobile p){return HavenMarks.CanUse(p) && Owner==p && !Deleted && p.Backpack!=null && IsChildOf(p.Backpack) && HavenResources.Accessible(p,this);}
-  public long DepositPack(Mobile p){if(!CanUse(p)||!MergeLegacy())return 0;long total=0;foreach(var item in p.Backpack.FindItemsByType(typeof(Item),true)){int amount=item is Gold?item.Amount:item is BankCheck?((BankCheck)item).Worth:0;if(amount<=0 || !HavenResources.Accessible(p,item))continue;if(!Banker.Deposit(p,amount))continue;total+=amount;item.Delete();}InvalidateProperties();return total;}
+  public long DepositPack(Mobile p){if(!CanUse(p)||!MergeLegacy())return 0;long total=0;foreach(var item in p.Backpack.FindItemsByType(typeof(Item),true)){if(item is AstralShard){DepositShard(p,(AstralShard)item);continue;}int amount=item is Gold?item.Amount:item is BankCheck?((BankCheck)item).Worth:0;if(amount<=0 || !HavenResources.Accessible(p,item))continue;if(!Banker.Deposit(p,amount))continue;total+=amount;item.Delete();}InvalidateProperties();return total;}
   // Native Banker.Withdraw cannot combine a partial account balance with physical bank gold safely.
   public static bool SpendBank(Mobile p,int amount){if(p==null||amount<=0||Banker.GetBalance(p)<amount)return false;int accountPart=0;if(AccountGold.Enabled&&p.Account!=null){int platinum;double gold;p.Account.GetGoldBalance(out platinum,out gold);accountPart=(int)Math.Min(amount,Math.Max(0,gold));if(accountPart>0&&!p.Account.WithdrawGold(accountPart))return false;}int remainder=amount-accountPart;if(remainder>0&&!Banker.Withdraw(p,remainder)){if(accountPart>0)p.Account.DepositGold(accountPart);return false;}return true;}
   public bool Spend(Mobile p,long amount){if(!CanUse(p)||!MergeLegacy()||amount<=0||amount>int.MaxValue)return false;bool ok=SpendBank(p,(int)amount);InvalidateProperties();return ok;}
@@ -26,8 +29,8 @@ namespace Server.HavenPrototype {
   public static bool PayGold(Mobile p,int amount){if(!HavenMarks.CanUse(p)||amount<=0)return false;var w=Find(p);if(w!=null&&w.CanUse(p)&&!w.MergeLegacy())return false;return SpendBank(p,amount);}
   public override void OnDoubleClick(Mobile p){if(CanUse(p)){if(!MergeLegacy())p.SendMessage("Some old wallet gold is awaiting bank space; it remains safely stored. Make bank space and reopen your wallet.");long deposited=DepositPack(p);if(deposited>0)p.SendMessage("Deposited "+deposited.ToString("N0")+" gold from pack gold and checks into your bank.");p.SendGump(new HavenWalletGump(this,p));}}
   public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Bank gold: "+Balance.ToString("N0"));list.Add("Double-click: collect pack gold/checks, then open bank and tithing");}
-  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Owner);w.Write(_legacyGold);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();_legacyGold=r.ReadLong();Timer.DelayCall(TimeSpan.Zero,()=>{if(!Deleted)MergeLegacy();});}
+  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(Owner);w.Write(_legacyGold);w.Write(AstralShards);}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Owner=r.ReadMobile();_legacyGold=r.ReadLong();AstralShards=version>=1?r.ReadLong():0;Timer.DelayCall(TimeSpan.Zero,()=>{if(!Deleted)MergeLegacy();});}
  }
  public class HavenWalletGump:HavenMenuGump {
   private readonly HavenWallet _wallet;
@@ -36,8 +39,9 @@ namespace Server.HavenPrototype {
    Text(24,22,400,24,"<B>ADVENTURER'S WALLET</B>");
    Text(24,56,260,22,"Bank gold: "+w.Balance.ToString("N0"));
    Text(295,56,140,22,"Marks: "+HavenMarks.Balance(p).ToString("N0"));
-   Text(24,82,410,22,"Tithing: "+p.TithingPoints.ToString("N0")+" / 100,000");
-   Button(24,116,1,"Deposit all pack gold / checks",360);
+   Text(295,82,140,22,"Shards: "+w.AstralShards.ToString("N0"));
+   Text(24,82,270,22,"Tithing: "+p.TithingPoints.ToString("N0")+" / 100,000");
+   Button(24,116,1,"Deposit gold / checks / shards",360);
    Text(24,158,85,22,"Amount"); AddBackground(110,151,145,32,0xBB8); AddTextEntry(119,157,127,22,0,1,"1000");
    Text(269,158,165,22,"Gold per action");
    Button(24,201,2,"Withdraw to pack",180); Button(242,201,3,"Tithe gold",170);

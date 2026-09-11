@@ -36,3 +36,17 @@ Codex opens on the requested skill matrix: one row per skill, columns for105/110
 The companion combat bar no longer gets closed by the shared companion menu-opening method. Its Menu button leaves it available alongside the full menu. Right-click dismissal is disabled; an explicit Close button remains. Open with [cc.
 
 CodexMenuSmoke passed matrix totals, exact-value withdrawals, retained browser regressions, and combat-bar close-control checks. Native build passed. Visual appearance has not been rated from a live client screenshot.
+
+## Advanced gear restoration
+
+The nine special bracelets and Champion pendant now evolve through equipped eligible kills (100 XP per level, level20 at1900 XP). Each gained level adds5 Luck and each fifth level adds1 Str/Dex/Int. Existing items attach automatically at startup, preserving their original item identity and stats. Matching-set behavior is unchanged. [gearprogress reports progress.
+
+Astral shards drop from eligible hostile kills:5% below1000 HP,15% at1000+, guaranteed three at4000+. The wallet absorbs actual pack/nested-bag shards on double-click and persists a separate shard balance. Special Rewards offers Weaver ring20, Guardian mantle40, Fortune earrings60 shards, with original attributes and level20 growth. Failed purchases preserve balances. Gold and Marks cannot substitute for shards.
+
+Legendary random gear drops use original HP-based probabilities and a Luck multiplier up to2x at5000 Luck. Warden base chance2%; other base chances0.1%/0.3%/1%/5% at100/300/1000/5000 HP. These native equipment items receive high-intensity attributes and persistent evolution. The old island-trial-specific2% branch awaits that encounter's restoration.
+
+Doom bosses can drop a matching-artifact reforging recipe (10%). A matching native Doom artifact,100 relevant crafting skill,100 iron ingots and20 diamonds are required. Reforging retains the item, adds original damage/regen bonuses and unlocks evolution; failed or duplicate reforging consumes nothing. Native Doom artifact rewards remain separate.
+
+Recruit/Warden/Dreadnought shield-warrior tiers restored: shield, sword, mace, gorget and ring. Recruit first claim per piece is free, replacements250 gold; Warden40 Marks per piece; Dreadnought80 shards per piece. Hover previews show native properties. Original supported Haven quest gear gains evolution when equipped; retroactive training-quest claims and broader boss-artifact/custom currency systems are not completed by this batch.
+
+AdvancedGearSmoke passed exact currency deposits/purchase/capacity rollback, first-claim protection,15 tier/piece factories, nine bracelet growth cases, actual kill XP/shard awards, duplicate reforge rejection, native item preservation, and fresh/reload balances and progression. Ordinary gear does not automatically evolve.

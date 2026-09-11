@@ -305,3 +305,7 @@ Rebuilt Codex browsing with categories, search, sort, selection-only rows and ex
 ## 2026-09-11 Skill matrix Codex and persistent combat bar
 
 Implemented the user screenshot's skill-row/tier-column layout, with summed Transcendence display and exact-item actions. Existing category browser retained for miscellaneous archive items. Removed automatic combat-bar closure when opening companion menus and added explicit Close with right-click dismissal disabled. Isolated UI/data regression checks passed.
+
+## 2026-09-11 Advanced gear
+
+Restored bracelet/pendant progression, Astral currency wallet and reward growth, luck-sensitive Legendary drops, native Doom artifact reforging, and15 shield-warrior pieces with original currency prices/free first Recruit claims. Fresh/reload isolated tests passed. User added saved offline mission presets to the pending mission restoration requirements. Pet/role/mission/island restoration is still pending.
