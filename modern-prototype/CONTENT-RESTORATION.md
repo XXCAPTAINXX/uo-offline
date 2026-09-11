@@ -20,3 +20,11 @@ Rings and Concord earn equipped hostile-kill XP, level 1-20 over 1,900 XP. Each 
 JewelrySmoke exercises all nine themes through native attribute reads, unequip behavior, Concord combination, nonstacking growth/unlock, catalog prices, and save/reload identity and bonuses. Fresh and reload passed. Broader Astral, quest, Legendary and Doom progression is still pending.
 
 Mini-champion wave enemies and bosses now disable native low-health fleeing for both melee and mage AI. Ordinary world creatures retain their own behavior.
+
+## Codex browsing and skill-free travel
+
+Codex now separates browsing from withdrawal: seven categories, case-insensitive skill/name search, alphabetical or quantity sorting, seven spaced rows, selected-item details, and explicit Withdraw one / Combine / Split controls. Exact recipes are displayed; insufficient quantities show how many more are needed. Selection never consumes or withdraws an item. Item properties remain on browse and withdraw arrows. Page/category/search/sort stay selected after actions and targeting returns to the menu. Different champion skull types now have separate rows. Existing stored items and serialization are unchanged.
+
+Recall, Mark and Gate Travel require no Magery skill for players in the opted-in Haven preview. Mana, reagents or applicable equipment discounts, casting delay, spell access, and normal travel restrictions are unchanged. Other spells keep their skill requirements.
+
+CodexMenuSmoke passed category/search/sort, distinct skulls/exact Transcendence values, selection-versus-withdrawal, combine/split quantities, and tooltip attachment checks. Native skill checks passed at zero Magery for all three travel spells; combat spell requirements and mana costs were checked. Live build and login verified separately. Client appearance still needs player feedback; automated checks do not establish visual quality.

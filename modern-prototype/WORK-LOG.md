@@ -297,3 +297,7 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 ## 2026-09-11 Jewelry and mini-champion behavior
 
 Restored original nine matching rings (30 Marks), Concord talisman (150 Marks), native set bonuses, level20 growth/follower unlock, and Warden20% ring drop. Isolated native attribute/equip/remove and fresh/reload checks passed. Disabled low-health fleeing for mini-champion wave enemies and bosses. Accepted restoration order recorded in RESTORATION-QUEUE.md: gear, pets, original companion roles/missions, island.
+
+## 2026-09-11 Codex interface and travel spell skill exemption
+
+Rebuilt Codex browsing with categories, search, sort, selection-only rows and explicit recipes/actions. Fixed champion skull grouping. Restored skill-free Recall/Mark/Gate for preview players without bypassing normal travel costs/restrictions. Isolated CodexMenuSmoke and native zero-Magery checks passed.
