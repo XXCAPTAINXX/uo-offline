@@ -84,3 +84,8 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Verified client shortcut target and working directory; leave client closed as authorized. Added a short first-session route and five-minute mining/ledger-transfer check with expected100ingots/500gold to TONIGHT.md.
 - Current source/test milestone a043aa4 already published and source-backed-up at E:/Backups/Haven/Prototypes/servuo-doom-naval-20260911-a043aa4. No new runtime changes in this readiness pass.
 
+## Final-window backup and migration documentation
+- Requested and confirmed a live preview save, then copied current Saves/Config to E:/Backups/Haven/Prototypes/servuo-ready-world-20260911. Compared source hashes before/after copy and backup hashes; current world backup verified. Server remains running, client closed.
+- Added MIGRATION.md with explicit type/identity inventory, currency/storage reconciliation, unsupported-type reporting, disposable conversion/reload checks and rollback gates. This is a plan only: no character/island conversion performed.
+- Next scheduled final check: leave preview running and stop build heartbeat at deadline. Runtime/test work is complete for this slice; remaining manual gameplay and migration gaps documented in TONIGHT.md/README.md.
+

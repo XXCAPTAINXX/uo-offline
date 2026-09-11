@@ -78,5 +78,7 @@ Next gates:
 3. Dry-run explicit conversion of custom saved types and balances, preserving identities and owner relationships and reporting unsupported types.
 4. Rehearse a complete migration before any live deployment.
 
+See [migration gates](MIGRATION.md) for required inventory, ownership, currency reconciliation and rollback checks. This plan does not imply a converter already exists.
+
 The current live Haven server and player saves have not been modified.
 
