@@ -10,13 +10,13 @@ namespace Server.HavenPrototype
     public static class HavenPlaytest
     {
         // Stable IDs: append tests; do not reorder existing entries with saved results.
-        public static readonly string[] Titles={"Starter supplies","Arcane supplies","Companion orders","Companion combat","Companion pack","Five-minute mining mission","Ledger transfer","Ledger withdrawal","Repair stone","Dungeon travel","Logout and return","Menus and readability","Marks reward shop","Mini champion fight","Mini champion rewards"};
-        public static readonly string[] Details={"Claim starter gear; skills stay unchanged; a second claim is refused.","Claim books and robe; equip them and try a spell you can cast.","Recruit with the stone; try follow, guard, all stay and all kill.","Outside combat choose a role, then fight an ordinary hostile.","Beside your companion, put an item in his pack and take it back out.","Complete Mining: auto-return, 500 gold, 100 ingots and 10 Marks.","Transfer your companion's ledger balance to yours; check both totals.","Withdraw some resources, then absorb them again; totals agree.","Carry a damaged weapon or armor piece; repair restores durability.","Use the travel stone; visit a destination and return to Haven.","Log out/in; verify your character, companion and possessions.","Check text, buttons, clipping and whether services are understandable.","Claim optional test Marks, buy an item, and verify the balance and properties.","Travel to camp, start a theme, defeat three waves and the boss with your companion.","Check 20 Marks, a 10,000-gold check and a deed. With a full pack, collect pending rewards."};
+        public static readonly string[] Titles={"Starter supplies","Arcane supplies","Companion orders","Companion combat","Companion pack","Five-minute mining mission","Ledger transfer","Ledger withdrawal","Repair stone","Dungeon travel","Logout and return","Menus and readability","Marks reward shop","Mini champion fight","Mini champion rewards","Evolving starter equipment","Wallet and tithing","Haven Luck and training"};
+        public static readonly string[] Details={"Claim starter gear; skills stay unchanged; a second claim is refused.","Claim books and robe; equip them and try a spell you can cast.","Recruit with the stone; try follow, guard, all stay and all kill.","Outside combat choose a role, then fight an ordinary hostile.","Beside your companion, put an item in his pack and take it back out.","Complete Mining: auto-return, 500 gold, 100 ingots and 10 Marks.","Transfer your companion's ledger balance to yours; check both totals.","Withdraw some resources, then absorb them again; totals agree.","Carry a damaged weapon or armor piece; repair restores durability.","Use the travel stone; visit a destination and return to Haven.","Log out/in; verify your character, companion and possessions.","Check text, buttons, clipping and whether services are understandable.","Claim optional test Marks, buy an item, and verify the balance and properties.","Travel to camp, start a theme, defeat three waves and the boss with your companion.","Check 20 Marks, a 10,000-gold check and a deed. With a full pack, collect pending rewards.","Claim the evolving set at its Haven stone. Equip gear, earn XP, and try a robe upgrade.","Open [wallet, deposit gold or a check, then tithe a small amount. Check both balances.","Use [havenluck in Haven and outside it. Train a skill below 100 and check faster gains."};
         public static void Initialize() { CommandSystem.Register("haventest",AccessLevel.Player,e=>{if(HavenPreview.Enabled) e.Mobile.SendGump(new HavenPlaytestGump(e.Mobile,0));}); }
         public static string TravelLabel(int test)
         {
             if(test==13)return "Go to expedition camp";
-            return test==0 || test==1 || test==2 || test==8 || test==9 ? "Go to Haven" : null;
+            return test==0 || test==1 || test==2 || test==8 || test==9 || test==15 || test==17 ? "Go to Haven" : null;
         }
         public static bool TravelToTest(Mobile from,int test)
         {
@@ -90,5 +90,6 @@ namespace Server.HavenPrototype
         private static int TitlesLength { get { return HavenPlaytest.Titles.Length; } }
     }
 }
+
 
 

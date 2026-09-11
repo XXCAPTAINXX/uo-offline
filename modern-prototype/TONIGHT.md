@@ -84,3 +84,10 @@ Mini champion placement now rejects native buildings across the full encounter f
 Companions now use bandages you put in their backpack (including sub-bags) to treat you within2tiles or themselves. One bandage is consumed per started attempt; normal Healing/Anatomy checks determine healing, curing and resurrection. All roles can use them, alongside existing spells and regeneration.
 Companion access: stand within12tiles and line of sight to open his pack, use nested bags/ledger, and drag items in or out. Bandages between you and your own companion use12tiles at application and completion. Bandaging unrelated targets keeps its ordinary range. Automatic companion bandaging uses the same extended reach.
 Mini-champ landmark: wooden expedition signpost, supply crate and lit lantern beside the camp. Double-click the marker to open the encounter menu.
+
+Evolving starter gear: double-click the green Evolving starter gear and upgrades stone in Haven (3500,2572), or [startergear while beside it. Claim nine free bound pieces even if you previously claimed ordinary supplies. Equip the appropriate items to gain XP from hostile monster kills; weapons also gain hit XP, grimoire successful-cast XP. Robe upgrades cost Marks or wallet/bank gold.
+
+Wallet: [wallet gives you an empty wallet if needed. Double-click it in your pack, Deposit pack gold/checks, enter an amount and Tithe to buy Chivalry points1:1(up to100,000). Coin withdrawals/bank transfers accept1-60,000. [tithe1000 uses wallet funds. Haven Marks are displayed from your existing character balance; no duplicate mark currency.
+
+Haven area bonuses: +1,000real Luck and5xnatural skill-gain chance/amount below100.0. [havenluck reports these. Outside the original Trammel Haven area, normal rates/Luck apply. This does not grant untrained skills or remove powerscroll requirements.
+The new [haventest checks are Evolving starter equipment (page4), Wallet and tithing and Haven Luck and training (page5). Gear/Luck checks offer Go to Haven.

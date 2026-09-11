@@ -62,6 +62,7 @@ namespace Server.HavenPrototype
             } else return null;
             item.Name=Names[index];item.Hue=0x489;return item;
         }
+        public static bool Spend(Mobile owner,int amount) {if(!CanUse(owner) || amount<=0 || Balance(owner)<amount)return false;((Account)owner.Account).SetTag(Key(owner),(Balance(owner)-amount).ToString());return true;}
         public static bool Buy(Mobile owner,int index) {
             if(!CanUse(owner) || index<0 || index>=Prices.Length || owner.Backpack==null) return false;
             int balance=Balance(owner);
@@ -103,4 +104,5 @@ namespace Server.HavenPrototype
         }
     }
 }
+
 

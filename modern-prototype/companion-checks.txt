@@ -87,6 +87,14 @@ PASS twelve-tile pack nested inventory and ledger access
 PASS companion bandages owner at twelve tiles and completes range check
 PASS strangers and unrelated bags retain ordinary range
 PASS thirteen tiles rejects pack ledger and bandage
+PASS starter gear full-pack refusal and single claim
+PASS credited native monster kill advances equipped gear
+PASS weapon levels cap at20 and100 percent mana leech with binding
+PASS robe upgrades charge exact Marks and reject stale menu
+PASS wallet absorbs gold checks and tithes only room below cap
+PASS wallet withdrawal preserves funds when full and bank transfers conserve gold
+PASS Haven Luck adds1000 only in original area
+PASS native accelerated skill gains stop at100 and respect power-scroll cap
 PASS raising caps preserves trained stats skills and individual caps
 PASS all 25 published free skills gain at counted cap and respect individual caps
 PASS free natural skill gain works at counted cap
@@ -106,6 +114,7 @@ PASS companion joins owner party idempotently
 PASS all kill shares native target with ordinary pet
 PASS guard chooses hostile and excludes wild tameable
 PASS guard restores cleared follow target and pursues owner beyond command range
+PASS successful native spell advances equipped grimoire
 PASS guard closes distance while retaining guard order
 PASS native greater heal starts
 PASS native spell heals owner and spends mana
@@ -152,6 +161,7 @@ PASS Marks balance and purchased reward survive reload
 PASS test allowance cannot replay after reload
 PASS mini champion active wave and full-pack prize survive reload
 PASS Haven recovery NPCs are present once
+PASS evolving gear wallet ownership and balances persist
 PASS player caps and free skill budget survive reload
 PASS low-Dex companion follows at travel pace in every role
 PASS owner and companion references persist
