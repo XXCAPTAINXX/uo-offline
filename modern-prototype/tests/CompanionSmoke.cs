@@ -52,6 +52,7 @@ public static class CompanionSmoke
         ResourceSmoke.Run(Check, reload);
         ResourceMissionSmoke.Run(Check, reload);
         ShadowguardSmoke.Run(Check, reload);
+        DoomNavalSmoke.Run(Check, reload);
         if (reload)
         {
             var ids = File.ReadAllLines("companion-fixtures.txt");

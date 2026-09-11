@@ -53,7 +53,9 @@ The progression harness exercises native Bar waves, Roof boss sequencing, room c
 
 ## Automated verification
 
-The current milestone passed **90 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
+The Doom harness kills each stage's native creatures and invokes the native progression callback through all six bosses, verifies the cycle restarts, and checks the sequence after reload. The naval harness moves a Britannian ship with cargo in its native GalleonHold and verifies ownership and cargo after reload. These are mechanics/persistence checks, not a fishing expedition, boarding battle, or client combat playthrough. The initial naval fixture incorrectly used the older boat Hold property; that fixture was corrected before the clean passing run.
+
+The current milestone passed **94 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
 
 Add `-Test` with another new destination to build, run fresh-world checks, save, restart and verify recovery. Test mode creates a disposable account with a random password and no client connection, then stops the server. It writes `companion-checks.log`.
 
@@ -77,3 +79,4 @@ Next gates:
 4. Rehearse a complete migration before any live deployment.
 
 The current live Haven server and player saves have not been modified.
+

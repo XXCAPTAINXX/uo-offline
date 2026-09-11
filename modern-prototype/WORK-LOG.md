@@ -73,3 +73,9 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Exercised a second clean save/stop/start cycle with the updated build; preview listener returned and account probe passed again. Original2593 remained running throughout. Client stays closed; preview server stays running.
 - Next: meaningful native Doom progression/naval validation in disposable test world, then final readiness documentation. No new dungeon or boat gameplay test is claimed in this deployment milestone. Deadline02:52UTC still applies.
 
+## 02:28 UTC Doom/naval verification
+- Added DoomNavalSmoke.cs to disposable harness. Native six-stage Doom deaths/callbacks advance and reset the cycle; restored sequence remains intact. Britannian movement preserves native GalleonHold cargo, owner and cargo survive reload.
+- First test fixture used obsolete BaseBoat.Hold instead of BaseGalleon.GalleonHold; corrected test only. Failed fixture retained at verification/HavenServUODoomNaval. Fresh reproduction verification/HavenServUODoomNavalFinal passed94checks across fresh/reload, zero build warnings/errors; test servers stopped.
+- No production change or preview restart needed for these test additions. Preview2699 and original2593 remain running. No actual fishing/naval combat/client dungeon completion claimed.
+- Publish tests/results/docs and source backup. Next final readiness pass by02:52UTC: confirm listeners and instructions, summarize migration gaps; no need to rerun passing suites without new changes.
+

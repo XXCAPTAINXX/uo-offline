@@ -38,6 +38,8 @@ PASS Shadowguard companion shares qualified owner's room eligibility
 PASS Shadowguard still requires every real party member's rooms
 PASS native Shadowguard bar advances all pirate waves and grants room credit
 PASS native Shadowguard roof sequences four bosses and consumes room credit
+PASS Doom advances all six native boss stages and restarts its cycle
+PASS Britannian ship moves with native hold cargo intact
 PASS create player fixture on traversable modern map
 PASS claim binds owner and one follower slot
 PASS repeat claim does not duplicate
@@ -81,6 +83,8 @@ PASS preview kit claim survives save and restart
 PASS ledger and deed balances survive world restart
 PASS resource mission rewards and ledger persist without replay
 PASS Shadowguard reload consumes orphaned player records without corrupting saved data
+PASS Doom six-stage sequence survives world reload
+PASS Britannian ship preserves owner and native hold cargo after reload
 PASS owner and companion references persist
 PASS role and native AI persist
 PASS overdue mission completes while owner is offline

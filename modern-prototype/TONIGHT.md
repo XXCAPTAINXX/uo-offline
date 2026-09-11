@@ -25,14 +25,17 @@ Use `Stop-Preview.ps1` to save and close this server. Do not copy the original M
 
 ## What is verified
 
-- 90 automated companion/preview checks passed with a clean Release build.
+- 94 automated companion/preview checks passed with a clean Release build.
 - Native world generation, all 25 setup stages and save/reload validation also passed from a second fresh checkout.
 - 6,835 spawners, six Doom Gauntlet controllers, 17 Shadowguard instances and 14 specific Blackthorn travel links were validated.
 - A socket test authenticated the prepared account and received the correct server list and game relay. This is not a graphical-client login/playthrough.
 - Start, save and clean shutdown scripts were exercised against the separate preview.
+- The Shadowguard patch is installed in the interactive preview; its existing world passed two starts and an intervening clean save/reload, with successful account connection probes.
+- Native Doom six-stage progression/cycle reset and Britannian ship movement/cargo/owner persistence passed in a disposable test world. Fishing, naval combat and real-player dungeon combat still need playtesting.
 
 ## Still outside this port
 
 The old island/house, wallet, custom pets, gear progression, guild bots, market and full AFK systems have not been migrated. Alden's bard masteries, Spellweaving rotations, dungeon assistance and resurrection are also not in this milestone. The original server retains those existing systems. Check the README for subsequent additions before testing.
 
 For a friend's independent installation, use the repository's `modern-prototype/Build-Prototype.ps1 -PopulateWorld` instructions with their own modern Classic client data. Do not share this PC's client settings, accounts or saves.
+
