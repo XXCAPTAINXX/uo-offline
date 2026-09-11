@@ -26,8 +26,10 @@ namespace Server.HavenPrototype
         public CompanionCombatBarGump(HavenCompanion companion):base(35,160)
         {
             _companion=companion;
+            Closable=false;
             AddBackground(0,0,420,104,0xA28);
-            AddLabel(12,9,0,companion.Name);
+            AddLabelCropped(12,9,205,24,0,companion.Name);
+            Button(230,8,9,"Close");
             Button(320,8,7,"Menu");
             Button(12,38,1,"Follow");Button(120,38,2,"Guard");Button(230,38,3,"Attack");
             Button(12,70,4,"Stay");Button(120,70,5,"Heal");Button(230,70,6,"Recall");Button(320,70,8,"Pack");
@@ -44,7 +46,8 @@ namespace Server.HavenPrototype
                 case 4:ok=_companion.SetOrder(owner,OrderType.Stay);break;
                 case 5:ok=_companion.HealOwner(owner);break;
                 case 6:ok=_companion.Recall(owner);break;
-                case 7:_companion.Show(owner,true);return;
+                case 7:_companion.ShowCombatBar(owner);_companion.Show(owner,true);return;
+                case 9:return;
                 case 8:_companion.OpenPack(owner);break;
                 default:return;
             }

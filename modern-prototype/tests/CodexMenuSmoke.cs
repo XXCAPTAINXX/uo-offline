@@ -13,7 +13,7 @@ using Server.HavenPrototype;
 public static class CodexMenuSmoke
 {
     static void Check(bool ok, string name) { if (!ok) throw new Exception(name); File.AppendAllText("codex-menu-checks.log", "PASS " + name + "\n"); }
-    static void Click(HavenCodexGump menu, Mobile player, int id)
+    static void Click(HavenCodexBrowserGump menu, Mobile player, int id)
     {
         var state = (NetState)FormatterServices.GetUninitializedObject(typeof(NetState)); state.Mobile = player;
         menu.OnResponse(state, new RelayInfo(id, new int[0], new TextRelay[0]));
@@ -32,24 +32,34 @@ public static class CodexMenuSmoke
             book.DropItem(new ScrollOfTranscendence(SkillName.Mining, 2.3));
             book.DropItem(new ScrollOfTranscendence(SkillName.Mining, 2.4));
             foreach (ChampionSkullType type in Enum.GetValues(typeof(ChampionSkullType))) book.DropItem(new ChampionSkull(type));
-            Check(HavenCodexGump.Groups(book, 6, "", false).Length == Enum.GetValues(typeof(ChampionSkullType)).Length, "different champion skulls stay in distinct groups");
-            Check(HavenCodexGump.Groups(book, 4, "minING", false).Length == 2, "case insensitive search preserves exact transcendence values");
-            Check(HavenCodexGump.Groups(book, 1, "", false).Single().Count() == 8, "power category excludes other scrolls");
-            Check(HavenCodexGump.Groups(book, 0, "", true).First().Count() == 8, "quantity sort puts largest stack first");
-            var menu = new HavenCodexGump(p, book, 0, 1);
+            Check(HavenCodexBrowserGump.Groups(book, 6, "", false).Length == Enum.GetValues(typeof(ChampionSkullType)).Length, "different champion skulls stay in distinct groups");
+            Check(HavenCodexBrowserGump.Groups(book, 4, "minING", false).Length == 2, "case insensitive search preserves exact transcendence values");
+            Check(HavenCodexBrowserGump.Groups(book, 1, "", false).Single().Count() == 8, "power category excludes other scrolls");
+            Check(HavenCodexBrowserGump.Groups(book, 0, "", true).First().Count() == 8, "quantity sort puts largest stack first");
+            var menu = new HavenCodexBrowserGump(p, book, 0, 1);
             int count = book.Items.Count;
             Click(menu, p, 100); Check(book.Items.Count == count, "selecting a row never withdraws or converts");
             Check(menu.Entries.OfType<GumpButton>().Any(b => b.ButtonID == 7), "combine available with sufficient scrolls");
             Click(menu, p, 7); Check(book.Items.OfType<PowerScroll>().Single().Value == 110, "explicit combine action consumes correct inputs");
-            menu = new HavenCodexGump(p, book, 0, 1);
+            menu = new HavenCodexBrowserGump(p, book, 0, 1);
             Check(!menu.Entries.OfType<GumpButton>().Any(b => b.ButtonID == 7), "insufficient quantity does not offer combine button");
             Click(menu, p, 8); Check(book.Items.OfType<PowerScroll>().Count() == 8, "explicit split restores eight 105 scrolls");
-            menu = new HavenCodexGump(p, book, 0, 1); Click(menu, p, 10);
+            menu = new HavenCodexBrowserGump(p, book, 0, 1); Click(menu, p, 10);
             Check(book.Items.OfType<PowerScroll>().Count() == 7 && p.Backpack.Items.OfType<PowerScroll>().Count() == 1, "withdraw moves exactly one item");
             for (int i = 0; i < menu.Entries.Count; i++) {
                 var arrow = menu.Entries[i] as GumpButton;
                 if (arrow != null && (arrow.ButtonID >= 100 || arrow.ButtonID == 10)) Check(menu.Entries[i + 1] is GumpItemProperty, "browse and withdraw arrows have item properties");
             }
+            var table = new HavenCodexGump(p, book, 0, true, "Mining");
+            Check(HavenCodexGump.Quantity(HavenCodexGump.Cell(book, SkillName.Mining, 8), 8) == "4.7", "table shows sum of exact transcendence points");
+            var detail = new HavenCodexCellGump(p, book, table, SkillName.Mining, 8);
+            Check(detail.Entries.OfType<GumpButton>().Count(b => b.ButtonID >= 100) == 2, "detail offers each distinct transcendence value");
+            var state = (NetState)FormatterServices.GetUninitializedObject(typeof(NetState)); state.Mobile = p;
+            detail.OnResponse(state, new RelayInfo(100, new int[0], new TextRelay[0]));
+            Check(p.Backpack.Items.OfType<ScrollOfTranscendence>().Single().Value == 2.3 && HavenCodexGump.Quantity(HavenCodexGump.Cell(book, SkillName.Mining, 8), 8) == "2.4", "table withdrawal preserves exact scroll and remaining points");
+            var companion = new HavenCompanion(); var bar = new CompanionCombatBarGump(companion);
+            Check(!bar.Closable && bar.Entries.OfType<GumpButton>().Any(b => b.ButtonID == 9), "combat bar prevents right click dismissal and has explicit close");
+            companion.Delete();
             p.Delete(); File.AppendAllText("codex-menu-checks.log", "COMPLETE\n"); Core.Kill(false);
         } catch (Exception e) { File.AppendAllText("codex-menu-checks.log", "FAIL " + e + "\n"); Core.Kill(false); }
     }

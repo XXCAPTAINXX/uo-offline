@@ -28,3 +28,11 @@ Codex now separates browsing from withdrawal: seven categories, case-insensitive
 Recall, Mark and Gate Travel require no Magery skill for players in the opted-in Haven preview. Mana, reagents or applicable equipment discounts, casting delay, spell access, and normal travel restrictions are unchanged. Other spells keep their skill requirements.
 
 CodexMenuSmoke passed category/search/sort, distinct skulls/exact Transcendence values, selection-versus-withdrawal, combine/split quantities, and tooltip attachment checks. Native skill checks passed at zero Magery for all three travel spells; combat spell requirements and mana costs were checked. Live build and login verified separately. Client appearance still needs player feedback; automated checks do not establish visual quality.
+
+## Skill-table Codex and combat-bar persistence
+
+Codex opens on the requested skill matrix: one row per skill, columns for105/110/115/120, mastery volumes I/II/III, Alacrity and total Transcendence points. Eighteen rows per page, skill search and All/Stored toggle. A cell opens a compact panel with actual-item tooltip/withdrawal and explicit conversion recipe buttons. Transcendence withdrawal selects an exact existing value; it never merges or rounds the stored scrolls. The detailed category browser remains available for stat caps, skulls and binders and returns to the table.
+
+The companion combat bar no longer gets closed by the shared companion menu-opening method. Its Menu button leaves it available alongside the full menu. Right-click dismissal is disabled; an explicit Close button remains. Open with [cc.
+
+CodexMenuSmoke passed matrix totals, exact-value withdrawals, retained browser regressions, and combat-bar close-control checks. Native build passed. Visual appearance has not been rated from a live client screenshot.

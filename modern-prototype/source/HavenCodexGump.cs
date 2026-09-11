@@ -10,7 +10,7 @@ using Server.Spells.SkillMasteries;
 
 namespace Server.HavenPrototype
 {
-    public class HavenCodexGump : HavenMenuGump
+    public class HavenCodexBrowserGump : HavenMenuGump
     {
         const int PageSize = 7;
         readonly HavenChampionCodex _book;
@@ -48,7 +48,7 @@ namespace Server.HavenPrototype
                 Key(x).IndexOf(search ?? "", StringComparison.OrdinalIgnoreCase) >= 0).GroupBy(Key);
             return (byCount ? groups.OrderByDescending(x => x.Count()).ThenBy(x => x.Key) : groups.OrderBy(x => x.Key)).ToArray();
         }
-        public HavenCodexGump(Mobile p, HavenChampionCodex book, int page, int category = 0,
+        public HavenCodexBrowserGump(Mobile p, HavenChampionCodex book, int page, int category = 0,
             string search = "", bool byCount = false, string selected = null) : base(40, 40)
         {
             _book = book; _category = Math.Max(0, Math.Min(6, category));
@@ -107,7 +107,7 @@ namespace Server.HavenPrototype
                 ItemArrow(this, p, chosen.First(), 195, 465, 10);
                 Text(228, 465, 123, 24, "Withdraw one");
             }
-            Button(24, 507, 0, "Close", 90);
+            Button(24, 507, 0, "Back to table", 132);
             if (_page > 0) Button(195, 507, 3, "Previous", 105);
             Text(361, 507, 173, 24, "Page " + (_page + 1) + " / " + pages);
             if (_page + 1 < pages) Button(565, 507, 4, "Next", 100);
@@ -117,12 +117,13 @@ namespace Server.HavenPrototype
         void Reopen(Mobile p, int page, int category, string search, bool byCount, string selected)
         {
             if (!_book.CanUse(p)) return;
-            p.CloseGump(typeof(HavenCodexGump)); p.SendGump(new HavenCodexGump(p, _book, page, category, search, byCount, selected));
+            p.CloseGump(typeof(HavenCodexBrowserGump)); p.SendGump(new HavenCodexBrowserGump(p, _book, page, category, search, byCount, selected));
         }
         public override void OnResponse(NetState state, RelayInfo info)
         {
             var p = state.Mobile; int id = info.ButtonID;
-            if (id == 0 || !_book.CanUse(p)) return;
+            if (!_book.CanUse(p)) return;
+            if (id == 0) { _book.Show(p); return; }
             int page = _page, category = _category; string search = _search, selected = _selected; bool byCount = _byCount;
             if (id == 1) p.SendMessage("Collected " + _book.Collect(p, p.Backpack) + " item(s).");
             else if (id == 2) { p.SendMessage("Target a scroll, item or bag. Unlocked bags and sub-bags are checked."); p.Target = new CollectTarget(this); return; }
@@ -143,8 +144,8 @@ namespace Server.HavenPrototype
         }
         class CollectTarget : Target
         {
-            readonly HavenCodexGump _menu;
-            public CollectTarget(HavenCodexGump menu) : base(12, false, TargetFlags.None) { _menu = menu; }
+            readonly HavenCodexBrowserGump _menu;
+            public CollectTarget(HavenCodexBrowserGump menu) : base(12, false, TargetFlags.None) { _menu = menu; }
             protected override void OnTarget(Mobile p, object obj) { p.SendMessage("Collected " + _menu._book.Collect(p, obj as Item) + " item(s)."); }
             protected override void OnTargetFinish(Mobile p) { _menu.Reopen(p, _menu._page, _menu._category, _menu._search, _menu._byCount, _menu._selected); }
         }

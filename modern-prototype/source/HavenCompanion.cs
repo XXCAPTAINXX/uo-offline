@@ -364,7 +364,6 @@ namespace Server.HavenPrototype
             from.CloseGump(typeof(CompanionActivityGump));
             from.CloseGump(typeof(CompanionResourceMissionGump));
             from.CloseGump(typeof(CompanionMissionTimerGump));
-            from.CloseGump(typeof(CompanionCombatBarGump));
             if (OnMission && !expanded) from.SendGump(new CompanionMissionTimerGump(this,from));
             else from.SendGump(new CompanionGump(this));
         }
