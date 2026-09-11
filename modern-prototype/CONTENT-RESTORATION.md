@@ -59,3 +59,11 @@ Caster mode supplies a real, immovable/nontransferable strength-6 Arcane Focus. 
 Ten custom species, signature abilities and tier defenses; twelve taming mission routes; persistent rarity/legendary skill rolls; native pet training with original triple-damage pace and per-enemy quotas. Companion Pets supports assignment, riding toggle, mission parking and exact-pet reclaim tickets. Bard Tame assist uses native peace/taming and returns a ticket. Assigned bonded pets can be resurrected. Travel stone: bear den, Ancient Hunt and Chelonia sanctuary; two wild vampiric steed sites.
 
 Validated native tame completion/cancellation, player ticket claim, pet resurrection, mission parking/return, habitat waves/spawns and native login reclaim/training persistence. Original island, complete role/mastery behavior, saved offline mission rotations and custom training ability pools are not complete. See RESTORATION-QUEUE.md.
+
+
+### Regional and offline missions - live 2026-09-11
+Missions includes Magery reagents, Malas necromantic reagents, Doom bones, Abyss essences and rare ingredients. The restored routes use original skill gates and material completion bonuses; 60-minute trips are selectable. Native reagents and rare ingredients are supported by the ledger.
+
+Select a route and duration, then **Save as offline default**. Open **Offline setup** to enable repeat after logout, choose the saved route or an eligible-route cycle, and choose finish/recall on login. This is off until the owner enables it. Existing manual missions finish first. Pausing repeat does not destroy an active trip. Server downtime awards no additional invented trips.
+
+Fresh/reload tests cover exact material credits, ledger withdrawal, ownership/skills, manual-trip preservation, repeated timer ticks, both login choices, rotation and persistent settings. Complete old role/mastery and gear/training/taming bonus parity remains separate.

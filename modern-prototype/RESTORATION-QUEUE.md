@@ -54,3 +54,5 @@ Pet checkpoint deployed 2026-09-11 after the above checks, including native auto
 - Saved offline plan: selected route and duration, disabled by default, repeat default or cycle eligible routes, finish or recall the active offline trip on login. Manual trips survive logout; the default starts only after completion. One shared mission/reward transaction path handles manual and offline dispatch. No extra simulated trips while server is stopped.
 - Native runtime tests pass for all restored material pools, stackable ledger withdrawal, 60-minute snapshots/exact credits, skill gates, opt-in, manual mission preservation, repeated pulses, stopping repeat, both login choices and unqualified-route skipping. Reload preserves plan/active mission and awards the overdue trip once before dispatching the next.
 - Compact timer separates route name from countdown so long names cannot hide the time.
+
+Regional/offline checkpoint deployed 2026-09-11; enable through Missions > Offline setup. Defaults remain off. Existing manual trips are retained. Full role and broader original reward/progression parity remain queued.
