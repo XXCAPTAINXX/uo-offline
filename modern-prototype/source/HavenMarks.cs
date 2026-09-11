@@ -23,6 +23,18 @@ namespace Server.HavenPrototype
             int current=Balance(owner),paid=Math.Min(amount,Maximum-current);
             account.SetTag(Key(owner),(current+paid).ToString());return paid;
         }
+        private const string TestAllowanceKey="Haven.MarksTestAllowance";
+        public static bool CanClaimTestAllowance(Mobile owner) {
+            return CanUse(owner) && ((Account)owner.Account).GetTag(TestAllowanceKey)!="claimed";
+        }
+        public static bool ClaimTestAllowance(Mobile owner) {
+            if(!CanClaimTestAllowance(owner))return false;
+            if(Balance(owner)>Maximum-100){owner.SendMessage("Spend some Marks before claiming the test allowance.");return false;}
+            if(Award(owner,100)!=100)return false;
+            ((Account)owner.Account).SetTag(TestAllowanceKey,"claimed");
+            owner.SendMessage("Added 100 test Marks. This optional allowance is once per account.");
+            return true;
+        }
         public static readonly string[] Names={"Corsair's cutlass","Deckbreaker's mace","Boarding shield","Voyager's robe","Prospector's gloves","Beastkeeper's gorget"};
         public static readonly int[] Prices={80,80,60,80,60,100};
         public static readonly string[] Descriptions={
@@ -77,13 +89,18 @@ namespace Server.HavenPrototype
             AddLabel(350,114,1152,HavenMarks.Prices[_selected]+" Marks");
             AddHtml(290,165,335,142,"<BASEFONT COLOR=#FFFFFF>"+HavenMarks.Descriptions[_selected]+"</BASEFONT>",false,false);
             AddButton(290,321,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(324,321,1152,"Buy selected reward");
-            AddHtml(20,364,500,35,"<BASEFONT COLOR=#FFFFFF>Marks are saved per character and take no inventory space.</BASEFONT>",false,false);
+            if(HavenMarks.CanClaimTestAllowance(owner)) {
+                AddButton(20,370,0xFA5,0xFA7,2,GumpButtonType.Reply,0);
+                AddLabel(54,370,1152,"Claim 100 test Marks (once per account)");
+            } else AddLabel(20,370,1152,"Test allowance claimed. Missions earn more Marks.");
             AddButton(545,370,0xFA5,0xFA7,0,GumpButtonType.Reply,0);AddLabel(579,370,1152,"Close");
         }
         public override void OnResponse(NetState sender,RelayInfo info) {
             if(info.ButtonID==0 || !HavenMarks.CanUse(sender.Mobile))return;
             if(info.ButtonID==1)HavenMarks.Buy(sender.Mobile,_selected);
+            else if(info.ButtonID==2)HavenMarks.ClaimTestAllowance(sender.Mobile);
             HavenMarks.Show(sender.Mobile,info.ButtonID>=100 && info.ButtonID<100+HavenMarks.Names.Length?info.ButtonID-100:_selected);
         }
     }
 }
+

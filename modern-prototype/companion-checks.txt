@@ -61,6 +61,7 @@ PASS early recall cancels Leather without rewards and restores Follow
 PASS early recall cancels Malas without rewards and restores Follow
 PASS early recall cancels Abyss without rewards and restores Follow
 PASS automatic placement returns completed mission once
+PASS optional test allowance funds any reward once per account
 PASS Marks are per character and awards clamp at cap
 PASS full pack and invalid reward preserve Marks
 PASS purchase spends exact price and supplies advertised weapon
@@ -123,6 +124,7 @@ PASS player checklist status survives reload
 PASS pirate lodge owner secure storage and cargo survive reload
 PASS cancelled mission remains cancelled after reload
 PASS Marks balance and purchased reward survive reload
+PASS test allowance cannot replay after reload
 PASS player caps and free skill budget survive reload
 PASS low-Dex companion follows at travel pace in every role
 PASS owner and companion references persist

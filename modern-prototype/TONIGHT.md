@@ -68,3 +68,5 @@ Player progression: 300 combined stat cap, 1,200 counted skill points. Animal Ta
 Expanded free skills: now25 total, combining InsaneUO/UOAlive lists with original Haven exemptions. See FREE-SKILLS.md or [skillbudget; this supersedes the four-skill list above.
 
 Companion travel: Follow and idle Guard now use a faster travel pace in all three roles. Please walk/run around Haven and check he keeps up, including after a mission.
+
+To test reward purchases without grinding: open [havenmarks, click Claim 100 test Marks (once per account), select a reward, then Buy selected reward. The allowance is optional and separate from mission earnings.

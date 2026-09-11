@@ -14,8 +14,21 @@ public static class HavenMarksSmoke
             check("Marks balance and purchased reward survive reload",()=>{
                 var restored=World.Mobiles.Values.OfType<PlayerMobile>().Single(x=>x.Name=="Marks fixture");
                 Require(HavenMarks.Balance(restored)==HavenMarks.Maximum-80 && restored.Backpack.FindItemByType(typeof(Broadsword))!=null);
+            });
+            check("test allowance cannot replay after reload",()=>{
+                var restored=World.Mobiles.Values.OfType<PlayerMobile>().Single(x=>x.Name=="Allowance fixture");
+                Require(!HavenMarks.ClaimTestAllowance(restored) && HavenMarks.Balance(restored)==0);
             });return;
         }
+        check("optional test allowance funds any reward once per account",()=>{
+            var tester=new PlayerMobile {Player=true,Name="Allowance fixture",Body=0x190,RawStr=100};tester.AddItem(new Backpack());
+            var acct=new Account("allowance-fixture",Guid.NewGuid().ToString("N"));acct[0]=tester;
+            tester.MoveToWorld(new Point3D(3506,2570,14),Map.Trammel);
+            Require(HavenMarks.Balance(tester)==0 && HavenMarks.ClaimTestAllowance(tester) && HavenMarks.Balance(tester)==100);
+            Require(HavenMarks.Prices.All(x=>x<=100) && HavenMarks.Buy(tester,5) && HavenMarks.Balance(tester)==0);
+            var alt=new PlayerMobile {Player=true};acct[1]=alt;
+            Require(!HavenMarks.ClaimTestAllowance(tester) && !HavenMarks.ClaimTestAllowance(alt) && HavenMarks.Balance(tester)==0 && HavenMarks.Balance(alt)==0);alt.Delete();
+        });
         var owner=new PlayerMobile {Player=true,Name="Marks fixture",Body=0x190,RawStr=100};owner.AddItem(new Backpack());
         var account=new Account("marks-fixture",Guid.NewGuid().ToString("N"));account[0]=owner;
         owner.MoveToWorld(new Point3D(3506,2570,14),Map.Trammel);
@@ -41,3 +54,4 @@ public static class HavenMarksSmoke
         });
     }
 }
+

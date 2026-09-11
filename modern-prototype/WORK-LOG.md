@@ -181,3 +181,8 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Read an isolated copy of the pre-restart save; the player's last Malas report recorded early recall with no completion rewards, balance0. Do not infer the earlier four runs were unpaid: they may predate Marks. User checked companion pack; explained Marks are virtual player balance in [havenmarks.
 - Separate timed integration fixture used a connected socket-backed owner and the real ScheduleMission callback (five-minute reward setting, due compressed to2seconds). PASS: mining completed once, auto-returned to Trammel in Follow, ledger resources delivered,500gold and10Marks. This does not prove the reported live timing issue resolved; user is running a fresh five-minute mining mission. No live mission state or balance was manually changed.
 - Diagnostic artifacts: verification/HavenMissionSnapshot and verification/HavenTimedMission (private; do not publish copied saves/accounts).
+
+## Optional reward-shop test allowance
+- User confirmed Marks arrived from the new live mission, but shop testing required too much grinding. Add an explicit Claim100testMarks button to [havenmarks, once per account, available only in opted-in preview. Covers any current reward; no automatic credit or recurring giveaway. Normal mission earnings/prices unchanged.
+- Test claims, actual100-Mark purchase, duplicate/alternate-character denial and reload persistence. Pending validation/deployment.
+- MarksAllowance136checks PASS fresh/reload. Saved backup E:/Backups/Haven/Prototypes/servuo-before-marks-allowance-20260911. Live build zero warnings/errors; restart and login probe passed.
