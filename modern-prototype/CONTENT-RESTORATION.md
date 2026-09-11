@@ -50,3 +50,6 @@ Doom bosses can drop a matching-artifact reforging recipe (10%). A matching nati
 Recruit/Warden/Dreadnought shield-warrior tiers restored: shield, sword, mace, gorget and ring. Recruit first claim per piece is free, replacements250 gold; Warden40 Marks per piece; Dreadnought80 shards per piece. Hover previews show native properties. Original supported Haven quest gear gains evolution when equipped; retroactive training-quest claims and broader boss-artifact/custom currency systems are not completed by this batch.
 
 AdvancedGearSmoke passed exact currency deposits/purchase/capacity rollback, first-claim protection,15 tier/piece factories, nine bracelet growth cases, actual kill XP/shard awards, duplicate reforge rejection, native item preservation, and fresh/reload balances and progression. Ordinary gear does not automatically evolve.
+
+## Companion Arcane Focus
+Caster mode supplies a real, immovable/nontransferable strength-6 Arcane Focus. Native Spellweaving uses this gem; no general spell-damage multiplier is added. Maintenance renews it before expiry, does not duplicate it, and removes the supplied gem when leaving caster mode. Existing caster companions receive it at startup through equipment maintenance. FocusSmoke verified native lookup, renewal, uniqueness, role switching and save/reload.

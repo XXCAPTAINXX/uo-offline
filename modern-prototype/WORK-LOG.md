@@ -309,3 +309,6 @@ Implemented the user screenshot's skill-row/tier-column layout, with summed Tran
 ## 2026-09-11 Advanced gear
 
 Restored bracelet/pendant progression, Astral currency wallet and reward growth, luck-sensitive Legendary drops, native Doom artifact reforging, and15 shield-warrior pieces with original currency prices/free first Recruit claims. Fresh/reload isolated tests passed. User added saved offline mission presets to the pending mission restoration requirements. Pet/role/mission/island restoration is still pending.
+
+## 2026-09-11 Caster Arcane Focus
+Restored automatic actual strength-6 Arcane Focus for companion caster mode. Native effective focus, immovable/nontransferable state, renewal, no duplication and switching away/back passed in the isolated test world. Mission timer overlap remains queued as requested.
