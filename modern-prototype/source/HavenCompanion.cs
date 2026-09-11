@@ -489,8 +489,15 @@ namespace Server.HavenPrototype
 
         public bool Recall(Mobile from)
         {
-            if (!IsOwner(from) || !from.Alive || !Alive || IsDeadPet || IsStabled || from.Map == null || from.Map == Map.Internal ||
-                from.Combatant != null || Combatant != null || from.Aggressors.Count > 0 || from.Aggressed.Count > 0 || Aggressors.Count > 0 || Aggressed.Count > 0) return false;
+            // Recall deliberately has no distance, line-of-sight or same-map requirement.
+            if (!IsOwner(from)) return false;
+            string blocked = !from.Alive ? "You must be alive to recall your companion." :
+                !Alive || IsDeadPet ? "Your companion needs resurrection before Recall." :
+                IsStabled ? "Your companion is stabled; reclaim him before Recall." :
+                from.Map == null || from.Map == Map.Internal ? "Your current location is unavailable for Recall." :
+                from.Combatant != null || from.Aggressors.Count > 0 || from.Aggressed.Count > 0 ? "Your combat is still active; Recall is available after it clears." :
+                Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 ? "Your companion's combat is still active; Recall is available after it clears." : null;
+            if (blocked != null) { from.SendMessage(blocked); return false; }
             if (!Controlled && !SetControlMaster(from)) return false;
             if (ControlMaster != from) return false;
             if (OnMission)
