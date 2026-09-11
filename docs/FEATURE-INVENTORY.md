@@ -22,7 +22,7 @@ This inventory was checked against the implementation tracker, player guide, fea
 | Resource books | Player and companion ledgers; loose resources, native commodity deeds, nested bags, selectable withdrawals and transfers. Virtual balances use no extra pack slots. Overflow remains queued. |
 | Operations | Start/save/stop scripts, separate client configuration, GitHub source and E: backups. Network account authentication and relay passed; the user approved the Windows prompt, and real-client login, New Haven rendering and the test-kit claim now work. |
 
-The companion/control/resource suite passed **94 checks** on fresh and reloaded test worlds. See [tonight's instructions](../modern-prototype/TONIGHT.md) for the latest deployment status and the [recorded checks](../modern-prototype/companion-checks.txt). A passing automated check is not a substitute for the final graphical playthrough.
+The companion/control/resource suite passed **103 checks** on fresh and reloaded test worlds. See [tonight's instructions](../modern-prototype/TONIGHT.md) for the latest deployment status and the [recorded checks](../modern-prototype/companion-checks.txt). A passing automated check is not a substitute for the final graphical playthrough.
 
 ## Original Haven: accumulated custom work
 
@@ -155,4 +155,3 @@ The companion/control/resource suite passed **94 checks** on fresh and reloaded 
 - Any requested feature absent from the implemented inventory above should not be assumed complete merely because it appeared in the conversation.
 
 For detailed original behavior, use [PLAYER-GUIDE.md](PLAYER-GUIDE.md), [IMPLEMENTATION-TRACKER.md](IMPLEMENTATION-TRACKER.md), and the linked feature documents. For tonight, use [the modern preview instructions](../modern-prototype/TONIGHT.md).
-

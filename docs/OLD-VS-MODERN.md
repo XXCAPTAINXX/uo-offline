@@ -1,5 +1,7 @@
 # Original Haven versus the modern preview
 
+Update after the comparison: the new preview now has seven New Haven service stones (normal starter supplies, arcane supplies, companion recruitment, travel, repair, optional test training and guide), `[?` command help and `[haventest` player feedback. These do not add the missing evolving gear, currency rewards, custom pets or mini champion. Current combined suite:103checks.
+
 Comparison date: September 10, 2026, evening build. Original: ModernUO, port 2593. New: ServUO preview, port 2699. **The preview is a modern foundation plus a small Haven port, not feature parity with the original.**
 
 Evidence: original `Projects/UOContent/CustomBots/UOOffline` source (172 files), the original implementation tracker/player inventory, the six deployed `Haven*.cs` preview files, the preview native script tree and the 94-check test record. File counts are not feature counts or a completion percentage. Original source and historical deployment reports do not prove every feature currently works perfectly; this comparison did not playtest every original feature or decode both live saves.

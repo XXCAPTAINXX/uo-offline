@@ -4,6 +4,14 @@ Your original Haven remains on port **2593**, with your existing character and i
 
 ## On this PC
 
+For a normal fresh character, visit the **Starter supplies** and **Arcane supplies** stones in the New Haven plaza near3501,2574 and3504,2583. These leave skills and stats unchanged. The starter kit includes30%mana-leech sword/mace, armor, shield, bow/arrows, bandages,5,000gold and a ledger; the arcane kit provides spellbooks and a reagent-saving robe. Each kit is once per character.
+
+The plaza also has companion recruitment, travel, free carried-equipment repair, an explicitly optional test-training stone and a services guide. The old evolving-gear upgrade and custom-currency reward stones are not ported. Native town services/quests remain available.
+
+Type **`[?`** for commands and short descriptions. Type **`[haventest`** for the two-page checklist. Click Pass, Fail or Blocked; an optional note is saved with the next result clicked. Results go to the private local `haven-playtest-results.tsv` in the preview server directory and status is stored per character. The assistant reads results during checks; this is not instant notification. This is a server gump, not a Legion script.
+
+**Skip “Prepare test character” if you want normal progression.** That separate convenience raises all skills to120 and stats to100 each. Ordinary starter supplies do not.
+
 1. Server folder: `D:/Uo Offline/Haven-ServUO-Preview`. Run `Start-Preview.ps1` if the preview is stopped. It detects an already running preview.
 2. Client: `D:/Uo Offline/Haven-ServUO-Preview-Client/Play Haven Preview.lnk`. Use this shortcut: it sets the correct working folder. This separate copy uses modern EA Classic data and the local preview. The prepared test account contains **Haven Explorer**. Your normal TazUO profile was not changed.
 3. Client login and New Haven rendering now work. The earlier Windows prompt was approved by the user; a launch-folder problem and a password truncated by the classic 16-character login field were corrected. The test-kit claim and backpack item properties were checked in the real client. Full combat/dungeon playthrough remains pending.
@@ -31,7 +39,7 @@ For any problem, note which server you were using, your location, the command/bu
 
 ## What is verified
 
-- 94 automated companion/preview checks passed with a clean Release build.
+- 103 automated companion/preview checks passed with a clean Release build.
 - Native world generation, all 25 setup stages and save/reload validation also passed from a second fresh checkout.
 - 6,835 spawners, six Doom Gauntlet controllers, 17 Shadowguard instances and 14 specific Blackthorn travel links were validated.
 - A socket test authenticated the prepared account and received the correct server list and game relay. This is not a graphical-client login/playthrough.
@@ -44,4 +52,3 @@ For any problem, note which server you were using, your location, the command/bu
 The old island/house, wallet, custom pets, gear progression, guild bots, market and full AFK systems have not been migrated. Alden's bard masteries, Spellweaving rotations, dungeon assistance and resurrection are also not in this milestone. The original server retains those existing systems. Check the README for subsequent additions before testing.
 
 For a friend's independent installation, use the repository's `modern-prototype/Build-Prototype.ps1 -PopulateWorld` instructions with their own modern Classic client data. Do not share this PC's client settings, accounts or saves.
-

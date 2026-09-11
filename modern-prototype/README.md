@@ -6,6 +6,9 @@ The source targets ServUO `pub57` at `d76bf4443cf76d081ddaf8f57c87ff33749256af`.
 
 ## Working slice
 
+- A seven-stone New Haven service hub supplies normal starter/arcane kits without changing skills, companion recruitment, travel, repair, optional test boosting and a guide. Setup preserves existing stones and does not duplicate them on restart. Old custom reward/upgrade systems remain unported.
+- `[?` describes available commands and companion speech. `[haventest` records player Pass/Fail/Blocked feedback with optional notes to a private local TSV and per-character saved status; no external transmission or automatic claim of success.
+
 - `[c` or `[companion` claims one permanent, bonded companion per character. Reopening the gump does not teleport or duplicate it.
 - Follow, guard, stay and targeted attack. Guard chooses the closest eligible hostile to the owner, excluding players, controlled/summoned pets and wild tameables. Direct attacks can target wild tameables where native rules permit.
 - Warrior, Caster and Archer roles use native melee, Magery and bow AI. Switching roles preserves equipment and refuses combat, active casting or insufficient pack space. New movement orders cancel queued spells and targets.
@@ -55,7 +58,7 @@ The progression harness exercises native Bar waves, Roof boss sequencing, room c
 
 The Doom harness kills each stage's native creatures and invokes the native progression callback through all six bosses, verifies the cycle restarts, and checks the sequence after reload. The naval harness moves a Britannian ship with cargo in its native GalleonHold and verifies ownership and cargo after reload. These are mechanics/persistence checks, not a fishing expedition, boarding battle, or client combat playthrough. The initial naval fixture incorrectly used the older boat Hold property; that fixture was corrected before the clean passing run.
 
-The current milestone passed **94 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
+The current milestone passed **103 checks**, with zero failures and zero Release-build warnings/errors. Local evening instructions are in [TONIGHT.md](TONIGHT.md).
 
 Add `-Test` with another new destination to build, run fresh-world checks, save, restart and verify recovery. Test mode creates a disposable account with a random password and no client connection, then stops the server. It writes `companion-checks.log`.
 
@@ -81,4 +84,3 @@ Next gates:
 See [migration gates](MIGRATION.md) for required inventory, ownership, currency reconciliation and rollback checks. This plan does not imply a converter already exists.
 
 The current live Haven server and player saves have not been modified.
-
