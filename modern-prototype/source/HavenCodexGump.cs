@@ -12,6 +12,7 @@ namespace Server.HavenPrototype
 {
     public class HavenCodexBrowserGump : HavenMenuGump
     {
+        protected override bool CompactButtons => true;
         const int PageSize = 7;
         readonly HavenChampionCodex _book;
         readonly int _page, _category;

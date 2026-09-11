@@ -16,7 +16,6 @@ namespace Server.HavenPrototype {
         }
         public static bool TravelToHealer(Mobile p){
             if(!HavenPreview.Enabled||p==null||!p.Player||p.Deleted||p.Account==null||p.Map==Map.Internal){if(p!=null)p.SendMessage("Healer travel is unavailable from your current location or account.");return false;}
-            if(p.Criminal){p.SendMessage("Healer travel blocked: your criminal flag is still active. Full health does not clear this flag.");return false;}
             if(p.Alive&&p.Combatant!=null){p.SendMessage("Healer travel blocked: you still have a combat target ("+p.Combatant+ "). Finish combat first.");return false;}
             if(p.Alive&&(p.Aggressors.Count>0||p.Aggressed.Count>0)){p.SendMessage("Healer travel blocked: recent combat has not expired ("+p.Aggressors.Count+" incoming, "+p.Aggressed.Count+" outgoing aggression records).");return false;}
             Ensure();var healer=World.Mobiles.Values.OfType<HavenPlazaHealer>().FirstOrDefault(x=>!x.Deleted);if(healer==null)return false;

@@ -193,7 +193,7 @@ namespace Server.HavenPrototype
             Button(20,385,1,"Travel to camp");Button(300,385,2,"Collect pending rewards");Button(20,423,3,"Refresh");Button(450,423,0,"Close");
         }
         private void Button(int x,int y,int id,string text){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,1152,text);}
-        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and clear criminal status before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
+        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and wait for recent combat to expire before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
     }
 }
 

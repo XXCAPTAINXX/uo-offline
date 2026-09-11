@@ -75,7 +75,7 @@ namespace Server.HavenPrototype
         public static bool CanTravel(Mobile from)
         {
             return Enabled && from != null && from.Player && !from.Deleted && from.Alive && from.Map != Map.Internal &&
-                from.Combatant == null && from.Aggressors.Count == 0 && from.Aggressed.Count == 0 && !from.Criminal;
+                from.Combatant == null && from.Aggressors.Count == 0 && from.Aggressed.Count == 0;
         }
         public static bool FindLanding(Destination destination, out Point3D landing)
         {
@@ -163,7 +163,7 @@ namespace Server.HavenPrototype
             if(info.ButtonID==3||info.ButtonID==4){from.SendGump(new PreviewGump(_page+(info.ButtonID==3?-1:1)));return;}
             if (info.ButtonID == 1) HavenPreview.Prepare(from);
             else if (info.ButtonID == 2) { var companion = HavenCompanion.Claim(from); if (companion != null) companion.Show(from); return; }
-            else if (!HavenPreview.Travel(from, info.ButtonID - 100)) from.SendMessage("Travel unavailable: leave combat, clear criminal status, and try again.");
+            else if (!HavenPreview.Travel(from, info.ButtonID - 100)) from.SendMessage("Travel unavailable: leave combat and wait for recent combat to expire, then try again.");
             from.SendGump(new PreviewGump(_page));
         }
     }

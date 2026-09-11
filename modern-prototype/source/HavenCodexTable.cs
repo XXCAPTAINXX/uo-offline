@@ -12,6 +12,7 @@ namespace Server.HavenPrototype
 {
     public class HavenCodexGump : HavenMenuGump
     {
+        protected override bool CompactButtons => true;
         const int PageSize = 18;
         readonly HavenChampionCodex _book;
         readonly int _page;
@@ -107,6 +108,7 @@ namespace Server.HavenPrototype
 
     public class HavenCodexCellGump : HavenMenuGump
     {
+        protected override bool CompactButtons => true;
         readonly HavenChampionCodex _book; readonly HavenCodexGump _table;
         readonly SkillName _skill; readonly int _column, _page;
         readonly Dictionary<int, Item> _withdraw = new Dictionary<int, Item>();

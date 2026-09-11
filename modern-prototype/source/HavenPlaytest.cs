@@ -80,7 +80,7 @@ namespace Server.HavenPrototype
             {
                 int target=info.ButtonID-1000;
                 bool ok=info.ButtonID==3 ? HavenPreview.Travel(from,0) : target>=0 && target<TitlesLength && target/4==_page && HavenPlaytest.TravelToTest(from,target);
-                from.SendMessage(ok ? "Arrived. Your checklist result has not changed." : "Travel unavailable: leave combat, clear criminal status, and try again while alive.");
+                from.SendMessage(ok ? "Arrived. Your checklist result has not changed." : "Travel unavailable: leave combat, wait for recent combat to expire, and try again while alive.");
                 from.SendGump(new HavenPlaytestGump(from,_page,note)); return;
             }
             int encoded=info.ButtonID-100,test=encoded/4,status=encoded%4;

@@ -14,6 +14,15 @@ public static class CompanionInventorySmoke {
  Check(HavenCompanionProgression.TamingTraining(1000,5,0.99)==10,"normal training above100");
  Check(HavenCompanionProgression.TamingTraining(1200,5,0.99)==0,"over120 remains twenty times slower");
  var owner=new MissionSafetyPlayer{Player=true,Body=0x190};owner.AddItem(new Backpack());new Account("inventory-"+Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))[0]=owner;owner.MoveToWorld(new Point3D(1015,527,-65),Map.Malas);
+ owner.Criminal=true;Check(HavenPreview.CanTravel(owner),"criminal status alone does not block Haven travel");Check(owner.Criminal,"travel eligibility preserves criminal status");
+ var opponent=new Horse();opponent.MoveToWorld(owner.Location,owner.Map);owner.Combatant=opponent;Check(!HavenPreview.CanTravel(owner),"active combat blocks Haven travel");owner.Combatant=null;owner.Aggressors.Clear();owner.Aggressed.Clear();
+ var incoming=AggressorInfo.Create(opponent,owner,false);owner.Aggressors.Add(incoming);Check(!HavenPreview.CanTravel(owner),"recent incoming combat blocks Haven travel");owner.Aggressors.Remove(incoming);
+ var outgoing=AggressorInfo.Create(owner,opponent,false);owner.Aggressed.Add(outgoing);Check(!HavenPreview.CanTravel(owner),"recent outgoing combat blocks Haven travel");owner.Aggressed.Remove(outgoing);
+ Check(HavenPreview.CanTravel(owner),"travel resumes when combat clears even while criminal");owner.Criminal=false;opponent.Delete();
+ var home=HavenStarterHome.Claim(owner);Check(home!=null,"create owned home for travel check");
+ var homeEnemy=new Horse();homeEnemy.MoveToWorld(owner.Location,owner.Map);owner.Combatant=homeEnemy;owner.Criminal=true;
+ Check(HavenStarterHome.Travel(owner),"home travel works during combat while criminal");Check(owner.Criminal,"home does not erase criminal status");Check(owner.Map==home.Map&&owner.InRange(home,8),"home travel reaches owned lodge");
+ owner.Combatant=null;owner.Aggressors.Clear();owner.Aggressed.Clear();owner.Criminal=false;homeEnemy.Delete();home.Delete();owner.MoveToWorld(new Point3D(1015,527,-65),Map.Malas);
  var c=HavenCompanion.Claim(owner);
  c.Skills.AnimalTaming.Base=73; c.Skills.AnimalTaming.Base=50;Check(c.Skills.AnimalTaming.Base==73,"earned taming cannot reset downward");
 var bag=new Bag();var gold=new Gold(200);bag.DropItem(gold);c.Backpack.DropItem(bag);

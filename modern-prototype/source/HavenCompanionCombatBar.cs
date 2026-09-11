@@ -28,10 +28,9 @@ namespace Server.HavenPrototype
         {
             _companion=companion;
             Closable=false;
-            AddBackground(0,0,350,112,3600);
-            AddAlphaRegion(0,0,350,112);
+            AddBackground(0,0,350,100,5054);
             AddLabelCropped(12,8,165,20,53,companion.Name);
-            Button(184,8,7,"Menu");Button(266,8,9,"Close");
+            Button(176,8,7,"Menu");Button(258,8,9,"Close");
             Button(12,39,1,"Follow");Button(94,39,2,"Guard");
             Button(176,39,4,"Stay");Button(258,39,3,"Attack");
             Button(12,69,5,"Heal");Button(94,69,10,companion.TamingAssistActive?"Cancel":"Tame");

@@ -50,7 +50,8 @@ namespace Server.HavenPrototype
         }
         public static bool Travel(Mobile from)
         {
-            var house=Find(from); if(house==null || !HavenPreview.CanTravel(from)) {from.SendMessage("Home travel requires an owned lodge, life and no active combat or criminal flag.");return false;}
+            if(!HavenPreview.Enabled || from==null || from.Deleted || !from.Player) return false;
+            var house=Find(from); if(house==null || house.Map==null || house.Map==Map.Internal) {from.SendMessage("Claim a home before using home travel.");return false;}
             var landing=new Point3D(house.X-1,house.Y+4,house.Z+7);
             if(!house.Map.CanFit(landing,16,false,true)) {from.SendMessage("The home arrival is blocked; clear its porch.");return false;}
             BaseCreature.TeleportPets(from,landing,house.Map);from.MoveToWorld(landing,house.Map);return true;
