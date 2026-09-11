@@ -286,3 +286,10 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Companion stats now parchment/brown; default Trainable shows current-role/common healing/native combat/mission skills below cap (respects normal locks, mission skill behavior). Used and All views, Name/Base/Gain sorting, baseline retained across paging/filter/sort/refresh. Native skill list/caps unchanged. Filtering/sort and reload checks passed.
 - User corrected healer corner to3500,2583; Ava and Mara target3500,2583/3501,2583 with safe adjacent fallback. Trash targets exact3504,2576,Z18 with fit check ignoring temporary mobile occupancy, retains contents/green hue. No restart for placement alone: bundled with requested stats UI update. Backup servuo-before-skill-filter-20260911; live build/login passed.
 - Explained Power Scrolls can stay in backpack/bank and use from pack; Champion Codex organizer still pending.
+
+## Starter-loop follow-up completed
+- Starter equipment progression, bank-backed wallet/tithing, Marks earning/spending and mini champion loop are deployed and verified. The scheduled starter-loop follow-up has met its stop condition.
+- Subsequent user-directed batches restored resource pouch and shared ledgers, 125 companion caps with slow gains above 120, stronger companion baselines, automatic Young graduation, shop arrow tooltips, consistent menu styling and expanded travel.
+- Latest deployed source e9f25a9 adds Codex storage/combine/split, repeatable Warden, companion healing/cures/resurrection, evolving role gear and boarding shields, Spellweaving/Wraith caster behavior, and automatic wallet check deposits. Isolated content fresh/reload and caster tests passed; live build/login passed. See CONTENT-RESTORATION.md for details and limitations.
+- Private checklist review found no new failures. Review cursor is stored only with the private preview runtime. No saves, account data or feedback are included in source control.
+
