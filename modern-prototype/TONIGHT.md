@@ -91,3 +91,7 @@ Wallet: [wallet gives you an empty wallet if needed. Double-click it in your pac
 
 Haven area bonuses: +1,000real Luck and5xnatural skill-gain chance/amount below100.0. [havenluck reports these. Outside the original Trammel Haven area, normal rates/Luck apply. This does not grant untrained skills or remove powerscroll requirements.
 The new [haventest checks are Evolving starter equipment (page4), Wallet and tithing and Haven Luck and training (page5). Gear/Luck checks offer Go to Haven.
+
+Wallet update: [wallet now uses bank gold directly. Deposit pack gold/checks, withdraw coins, or tithe without wallet-to-bank transfers. Existing wallet gold merges into the bank automatically; failed migrations retain gold and retry when reopened.
+
+Trash: [trashbag or Starter supplies > Get a free trash bag. Public trash chest near Haven3502,2570. Trash empties three minutes after the last deposit; retrieve mistakes before then. Protected items are rejected, including inside nested bags.

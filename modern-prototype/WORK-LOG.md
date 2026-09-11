@@ -248,3 +248,9 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 
 ## Wallet readability cleanup
 - Replaced noisy wallet interior with opaque dark panel and regular HTML text, aligned two-column actions, smaller 460px width, and plain inset amount entry. Backend untouched. Isolated and live builds passed; saved backup servuo-before-wallet-layout-20260911, deployed source-only and restarted. Client visual review remains pending.
+
+## Shared bank wallet and trash
+- Wallet now reads native bank balance; pack deposits go to bank, tithing and withdrawals spend bank gold. Removed manual transfer buttons. Saved legacy wallet funds migrate once on load/open, retaining any undeposited remainder. Split account/physical bank payment avoids native partial-account withdrawal issue. Version0 field remains legacy remainder for compatible reload.
+- 174 full fresh/reload checks passed. Additional mixed-bank, failed-migration retry, and trash checks passed in final reload run. First bank-full fixture incorrectly used MaxItems=0 (unlimited); corrected to a filled one-slot bank. No production fix needed for that fixture.
+- Added native timed trash bag via [trashbag or Starter supplies button, and one public chest at Haven3502,2570 (safe landing). Uses native3minute timer and cleanup behavior. Rejects blessed/insured/newbie items recursively and caps49items to avoid native immediate-full empty. Chest setup idempotent.
+- Companion new evolving gear was not applied automatically; companion progression remains queued. Source-only saved deployment backed up to servuo-before-shared-bank-trash-20260911.
