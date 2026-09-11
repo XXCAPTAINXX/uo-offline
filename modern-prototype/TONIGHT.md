@@ -77,3 +77,8 @@ Recovery: approach Ava at Haven plaza as a ghost for player resurrection. While 
 Companions also automatically resurrect after about five seconds while you are online and within18tiles on the same facet, restoring health/mana/stamina and following you. Mara can recover a stranded dead companion instead.
 Mara's nearby-pet option heals living pets/companions as well as resurrecting them. Automatic companion self-healing starts below80%health; critically hurt owners get first attempt below65%. Self-heals use native Greater Heal, mana and a4second cooldown. Poison or mortal wounds still block healing.
 Healing and Veterinary bandage application takes at most2seconds, including self-bandaging and resurrection attempts. Success requirements and normal skill checks still apply. This is separate from the companion's four-second healing-spell cooldown.
+
+Companion baseline regeneration restored: every3seconds,4health (unless poisoned),12stamina and8mana, capped at maximum values. This is in addition to native/equipment regeneration. Original training-level scaling is not yet migrated.
+
+Mini champion placement now rejects native buildings across the full encounter footprint and relocates the old camp while idle. Reopen [minichamp and choose Travel to camp after the update. Active runs finish before relocation.
+Companions now use bandages you put in their backpack (including sub-bags) to treat you within2tiles or themselves. One bandage is consumed per started attempt; normal Healing/Anatomy checks determine healing, curing and resurrection. All roles can use them, alongside existing spells and regeneration.

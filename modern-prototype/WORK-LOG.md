@@ -212,3 +212,15 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Added native delay checks at Dex10/80/150/300 for self/other Healing and Veterinary, alive/dead cases. Recovery7 pending. Recovery6 patch check failed before build because generated hunk lacked context; added context, clean upstream check now applies.
 - Recovery5 passed153checks with faster self-healing and corrected role fixture. Not deployed yet; combining clinic, self-heal and bandage changes into one saved restart.
 - Recovery7:154PASS fresh/reload. Includes actual native self-heal completion and all bandage delay cases. Deployment backup E:/Backups/Haven/Prototypes/servuo-before-healing-20260911; live sources only, no verification binaries.
+
+## Mini champion building overlap and companion regeneration
+- User screenshot identifies old camp footprint overlapping native structure near3700,2650. Old BaseHouse check only recognized player houses and sparse49-point sampling missed static buildings.
+- Replace placement with every-tile49x49footprint validation across20tile leash +4tile setback: reject native static walls/roofs/doors, player houses and guarded regions; require80%walkable within6Z and clear5x5arrival. SafeSite also rejects structural tiles for individual mob spawns. Reuse and relocate existing controller when idle; active encounters finish before relocation. Invalid sites cannot start new waves via Begin.
+- First stricter test rejected every Surface tile (including natural map clutter), yielding no site. Revised structural flags retain native building rejection without rejecting all natural surfaces. Camp2 pending.
+- Original companion recovery located in HavenCompanionCaster.cs: every3seconds +4HP unless poisoned,+12stamina,+8mana, plus min40,TrainingLevel/5. Port baseline to all modern companion roles; training-level system absent so growth scaling remains pending. Includes cadence/cap regression.
+
+## Companion bandaging
+- User requested companions use bandages. Added native BandageContext usage from recursive companion backpack supplies, one consumed only when application begins, no duplicate simultaneous contexts. Owner first below80%HP/poisoned/dead and within2tiles/LOS, then self. Works across roles; normal Healing/Anatomy cure/resurrection checks apply. Uses two-second bandage patch and retains spell healing/regen alongside it.
+- No free skill levels or unlimited bandages granted. Put ordinary bandages in companion pack; current trained skills determine success. Player pets are not auto-targeted in this first implementation.
+- Camp2:156PASS, native-building rejection and new outdoor clearing3410,2690,49 confirmed. Combined CampBandages suite pending before deployment.
+- CampBandages:158PASS fresh/reload, including native bandage consumption/completion, baseline regen cadence/caps and safe clearing. Backup E:/Backups/Haven/Prototypes/servuo-before-camp-regeneration-20260911. Source-only live update; no test binaries deployed. User clarified mana regeneration was the main concern; restored8mana/3seconds plus existing cloak/native regen.

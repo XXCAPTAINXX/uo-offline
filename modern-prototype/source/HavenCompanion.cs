@@ -261,12 +261,38 @@ namespace Server.HavenPrototype
         public override void OnThink()
         {
             if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
+            RecoverResources(DateTime.UtcNow);
             base.OnThink();
             if (_owner != null && _owner.NetState != null)
             {
+                if (!TryBandage(_owner)) TryBandage(this);
                 if (_owner.Hits < _owner.HitsMax * 0.65 && HealOwner(_owner)) return;
                 if (Hits < HitsMax * 0.8) HealSelf();
             }
+        }
+
+        internal bool TryBandage(Mobile patient)
+        {
+            if (Deleted || !Alive || IsDeadPet || OnMission || IsStabled || Backpack == null ||
+                patient == null || patient.Deleted || (patient != this && patient != _owner) ||
+                Map == null || Map == Map.Internal || patient.Map != Map || !InRange(patient, 2) || !InLOS(patient) ||
+                BandageContext.GetContext(this) != null || MortalStrike.IsWounded(patient) ||
+                (patient.Alive && !patient.Poisoned && patient.Hits >= patient.HitsMax * 0.8)) return false;
+            var bandages = Backpack.FindItemByType(typeof(Bandage), true) as Bandage;
+            if (bandages == null || bandages.Deleted || bandages.Amount < 1) return false;
+            if (BandageContext.BeginHeal(this, patient) == null) return false;
+            bandages.Consume(1);
+            return true;
+        }
+
+        private DateTime _nextResourceRecovery;
+        internal void RecoverResources(DateTime now)
+        {
+            if (Deleted || !Alive || IsDeadPet || OnMission || IsStabled || Map == null || Map == Map.Internal || now < _nextResourceRecovery) return;
+            _nextResourceRecovery = now.AddSeconds(3);
+            if (!Poisoned) Hits = Math.Min(HitsMax, Hits + 4);
+            Stam = Math.Min(StamMax, Stam + 12);
+            Mana = Math.Min(ManaMax, Mana + 8);
         }
 
         internal bool HealSelf()

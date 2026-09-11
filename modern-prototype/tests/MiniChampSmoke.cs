@@ -24,8 +24,9 @@ public static class MiniChampSmoke {
                 HavenMiniPrize.Collect(p);Require(p.Backpack.FindItemsByType(typeof(BankCheck)).Length==1);Call(c,"Abort");
             });return;
         }
+        check("old camp footprint rejects native building",()=>Require(!HavenMiniChamp.SafeClearing(Map.Trammel,new Point3D(3690,2640,6))));
         HavenMiniChamp.Ensure();var camp=HavenMiniChamp.Find();
-        check("mini champion camp is open unguarded land and setup is idempotent",()=>{Require(camp!=null && HavenMiniChamp.SafeSite(camp.Map,camp.Location));HavenMiniChamp.Ensure();Require(World.Items.Values.OfType<HavenMiniChamp>().Count()==1);});
+        check("mini champion camp is open unguarded land and setup is idempotent",()=>{Require(camp!=null && HavenMiniChamp.SafeClearing(camp.Map,camp.Location));HavenMiniChamp.Ensure();Require(World.Items.Values.OfType<HavenMiniChamp>().Count()==1);});
         if(camp==null)return;
         var owner=Player("Mini owner",camp);var friend=Player("Mini friend",camp);var spectator=Player("Mini spectator",camp);var companion=HavenCompanion.Claim(owner);
         owner.Backpack.DropItem(new Bag());owner.Backpack.MaxItems=1;
@@ -56,3 +57,4 @@ public static class MiniChampSmoke {
         owner.Internalize();friend.Internalize();spectator.Internalize();companion.Internalize();
     }
 }
+

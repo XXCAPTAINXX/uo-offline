@@ -29,21 +29,40 @@ namespace Server.HavenPrototype
             EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};
         }
         public static HavenMiniChamp Find(){return World.Items.Values.OfType<HavenMiniChamp>().FirstOrDefault(x=>!x.Deleted);}
+        private static bool HasStructure(Map map,int x,int y) {
+            foreach(var tile in map.Tiles.GetStaticTiles(x,y,true))
+                if((TileData.ItemTable[tile.ID & 0x3FFF].Flags & (TileFlag.Wall|TileFlag.Roof|TileFlag.Door))!=0)return true;
+            return false;
+        }
         public static bool SafeSite(Map map,Point3D p) {
-            if(!map.CanFit(p,16,false,false) || BaseHouse.FindHouseAt(p,map,20)!=null)return false;
-            var region=Region.Find(p,map);return !region.IsPartOf<GuardedRegion>();
+            if(map==null || map==Map.Internal || HasStructure(map,p.X,p.Y) || !map.CanFit(p,16,false,false) || BaseHouse.FindHouseAt(p,map,20)!=null)return false;
+            return !Region.Find(p,map).IsPartOf<GuardedRegion>();
+        }
+        public static bool SafeClearing(Map map,Point3D center) {
+            if(!SafeSite(map,center))return false;
+            int open=0;
+            // Check every tile across the leash plus a four-tile building setback.
+            for(int dx=-24;dx<=24;dx++)for(int dy=-24;dy<=24;dy++) {
+                int x=center.X+dx,y=center.Y+dy;
+                var p=new Point3D(x,y,map.GetAverageZ(x,y));
+                if(HasStructure(map,x,y) || BaseHouse.FindHouseAt(p,map,20)!=null || Region.Find(p,map).IsPartOf<GuardedRegion>())return false;
+                bool safe=Math.Abs(p.Z-center.Z)<=6 && map.CanFit(p,16,false,false);
+                if(Math.Abs(dx)<=2 && Math.Abs(dy)<=2 && !safe)return false;
+                if(safe)open++;
+            }
+            return open>=1921; // At least 80 percent walkable, allowing scattered natural trees.
         }
         public static void Ensure() {
-            if(Find()!=null)return;
-            // Wilderness east/south of New Haven. Pick an open unguarded clearing, not a town or house.
-            for(int x=3590;x<=3740;x+=10)for(int y=2640;y<=2780;y+=10) {
-                var p=new Point3D(x,y,Map.Trammel.GetAverageZ(x,y));int open=0;
-                for(int dx=-18;dx<=18;dx+=6)for(int dy=-18;dy<=18;dy+=6)
-                    if(SafeSite(Map.Trammel,new Point3D(x+dx,y+dy,Map.Trammel.GetAverageZ(x+dx,y+dy))))open++;
-                if(open<45 || !SafeSite(Map.Trammel,p))continue;
-                var c=new HavenMiniChamp();c.MoveToWorld(p,Map.Trammel);Console.WriteLine("Haven mini champion camp ready: "+p);return;
+            var existing=Find();
+            if(existing!=null && existing.Active){Timer.DelayCall(TimeSpan.FromSeconds(30),Ensure);return;}
+            if(existing!=null && SafeClearing(existing.Map,existing.Location))return;
+            for(int x=3300;x<=3800;x+=10)for(int y=2400;y<=3080;y+=10) {
+                var p=new Point3D(x,y,Map.Trammel.GetAverageZ(x,y));
+                if(!SafeClearing(Map.Trammel,p))continue;
+                var camp=existing ?? new HavenMiniChamp();camp.MoveToWorld(p,Map.Trammel);
+                Console.WriteLine("Haven mini champion outdoor camp ready: "+p);return;
             }
-            Console.WriteLine("Haven mini champion: no safe wilderness clearing found; no spawn created.");
+            Console.WriteLine("Haven mini champion: no building-free wilderness clearing found.");
         }
         public HavenMiniChamp():base(0x1F14){Name="Corsair expedition camp";Movable=false;Visible=false;StartTimer();}
         public HavenMiniChamp(Serial serial):base(serial){}
@@ -59,6 +78,7 @@ namespace Server.HavenPrototype
         public bool Begin(Mobile from,int theme) {
             if(!HavenPreview.Enabled || !HavenMarks.CanUse(from) || from.Map!=Map || !from.InRange(this,8) ||
                 Active || DateTime.UtcNow<_cooldown || theme<0 || theme>=Themes.Length || !HavenPreview.CanTravel(from))return false;
+            if(!SafeClearing(Map,Location)){from.SendMessage("This camp needs relocating to a clear outdoor area. Please reopen the menu after relocation.");Ensure();return false;}
             _theme=theme;_stage=0;_deadline=DateTime.UtcNow.AddMinutes(20);_emptySince=DateTime.MinValue;_participants.Clear();
             SpawnWave();return Active;
         }
@@ -173,4 +193,6 @@ namespace Server.HavenPrototype
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and clear criminal status before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=12 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
     }
 }
+
+
 

@@ -90,7 +90,13 @@ public static class RoleSmoke
         Timer.DelayCall(TimeSpan.FromSeconds(5),()=>{
             _check("self heal completes native spell without a cursor",()=>Require(_companion.Hits>_hits+10 && _companion.Spell==null && _companion.Target==null,"Self healing did not complete"));
             Require(_companion.SetRole(_owner,CompanionRole.Archer),"Restore archer fixture failed");
-            _next();
+            var bandages=new Bandage(2); _companion.Backpack.DropItem(bandages);
+            _companion.Skills[SkillName.Healing].Base=120;_companion.Skills[SkillName.Anatomy].Base=120;_companion.Hits=20;
+            _check("companion starts one bandage and consumes one supply",()=>Require(_companion.TryBandage(_companion) && !_companion.TryBandage(_companion) && bandages.Amount==1,"Bandage supply or duplicate context failed"));
+            Timer.DelayCall(TimeSpan.FromSeconds(3),()=>{
+                _check("companion bandage finishes within two-second application window",()=>Require(BandageContext.GetContext(_companion)==null && _companion.Hits>30 && bandages.Amount==1,"Bandage completion failed"));
+                bandages.Delete();_next();
+            });
         });
     }
 }

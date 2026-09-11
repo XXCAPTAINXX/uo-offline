@@ -66,6 +66,7 @@ PASS Marks are per character and awards clamp at cap
 PASS full pack and invalid reward preserve Marks
 PASS purchase spends exact price and supplies advertised weapon
 PASS all reward previews create valid items without charging
+PASS old camp footprint rejects native building
 PASS mini champion camp is open unguarded land and setup is idempotent
 PASS mini champion rejects invalid starts and duplicate encounter
 PASS three waves and boss credit companion owner and all damage participants
@@ -73,6 +74,7 @@ PASS mini champion rewards cannot replay or be collected by stranger
 PASS administratively deleted enemies abort without completion rewards
 PASS save an active undead wave without replaying its spawns
 PASS Haven recovery NPCs are present once
+PASS companion baseline regeneration uses three-second cadence and resource caps
 PASS Healing and Veterinary cap at two seconds for all dex and resurrection
 PASS dead companion returns from another facet with gear and Follow
 PASS companion recovers after five seconds near owner, with full resources
@@ -119,6 +121,8 @@ PASS native archer damages target at range
 PASS repeated roles preserve one sword shield and bow
 PASS warrior starts self heal and respects cooldown
 PASS self heal completes native spell without a cursor
+PASS companion starts one bandage and consumes one supply
+PASS companion bandage finishes within two-second application window
 PASS gold rewards merge existing pile
 PASS full pack queues rewards without loss
 PASS mission rejects invalid length and stranger
