@@ -1,0 +1,11 @@
+--- a/Scripts/Misc/AOS.cs
++++ b/Scripts/Misc/AOS.cs
+@@ -892,7 +892,7 @@
+             }
+             #endregion
+ 
+-            return value;
++            return value + Server.HavenPrototype.HavenJewelrySets.GetBonus(m, attribute);
+         }
+ 
+         public override void SetValue(int bitmask, int value)

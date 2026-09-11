@@ -147,6 +147,7 @@ namespace Server.HavenPrototype
     }
     public class HavenMiniEnemy : BaseCreature
     {
+        public override bool CanFlee { get { return false; } }
         private HavenMiniChamp _camp;private bool _boss;
         public HavenMiniEnemy(HavenMiniChamp camp,int theme,int stage):base(stage==3 && theme==2?AIType.AI_Mage:AIType.AI_Melee,FightMode.Closest,12,1,0.2,0.4) {
             _camp=camp;_boss=stage==3;

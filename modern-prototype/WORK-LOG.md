@@ -293,3 +293,7 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Latest deployed source e9f25a9 adds Codex storage/combine/split, repeatable Warden, companion healing/cures/resurrection, evolving role gear and boarding shields, Spellweaving/Wraith caster behavior, and automatic wallet check deposits. Isolated content fresh/reload and caster tests passed; live build/login passed. See CONTENT-RESTORATION.md for details and limitations.
 - Private checklist review found no new failures. Review cursor is stored only with the private preview runtime. No saves, account data or feedback are included in source control.
 
+
+## 2026-09-11 Jewelry and mini-champion behavior
+
+Restored original nine matching rings (30 Marks), Concord talisman (150 Marks), native set bonuses, level20 growth/follower unlock, and Warden20% ring drop. Isolated native attribute/equip/remove and fresh/reload checks passed. Disabled low-health fleeing for mini-champion wave enemies and bosses. Accepted restoration order recorded in RESTORATION-QUEUE.md: gear, pets, original companion roles/missions, island.

@@ -15,3 +15,5 @@ Restored next: nine original special bracelet classes with original native attri
 Champion pendant is now restored at250Marks with its original attributes. Concord talisman and matching ring/set progression remain pending.
 
 Current batch: boarding shields and companion role equipment now evolve to level 20, with persistent XP and migration of existing item identities. Companion caster gear includes FC2/FCR6. See CONTENT-RESTORATION.md for Codex, Warden, full support, Spellweaving/Necromancy and wallet changes and remaining ring/set limitations.
+
+Nine matching rings, set bonuses and evolving Concord talisman are now restored; Warden matching-ring drops restored. See CONTENT-RESTORATION.md. Earlier pending notes above are historical.
