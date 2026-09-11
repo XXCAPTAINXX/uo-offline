@@ -23,17 +23,19 @@ namespace Server.HavenPrototype
         public static void Ensure()
         {
             if(!HavenPreview.Enabled) return;
-            int[] services={0,3,6};
-            var sites=new[]{new Point2D(3500,2574),new Point2D(3500,2578),new Point2D(3500,2582)};
+            int[] services={0,1,9,10,3,6};
+            foreach(var oldPost in World.Items.Values.OfType<HavenServicePost>().ToArray())oldPost.Delete();
+            var sites=new[]{new Point2D(3499,2574),new Point2D(3499,2577),new Point2D(3499,2580),new Point2D(3502,2584),new Point2D(3505,2584),new Point2D(3508,2584)};
             foreach(var old in World.Items.Values.OfType<HavenServiceStone>().Where(x=>x.Map==Map.Trammel&&!services.Contains(x.Service)).ToArray())old.Delete();
             for(int i=0;i<services.Length;i++){
                 int service=services[i];var board=World.Items.Values.OfType<HavenServiceStone>().FirstOrDefault(x=>!x.Deleted&&x.Service==service&&x.Map==Map.Trammel);
-                if(board==null||board.ItemID!=0xBD2){
+                if(board==null||board.ItemID!=0xED4){
                     if(board!=null)board.Internalize();Point3D landing;var site=sites[i];
                     if(!HavenPreview.FindLanding(new HavenPreview.Destination("Haven services",Map.Trammel,site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y)),out landing)){if(board!=null)board.MoveToWorld(new Point3D(site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y)),Map.Trammel);continue;}
-                    if(board==null)board=new HavenServiceStone(service);board.ItemID=0xBD2;board.Hue=0;board.Name=service==0?"Haven supplies and equipment":service==3?"Haven travel and training":"Haven help and companions";board.MoveToWorld(landing,Map.Trammel);
+                    if(board==null)board=new HavenServiceStone(service);board.ItemID=0xED4;board.Hue=0;board.Name=service==9?"Training supplies":service==10?"Special rewards":service==1?"Arcane supplies":service==0?"Haven supplies and equipment":service==3?"Haven travel":"Haven help and companions";board.MoveToWorld(landing,Map.Trammel);
                 }
-                var post=World.Items.Values.OfType<HavenServicePost>().FirstOrDefault(x=>!x.Deleted&&x.Board==board);if(post==null)post=new HavenServicePost(board);post.MoveToWorld(board.Location,board.Map);
+                if(!World.Items.Values.OfType<HavenPlazaPlanter>().Any(x=>!x.Deleted&&x.Stone==board)){var planter=new HavenPlazaPlanter(board);var point=new Point3D(board.X+(i<3?-1:0),board.Y+(i<3?0:1),board.Z);if(board.Map.CanFit(point,16,false,true))planter.MoveToWorld(point,board.Map);else planter.Delete();}
+
             }
         }
         public static bool CanUse(Mobile from,HavenServiceStone stone)
@@ -84,11 +86,18 @@ namespace Server.HavenPrototype
     public class HavenServiceStone : Item
     {
         public int Service { get; private set; }
-        public HavenServiceStone(int service):base(0xED4) { Service=service; Name=HavenStarterHub.Names[service]; Movable=false; Hue=service==5?0x489:0x47E; }
+        public HavenServiceStone(int service):base(0xED4) { Service=service; Name=service==9?"Training supplies":service==10?"Special rewards":HavenStarterHub.Names[service]; Movable=false; Hue=service==5?0x489:0x47E; }
         public HavenServiceStone(Serial serial):base(serial) {}
-        public override void OnDoubleClick(Mobile from) { if(HavenStarterHub.CanUse(from,this)) from.SendGump(new HavenServiceMenu(this)); else from.SendMessage("Stand within three tiles of the service stone."); }
+        public override void OnDoubleClick(Mobile from) { if(HavenStarterHub.CanUse(from,this)){if(Service==1||Service==9||Service==10)HavenSupplyShops.Show(from,Service==1?0:Service==9?1:2);else from.SendGump(new HavenServiceMenu(this));} else from.SendMessage("Stand within three tiles of the service stone."); }
         public override void Serialize(GenericWriter writer) { base.Serialize(writer); writer.Write(0); writer.Write(Service); }
         public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); Service=reader.ReadInt(); }
+    }
+    public class HavenPlazaPlanter:Item {
+        public HavenServiceStone Stone{get;private set;}
+        public HavenPlazaPlanter(HavenServiceStone stone):base(0x11CA){Stone=stone;Name="Haven plaza flowers";Movable=false;}
+        public HavenPlazaPlanter(Serial serial):base(serial){}
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Stone);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Stone=r.ReadItem() as HavenServiceStone;}
     }
     public class HavenServicePost : Item {
         public HavenServiceStone Board {get;private set;}
@@ -100,7 +109,7 @@ namespace Server.HavenPrototype
     }
     public class HavenServiceMenu : Gump {
         private readonly HavenServiceStone _board;
-        public HavenServiceMenu(HavenServiceStone board):base(50,50){_board=board;AddBackground(0,0,350,350,0x13BE);AddImageTiled(12,12,326,326,2624);AddHtml(24,22,300,30,"<BASEFONT COLOR=#FFFFFF><B>"+board.Name+"</B></BASEFONT>",false,false);int y=65;foreach(int service in Services(board.Service)){AddButton(24,y,0xFA5,0xFA7,service+1,GumpButtonType.Reply,0);AddHtml(60,y,260,25,"<BASEFONT COLOR=#FFFFFF>"+(service==7?"Healers and recovery":service==8?"Evolving gear and upgrades":service==9?"Training supplies":service==10?"Special rewards":HavenStarterHub.Names[service])+"</BASEFONT>",false,false);y+=36;}AddButton(245,310,0xFA5,0xFA7,0,GumpButtonType.Reply,0);AddHtml(280,310,60,25,"<BASEFONT COLOR=#FFFFFF>Close</BASEFONT>",false,false);}
+        public HavenServiceMenu(HavenServiceStone board):base(50,50){_board=board;AddBackground(0,0,350,350,0xA28);AddHtml(24,22,300,30,"<BASEFONT COLOR=#342B23><B>"+board.Name+"</B></BASEFONT>",false,false);int y=65;foreach(int service in Services(board.Service)){AddButton(24,y,0xFA5,0xFA7,service+1,GumpButtonType.Reply,0);AddHtml(60,y,260,25,"<BASEFONT COLOR=#342B23>"+(service==7?"Healers and recovery":service==8?"Evolving gear and upgrades":service==9?"Training supplies":service==10?"Special rewards":HavenStarterHub.Names[service])+"</BASEFONT>",false,false);y+=36;}AddButton(245,310,0xFA5,0xFA7,0,GumpButtonType.Reply,0);AddHtml(280,310,60,25,"<BASEFONT COLOR=#342B23>Close</BASEFONT>",false,false);}
         public static int[] Services(int group){return group==0?new[]{0,1,8,9,10,4}:group==3?new[]{3,5}:new[]{2,6,7};}
         public override void OnResponse(NetState sender,RelayInfo info){int service=info.ButtonID-1;if(!HavenStarterHub.CanUse(sender.Mobile,_board)||!Services(_board.Service).Contains(service))return;if(service==1||service==9||service==10){HavenSupplyShops.Show(sender.Mobile,service==1?0:service==9?1:2);return;}if(service==7)sender.Mobile.SendGump(new HavenRecoveryGump());else if(service==8)sender.Mobile.SendGump(new HavenStarterGearGump(sender.Mobile));else sender.Mobile.SendGump(new HavenHubGump(_board,service));}
     }

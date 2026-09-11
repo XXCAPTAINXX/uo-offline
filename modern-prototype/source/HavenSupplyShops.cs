@@ -17,8 +17,8 @@ namespace Server.HavenPrototype {
   public static readonly string[] Names={"Arcane supplies","Training supplies","Special rewards"};
   public static void Initialize(){CommandSystem.Register("arcane",AccessLevel.Player,e=>Show(e.Mobile,0));CommandSystem.Register("training",AccessLevel.Player,e=>Show(e.Mobile,1));CommandSystem.Register("rewards",AccessLevel.Player,e=>Show(e.Mobile,2));}
   public static void Show(Mobile p,int kind){if(HavenMarks.CanUse(p))p.SendGump(new HavenSupplyShopGump(p,kind,0));}
-  public static bool Near(Mobile p){return HavenMarks.CanUse(p)&&World.Items.Values.OfType<HavenServiceStone>().Any(s=>s.Service==0&&HavenStarterHub.CanUse(p,s));}
-  public static bool Buy(Mobile p,int kind,int index){if(kind<0||kind>=Catalogs.Length||index<0||index>=Catalogs[kind].Count||!Near(p)||p.Backpack==null)return false;var entry=Catalogs[kind][index];var item=entry.Create();if(!p.Backpack.CheckHold(p,item,false)){item.Delete();p.SendMessage("Make room in your backpack. Nothing was charged.");return false;}bool paid=entry.Marks>0&&HavenMarks.Balance(p)>=entry.Marks?HavenMarks.Spend(p,entry.Marks):entry.Gold>0&&HavenWallet.PayGold(p,entry.Gold);if(!paid){item.Delete();p.SendMessage("You do not have enough bank gold or Marks.");return false;}p.Backpack.DropItem(item);p.SendMessage("Purchased "+entry.Name+".");return true;}
+  public static bool Near(Mobile p){return HavenMarks.CanUse(p)&&World.Items.Values.OfType<HavenServiceStone>().Any(s=>(s.Service==0||s.Service==1||s.Service==9||s.Service==10)&&HavenStarterHub.CanUse(p,s));}
+  public static bool Buy(Mobile p,int kind,int index,Item preview=null){if(kind<0||kind>=Catalogs.Length||index<0||index>=Catalogs[kind].Count||!Near(p)||p.Backpack==null)return false;var entry=Catalogs[kind][index];var item=preview??entry.Create();if(item.Deleted)return false;if(!p.Backpack.CheckHold(p,item,false)){item.Delete();p.SendMessage("Make room in your backpack. Nothing was charged.");return false;}bool paid=entry.Marks>0&&HavenMarks.Balance(p)>=entry.Marks?HavenMarks.Spend(p,entry.Marks):entry.Gold>0&&HavenWallet.PayGold(p,entry.Gold);if(!paid){item.Delete();p.SendMessage("You do not have enough bank gold or Marks.");return false;}p.Backpack.DropItem(item);p.SendMessage("Purchased "+entry.Name+".");return true;}
   static Item Full(Spellbook book){book.Content=book.BookCount==64?ulong.MaxValue:(1UL<<book.BookCount)-1;return book;}
   static Bag Reagents(){var bag=new Bag{Name="100 of each magery reagent"};foreach(var item in new Item[]{new BlackPearl(100),new Bloodmoss(100),new Garlic(100),new Ginseng(100),new MandrakeRoot(100),new Nightshade(100),new SulfurousAsh(100),new SpidersSilk(100)})bag.DropItem(item);return bag;}
   static Bag Potions(){var bag=new Bag{Name="10 heal, cure and refresh potions"};for(int i=0;i<10;i++){bag.DropItem(new GreaterHealPotion());bag.DropItem(new GreaterCurePotion());bag.DropItem(new TotalRefreshPotion());}return bag;}
@@ -51,16 +51,26 @@ namespace Server.HavenPrototype {
    string[] details={"+5 Strength, +5 Hits, +10% Damage Increase.","+5 Intelligence, +8 Mana, +5% Lower Mana Cost.","+5 Dexterity, +8 Stamina, +5% Hit Chance.","+5 Animal Taming, Animal Lore and Veterinary.","+5 Musicianship; +3 Discordance, Peacemaking and Provocation.","+5 Blacksmithing, Tailoring and Tinkering.","+150 Luck.","+10% Defense Chance, +2 Hit Regeneration, +3 all resists.","Night Sight, +2 Hit Regeneration, +10% Lower Reagent Cost, +5 Hits."};
    Func<Item>[] factories={()=>new BraceletOfTheVanguard(),()=>new BraceletOfArcaneFocus(),()=>new BraceletOfTheWind(),()=>new BraceletOfTheBeastmaster(),()=>new BraceletOfTheVirtuoso(),()=>new BraceletOfTheArtisan(),()=>new BraceletOfFortune(),()=>new BraceletOfTheGuardian(),()=>new BraceletOfTheNight()};for(int i=0;i<names.Length;i++)list.Add(new HavenShopEntry(names[i],25000,factories[i],details[i]+" Native attribute caps apply. Matching-set progression is not included yet.",15));return list;}
  }
+ public class HavenShopPreviewHolder:Bag {
+  public HavenShopPreviewHolder(){Movable=false;Visible=false;Timer.DelayCall(TimeSpan.FromMinutes(10),Delete);}
+  public HavenShopPreviewHolder(Serial serial):base(serial){}
+  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Timer.DelayCall(TimeSpan.Zero,Delete);}
+ }
  public class HavenSupplyShopGump:Gump {
   readonly int _kind,_selected;const int PageSize=8;
+  HavenShopPreviewHolder _holder; Item _preview;
+  void Cleanup(){if(_holder!=null&&!_holder.Deleted)_holder.Delete();}
+  public override void OnServerClose(NetState state){Cleanup();base.OnServerClose(state);}
   public HavenSupplyShopGump(Mobile p,int kind,int selected):base(40,40){_kind=kind;var entries=HavenSupplyShops.Catalogs[kind];_selected=Math.Max(0,Math.Min(entries.Count-1,selected));int page=_selected/PageSize;
-   AddBackground(0,0,660,430,0x13BE);AddImageTiled(12,12,636,406,2624);Text(24,22,610,25,"<B>"+HavenSupplyShops.Names[kind]+"</B>");Text(24,54,610,25,"Bank gold: "+Server.Mobiles.Banker.GetBalance(p).ToString("N0")+" | Marks: "+HavenMarks.Balance(p));
+   AddBackground(0,0,660,470,0xA28);Text(24,22,610,25,"<B>"+HavenSupplyShops.Names[kind]+"</B>");Text(24,54,610,25,"Bank gold: "+Server.Mobiles.Banker.GetBalance(p).ToString("N0")+" | Marks: "+HavenMarks.Balance(p));
    for(int row=0;row<PageSize;row++){int index=page*PageSize+row;if(index>=entries.Count)break;Button(24,94+row*33,100+index,entries[index].Name,275);}
-   var entry=entries[_selected];Text(345,96,285,50,"<B>"+entry.Name+"</B>");Text(345,151,285,45,entry.Marks>0?entry.Marks+" Marks"+(entry.Gold>0?" or "+entry.Gold.ToString("N0")+" gold":""):entry.Gold.ToString("N0")+" gold");Text(345,202,285,130,entry.Details);Button(345,343,1,"Buy selected",250);
-   if(page>0)Button(24,386,2,"Previous",100);Text(148,386,160,25,"Page "+(page+1)+" / "+((entries.Count+7)/8));if((page+1)*PageSize<entries.Count)Button(300,386,3,"Next",100);Button(550,386,0,"Close",65);
+   var entry=entries[_selected];Text(345,96,285,40,"<B>"+entry.Name+"</B>");Text(345,140,285,40,entry.Marks>0?entry.Marks+" Marks"+(entry.Gold>0?" or "+entry.Gold.ToString("N0")+" gold":""):entry.Gold.ToString("N0")+" gold");Text(345,267,285,120,entry.Details);
+   _holder=new HavenShopPreviewHolder();_preview=entry.Create();_holder.DropItem(_preview);AddItem(370,185,_preview.ItemID,_preview.Hue);_preview.SendPropertiesTo(p);AddItemProperty(_preview.Serial);Text(425,190,195,60,"Hover over the item to inspect its full properties.");Button(345,394,1,"Buy selected",250);
+   if(page>0)Button(24,428,2,"Previous",100);Text(148,428,160,25,"Page "+(page+1)+" / "+((entries.Count+7)/8));if((page+1)*PageSize<entries.Count)Button(300,428,3,"Next",100);Button(550,428,0,"Close",65);
   }
-  void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#FFFFFF>"+text+"</BASEFONT>",false,false);}
+  void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#342B23>"+text+"</BASEFONT>",false,false);}
   void Button(int x,int y,int id,string text,int width){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,29,text);}
-  public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0||!HavenMarks.CanUse(p))return;int selected=_selected;if(info.ButtonID==1){if(!HavenSupplyShops.Near(p))p.SendMessage("Stand beside the Haven Supplies sign to buy.");else HavenSupplyShops.Buy(p,_kind,_selected);}else if(info.ButtonID==2)selected=Math.Max(0,(_selected/8-1)*8);else if(info.ButtonID==3)selected=(_selected/8+1)*8;else if(info.ButtonID>=100)selected=info.ButtonID-100;if(selected>=0&&selected<HavenSupplyShops.Catalogs[_kind].Count)p.SendGump(new HavenSupplyShopGump(p,_kind,selected));}
+  public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0||!HavenMarks.CanUse(p)){Cleanup();return;}int selected=_selected;if(info.ButtonID==1){if(!HavenSupplyShops.Near(p))p.SendMessage("Stand beside a Haven shop stone to buy.");else HavenSupplyShops.Buy(p,_kind,_selected,_preview);}else if(info.ButtonID==2)selected=Math.Max(0,(_selected/8-1)*8);else if(info.ButtonID==3)selected=(_selected/8+1)*8;else if(info.ButtonID>=100)selected=info.ButtonID-100;Cleanup();if(selected>=0&&selected<HavenSupplyShops.Catalogs[_kind].Count)p.SendGump(new HavenSupplyShopGump(p,_kind,selected));}
  }
 }
