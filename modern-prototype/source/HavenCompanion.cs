@@ -103,6 +103,7 @@ namespace Server.HavenPrototype
         [Constructable]
         public HavenCompanion() : base(AIType.AI_Melee, FightMode.Aggressor, 12, 1, 0.2, 0.4)
         {
+            EnsureProgressionCaps();
             Name = RecruitName();
             Title = "the faithful companion";
             Body = 0x190;
@@ -391,6 +392,7 @@ namespace Server.HavenPrototype
             _missionDue = DateTime.UtcNow.AddMinutes(minutes);
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
             Internalize();
+            EnsureProgressionCaps();
             ScheduleMission();
             return true;
         }
@@ -486,6 +488,7 @@ namespace Server.HavenPrototype
             SerializeResourceMissions(writer);
             writer.Write(_missionReturnPending);
         }
+        public void EnsureProgressionCaps() { for (int i = 0; i < Skills.Length; i++) Skills[i].Cap = Math.Max(120.0, Skills[i].Cap); Skills.Cap = Math.Max(Skills.Cap, Skills.Length * 1200); }
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
@@ -499,6 +502,7 @@ namespace Server.HavenPrototype
             _missionReturnPending = version >= 3 ? reader.ReadBool() :
                 !OnMission && _completedMissions > 0 && Map == Map.Internal && !IsStabled;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
+            EnsureProgressionCaps();
             ScheduleMission();
             if (_missionReturnPending) ScheduleMissionReturn();
         }
@@ -593,6 +597,7 @@ namespace Server.HavenPrototype
         public override bool CheckItemUse(Mobile from, Item item) { return IsAccessibleTo(from); }
         public HavenCompanionPack(Serial serial) : base(serial) { }
         public override void Serialize(GenericWriter writer) { base.Serialize(writer); writer.Write(0); }
+
         public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); }
     }
 

@@ -17,7 +17,8 @@ namespace Server.HavenPrototype
             typeof(Leather),typeof(SpinedLeather),typeof(HornedLeather),typeof(BarbedLeather),
             typeof(Amber),typeof(Amethyst),typeof(Citrine),typeof(Diamond),typeof(Emerald),typeof(Ruby),typeof(Sapphire),typeof(StarSapphire),typeof(Tourmaline),
             typeof(BatWing),typeof(GraveDust),typeof(DaemonBlood),typeof(NoxCrystal),typeof(PigIron),typeof(Bone),typeof(DaemonBone),
-            typeof(EssenceAchievement),typeof(EssenceBalance),typeof(EssenceControl),typeof(EssenceDiligence),typeof(EssenceDirection),typeof(EssenceFeeling),typeof(EssenceOrder),typeof(EssencePassion),typeof(EssencePersistence),typeof(EssencePrecision),typeof(EssenceSingularity)
+            typeof(EssenceAchievement),typeof(EssenceBalance),typeof(EssenceControl),typeof(EssenceDiligence),typeof(EssenceDirection),typeof(EssenceFeeling),typeof(EssenceOrder),typeof(EssencePassion),typeof(EssencePersistence),typeof(EssencePrecision),typeof(EssenceSingularity),
+            typeof(Hides),typeof(SpinedHides),typeof(HornedHides),typeof(BarbedHides),typeof(RedScales),typeof(YellowScales),typeof(BlackScales),typeof(GreenScales),typeof(WhiteScales),typeof(BlueScales),typeof(Feather),typeof(Wool),typeof(TaintedWool),typeof(RawRibs),typeof(RawBird),typeof(RawLambLeg),typeof(RawRotwormMeat),typeof(DragonBlood),typeof(Fur),typeof(Sand),typeof(Saltpeter),typeof(WhitePearl),typeof(DelicateScales),typeof(RawFishSteak),typeof(BarkFragment),typeof(LuminescentFungi),typeof(SwitchItem),typeof(ParasiticPlant),typeof(BrilliantAmber),typeof(CrystalShards),typeof(BlueDiamond),typeof(DarkSapphire),typeof(EcruCitrine),typeof(FireRuby),typeof(PerfectEmerald),typeof(Turquoise)
         };
         public static readonly string[] Names = {
             "Iron ingots","Dull copper ingots","Shadow iron ingots","Copper ingots","Bronze ingots","Gold ingots","Agapite ingots","Verite ingots","Valorite ingots",
@@ -25,7 +26,8 @@ namespace Server.HavenPrototype
             "Leather","Spined leather","Horned leather","Barbed leather",
             "Amber","Amethyst","Citrine","Diamond","Emerald","Ruby","Sapphire","Star sapphire","Tourmaline",
             "Bat wings","Grave dust","Daemon blood","Nox crystals","Pig iron","Bones","Daemon bones",
-            "Essence of achievement","Essence of balance","Essence of control","Essence of diligence","Essence of direction","Essence of feeling","Essence of order","Essence of passion","Essence of persistence","Essence of precision","Essence of singularity"
+            "Essence of achievement","Essence of balance","Essence of control","Essence of diligence","Essence of direction","Essence of feeling","Essence of order","Essence of passion","Essence of persistence","Essence of precision","Essence of singularity",
+            "Hides","Spined Hides","Horned Hides","Barbed Hides","Red Scales","Yellow Scales","Black Scales","Green Scales","White Scales","Blue Scales","Feather","Wool","Tainted Wool","Raw Ribs","Raw Bird","Raw Lamb Leg","Raw Rotworm Meat","Dragon Blood","Fur","Sand","Saltpeter","White Pearl","Delicate Scales","Raw Fish Steak","Bark Fragment","Luminescent Fungi","Switch Item","Parasitic Plant","Brilliant Amber","Crystal Shards","Blue Diamond","Dark Sapphire","Ecru Citrine","Fire Ruby","Perfect Emerald","Turquoise"
         };
         public static bool Valid(int id) { return id >= 0 && id < Types.Length; }
         public static Item Create(int id,int units)
@@ -58,7 +60,8 @@ namespace Server.HavenPrototype
         [Constructable]
         public HavenResourceLedger() : base(0x2259) { Name = "Haven resource ledger"; Weight = 1; LootType = LootType.Blessed; }
         public int Balance(int id) { int value; return _balances.TryGetValue(id,out value) ? value : 0; }
-        public bool CanUse(Mobile from) { return HavenResources.Accessible(from,this); }
+        public virtual bool CanUse(Mobile from) { return HavenResources.Accessible(from,this); }
+        internal bool AbsorbCarriedResource(HavenCompanion carrier,Item item) { if(carrier.Backpack==null || !IsChildOf(carrier.Backpack) || item==null || item.Deleted || item.Parent!=carrier.Backpack) return false; int id=Array.IndexOf(HavenResources.Types,item.GetType()); if(!HavenResources.Valid(id)||!item.Stackable||!Credit(id,item.Amount))return false; item.Delete();return true; }
         internal bool Credit(int id,int units)
         {
             if (!HavenResources.Valid(id) || units <= 0 || units > MaxBalance - Balance(id)) return false;
@@ -163,7 +166,7 @@ namespace Server.HavenPrototype
         public ResourceLedgerGump(HavenResourceLedger ledger,int page,int amount,bool deeds) : base(60,60)
         {
             _ledger=ledger; _page=Math.Max(0,Math.Min((HavenResources.Types.Length-1)/PageSize,page)); _amount=amount; _deeds=deeds;
-            AddBackground(0,0,540,545,0xA28); AddLabel(24,20,0,"Resource ledger");
+            AddBackground(0,0,540,585,0xA28); AddLabel(24,20,0,ledger is HavenGuildResourceLedger ? "Shared guild resource ledger (all members)" : "Resource ledger");
             AddLabel(24,55,0,"Select a resource to withdraw the amount below.");
             for(int row=0;row<PageSize;row++)
             {
@@ -174,7 +177,8 @@ namespace Server.HavenPrototype
             Button(315,384,4,deeds?"Deeds":"Loose resources");
             Button(24,430,1,"Absorb my pack"); Button(285,430,2,"Target item / bag");
             Button(24,468,3,"Transfer all..."); Button(285,468,5,"Previous"); Button(405,468,6,"Next");
-            AddLabel(24,509,0,"Page "+(_page+1)+" / "+((HavenResources.Types.Length-1)/PageSize+1)); Button(405,509,0,"Close");
+            AddLabel(24,509,0,"Page "+(_page+1)+" / "+((HavenResources.Types.Length-1)/PageSize+1)); Button(405,549,0,"Close");
+            Button(24,509,7,"Give to me"); Button(190,509,8,"Give to guild"); Button(355,509,9,"Guild ledger");
         }
         private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
         public override void OnResponse(NetState sender,RelayInfo info)
@@ -184,6 +188,9 @@ namespace Server.HavenPrototype
             int page=_page; bool deeds=_deeds;
             if(info.ButtonID==1) from.SendMessage("Absorbed "+_ledger.Absorb(from,from.Backpack)+" resource stacks/deeds. Unsupported items stayed in place.");
             else if(info.ButtonID==2 || info.ButtonID==3) { from.Target=new LedgerTarget(_ledger,info.ButtonID==3,_page,amount,deeds); return; }
+            else if(info.ButtonID==7) { var personal=from.Backpack.FindItemsByType(typeof(HavenResourceLedger),true).OfType<HavenResourceLedger>().FirstOrDefault(x=>x!=_ledger); if(personal==null) { personal=new HavenResourceLedger(); if(!from.Backpack.TryDropItem(from,personal,false)){personal.Delete();personal=null;} } from.SendMessage(personal!=null&&_ledger.TransferAll(from,personal)?"Resources transferred to your ledger.":"Transfer unavailable; balances retained."); }
+            else if(info.ButtonID==8) { var guild=HavenGuildResourceLedger.For(from); from.SendMessage(guild!=null&&_ledger.TransferAll(from,guild)?"Resources transferred to your guild ledger.":"Transfer unavailable: check guild membership and capacity. Balances retained."); }
+            else if(info.ButtonID==9) { var guild=HavenGuildResourceLedger.For(from); if(guild!=null){guild.Show(from,0,amount,deeds);return;} from.SendMessage("Join a guild to use its shared ledger."); }
             else if(info.ButtonID==4) deeds=!deeds;
             else if(info.ButtonID==5) page--; else if(info.ButtonID==6) page++;
             else if(info.ButtonID>=100 && !_ledger.Withdraw(from,info.ButtonID-100,amount,deeds)) from.SendMessage("Withdrawal unavailable: check the balance and free pack space/weight.");

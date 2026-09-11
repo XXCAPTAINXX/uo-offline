@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Server.Gumps;
+using Server.Items;
 using Server.Network;
 
 namespace Server.HavenPrototype
@@ -61,7 +62,7 @@ namespace Server.HavenPrototype
                     break;
                 case CompanionMission.Abyss:
                     if (Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < 80) return false;
-                    for (int id=36;id<HavenResources.Types.Length;id++) rewards.Add(id,minutes);
+                    for (int id=36;id<47;id++) rewards.Add(id,minutes);
                     break;
             }
             foreach (var pair in rewards)
@@ -86,6 +87,16 @@ namespace Server.HavenPrototype
             Skill skill = _missionKind == CompanionMission.Mining ? Skills.Mining : _missionKind == CompanionMission.Lumber ? Skills.Lumberjacking : _missionKind == CompanionMission.Leather ? Skills.AnimalLore : null;
             if (skill != null && skill.Base < skill.Cap) skill.Base = Math.Min(skill.Cap,skill.Base + _missionMinutes*0.2);
             return _missionKind + " run completed." + (report.Count==0 ? "" : " Resources: " + String.Join(", ",report) + ". Stored in his ledger; overflow waits for space.");
+        }
+        public override void OnSubItemAdded(Item item)
+        {
+            base.OnSubItemAdded(item);
+            if (Backpack == null || item == null || item.Parent != Backpack) return;
+            Timer.DelayCall(TimeSpan.Zero, () => {
+                if (Deleted || Backpack == null || item.Deleted || item.Parent != Backpack) return;
+                var ledger = EnsureResourceLedger();
+                if (ledger != null) ledger.AbsorbCarriedResource(this,item);
+            });
         }
         private void DeliverResourceRewards()
         {
