@@ -280,12 +280,17 @@ namespace Server.HavenPrototype
             // The prototype's order gump deliberately omits release, transfer and drop-all.
         }
         public override void OnDoubleClick(Mobile from) { Show(from); }
-        public void Show(Mobile from)
+        public void Show(Mobile from, bool expanded = false)
         {
             if (!IsOwner(from)) return;
             from.CloseGump(typeof(CompanionGump));
-            from.SendGump(new CompanionGump(this));
+            from.CloseGump(typeof(CompanionActivityGump));
+            from.CloseGump(typeof(CompanionResourceMissionGump));
+            from.CloseGump(typeof(CompanionMissionTimerGump));
+            if (OnMission && !expanded) from.SendGump(new CompanionMissionTimerGump(this,from));
+            else from.SendGump(new CompanionGump(this));
         }
+        public override bool IsSnoop(Mobile from) { return !CanOpenPack(from) && base.IsSnoop(from); }
         public void OpenPack(Mobile from)
         {
             if (CanOpenPack(from)) Backpack.DisplayTo(from);
@@ -372,7 +377,10 @@ namespace Server.HavenPrototype
             if (ControlMaster != from) return false;
             MoveToWorld(from.Location, from.Map);
             DeliverRewards();
-            return SetOrder(from, OrderType.Follow);
+            if (!SetOrder(from, OrderType.Follow)) return false;
+            AIObject.NextMove = Core.TickCount;
+            AIObject.Activate();
+            return true;
         }
 
         public override void OnAfterDelete()
@@ -514,6 +522,7 @@ namespace Server.HavenPrototype
             AddHtml(24, 291, 430, 76, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
             AddLabel(24, 379, 0, "Gold waiting for pack space: " + companion.PendingGold);
             Button(24, 417, 9, "Refresh / collect"); Button(330, 417, 0, "Close");
+            if(companion.OnMission) Button(330,72,11,"Minimize");
         }
         private void Button(int x, int y, int id, string text) { AddButton(x, y, 0xFA5, 0xFA7, id, GumpButtonType.Reply, 0); AddLabel(x + 34, y, 0, text); }
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -533,6 +542,7 @@ namespace Server.HavenPrototype
                 case 8: from.SendGump(new CompanionActivityGump(_companion)); return;
                 case 9: _companion.DeliverRewards(); break;
                 case 10: ok = _companion.JoinOwnerParty(from); break;
+                case 11: _companion.Show(from); return;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
             _companion.Show(from);

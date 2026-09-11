@@ -35,9 +35,16 @@ public static class ResourceMissionSmoke
         _fixture=companion;
         var playerLedger=new HavenResourceLedger(); owner.Backpack.DropItem(playerLedger);
         check("companion begins with accessible ledger",()=>Require(companion.ResourceLedger!=null && companion.ResourceLedger.CanUse(owner)));
+        check("owner can use ledger in companion pack without snooping",()=> {
+            var stranger=new PlayerMobile {Player=true,Body=0x190};
+            Require(!companion.IsSnoop(owner) && companion.ResourceLedger.IsAccessibleTo(owner) && companion.ResourceLedger.CheckItemUse(owner));
+            Require(companion.IsSnoop(stranger) && !companion.ResourceLedger.IsAccessibleTo(stranger));
+            stranger.Delete();
+        });
         check("resource mission snapshots tier and scales by duration",()=> {
             companion.Skills.Mining.Base=99;
             Require(companion.StartMission(owner,15,CompanionMission.Mining)); companion.Skills.Mining.Base=50;
+            Require(CompanionMissionTimerGump.Remaining(companion).StartsWith("Mining  15:"));
             Due(companion); Require(companion.ResourceLedger.Balance(8)==300 && companion.Skills.Mining.Base==53 && companion.PendingResources==0);
             Require(companion.Recall(owner) && companion.LastReport.Contains("300 Valorite ingots"));
         });

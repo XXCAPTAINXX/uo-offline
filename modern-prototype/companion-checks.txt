@@ -27,6 +27,7 @@ PASS ledger transfer is atomic on target overflow
 PASS ledger transfer preserves each resource and rejects replay
 PASS persist resource fixtures
 PASS companion begins with accessible ledger
+PASS owner can use ledger in companion pack without snooping
 PASS resource mission snapshots tier and scales by duration
 PASS companion ledger transfers to owner's book
 PASS wood and leather missions unlock higher resource types

@@ -135,3 +135,10 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Ongoing guard no longer uses new-command range/LOS checks, allowing native pathfinding to catch up when owner is more than14tiles away or behind an obstacle. Ownership, controlled state, alive, same map and mission restrictions remain. Shared guard logic covers Warrior/Caster/Archer.
 - Regression exercises cleared target, owner moving beyond command range and actual movement while retaining Guard; existing hostile/tameable checks retained. Isolated HavenServUOGuardFollow.
 - Guard follow suite111PASS fresh/reload; live backup at E:/Backups/Haven/Prototypes/servuo-before-guard-follow-20260911. Deployment uses tested HavenCompanion.cs; ask player to reissue all guard me after reconnect.
+
+## Player checklist completed; mission usability fixes
+- Read private checklist: all12 latest statuses Pass; earlier mining/supply confusion entry superseded by later mining result per explicit user correction. Follow-up issues remain valid despite Pass statuses.
+- Mission dispatch now collapses companion windows to300x120 timer; Open restores full menu; Minimize collapses again. Countdown refresh stops if closed/expanded/disconnected; ready panel offers Recall. No automated cancellation or early rewards.
+- Recall now explicitly activates AI and resets movement delay after setting Follow, addressing mission internalization/AI sleep. Ledger double-click was intercepted as snooping on another mobile before item handler: own nearby companion now exempts owner from IsSnoop; pack/range/ownership/trapped-container checks remain.
+- User rates Haven hub2/10: scattered identical stones. Accepted baseline, not polished presentation. Priorities after this bundle: Marks/reward exchange with item previews, mini champion progression; replace scattered-stone presentation with organized signed service stations. Original server remains unchanged.
+- MissionUX112checks passed fresh/reload; live build zero warnings/errors. Backup E:/Backups/Haven/Prototypes/servuo-before-mission-ui-20260911. UI still needs player visual verification; no claim of live click-through testing.
