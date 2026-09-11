@@ -130,13 +130,14 @@ namespace Server.HavenPrototype
                 "The plaza offers starter supplies, arcane supplies, companion recruitment, dungeon travel, repairs and optional test training.<BR><BR>Use [c for your companion, [home for starter housing and [havenmarks for rewards. Completed companion missions earn 2 Haven Marks per minute. Preview each reward before buying it.<BR><BR>Native vendors, bankers, healers and trainers remain available. Use [minichamp for three-wave expeditions and a boss, with rewards for every damage participant. The evolving gear stone offers starter equipment and robe upgrades. Use [wallet for gold storage and tithing; [havenluck shows the restored area bonus. Custom pets, the market and home island remain upcoming. Original-server progress is separate."};
             AddHtml(24,58,520,240,"<BASEFONT COLOR=#202020>"+details[service]+"</BASEFONT>",false,true);
             if(stone!=null && service!=6) { AddButton(24,362,0xFA5,0xFA7,1,GumpButtonType.Reply,0); AddLabel(60,362,0,service<=1?"Claim supplies":service==4?"Repair carried equipment":"Open service"); }
-            if(service==0) {AddButton(24,315,0xFA5,0xFA7,5,GumpButtonType.Reply,0);AddLabel(60,315,0,"Get a free trash bag");AddButton(265,315,0xFA5,0xFA7,6,GumpButtonType.Reply,0);AddLabel(299,315,0,"Open wallet");}
+            if(service==0) {AddButton(265,280,0xFA5,0xFA7,7,GumpButtonType.Reply,0);AddLabel(299,280,0,"Free Champion's Codex");AddButton(24,315,0xFA5,0xFA7,5,GumpButtonType.Reply,0);AddLabel(60,315,0,"Get a free trash bag");AddButton(265,315,0xFA5,0xFA7,6,GumpButtonType.Reply,0);AddLabel(299,315,0,"Open wallet");}
             if(service==6) {AddButton(24,315,0xFA5,0xFA7,4,GumpButtonType.Reply,0);AddLabel(60,315,0,"Healers and corpse recovery");AddButton(24,362,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(60,362,0,"Browse Haven rewards");AddButton(245,362,0xFA5,0xFA7,3,GumpButtonType.Reply,0);AddLabel(279,362,0,"Mini champion");}
             AddButton(440,362,0xFA5,0xFA7,0,GumpButtonType.Reply,0); AddLabel(476,362,0,"Close");
         }
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var from=sender.Mobile;
+            if(info.ButtonID==7 && _service==0 && HavenStarterHub.CanUse(from,_stone)){HavenChampionCodex.OpenCodex(from);return;}
             if(info.ButtonID==6 && _service==0 && HavenStarterHub.CanUse(from,_stone)){HavenWallet.Open(from);return;}
             if(info.ButtonID==5 && _service==0 && HavenStarterHub.CanUse(from,_stone)) {HavenTrash.Claim(from);return;}
             if(info.ButtonID==4 && _service==6) {from.SendGump(new HavenRecoveryGump());return;}

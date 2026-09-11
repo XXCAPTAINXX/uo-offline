@@ -10,6 +10,8 @@ Status: the nine-piece evolving starter set, robe upgrades, wallet/tithing and H
 
 Player progression prerequisite restored: original Haven-area +1000Luck and5x natural gain chance/amount below100.0. Native gain tests cover the100.0cutoff, and existing free-skill/cap tests still pass.
 
-Restored next: nine original special bracelet classes with original native attributes and15Mark/25,000gold pricing. Matching rings, set bonuses, Champion pendant, Concord talisman and Astral progression remain pending. All five original service categories are now reachable from Supplies sign; Arcane and Training use native items where available. Custom codex/key vault/rune pouch/resource satchel and pet utilities are not falsely listed as restored.
+Restored next: nine original special bracelet classes with original native attributes and15Mark/25,000gold pricing. Matching rings, set bonuses, Champion pendant, Concord talisman and Astral progression remain pending. All five original service categories are now reachable from Supplies sign; Arcane and Training use native items where available. The Codex and raw resource pouch are now restored; key vault, rune pouch and broader pet utilities remain pending.
 
 Champion pendant is now restored at250Marks with its original attributes. Concord talisman and matching ring/set progression remain pending.
+
+Current batch: boarding shields and companion role equipment now evolve to level 20, with persistent XP and migration of existing item identities. Companion caster gear includes FC2/FCR6. See CONTENT-RESTORATION.md for Codex, Warden, full support, Spellweaving/Necromancy and wallet changes and remaining ring/set limitations.

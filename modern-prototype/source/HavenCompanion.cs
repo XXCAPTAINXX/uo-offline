@@ -127,6 +127,7 @@ namespace Server.HavenPrototype
             AddItem(new HavenCompanionPack());
             SetSkill(SkillName.Mining, 50); SetSkill(SkillName.Lumberjacking, 50); SetSkill(SkillName.AnimalLore, 50);
             EnsureResourceLedger();
+            EnsureEvolvingEquipment();
         }
 
         public bool SetRole(Mobile from, CompanionRole role)
@@ -155,7 +156,7 @@ namespace Server.HavenPrototype
                 if (_roleBow == null || _roleBow.Deleted) _roleBow = new Bow { Movable = false };
                 AddItem(_roleBow);
             }
-            _role = role; RangeFight = role == CompanionRole.Warrior ? 1 : 6;
+            _role = role; EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             return SetOrder(from, OrderType.Follow);
         }
@@ -250,25 +251,33 @@ namespace Server.HavenPrototype
             return best;
         }
 
-        public bool HealOwner(Mobile from)
-        {
-            if (!CanCommand(from) || from.Hits >= from.HitsMax || from.Poisoned || MortalStrike.IsWounded(from) || Spell != null || DateTime.UtcNow < _nextHeal || Mana < 11) return false;
-            var spell = new CompanionHealSpell(this, from);
-            if (!spell.Cast()) return false;
-            _nextHeal = DateTime.UtcNow.AddSeconds(8);
-            return true;
+        public bool HealOwner(Mobile from) { return IsOwner(from) && SupportPatient(from); }
+        internal bool SupportPatient(Mobile patient) {
+            if(Deleted||!Alive||IsDeadPet||OnMission||IsStabled||patient==null||patient.Deleted||Map==null||Map==Map.Internal||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient)||DateTime.UtcNow<_nextHeal||Mana<10)return false;
+            var pet=patient as BaseCreature;
+            bool allowed=patient==this||patient==_owner||(pet!=null&&pet.ControlMaster==_owner)||(_owner!=null&&patient.Player&&CompanionParty.Get(_owner)!=null&&CompanionParty.Get(_owner).Contains(patient));
+            if(!allowed)return false;
+            if(!patient.Alive) {
+                if(!patient.Player||patient.Map==null||!patient.Map.CanFit(patient.Location,16,false,false)||patient.Region.IsPartOf("Khaldun")||patient.HasGump(typeof(ResurrectGump)))return false;
+                patient.SendGump(new ResurrectGump(patient,this));_nextHeal=DateTime.UtcNow.AddSeconds(10);
+            } else if(pet!=null&&pet.IsDeadPet) {
+                if(pet.ControlMaster!=_owner||!patient.Map.CanFit(patient.Location,16,false,false))return false;pet.ResurrectPet();_nextHeal=DateTime.UtcNow.AddSeconds(10);
+            } else if(patient.Poisoned) {if(!patient.CurePoison(this))return false;_nextHeal=DateTime.UtcNow.AddSeconds(2);}
+            else {if(patient.Hits>=patient.HitsMax||MortalStrike.IsWounded(patient))return false;patient.Heal(30+(int)(Skills.Healing.Base/5),this);_nextHeal=DateTime.UtcNow.AddSeconds(2);}
+            Mana-=10;patient.FixedEffect(0x376A,10,16);patient.PlaySound(0x1F2);CheckSkill(SkillName.Healing,0,125);return true;
         }
 
         public override void OnThink()
         {
             if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
             RecoverResources(DateTime.UtcNow);
+            if (_owner != null && _owner.NetState != null) MaintainSpellweaver();
             base.OnThink();
             if (_owner != null && _owner.NetState != null)
             {
                 if (!TryBandage(_owner)) TryBandage(this);
-                if (_owner.Hits < _owner.HitsMax * 0.65 && HealOwner(_owner)) return;
-                if (Hits < HitsMax * 0.8) HealSelf();
+                if (HealOwner(_owner) || SupportPatient(this)) return;
+                var patients=GetMobilesInRange(12);try{foreach(Mobile patient in patients)if(SupportPatient(patient))break;}finally{patients.Free();}
             }
         }
 
@@ -278,7 +287,7 @@ namespace Server.HavenPrototype
                 patient == null || patient.Deleted || (patient != this && patient != _owner) ||
                 Map == null || Map == Map.Internal || patient.Map != Map || !InRange(patient, HavenCompanionAccess.BandageRange(this, patient)) || !InLOS(patient) ||
                 BandageContext.GetContext(this) != null || MortalStrike.IsWounded(patient) ||
-                (patient.Alive && !patient.Poisoned && patient.Hits >= patient.HitsMax * 0.8)) return false;
+                (patient.Alive && !patient.Poisoned && patient.Hits >= patient.HitsMax)) return false;
             var bandages = Backpack.FindItemByType(typeof(Bandage), true) as Bandage;
             if (bandages == null || bandages.Deleted || bandages.Amount < 1) return false;
             if (BandageContext.BeginHeal(this, patient) == null) return false;
@@ -559,11 +568,11 @@ namespace Server.HavenPrototype
             companion.Warmode = false; return ai.DoOrderFollow();
         }
     }
-    public class HavenCompanionMageAI : MageAI
+    public partial class HavenCompanionMageAI : MageAI
     {
         private readonly HavenCompanion _companion;
         public HavenCompanionMageAI(HavenCompanion companion) : base(companion) { _companion = companion; }
-        public override bool SmartAI { get { return true; } }
+        public override bool SmartAI { get { return false; } }
         public override bool DoOrderGuard() { return CompanionGuard.Run(this, _companion); }
         public override bool DoOrderFollow() { _companion.PrepareFollowSpeed(); return base.DoOrderFollow(); }
         public override void EndPickTarget(Mobile from, IDamageable target, OrderType order)

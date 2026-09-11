@@ -49,7 +49,8 @@ namespace Server.HavenPrototype
             new Destination("Wrong entrance",Map.Trammel,2043,238,10),
             new Destination("Isamu-Jima",Map.Tokuno,1169,998,41),
             new Destination("Homare-Jima",Map.Tokuno,270,628,15),
-            new Destination("Ilshenar Spirituality",Map.Ilshenar,1532,1340,-3)
+            new Destination("Ilshenar Spirituality",Map.Ilshenar,1532,1340,-3),
+            HavenWardenPost.Arrival
         };
         public static void Initialize()
         {
@@ -148,7 +149,7 @@ namespace Server.HavenPrototype
             AddLabel(24,165,0,"Test travel - leave combat first; Felucca has PvP rules");
             for (int row = 0; row < 10; ++row) {int i=_page*10+row;if(i>=HavenPreview.Destinations.Length)break;
                 Button(24 + (row % 2) * 280,205 + (row / 2) * 43,100 + i,HavenPreview.Destinations[i].Name); }
-            AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Pages: 1 - modern adventures; 2 - towns and gateways; 3 - dungeons and hunting. Trammel dungeon entrances use non-PvP rules.</BASEFONT>",false,false);
+            AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Pages: 1 - modern adventures; 2 - towns and gateways; 3 - dungeons and hunting; 4 - Warden. Trammel dungeon entrances use non-PvP rules.</BASEFONT>",false,false);
             if(_page>0)Button(24,526,3,"Previous");AddLabel(165,526,0,"Page "+(_page+1)+" / "+((HavenPreview.Destinations.Length+9)/10));if((_page+1)*10<HavenPreview.Destinations.Length)Button(280,526,4,"Next");Button(430,526,0,"Close");
         }
         private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }

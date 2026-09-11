@@ -40,7 +40,7 @@ namespace Server.HavenPrototype
         public static readonly string[] Descriptions={
             "One-handed sword: 60% Hit Mana Leech, 30% Hit Life Leech, +30% Damage Increase, +10% Hit Chance Increase. A step above the starter weapon.",
             "One-handed mace: 60% Hit Mana Leech, 30% Hit Life Leech, +30% Damage Increase, +10% Hit Chance Increase. Pair with a shield for a basher build.",
-            "Metal kite shield: +5 Parrying, +10% Defense Chance Increase and +5% Hit Chance Increase. Skill bonuses do not raise your skill cap.",
+            "Evolves from level 1 to 20 while worn on credited kills. Starts with +10 Parrying, +15% Defense Chance, +10% Hit Chance, +15 Hits, +10 Stamina, +3 Hit/Mana/Stamina Regen, +5% Lower Mana Cost and +10 all resists. Native caps apply.",
             "Robe: 100% Lower Reagent Cost, +10% Lower Mana Cost, +10% Spell Damage Increase and +3 Mana Regeneration. Native attribute limits still apply.",
             "Leather gloves: +5 Mining, +5 Lumberjacking and +100 Luck. Skill bonuses do not raise caps; companion mission tiers use trained base skill.",
             "Leather gorget: +5 Animal Taming, +5 Animal Lore, +5 Veterinary and +5 Intelligence. Skill bonuses do not raise skill caps."
@@ -52,7 +52,7 @@ namespace Server.HavenPrototype
                 weapon.WeaponAttributes.HitLeechMana=60;weapon.WeaponAttributes.HitLeechHits=30;
                 weapon.Attributes.WeaponDamage=30;weapon.Attributes.AttackChance=10;item=weapon;
             } else if(index==2) {
-                var shield=new MetalKiteShield();shield.Attributes.DefendChance=10;shield.Attributes.AttackChance=5;shield.SkillBonuses.SetValues(0,SkillName.Parry,5);item=shield;
+                var shield=new MetalKiteShield();HavenBoardingShieldUpgrade.Apply(shield);item=shield;
             } else if(index==3) {
                 var robe=new Robe();robe.Attributes.LowerRegCost=100;robe.Attributes.LowerManaCost=10;robe.Attributes.SpellDamage=10;robe.Attributes.RegenMana=3;item=robe;
             } else if(index==4) {
@@ -60,7 +60,7 @@ namespace Server.HavenPrototype
             } else if(index==5) {
                 var gorget=new LeatherGorget();gorget.SkillBonuses.SetValues(0,SkillName.AnimalTaming,5);gorget.SkillBonuses.SetValues(1,SkillName.AnimalLore,5);gorget.SkillBonuses.SetValues(2,SkillName.Veterinary,5);gorget.Attributes.BonusInt=5;item=gorget;
             } else return null;
-            item.Name=Names[index];item.Hue=0x489;return item;
+            item.Name=Names[index];item.Hue=0x489;if(index==2)HavenEquipmentEvolution.Attach(item,0).Apply();return item;
         }
         public static bool Spend(Mobile owner,int amount) {if(!CanUse(owner) || amount<=0 || Balance(owner)<amount)return false;((Account)owner.Account).SetTag(Key(owner),(Balance(owner)-amount).ToString());return true;}
         public static bool Buy(Mobile owner,int index,Item preview=null) {
