@@ -689,11 +689,12 @@ namespace Server.HavenPrototype
             Button(24, 110, 1, "Follow"); Button(250, 110, 2, "Guard");
             Button(24, 148, 3, "Stay"); Button(250, 148, 4, "Attack...");
             Button(24, 186, 5, "Heal me"); Button(250, 186, 6, "Open pack");
-            Button(24, 224, 7, "Recall"); Button(250, 224, 8, "Roles / missions");
-            AddLabel(24, 265, 0, "Last mission report");
+            Button(24, 224, 7, "Recall"); Button(250, 224, 8, "Missions");
+            Button(24,262,15,"Roles");
+            AddLabel(24,294,0,"Last mission report");
             Button(250, 262, 10, "Join my party");
             Button(250, 379, 13, "Stats / skills");
-            AddHtml(24, 291, 430, 76, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
+            AddHtml(24, 320, 430, 48, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
             AddLabel(24, 379, 0, "Pending gold: " + companion.PendingGold);
             Button(24, 417, 9, "Refresh / collect"); Button(220,417,14,"Pets"); Button(330, 417, 0, "Close");
             if(companion.OnMission) Button(330,72,11,"Minimize");
@@ -714,6 +715,7 @@ namespace Server.HavenPrototype
                 case 5: ok = _companion.HealOwner(from); break;
                 case 6: _companion.OpenPack(from); break;
                 case 7: ok = _companion.Recall(from); break;
+                case 15: from.SendGump(new HavenCompanionRolesGump(_companion)); return;
                 case 8: from.SendGump(new CompanionActivityGump(_companion)); return;
                 case 9: _companion.DeliverRewards(); break;
                 case 10: ok = _companion.JoinOwnerParty(from); break;

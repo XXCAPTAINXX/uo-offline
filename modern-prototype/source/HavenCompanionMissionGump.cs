@@ -25,7 +25,7 @@ namespace Server.HavenPrototype
             Text(24,52,664,25,companion.OnMission?"Away: "+MissionName(companion.MissionKind)+" | "+CompanionMissionTimerGump.Remaining(companion):"Ready | Combat role: "+companion.Role);
             Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
             Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
-            Button(475,87,12,_tab==2?"[Combat role]":"Combat role",185);
+
             AddBackground(14,122,282,348,3000);
             AddBackground(306,122,397,374,3000);
             Text(24,133,264,25,""+(_tab==2?"Choose a role":"1. Choose a mission")+"");

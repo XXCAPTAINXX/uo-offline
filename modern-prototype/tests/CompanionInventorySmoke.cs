@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.IO;
 using Server;
 using Server.Items;
@@ -24,6 +25,10 @@ var bag=new Bag();var gold=new Gold(200);bag.DropItem(gold);c.Backpack.DropItem(
  c.MoveToWorld(new Point3D(1500,1500,0),owner.Map);Check(c.Recall(owner)&&c.Location==owner.Location,"recall across the same facet");
  Check(c.StartMission(owner,30,CompanionMission.Mining),"mission dispatch");Check(bag.Parent==c.Backpack&&gold.Parent==bag,"nested items retained while away");Check(c.Recall(owner),"early recall");Check(bag.Parent==c.Backpack&&gold.Parent==bag&&gold.Amount==200,"same items return unchanged");
  var horse=new Horse();horse.MoveToWorld(owner.Location,owner.Map);horse.SetControlMaster(owner);Check(horse.AIObject.DoOrderRelease()&&!horse.Controlled,"ordinary pet release unchanged");horse.Delete();
+ var source=HavenMiniChamp.Find();Check(source!=null,"existing verified mini camp");var camp=new HavenMiniChamp();camp.MoveToWorld(source.Location,source.Map);owner.MoveToWorld(camp.Location,camp.Map);c.MoveToWorld(owner.Location,owner.Map);
+ Check(camp.Begin(owner,3),"start combined challenge");var foesField=typeof(HavenMiniChamp).GetField("_foes",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);var spawn=typeof(HavenMiniChamp).GetMethod("SpawnWave",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+ for(int stage=0;stage<4;stage++){var foes=(System.Collections.Generic.List<Mobile>)foesField.GetValue(camp);Check(foes.Count==(stage==3?3:15),"challenge population stage "+stage);Check(System.Linq.Enumerable.Distinct(System.Linq.Enumerable.Select(foes,x=>x.Name)).Count()==3,"all three variants present");camp.Credit((HavenMiniEnemy)foes[0],owner,1);foreach(var foe in foes.ToArray()){camp.Defeated((HavenMiniEnemy)foe);foe.Delete();}if(stage<3)spawn.Invoke(camp,null);}
+ Check(!camp.Active,"challenge completes only after all bosses");var pirate=new HavenMiniPrize(owner,1);Check(pirate.FindItemByType(typeof(Cannonball))!=null&&pirate.FindItemByType(typeof(PowderCharge))!=null&&pirate.FindItemByType(typeof(FuseCord))!=null,"native ship ammunition in corsair prize");pirate.Delete();camp.Delete();
  c.Criminal=true;owner.Criminal=false;owner.DoBeneficial(c);Check(!owner.Criminal,"owner care of criminal companion does not create a flag");
  owner.Criminal=true;var expiry=typeof(Mobile).GetField("m_ExpireCriminal",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);var timer=(Timer)expiry.GetValue(owner);var crimeCount=owner.Crimes;owner.DoBeneficial(c);Check(owner.Criminal&&owner.Crimes==crimeCount,"owner care preserves existing expiry");
  var stranger=new PlayerMobile{Player=true};stranger.Criminal=true;Check(owner.IsBeneficialCriminal(stranger),"unrelated criminal aid remains criminal");

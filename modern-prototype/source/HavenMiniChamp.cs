@@ -14,12 +14,13 @@ namespace Server.HavenPrototype
 {
     public class HavenMiniChamp : Item
     {
-        public static readonly string[] Themes={"Wildwood uprising","Corsair raiders","Restless dead"};
+        public static readonly string[] Themes={"Wildwood uprising","Corsair raiders","Restless dead","Challenge: all variants"};
         private readonly List<Mobile> _foes=new List<Mobile>();
         private readonly HashSet<Mobile> _participants=new HashSet<Mobile>();
         private int _stage=-1, _theme;
         private DateTime _deadline, _cooldown, _emptySince;
         private Timer _timer;
+        public bool Challenge { get { return _theme==3; } }
         public bool Active { get { return _stage>=0; } }
         public int Stage { get { return _stage; } }
         public int Remaining { get { return _foes.Count; } }
@@ -80,7 +81,7 @@ namespace Server.HavenPrototype
             if(!HavenPreview.Enabled || !HavenMarks.CanUse(from) || from.Map!=Map || !from.InRange(this,8) ||
                 Active || DateTime.UtcNow<_cooldown || theme<0 || theme>=Themes.Length || !HavenPreview.CanTravel(from))return false;
             if(!SafeClearing(Map,Location)){from.SendMessage("This camp needs relocating to a clear outdoor area. Please reopen the menu after relocation.");Ensure();return false;}
-            _theme=theme;_stage=0;_deadline=DateTime.UtcNow.AddMinutes(20);_emptySince=DateTime.MinValue;_participants.Clear();
+            _theme=theme;_stage=0;_deadline=DateTime.UtcNow.AddMinutes(theme==3?30:20);_emptySince=DateTime.MinValue;_participants.Clear();
             SpawnWave();return Active;
         }
         private bool SpawnPoint(out Point3D p) {
@@ -93,9 +94,9 @@ namespace Server.HavenPrototype
         }
         private void SpawnWave() {
             if(!Active)return;
-            for(int i=0;i<(_stage==3?1:5);i++) {
+            for(int i=0;i<(_stage==3?(Challenge?3:1):(Challenge?15:5));i++) {
                 Point3D p;if(!SpawnPoint(out p)){Abort();return;}
-                var enemy=new HavenMiniEnemy(this,_theme,_stage);_foes.Add(enemy);enemy.MoveToWorld(p,Map);
+                var enemy=new HavenMiniEnemy(this,Challenge?i%3:_theme,_stage);_foes.Add(enemy);enemy.MoveToWorld(p,Map);
             }
             foreach(var player in _participants)if(player!=null && !player.Deleted)player.SendMessage(_stage==3?"The expedition boss has arrived!":"Expedition wave "+(_stage+1)+" has begun.");
         }
@@ -116,10 +117,9 @@ namespace Server.HavenPrototype
             _stage=-1;_cooldown=DateTime.UtcNow.AddMinutes(2);
             foreach(var player in _participants.ToArray()) {
                 if(player==null || player.Deleted || !(player.Account is Account))continue;
-                var prize=new HavenMiniPrize(player,_theme);
-                HavenMarks.Award(player,20);Increment(player,"Wins");
-                player.SendMessage("Expedition won: 20 Marks, 10,000 gold and 250 themed resources. Use [minichamp if your rewards need collecting.");
-                prize.Deliver(player);
+                for(int theme=Challenge?0:_theme;theme<=(Challenge?2:_theme);theme++)new HavenMiniPrize(player,theme).Deliver(player);
+                HavenMarks.Award(player,Challenge?60:20);Increment(player,"Wins");
+                player.SendMessage(Challenge?"Challenge won: all three reward sets, 60 Marks and ship supplies. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Corsair raiders also award ship supplies. Full-pack rewards remain pending.");
             }
             _participants.Clear();
         }
@@ -171,7 +171,7 @@ namespace Server.HavenPrototype
     public class HavenMiniPrize : Container
     {
         private Mobile _owner;
-        public HavenMiniPrize(Mobile owner,int theme):base(0xE76){_owner=owner;Movable=false;Visible=false;DropItem(new BankCheck(10000));DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
+        public HavenMiniPrize(Mobile owner,int theme):base(0xE76){_owner=owner;Movable=false;Visible=false;DropItem(new BankCheck(10000));if(theme==1){DropItem(new Cannonball(25));DropItem(new PowderCharge(25));DropItem(new FuseCord(25));}DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
         public HavenMiniPrize(Serial serial):base(serial){}
         public bool Deliver(Mobile from){if(Deleted || from!=_owner || !HavenMarks.CanUse(from) || from.Backpack==null)return false;int count=0,weight=0;foreach(var item in Items){if(!from.Backpack.CheckHold(from,item,false,true,count,weight))return false;count+=1+item.TotalItems;weight+=item.PileWeight+item.TotalWeight;}foreach(var item in Items.ToArray())from.Backpack.DropItem(item);Delete();return true;}
         public static void Collect(Mobile p){foreach(var parcel in World.Items.Values.OfType<HavenMiniPrize>().Where(x=>x._owner==p).ToArray())parcel.Deliver(p);}
@@ -183,16 +183,17 @@ namespace Server.HavenPrototype
     {
         private readonly HavenMiniChamp _camp;
         public HavenMiniChampGump(HavenMiniChamp camp,Mobile p):base(45,45){
-            _camp=camp;AddBackground(0,0,570,380,0x13BE);AddLabel(20,16,1152,"Corsair expeditions - mini champion");
+            _camp=camp;AddBackground(0,0,570,455,0x13BE);AddLabel(20,16,1152,"Corsair expeditions - mini champion");
             AddHtml(20,50,530,70,"<BASEFONT COLOR=#FFFFFF>Three waves of five enemies, then a boss. Everyone who damages an enemy earns the completion reward; companion and pet damage counts for their owner. Run away to abandon the fight.</BASEFONT>",false,false);
             AddLabel(20,127,1152,camp.Active?"Active: wave "+(camp.Stage+1)+" / 4, "+camp.Remaining+" enemies":"Ready in "+Math.Max(0,Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds))+" seconds");
-            for(int i=0;i<3;i++){AddButton(20,160+i*30,0xFA5,0xFA7,10+i,GumpButtonType.Reply,0);AddLabel(54,160+i*30,1152,"Start "+HavenMiniChamp.Themes[i]);}
+            for(int i=0;i<4;i++){AddButton(20,160+i*30,0xFA5,0xFA7,10+i,GumpButtonType.Reply,0);AddLabel(54,160+i*30,1152,"Start "+HavenMiniChamp.Themes[i]);}
             AddHtml(300,160,250,105,"<BASEFONT COLOR=#FFFFFF>Each participant: 10,000 gold, 20 Marks, 250 themed resources as a deed. Five 105/110 Power Scrolls, Alacrity and Transcendence. Full packs keep rewards pending.</BASEFONT>",false,false);
-            AddLabel(20,266,1152,"Wins: "+HavenMiniChamp.Wins(p)+" | Pending rewards: "+HavenMiniPrize.Pending(p));
-            Button(20,306,1,"Travel to camp");Button(300,306,2,"Collect pending rewards");Button(20,344,3,"Refresh");Button(450,344,0,"Close");
+            AddHtml(20,290,530,52,"<BASEFONT COLOR=#3B2A1A>Challenge: three waves of 15 mixed enemies, then all three bosses together. Three reward sets / 60 Marks. Corsair loot includes 25 cannonballs, powder charges and fuse cords.</BASEFONT>",false,false);
+            AddLabel(20,347,1152,"Wins: "+HavenMiniChamp.Wins(p)+" | Pending rewards: "+HavenMiniPrize.Pending(p));
+            Button(20,385,1,"Travel to camp");Button(300,385,2,"Collect pending rewards");Button(20,423,3,"Refresh");Button(450,423,0,"Close");
         }
         private void Button(int x,int y,int id,string text){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,1152,text);}
-        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and clear criminal status before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=12 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
+        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and clear criminal status before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
     }
 }
 
