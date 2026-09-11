@@ -79,3 +79,8 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - No production change or preview restart needed for these test additions. Preview2699 and original2593 remain running. No actual fishing/naval combat/client dungeon completion claimed.
 - Publish tests/results/docs and source backup. Next final readiness pass by02:52UTC: confirm listeners and instructions, summarize migration gaps; no need to rerun passing suites without new changes.
 
+## 02:37 UTC readiness pass
+- Both listeners2593/2699 healthy; latest preview stderr logs empty. All installed prototype source hashes match published source, and reverse-check confirms installed native Shadowguard patch. Verified all77 private predeployment backup file checksums.
+- Verified client shortcut target and working directory; leave client closed as authorized. Added a short first-session route and five-minute mining/ledger-transfer check with expected100ingots/500gold to TONIGHT.md.
+- Current source/test milestone a043aa4 already published and source-backed-up at E:/Backups/Haven/Prototypes/servuo-doom-naval-20260911-a043aa4. No new runtime changes in this readiness pass.
+

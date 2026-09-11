@@ -14,6 +14,12 @@ Use `Stop-Preview.ps1` to save and close this server. Do not copy the original M
 
 ## Short test list
 
+Start in New Haven with the test gear equipped. The kit has already been claimed on Haven Explorer, so check his backpack before trying to claim it again. Spend your first few minutes testing follow/stay, opening Alden's pack and changing roles outside combat. Then try an ordinary hostile before attempting a dungeon boss.
+
+For a quick resource check, send Alden on a **five-minute Mining** mission. After it finishes, use Recall and open his Resource ledger while nearby. Expect **100 ingots** of the tier selected from his Mining skill when dispatched, plus **500 gold**. Transfer the ledger balance into your own ledger, withdraw a chosen amount, and absorb it again. Report any missing resources, duplicate rewards or failed transfer. The full-pack cases are covered by automated checks, but the menu flow needs player feedback.
+
+For any problem, note which server you were using, your location, the command/button and what happened. A screenshot is helpful. Keep original-world problems separate from preview problems: they run different code and saves.
+
 - Open `[preview` and `[c`; check readability and button placement.
 - Have Alden follow, guard and obey `all stay`. Try `all kill` on a hostile. Check that wild tameables are left alone while guarding.
 - Change roles outside combat. Check sword attacks, Magery casting and bow attacks. Tell a casting companion to stay and check that he stops.
