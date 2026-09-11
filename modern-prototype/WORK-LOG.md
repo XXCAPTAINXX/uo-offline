@@ -66,3 +66,10 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - Real user is connected to2699 (ServUO PID2208), character Haven Explorer. Leave client controls/session alone while user tests. Original2593 unaffected. Private source/Config/Saves backup: E:/Backups/Haven/Prototypes/servuo-client-login-20260910-c152590, save hashes unchanged during copy.
 - Next: stage native Shadowguard patch for planned restart, further native dungeon/naval verification, finish play instructions and deadline deployment. Core test servers all stopped.
 
+## 02:10 UTC deployed Shadowguard milestone
+- User authorized closing the preview client; it is closed. User requests updates every15minutes through02:52UTC; heartbeat updated accordingly. Independent critic explicitly authorized for future island decoration, iterate to at least8/10; no delegation authorized for server work.
+- Cleanly saved/stopped preview2699, backed up private Saves/Config to E:/Backups/Haven/Prototypes/servuo-before-shadowguard-deploy-20260911 with SHA256 manifest. Initial manifest enumerated its own open output; corrected by hashing only Saves/Config before writing CSV.
+- Deployed all current prototype source and native Shadowguard patch23e79f4 to interactive preview. Release build zero warnings/errors. Existing populated world loaded successfully; prepared-account login/server-list/relay probe passed.
+- Exercised a second clean save/stop/start cycle with the updated build; preview listener returned and account probe passed again. Original2593 remained running throughout. Client stays closed; preview server stays running.
+- Next: meaningful native Doom progression/naval validation in disposable test world, then final readiness documentation. No new dungeon or boat gameplay test is claimed in this deployment milestone. Deadline02:52UTC still applies.
+
