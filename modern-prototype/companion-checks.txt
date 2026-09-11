@@ -64,8 +64,8 @@ PASS remote pack access and stale command denied
 PASS companion joins owner party idempotently
 PASS all kill shares native target with ordinary pet
 PASS guard chooses hostile and excludes wild tameable
-PASS follow order starts native movement
-PASS native follow closes distance
+PASS guard restores cleared follow target and pursues owner beyond command range
+PASS guard closes distance while retaining guard order
 PASS native greater heal starts
 PASS native spell heals owner and spends mana
 PASS direct attack starts native combat

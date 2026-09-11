@@ -148,16 +148,21 @@ public static class CompanionSmoke
             Require(_companion.Combatant == _enemy && _companion.ControlOrder == OrderType.Guard, "Guard attack failed");
             tameable.Delete(); _enemy.Delete(); ClearCombat();
         });
-        Check("follow order starts native movement", () => {
+        Check("guard restores cleared follow target and pursues owner beyond command range", () => {
             _companion.MoveToWorld(new Point3D(_owner.X + 5, _owner.Y, _owner.Z), _owner.Map);
-            _companion.SetOrder(_owner, OrderType.Follow); _distanceBefore = _companion.GetDistanceToSqrt(_owner);
-            _companion.AIObject.DoOrderFollow();
+            Require(_companion.SetOrder(_owner, OrderType.Guard), "Guard refused");
+            _companion.ControlTarget=null;
+            _owner.MoveToWorld(new Point3D(_owner.X-12,_owner.Y,_owner.Z),_owner.Map);
+            _distanceBefore = _companion.GetDistanceToSqrt(_owner);
+            _companion.AIObject.DoOrderGuard();
+            Require(_companion.ControlTarget==_owner && _companion.ControlOrder==OrderType.Guard,"Guard lost follow target/order");
         });
         Timer.DelayCall(TimeSpan.FromSeconds(3), AfterFollow);
     }
     private static void AfterFollow()
     {
-        Check("native follow closes distance", () => Require(_companion.GetDistanceToSqrt(_owner) < _distanceBefore, "No movement"));
+        Check("guard closes distance while retaining guard order", () => Require(_companion.GetDistanceToSqrt(_owner) < _distanceBefore && _companion.ControlOrder==OrderType.Guard, "No guard movement"));
+        _companion.MoveToWorld(new Point3D(_owner.X+1,_owner.Y,_owner.Z),_owner.Map);
         ClearCombat();
         Check("native greater heal starts", () => { _owner.Hits = 30; _healBefore = _owner.Hits; Require(_companion.HealOwner(_owner), "Heal not cast"); });
         Timer.DelayCall(TimeSpan.FromSeconds(4), AfterHeal);

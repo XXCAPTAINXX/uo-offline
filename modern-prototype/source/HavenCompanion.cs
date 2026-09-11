@@ -443,9 +443,16 @@ namespace Server.HavenPrototype
     {
         public static bool Run(BaseAI ai, HavenCompanion companion)
         {
-            if (!companion.CanCommand(companion.BoundOwner)) return true;
+            var owner = companion.BoundOwner;
+            // Continuing an existing order must not require the owner to remain in command range/LOS.
+            if (!companion.IsOwner(owner) || !companion.Controlled || companion.ControlMaster != owner ||
+                !owner.Alive || !companion.Alive || companion.IsDeadPet || companion.OnMission ||
+                owner.Map != companion.Map || companion.Map == Map.Internal) return true;
             var target = companion.ClosestHostile(); companion.Combatant = target; companion.FocusMob = target;
             if (target != null) { ai.Action = ActionType.Combat; return ai.Think(); }
+            // Native OnCurrentOrderChanged clears ControlTarget when Guard is selected.
+            // Restore it before native following, otherwise Follow changes the order to None.
+            companion.ControlTarget = owner;
             companion.Warmode = false; return ai.DoOrderFollow();
         }
     }

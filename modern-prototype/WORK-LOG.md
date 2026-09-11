@@ -129,3 +129,9 @@ Full old-character/island migration is not a prerequisite for tonight's separate
 - New lodge doors now use native house access with SecureLevel.Owner. Startup repair replaces only old ordinary DarkWoodDoor entries in HavenPirateLodge.Doors, preserving closed coordinates/hue and removing old door; house, design and storage untouched. Idempotent migration.
 - Added explicit legacy-repair, owner opening, stranger rejection and reload permission checks. Verification/HavenServUODoorFix.
 - Final suite111PASS fresh/reload, zero build warnings/errors. Saved/backed up preview to E:/Backups/Haven/Prototypes/servuo-before-door-fix-20260911. Deploy includes previously staged companion names.
+
+## Guard follow repair
+- Native BaseAI.OnCurrentOrderChanged clears ControlTarget for Guard. Custom guard called DoOrderFollow with null target, which changed the order to None. Restore BoundOwner as ControlTarget before native following.
+- Ongoing guard no longer uses new-command range/LOS checks, allowing native pathfinding to catch up when owner is more than14tiles away or behind an obstacle. Ownership, controlled state, alive, same map and mission restrictions remain. Shared guard logic covers Warrior/Caster/Archer.
+- Regression exercises cleared target, owner moving beyond command range and actual movement while retaining Guard; existing hostile/tameable checks retained. Isolated HavenServUOGuardFollow.
+- Guard follow suite111PASS fresh/reload; live backup at E:/Backups/Haven/Prototypes/servuo-before-guard-follow-20260911. Deployment uses tested HavenCompanion.cs; ask player to reissue all guard me after reconnect.
