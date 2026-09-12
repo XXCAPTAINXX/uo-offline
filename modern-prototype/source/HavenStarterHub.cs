@@ -12,7 +12,7 @@ namespace Server.HavenPrototype
 {
     public static class HavenStarterHub
     {
-        public static readonly string[] Names = { "Starter supplies", "Arcane supplies", "Companion recruitment", "Dungeon travel", "Repair service", "Optional test training", "Haven services guide" };
+        public static readonly string[] Names = { "Starter supplies", "Arcane supplies", "Companion recruitment", "Travel stone", "Repair service", "Optional test training", "Haven services guide" };
         private static readonly Point2D[] Sites = { new Point2D(3501,2574),new Point2D(3504,2583),new Point2D(3508,2571),new Point2D(3499,2579),new Point2D(3502,2581),new Point2D(3508,2583),new Point2D(3504,2571) };
         public static void Initialize()
         {
@@ -88,9 +88,9 @@ namespace Server.HavenPrototype
         public int Service { get; private set; }
         public HavenServiceStone(int service):base(0xED4) { Service=service; Name=service==9?"Training supplies":service==10?"Special rewards":HavenStarterHub.Names[service]; Movable=false; Hue=service==5?0x489:0x47E; }
         public HavenServiceStone(Serial serial):base(serial) {}
-        public override void OnDoubleClick(Mobile from) { if(HavenStarterHub.CanUse(from,this)){if(Service==1||Service==9||Service==10)HavenSupplyShops.Show(from,Service==1?0:Service==9?1:2);else from.SendGump(new HavenServiceMenu(this));} else from.SendMessage("Stand within three tiles of the service stone."); }
+        public override void OnDoubleClick(Mobile from) { if(HavenStarterHub.CanUse(from,this)){if(Service==1||Service==9||Service==10)HavenSupplyShops.Show(from,Service==1?0:Service==9?1:2);else if(Service==3)from.SendGump(new PreviewGump());else from.SendGump(new HavenServiceMenu(this));} else from.SendMessage("Stand within three tiles of the service stone."); }
         public override void Serialize(GenericWriter writer) { base.Serialize(writer); writer.Write(0); writer.Write(Service); }
-        public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); Service=reader.ReadInt(); }
+        public override void Deserialize(GenericReader reader) { base.Deserialize(reader); reader.ReadInt(); Service=reader.ReadInt(); if(Service==3)Name="Travel stone"; }
     }
     public class HavenPlazaPlanter:Item {
         public Item Stone{get;private set;}
@@ -105,7 +105,7 @@ namespace Server.HavenPrototype
         public HavenServicePost(Serial serial):base(serial){}
         public override void OnDoubleClick(Mobile p){if(Board!=null&&!Board.Deleted)Board.OnDoubleClick(p);}
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Board);}
-        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Board=r.ReadItem() as HavenServiceStone;}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Board=r.ReadItem() as HavenServiceStone;if(Board!=null&&Board.Service==3)Name="Travel stone";}
     }
     public class HavenServiceMenu : HavenStoneGump {
         private readonly HavenServiceStone _board;
@@ -118,7 +118,7 @@ namespace Server.HavenPrototype
             }
             FlatButton(256,310,100,0,"Close");
         }
-        public static int[] Services(int group){return group==0?new[]{0,1,8,9,10,4}:group==3?new[]{3,5}:new[]{2,6,7};}
+        public static int[] Services(int group){return group==0?new[]{0,1,8,9,10,4}:group==3?new[]{3}:new[]{2,6,7};}
         public override void OnResponse(NetState sender,RelayInfo info){int service=info.ButtonID-1;if(!HavenStarterHub.CanUse(sender.Mobile,_board)||!Services(_board.Service).Contains(service))return;if(service==1||service==9||service==10){HavenSupplyShops.Show(sender.Mobile,service==1?0:service==9?1:2);return;}if(service==7)sender.Mobile.SendGump(new HavenRecoveryGump());else if(service==8)sender.Mobile.SendGump(new HavenStarterGearGump(sender.Mobile));else sender.Mobile.SendGump(new HavenHubGump(_board,service));}
     }
     public class HavenHubGump : HavenStoneGump

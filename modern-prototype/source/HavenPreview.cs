@@ -59,7 +59,7 @@ namespace Server.HavenPrototype
         public static void Initialize()
         {
             CommandSystem.Register("preview", AccessLevel.Player, e => { if (Enabled) e.Mobile.SendGump(new PreviewGump()); });
-            EventSink.Login += e => { if (Enabled) e.Mobile.SendMessage("Haven modern preview: use [preview for test preparation and travel; [c for your companion."); };
+            EventSink.Login += e => { if (Enabled) e.Mobile.SendMessage("Welcome to Haven: use [preview for travel; [c for your companion."); };
             EventSink.ServerStarted += () => {
                 if (Enabled) Timer.DelayCall(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5), CheckLocalSaveRequest);
             };
@@ -156,13 +156,11 @@ namespace Server.HavenPrototype
         {
             _page=Math.Max(0,Math.Min((HavenPreview.Destinations.Length-1)/10,page));
             AddBackground(0,0,590,570,0xA28);
-            AddLabel(24,20,0,"Haven travel and test tools");
+            AddLabel(24,20,0,"Travel stone");
             AddHtml(24,50,540,64,"<BASEFONT COLOR=#202020>Travel with nearby followers. Town stops use public moongates; dungeon stops use entrances. Hostile creatures may be nearby.</BASEFONT>",false,false);
-            Button(24,122,1,"Prepare test character (once)");
-            Button(320,122,2,"Open companion");
-            AddLabel(24,165,0,"Test travel - leave combat first; Felucca has PvP rules");
+            AddLabel(24,122,0,"Leave combat before traveling. Felucca has PvP rules.");
             for (int row = 0; row < 10; ++row) {int i=_page*10+row;if(i>=HavenPreview.Destinations.Length)break;
-                Button(24 + (row % 2) * 280,205 + (row / 2) * 43,100 + i,HavenPreview.Destinations[i].Name); }
+                Button(24 + (row % 2) * 280,165 + (row / 2) * 43,100 + i,HavenPreview.Destinations[i].Name); }
             AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Pages: 1 - modern adventures; 2 - towns and gateways; 3 - dungeons and hunting; 4 - Warden. Trammel dungeon entrances use non-PvP rules.</BASEFONT>",false,false);
             if(_page>0)Button(24,526,3,"Previous");AddLabel(165,526,0,"Page "+(_page+1)+" / "+((HavenPreview.Destinations.Length+9)/10));if((_page+1)*10<HavenPreview.Destinations.Length)Button(280,526,4,"Next");Button(430,526,0,"Close");
         }
@@ -172,9 +170,8 @@ namespace Server.HavenPrototype
             if (!HavenPreview.Enabled || sender.Mobile == null || info.ButtonID == 0) return;
             var from = sender.Mobile;
             if(info.ButtonID==3||info.ButtonID==4){from.SendGump(new PreviewGump(_page+(info.ButtonID==3?-1:1)));return;}
-            if (info.ButtonID == 1) HavenPreview.Prepare(from);
-            else if (info.ButtonID == 2) { var companion = HavenCompanion.Claim(from); if (companion != null) companion.Show(from); return; }
-            else if (!HavenPreview.Travel(from, info.ButtonID - 100)) from.SendMessage("Travel unavailable: leave combat and wait for recent combat to expire, then try again.");
+            if (info.ButtonID < 100 || info.ButtonID >= 100 + HavenPreview.Destinations.Length) return;
+            if (!HavenPreview.Travel(from, info.ButtonID - 100)) from.SendMessage("Travel unavailable: leave combat and wait for recent combat to expire, then try again.");
             from.SendGump(new PreviewGump(_page));
         }
     }
