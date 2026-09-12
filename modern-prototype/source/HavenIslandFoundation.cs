@@ -29,7 +29,7 @@ namespace Server.HavenPrototype
         public HavenIslandFoundation(Serial serial):base(serial){}
         public static HavenIslandFoundation BuildTest()
         {
-            if(!File.Exists("ISLAND-TEST-ONLY"))throw new InvalidOperationException("Island foundation requires an isolated test world.");
+            if(!HavenIslandInstall.CanBuild)throw new InvalidOperationException("Island foundation requires an isolated test world.");
             if(World.Items.Values.OfType<HavenIslandFoundation>().Any(i=>!i.Deleted))throw new InvalidOperationException("Foundation already exists.");
             var map=Map.Trammel;
             if(!map.CanFit(4196,2868,0,16,false,true))throw new InvalidOperationException("Staged island terrain is not loaded.");

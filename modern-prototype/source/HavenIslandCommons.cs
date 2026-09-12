@@ -18,7 +18,7 @@ namespace Server.HavenPrototype
         public HavenIslandCommons(Serial serial):base(serial){}
         public static HavenIslandCommons BuildTest()
         {
-            if(!File.Exists("ISLAND-TEST-ONLY"))throw new InvalidOperationException("Community-center prototype requires an isolated test world.");
+            if(!HavenIslandInstall.CanBuild)throw new InvalidOperationException("Community-center prototype requires an isolated test world.");
             var map=Map.Trammel;
             for(int x=0;x<33;x++)for(int y=0;y<41;y++)
             {

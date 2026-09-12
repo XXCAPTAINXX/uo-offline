@@ -54,6 +54,8 @@ namespace Server.HavenPrototype
             new Destination("Frostbound bear den",Map.Tokuno,942,116,Map.Tokuno.GetAverageZ(942,116)),
             new Destination("Ancient Hunt",Map.TerMur,527,758,-92),
             new Destination("Chelonia sanctuary",Map.Trammel,4094,3475,0),
+            new Destination("Corsair island estate",Map.Trammel,4196,2886,0),
+            new Destination("Island community center",Map.Trammel,3984,2897,0),
             HavenWardenPost.Arrival
         };
         public static void Initialize()
@@ -103,6 +105,7 @@ namespace Server.HavenPrototype
         public static bool Travel(Mobile from, int index)
         {
             Point3D landing;
+            if (index >= 0 && index < Destinations.Length && (Destinations[index].Name == "Corsair island estate" || Destinations[index].Name == "Island community center") && !HavenIslandInstall.Installed) return false;
             if (!CanTravel(from) || index < 0 || index >= Destinations.Length || !FindLanding(Destinations[index], out landing)) return false;
             var destination = Destinations[index];
             BaseCreature.TeleportPets(from, landing, destination.Map);

@@ -13,7 +13,7 @@ namespace Server.HavenPrototype {
   public HavenIslandEncounters(int theme):base(1){Theme=theme;Visible=false;Movable=false;Name="Island encounter habitat";}
   public HavenIslandEncounters(Serial serial):base(serial){}
   public static HavenIslandEncounters[] BuildTest(){
-   if(!File.Exists("ISLAND-TEST-ONLY"))throw new InvalidOperationException("Island encounters require isolated testing.");
+   if(!HavenIslandInstall.CanBuild)throw new InvalidOperationException("Island encounters require isolated testing.");
    if(World.Items.Values.OfType<HavenIslandEncounters>().Any(x=>!x.Deleted))throw new InvalidOperationException("Island encounters already installed.");
    var sites=new[]{new Point3D(4172,2910,0),new Point3D(4240,2845,0),new Point3D(4220,2930,0)};var result=new List<HavenIslandEncounters>();
    try{for(int i=0;i<sites.Length;i++){var site=new HavenIslandEncounters(i);result.Add(site);site.MoveToWorld(sites[i],Map.Trammel);site.Tick();if(site.Raiders.Count!=3)throw new InvalidOperationException("Encounter site lacks safe ground: "+sites[i]);site.Start();}return result.ToArray();}
