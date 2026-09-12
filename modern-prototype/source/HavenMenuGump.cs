@@ -8,11 +8,11 @@ namespace Server.HavenPrototype {
 
  public class HavenMenuGump:Gump {
   public HavenMenuGump(int x,int y):base(x,y){}
-  public void FlatButton(int x,int y,int width,int id,string text){
+  public void FlatButton(int x,int y,int width,int id,string text,int tooltip=0){
    width=System.Math.Max(38,width);
-   for(int offset=0;offset<width;offset+=19)base.AddButton(x+System.Math.Min(offset,width-19),y,210,210,id,GumpButtonType.Reply,0);
-   base.AddImageTiled(x,y,width,19,5058);
-   base.AddHtml(x,y+1,width,18,"<CENTER><BASEFONT COLOR=#FFFFFF>"+HavenMenuText.Encode(text)+"</BASEFONT></CENTER>",false,false);
+   for(int offset=0;offset<width;offset+=19){base.AddButton(x+System.Math.Min(offset,width-19),y,210,210,id,GumpButtonType.Reply,0);if(tooltip>0)AddTooltip(tooltip);}
+   base.AddImageTiled(x,y,width,19,5058);if(tooltip>0)AddTooltip(tooltip);
+   base.AddHtml(x,y+1,width,18,"<CENTER><BASEFONT COLOR=#FFFFFF>"+HavenMenuText.Encode(text)+"</BASEFONT></CENTER>",false,false);if(tooltip>0)AddTooltip(tooltip);
   }
   protected virtual bool CompactButtons => false;
   public new void AddButton(int x,int y,int normal,int pressed,int id,GumpButtonType type,int page){base.AddButton(x,y,!CompactButtons&&normal==0xFA5?2151:normal,!CompactButtons&&pressed==0xFA7?2152:pressed,id,type,page);}

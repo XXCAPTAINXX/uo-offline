@@ -112,7 +112,8 @@ namespace Server.HavenPrototype
             if(_options.Count==0)AddLabel(230,164,0,"No eligible options for this pet in this category.");
             for(int row=0;row<Rows;row++) { int index=_page*Rows+row;if(index>=_options.Count)break;var tp=_options[index];int y=164+row*25;
                 if(tp.Name.Number>0)AddHtmlLocalized(230,y,240,24,tp.Name.Number,false,false);else AddLabel(230,y,0,tp.Name.String??tp.TrainPoint.ToString());
-                AddLabel(480,y,0,HavenPetTrainingMenu.ValueText(pet,tp));FlatButton(590,y,120,100+index,"Choose upgrade");
+                if(tp.Description.Number>0)AddTooltip(tp.Description.Number);
+                AddLabel(480,y,0,HavenPetTrainingMenu.ValueText(pet,tp));FlatButton(590,y,120,100+index,"Choose upgrade",tp.Description.Number);
             }
             if(_page>0)FlatButton(230,426,100,2,"Previous");AddLabel(359,426,0,"Page "+(_page+1)+" / "+Math.Max(1,(_options.Count+Rows-1)/Rows));if((_page+1)*Rows<_options.Count)FlatButton(590,426,120,3,"Next");
             AddHtml(24,464,686,42,"Train through combat to 100%, then spend points. The first purchase adds a follower slot. Skill caps require matching power scrolls.",false,false);
