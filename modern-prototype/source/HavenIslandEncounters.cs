@@ -7,7 +7,7 @@ using Server.Mobiles;
 using Server.Multis;
 namespace Server.HavenPrototype {
  // World encounter prototype; installation is deliberately isolated until island release.
- public class HavenIslandEncounters:Item {
+ public partial class HavenIslandEncounters:Item {
   public readonly List<HavenIslandRaider> Raiders=new List<HavenIslandRaider>();
   public int Theme;public DateTime NextWave;private Timer _timer;
   public HavenIslandEncounters(int theme):base(1){Theme=theme;Visible=false;Movable=false;Name="Island encounter habitat";}
@@ -22,17 +22,17 @@ namespace Server.HavenPrototype {
   void Start(){_timer?.Stop();_timer=Timer.DelayCall(TimeSpan.FromSeconds(2),TimeSpan.FromSeconds(2),Tick);}
   public bool Safe(Point3D p){return Map!=null&&Map!=Map.Internal&&Math.Abs(p.X-X)<=8&&Math.Abs(p.Y-Y)<=8&&Map.CanSpawnMobile(p)&&BaseHouse.FindHouseAt(p,Map,20)==null;}
   internal void Tick(){
-   if(Deleted)return;
+   if(Deleted)return;if(!PreparePatrol())return;
    foreach(var pet in Raiders.ToArray())if(pet.Deleted||pet.Controlled||pet.Owners.Count>0)Raiders.Remove(pet);
    if(Raiders.Count>0||DateTime.UtcNow<NextWave)return;
    var floor=new List<Point3D>();for(int x=X-6;x<=X+6;x++)for(int y=Y-6;y<=Y+6;y++){var p=new Point3D(x,y,Map.GetAverageZ(x,y));if(Safe(p))floor.Add(p);}
    if(floor.Count<3)return;
-   for(int i=0;i<3;i++){int pick=Utility.Random(floor.Count);var point=floor[pick];floor.RemoveAt(pick);var mob=new HavenIslandRaider(this,i==0&&Utility.RandomDouble()<0.15);Raiders.Add(mob);mob.MoveToWorld(point,Map);mob.Home=point;mob.RangeHome=3;}
+   for(int i=0;i<3;i++){int pick=Utility.Random(floor.Count);var point=floor[pick];floor.RemoveAt(pick);var mob=new HavenIslandRaider(this,i==0&&Utility.RandomDouble()<0.15);Raiders.Add(mob);mob.MoveToWorld(point,Map);mob.Home=point;mob.RangeHome=3;mob.CurrentWayPoint=Patrol[(i*Patrol.Count)/3];}
   }
   internal void Defeated(HavenIslandRaider mob){Raiders.Remove(mob);if(Raiders.Count==0)NextWave=DateTime.UtcNow.AddMinutes(2);}
-  public override void OnDelete(){_timer?.Stop();foreach(var mob in Raiders.ToArray())if(!mob.Deleted&&!mob.Controlled&&mob.Owners.Count==0)mob.Delete();Raiders.Clear();base.OnDelete();}
-  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Theme);w.Write(NextWave);w.Write(Raiders.Count);foreach(var mob in Raiders)w.Write(mob);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Theme=r.ReadInt();NextWave=r.ReadDateTime();int count=r.ReadInt();if(count<0||count>3)throw new InvalidOperationException("Invalid island patrol size");for(int i=0;i<count;i++){var mob=r.ReadMobile() as HavenIslandRaider;if(mob!=null)Raiders.Add(mob);}Timer.DelayCall(TimeSpan.Zero,Start);}
+  public override void OnDelete(){_timer?.Stop();foreach(var node in Patrol)if(!node.Deleted)node.Delete();Patrol.Clear();foreach(var mob in Raiders.ToArray())if(!mob.Deleted&&!mob.Controlled&&mob.Owners.Count==0)mob.Delete();Raiders.Clear();base.OnDelete();}
+  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(Theme);w.Write(NextWave);w.Write(Raiders.Count);foreach(var mob in Raiders)w.Write(mob);w.Write(Patrol.Count);foreach(var node in Patrol)w.Write(node);}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Theme=r.ReadInt();NextWave=r.ReadDateTime();int count=r.ReadInt();if(count<0||count>3)throw new InvalidOperationException("Invalid island patrol size");for(int i=0;i<count;i++){var mob=r.ReadMobile() as HavenIslandRaider;if(mob!=null)Raiders.Add(mob);}if(version>=1){int nodes=r.ReadInt();if(nodes<0||nodes>128)throw new InvalidOperationException("Invalid patrol node count");for(int i=0;i<nodes;i++){var node=r.ReadItem() as WayPoint;if(node!=null)Patrol.Add(node);}}Timer.DelayCall(TimeSpan.Zero,Start);}
  }
  public class HavenIslandRaider:Brigand {
   public HavenIslandEncounters Encounter;public bool Captain;
@@ -40,7 +40,7 @@ namespace Server.HavenPrototype {
   public HavenIslandRaider(Serial serial):base(serial){}
   public override int Damage(int amount,Mobile from,bool informMount,bool checkDisrupt){if(from!=null&&(Encounter==null||Encounter.Deleted||from.Map!=Encounter.Map||!from.InRange(Encounter,8)||BaseHouse.FindHouseAt(from.Location,from.Map,20)!=null))return 0;return base.Damage(amount,from,informMount,checkDisrupt);}
   public override bool CanBeHarmful(IDamageable target,bool message,bool ignoreOurBlessedness){var mob=target as Mobile;if(Encounter==null||Encounter.Deleted||mob==null||mob.Map!=Encounter.Map||!mob.InRange(Encounter,8)||BaseHouse.FindHouseAt(mob.Location,mob.Map,20)!=null)return false;return base.CanBeHarmful(target,message,ignoreOurBlessedness);}
-  public override void OnThink(){base.OnThink();if(Encounter==null||Encounter.Deleted||Controlled)return;if(Map!=Encounter.Map||!InRange(Encounter,8)||BaseHouse.FindHouseAt(Location,Map,20)!=null){Combatant=null;if(Encounter.Safe(Home))MoveToWorld(Home,Encounter.Map);}}
+  public override void OnThink(){base.OnThink();if(Encounter==null||Encounter.Deleted||Controlled)return;if(Map!=Encounter.Map||!InRange(Encounter,8)||BaseHouse.FindHouseAt(Location,Map,20)!=null){Combatant=null;if(Encounter.Patrol.Count>0)CurrentWayPoint=Encounter.Patrol.OrderBy(p=>GetDistanceToSqrt(p)).First();}}
   public override void OnDeath(Container corpse){base.OnDeath(corpse);if(corpse!=null){corpse.DropItem(new Gold(Captain?Utility.RandomMinMax(1500,2500):Utility.RandomMinMax(150,300)));if(Captain)HavenMiniBossLoot.Drop(corpse,1);else if(Utility.RandomDouble()<.05)corpse.DropItem(new TreasureMap(Utility.RandomMinMax(1,3),Map.Trammel));if(Utility.RandomDouble()<.35)corpse.DropItem(new Cannonball(Captain?25:5));}Encounter?.Defeated(this);}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Encounter);w.Write(Captain);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Encounter=r.ReadItem() as HavenIslandEncounters;Captain=r.ReadBool();}

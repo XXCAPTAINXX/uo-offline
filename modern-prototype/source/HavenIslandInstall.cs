@@ -15,7 +15,7 @@ namespace Server.HavenPrototype
         const string MapHash = "5e8f232f803a1f4fe080df3ca33b75e333e0b53484ec2582e2921f488b32a48f";
         static bool _installing;
         public static bool CanBuild { get { return _installing || File.Exists("ISLAND-TEST-ONLY"); } }
-        public static bool Installed { get { return World.Items.Values.OfType<HavenIslandEstate>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenIslandFoundation>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenIslandCommons>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenCoveEncounter>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenIslandEncounters>().Count(x => !x.Deleted) == 3; } }
+        public static bool Installed { get { return World.Items.Values.Any(x => !x.Deleted && (x is HavenIslandEstate || x is HavenRecoveredHeadquarters)) && World.Items.Values.OfType<HavenIslandFoundation>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenIslandCommons>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenCoveEncounter>().Any(x => !x.Deleted) && World.Items.Values.OfType<HavenIslandEncounters>().Count(x => !x.Deleted) == 3; } }
 
         public static void Initialize()
         {
@@ -51,7 +51,7 @@ namespace Server.HavenPrototype
                 if (request.Length != 2) throw new InvalidOperationException("Expected owner account and character name");
                 var owners = World.Mobiles.Values.OfType<PlayerMobile>().Where(p => !p.Deleted && p.Name == request[1] && (p.Account as Account)?.Username == request[0]).ToArray();
                 if (owners.Length != 1) throw new InvalidOperationException("Island owner must resolve uniquely");
-                if (World.Items.Values.Any(i => i is HavenIslandFoundation || i is HavenIslandCommons || i is HavenIslandEstate || i is HavenCoveEncounter || i is HavenIslandEncounters))
+                if (World.Items.Values.Any(i => i is HavenIslandFoundation || i is HavenIslandCommons || i is HavenIslandEstate || i is HavenRecoveredHeadquarters || i is HavenCoveEncounter || i is HavenIslandEncounters))
                     throw new InvalidOperationException("Island entities already exist; refusing duplicate installation");
                 _installing = true;
                 var foundation = HavenIslandFoundation.BuildTest(); created.Add(foundation);
