@@ -18,14 +18,24 @@ namespace Server.HavenPrototype
             public TrainingTarget() : base(12, false, TargetFlags.None) { }
             protected override void OnTarget(Mobile from, object target) { Show(from, target as BaseCreature); }
         }
-        public static bool CanUse(Mobile owner, BaseCreature pet) {
-            return HavenPreview.Enabled && PetTrainingHelper.Enabled && owner is PlayerMobile && !owner.Deleted && owner.Alive &&
-                pet != null && !pet.Deleted && pet.Alive && !pet.IsDeadPet && pet.Controlled && pet.ControlMaster == owner &&
-                !(pet is HavenCompanion) && !pet.IsStabled && pet.Map == owner.Map && owner.InRange(pet,12) && owner.InLOS(pet) &&
-                (!(pet is IMount) || ((IMount)pet).Rider == null) && PetTrainingHelper.GetTrainingDefinition(pet) != null;
+        public static string UseFailure(Mobile owner, BaseCreature pet) {
+            if(!HavenPreview.Enabled || !PetTrainingHelper.Enabled)return "Pet training is not enabled.";
+            if(!(owner is PlayerMobile)||owner.Deleted||!owner.Alive)return "You must be alive to train your pet.";
+            if(pet==null||pet.Deleted)return "That pet is no longer available. Reopen Animal Lore for your pet.";
+            if(!pet.Alive||pet.IsDeadPet)return "Resurrect your pet before training it.";
+            if(!pet.Controlled||pet.ControlMaster!=owner)return "You can only train a pet you currently control.";
+            if(pet is HavenCompanion)return "Use your companion's training controls for this companion.";
+            if(pet.IsStabled)return "Claim your pet from storage before training it.";
+            if(pet is IMount && ((IMount)pet).Rider!=null)return "Dismount your pet before using its training buttons.";
+            if(pet.Map!=owner.Map||!owner.InRange(pet,12))return "Bring your pet within 12 tiles, then reopen its training menu.";
+            if(!owner.InLOS(pet))return "Move beside your pet where you can see it, then try training again.";
+            if(PetTrainingHelper.GetTrainingDefinition(pet)==null)return "This pet does not have a training definition.";
+            return null;
         }
+        public static bool CanUse(Mobile owner, BaseCreature pet) { return UseFailure(owner,pet)==null; }
+        public static bool CheckUse(Mobile owner, BaseCreature pet) { string reason=UseFailure(owner,pet);if(reason==null)return true;if(owner!=null)owner.SendMessage(reason);return false; }
         public static void Show(Mobile owner, BaseCreature pet, int category=0, int page=0) {
-            if (!CanUse(owner,pet)) { owner.SendMessage("Bring your living, unmounted pet nearby to train it."); return; }
+            if (!CheckUse(owner,pet)) return;
             owner.CloseGump(typeof(HavenPetTrainingGump)); owner.SendGump(new HavenPetTrainingGump(pet,category,page));
         }
         public static bool Peaceful(Mobile owner, BaseCreature pet) {
@@ -82,7 +92,30 @@ namespace Server.HavenPrototype
                 if(cost>0)best=value;
             }return best;
         }
+        public static string PurchaseFailure(Mobile owner,BaseCreature pet,TrainingPoint tp,int expected,int value) {
+            string reason=UseFailure(owner,pet);if(reason!=null)return reason;
+            int cooldown=Math.Max(HavenPreview.TravelCombatSeconds(owner),HavenPreview.TravelCombatSeconds(pet));
+            if(cooldown>0)return "Leave combat and wait "+cooldown+" seconds before training.";
+            if(tp==null||!Available(pet,tp))return "That training option is not available for this pet.";
+            var profile=PetTrainingHelper.GetTrainingProfile(pet,true);int current=Current(pet,tp);
+            if(profile.TrainingMode!=TrainingMode.Regular)return "Exit training planning mode before buying upgrades.";
+            if(!profile.CanApplyOptions)return "Complete this stage's combat training to 100% first.";
+            if(current!=expected)return "Your pet's stats changed. Reopen this upgrade before purchasing.";
+            if(current>=tp.GetMax(pet))return "This stat is already at or above its training limit ("+tp.GetMax(pet)+"). Its existing value will be preserved.";
+            if(value<=current)return "Choose an increase with the + button or Max affordable before confirming.";
+            if(value<tp.Start||value>tp.GetMax(pet))return "That increase exceeds this option's training limit.";
+            if(!profile.HasIncreasedControlSlot&&owner.Followers>=owner.FollowersMax)return "The first upgrade adds a follower slot. Stable another pet to free one slot.";
+            if(!PetTrainingHelper.CanControl(owner,pet,profile))return "Your Animal Taming skill is too low for the pet's next training requirement.";
+            double increase=(value-current)*tp.Weight;
+            if(tp.TrainPoint is PetStat&&(PetStat)tp.TrainPoint<=PetStat.Mana){var stat=(PetStat)tp.TrainPoint;int total=stat<=PetStat.Int?PetTrainingHelper.GetTotalStatWeight(pet):PetTrainingHelper.GetTotalAttributeWeight(pet);if(total+increase>PetTrainingHelper.GetTrainingCapTotal(stat))return "This exceeds the shared stat budget. Choose a smaller increase or Max affordable.";}
+            if(tp.TrainPoint is ResistanceType&&PetTrainingHelper.GetTotalResistWeight(pet)+increase>PetTrainingHelper.GetTrainingCapTotal((ResistanceType)tp.TrainPoint))return "This exceeds the shared resistance budget. Choose a smaller increase or Max affordable.";
+            if((value-current)%AdjustmentStep(tp)!=0)return "Choose an increase using the adjustment buttons.";
+            int cost=PetTrainingHelper.GetTotalCost(tp,pet,value,current);if(cost<=0||cost>profile.TrainingPoints)return "You do not have enough training points for this increase. Try Max affordable.";
+            if(tp.TrainPoint is SkillName&&(owner.Backpack==null||!owner.Backpack.Items.OfType<PowerScroll>().Any(s=>!s.Deleted&&s.Skill==(SkillName)tp.TrainPoint&&s.Value==100+value/10)))return "Put the matching power scroll in your main backpack first.";
+            return null;
+        }
         public static bool Purchase(Mobile owner, BaseCreature pet, TrainingPoint tp, int expected, int value) {
+            string failure=PurchaseFailure(owner,pet,tp,expected,value);if(failure!=null){owner.SendMessage(failure);return false;}
             if(!CanUse(owner,pet)||!Peaceful(owner,pet)||tp==null||!Available(pet,tp))return false;
             var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
             int current=Current(pet,tp);
@@ -135,7 +168,7 @@ namespace Server.HavenPrototype
             FlatButton(24,518,184,1,profile.HasBegunTraining?"Training status":"Begin training");FlatButton(230,518,180,4,"Finish stage");FlatButton(432,518,130,5,"Animal Lore");FlatButton(590,518,120,6,"Refresh");FlatButton(24,554,184,7,"Plan training");FlatButton(230,554,180,8,"Training info");FlatButton(590,554,120,0,"Close");
         }
         public override void OnResponse(NetState sender,RelayInfo info) {
-            var p=sender.Mobile;int id=info.ButtonID;if(id==0||!HavenPetTrainingMenu.CanUse(p,_pet))return;
+            var p=sender.Mobile;int id=info.ButtonID;if(id==0||!HavenPetTrainingMenu.CheckUse(p,_pet))return;
             var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
             if(id>=10&&id<10+HavenPetTrainingMenu.Categories.Length){HavenPetTrainingMenu.Show(p,_pet,id-10);return;}
             if(id==7){BaseGump.SendGump(new HavenPetTrainingPlanningGump((PlayerMobile)p,_pet));return;}if(id==8){BaseGump.SendGump(new HavenPetTrainingInfoGump((PlayerMobile)p));return;}if(id==5){HavenAnimalLoreGump.DisplayTo(p,_pet);return;}
@@ -173,13 +206,13 @@ namespace Server.HavenPrototype
         }
         string Result(int value){return _point.TrainPoint is SkillName?(100+value/10.0).ToString("F1"):_point.Start==_point.Max?"Learned":value.ToString();}
         int Step(){return HavenPetTrainingMenu.AdjustmentStep(_point);}
-        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(!HavenPetTrainingMenu.CanUse(p,_pet))return;
+        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(!HavenPetTrainingMenu.CheckUse(p,_pet))return;
             if(info.ButtonID==2&&_point!=null&&_point.Start!=_point.Max){p.SendGump(new HavenPetUpgradeGump(_pet,_point,_expected,_category,_page,HavenPetTrainingMenu.AffordableMaximum(_pet,_point)));return;}
             if(info.ButtonID>=100&&_point!=null&&_point.Start!=_point.Max){int[] delta=_point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};int i=info.ButtonID-100;if(i<delta.Length)p.SendGump(new HavenPetUpgradeGump(_pet,_point,_expected,_category,_page,_value+delta[i]));return;}
             if(info.ButtonID==1){var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
                 if(_point==null){if(profile.CanApplyOptions&&HavenPetTrainingMenu.Peaceful(p,_pet))profile.EndTraining();else p.SendMessage("Complete combat training before finishing this stage.");}
                 else if(profile.TrainingMode==TrainingMode.Planning){if(_value>_expected&&HavenPetTrainingMenu.Available(_pet,_point)){PetTrainingHelper.GetPlanningProfile(_pet,true).AddToPlan(_point.TrainPoint,_value,PetTrainingHelper.GetTotalCost(_point,_pet,_value,_expected));p.SendMessage("Added to your plan. No training points or scrolls spent.");}}
-                else p.SendMessage(HavenPetTrainingMenu.Purchase(p,_pet,_point,_expected,_value)?"Pet training applied.":"No change: check completed training, points, limits, follower capacity and the matching scroll in your main backpack.");
+                else if(HavenPetTrainingMenu.Purchase(p,_pet,_point,_expected,_value))p.SendMessage("Pet training applied.");
             }
             HavenPetTrainingMenu.Show(p,_pet,_category,_page);
         }
