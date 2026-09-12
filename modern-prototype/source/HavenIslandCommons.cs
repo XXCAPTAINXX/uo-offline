@@ -61,7 +61,7 @@ namespace Server.HavenPrototype
             while(queue.Count>0){var p=queue.Dequeue();if(p.X<1||p.X>31||p.Y<1||p.Y>40||seen.Contains(p)||!Map.CanFit(X+p.X,Y+p.Y,0,16,false,false))continue;seen.Add(p);queue.Enqueue(new Point2D(p.X-1,p.Y));queue.Enqueue(new Point2D(p.X+1,p.Y));queue.Enqueue(new Point2D(p.X,p.Y-1));queue.Enqueue(new Point2D(p.X,p.Y+1));}
             return ServiceApproaches.Select(p=>(seen.Contains(p)?"PASS ":"FAIL ")+"commons service "+p).ToArray();
         }
-        public override void OnDelete(){foreach(var item in Fixtures.ToArray())if(!item.Deleted)item.Delete();foreach(var resident in Residents.ToArray())if(!resident.Deleted)resident.Delete();base.OnDelete();}
+        public override void OnDelete(){foreach(var item in Fixtures.ToArray())if(!item.Deleted){var container=item as Container;if(container!=null&&container.Items.Count>0){container.Movable=true;container.Name="Recovered community supplies";}else item.Delete();}foreach(var resident in Residents.ToArray())if(!resident.Deleted)resident.Delete();base.OnDelete();}
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Fixtures.Count);foreach(var item in Fixtures)w.Write(item);w.Write(Residents.Count);foreach(var resident in Residents)w.Write(resident);}
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();int count=r.ReadInt();for(int i=0;i<count;i++){var item=r.ReadItem();if(item!=null)Fixtures.Add(item);}count=r.ReadInt();for(int i=0;i<count;i++){var mobile=r.ReadMobile();if(mobile!=null)Residents.Add(mobile);}}
     }

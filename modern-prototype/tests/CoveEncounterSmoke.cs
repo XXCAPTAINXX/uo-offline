@@ -19,6 +19,7 @@ public static class CoveEncounterSmoke {
   for(int stage=0;stage<4;stage++){
    var foes=World.Mobiles.Values.OfType<HavenCoveEnemy>().Where(m=>!m.Deleted).ToArray();
    if(camp.Stage!=stage||foes.Length!=(stage==3?1:5))throw new Exception("Incorrect cove wave "+stage);
+   int hits=foes[0].Hits;owner.MoveToWorld(new Point3D(camp.X+14,camp.Y,camp.Z),camp.Map);foes[0].Damage(25,owner);if(foes[0].Hits!=hits)throw new Exception("Cove boundary permits safe damage");owner.MoveToWorld(camp.Location,camp.Map);
    camp.Credit(foes[0],pet,1);
    foreach(var foe in foes)foe.Kill();
    if(stage<3)spawn.Invoke(camp,null);

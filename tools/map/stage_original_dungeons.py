@@ -23,10 +23,10 @@ def namehash(s):
         c=((c^b)-rot(b,16))&MASK;a=((a^c)-rot(c,4))&MASK;b=((b^a)-rot(a,14))&MASK;c=((c^b)-rot(b,24))&MASK
     return (b<<32)|c
 
-def unpack_map(path):
+def unpack_map(path, entry_stem=None):
     raw=path.read_bytes()
     if struct.unpack_from('<I',raw)[0]!=0x50594d:raise ValueError('Not UOP')
-    names={namehash(f'build/{path.stem.lower()}/{i:08d}.dat'):i for i in range(512)}
+    names={namehash(f'build/{(entry_stem or path.stem.lower())}/{i:08d}.dat'):i for i in range(512)}
     block=struct.unpack_from('<Q',raw,12)[0];entries={}
     while block:
         count,nxt=struct.unpack_from('<IQ',raw,block)

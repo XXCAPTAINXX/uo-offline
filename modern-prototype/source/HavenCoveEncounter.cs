@@ -24,6 +24,7 @@ namespace Server.HavenPrototype {
   private HavenCoveEncounter _cove;
   public HavenCoveEnemy(HavenCoveEncounter camp,int stage):base(camp,1,stage){_cove=camp;Body=0x190;BaseSoundID=0x45A;Name=stage==3?"Admiral Blackwake":stage==0?"a Blackwake deckhand":stage==1?"a Blackwake boarding guard":"a Blackwake quartermaster";Hue=0;AddItem(new FancyShirt{Hue=0x455});AddItem(new ShortPants{Hue=0x972});AddItem(new Boots());AddItem(new Bandana{Hue=0x21});AddItem(new Scimitar());SetSkill(SkillName.Swords,stage==3?115:80+stage*10);if(stage==3){SetHits(3600);SetStr(400);SetDamage(18,26);SetResistance(ResistanceType.Physical,55);}}
   public HavenCoveEnemy(Serial serial):base(serial){}
+  public override int Damage(int amount,Mobile from,bool informMount,bool checkDisrupt){if(from!=null&&(_cove==null||_cove.Deleted||from.Map!=_cove.Map||!from.InRange(_cove,12)||BaseHouse.FindHouseAt(from.Location,from.Map,20)!=null))return 0;return base.Damage(amount,from,informMount,checkDisrupt);}
   public override bool CanBeHarmful(IDamageable target,bool message,bool ignoreOurBlessedness){var mob=target as Mobile;if(_cove==null||_cove.Deleted||mob==null||mob.Map!=_cove.Map||!mob.InRange(_cove,12)||BaseHouse.FindHouseAt(mob.Location,mob.Map,20)!=null)return false;return base.CanBeHarmful(target,message,ignoreOurBlessedness);}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_cove);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_cove=r.ReadItem() as HavenCoveEncounter;}
