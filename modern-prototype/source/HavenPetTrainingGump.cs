@@ -67,6 +67,11 @@ namespace Server.HavenPrototype
             if(point is WeaponAbility)return PetTrainingHelper.ValidateTrainingPoint(pet,(WeaponAbility)point)&&a.CanChooseWeaponAbility();
             return false;
         }
+        public static int AdjustmentStep(TrainingPoint point) {
+            if(point.TrainPoint is SkillName||point.Weight<=0||point.Weight>=1)return 1;
+            for(int step=1;step<=100;step++){decimal cost=step*(decimal)point.Weight;if(cost==decimal.Truncate(cost))return step;}
+            return 100;
+        }
         public static bool Purchase(Mobile owner, BaseCreature pet, TrainingPoint tp, int expected, int value) {
             if(!CanUse(owner,pet)||!Peaceful(owner,pet)||tp==null||!Available(pet,tp))return false;
             var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
@@ -79,7 +84,7 @@ namespace Server.HavenPrototype
                 if(total+increase>PetTrainingHelper.GetTrainingCapTotal(stat))return false;
             }
             if(tp.TrainPoint is ResistanceType && PetTrainingHelper.GetTotalResistWeight(pet)+increase>PetTrainingHelper.GetTrainingCapTotal((ResistanceType)tp.TrainPoint))return false;
-            int step=tp.Weight>0 && tp.Weight<1 && !(tp.TrainPoint is SkillName)?Math.Max(1,(int)(tp.Weight*100)):1;
+            int step=AdjustmentStep(tp);
             if((value-current)%step!=0)return false;
             int cost=PetTrainingHelper.GetTotalCost(tp,pet,value,current); if(cost<=0||cost>profile.TrainingPoints)return false;
             PowerScroll scroll=null;
@@ -157,7 +162,7 @@ namespace Server.HavenPrototype
             FlatButton(464,415,130,0,"Back");
         }
         string Result(int value){return _point.TrainPoint is SkillName?(100+value/10.0).ToString("F1"):_point.Start==_point.Max?"Learned":value.ToString();}
-        int Step(){return _point.Weight>0&&_point.Weight<1?Math.Max(1,(int)(_point.Weight*100)):1;}
+        int Step(){return HavenPetTrainingMenu.AdjustmentStep(_point);}
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(!HavenPetTrainingMenu.CanUse(p,_pet))return;
             if(info.ButtonID>=100&&_point!=null&&_point.Start!=_point.Max){int[] delta=_point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};int i=info.ButtonID-100;if(i<delta.Length)p.SendGump(new HavenPetUpgradeGump(_pet,_point,_expected,_category,_page,_value+delta[i]));return;}
             if(info.ButtonID==1){var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
