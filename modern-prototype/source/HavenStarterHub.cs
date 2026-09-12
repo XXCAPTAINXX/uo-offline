@@ -20,15 +20,16 @@ namespace Server.HavenPrototype
             CommandSystem.Register("?", AccessLevel.Player, e => { if(HavenPreview.Enabled) e.Mobile.SendGump(new HavenCommandHelpGump()); });
             EventSink.ServerStarted += () => { if(HavenPreview.Enabled) Timer.DelayCall(TimeSpan.FromSeconds(2),Ensure); };
         }
+        private static bool InPlaza(Item item){return item.Map==Map.Trammel&&item.X>=3450&&item.X<=3550&&item.Y>=2520&&item.Y<=2630;}
         public static void Ensure()
         {
             if(!HavenPreview.Enabled) return;
             int[] services={0,1,9,10,3,6};
-            foreach(var oldPost in World.Items.Values.OfType<HavenServicePost>().ToArray())oldPost.Delete();
+            foreach(var oldPost in World.Items.Values.OfType<HavenServicePost>().Where(InPlaza).ToArray())oldPost.Delete();
             var sites=new[]{new Point2D(3499,2574),new Point2D(3499,2577),new Point2D(3499,2580),new Point2D(3502,2584),new Point2D(3505,2584),new Point2D(3508,2584)};
-            foreach(var old in World.Items.Values.OfType<HavenServiceStone>().Where(x=>x.Map==Map.Trammel&&!services.Contains(x.Service)).ToArray())old.Delete();
+            foreach(var old in World.Items.Values.OfType<HavenServiceStone>().Where(x=>InPlaza(x)&&!services.Contains(x.Service)).ToArray())old.Delete();
             for(int i=0;i<services.Length;i++){
-                int service=services[i];var board=World.Items.Values.OfType<HavenServiceStone>().FirstOrDefault(x=>!x.Deleted&&x.Service==service&&x.Map==Map.Trammel);
+                int service=services[i];var board=World.Items.Values.OfType<HavenServiceStone>().FirstOrDefault(x=>!x.Deleted&&x.Service==service&&InPlaza(x));
                 if(board==null||board.ItemID!=0xED4){
                     if(board!=null)board.Internalize();Point3D landing;var site=sites[i];
                     if(!HavenPreview.FindLanding(new HavenPreview.Destination("Haven services",Map.Trammel,site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y)),out landing)){if(board!=null)board.MoveToWorld(new Point3D(site.X,site.Y,Map.Trammel.GetAverageZ(site.X,site.Y)),Map.Trammel);continue;}

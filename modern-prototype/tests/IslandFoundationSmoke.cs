@@ -19,6 +19,7 @@ public static class IslandFoundationSmoke
    for(int y=2960;y<=2980;y++)if(!boat.CanFit(new Point3D(4237,y,-5),Map.Trammel,boat.SouthID)){clear=false;File.AppendAllText("island-foundation.log","Boat blocked y="+y+"\n");break;}
    boat.Delete();File.AppendAllText("island-foundation.log","Boat south corridor="+clear+"\n");if(!clear)throw new Exception("Boat exit blocked");File.AppendAllText("island-foundation.log","FOUNDATION COMPLETE\n");
   }catch(Exception ex){File.AppendAllText("island-foundation.log","Navigation FAIL "+ex+"\n");}
+  try{CoveEncounterSmoke.Run();}catch(Exception ex){File.AppendAllText("island-foundation.log","COVE FAIL "+ex+"\n");}
   Core.Kill(false);
  };}
 }

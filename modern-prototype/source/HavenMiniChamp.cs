@@ -29,7 +29,7 @@ namespace Server.HavenPrototype
             CommandSystem.Register("minichamp",AccessLevel.Player,e=>{if(HavenPreview.Enabled){var c=Find();if(c!=null)c.Show(e.Mobile);else e.Mobile.SendMessage("The encounter camp is not available yet.");}});
             EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(3),Ensure);};
         }
-        public static HavenMiniChamp Find(){return World.Items.Values.OfType<HavenMiniChamp>().FirstOrDefault(x=>!x.Deleted);}
+        public static HavenMiniChamp Find(){return World.Items.Values.OfType<HavenMiniChamp>().FirstOrDefault(x=>!x.Deleted&&x.GetType()==typeof(HavenMiniChamp));}
         private static bool HasStructure(Map map,int x,int y) {
             foreach(var tile in map.Tiles.GetStaticTiles(x,y,true))
                 if((TileData.ItemTable[tile.ID & 0x3FFF].Flags & (TileFlag.Wall|TileFlag.Roof|TileFlag.Door))!=0)return true;
@@ -69,7 +69,7 @@ namespace Server.HavenPrototype
         public HavenMiniChamp():base(0x1F14){Name="Corsair expedition camp";Movable=false;Visible=false;StartTimer();}
         public HavenMiniChamp(Serial serial):base(serial){}
         private void StartTimer(){if(_timer!=null)_timer.Stop();_timer=Timer.DelayCall(TimeSpan.FromSeconds(2),TimeSpan.FromSeconds(2),Tick);}
-        public void Show(Mobile from){if(!HavenMarks.CanUse(from))return;from.CloseGump(typeof(HavenMiniChampGump));from.SendGump(new HavenMiniChampGump(this,from));}
+        public virtual void Show(Mobile from){if(!HavenMarks.CanUse(from))return;from.CloseGump(typeof(HavenMiniChampGump));from.SendGump(new HavenMiniChampGump(this,from));}
         public bool Travel(Mobile from) {
             if(!HavenPreview.CanTravel(from))return false;
             Point3D landing;
@@ -90,11 +90,11 @@ namespace Server.HavenPrototype
         }
         public bool Begin(Mobile from,int theme) {
             var error=StartError(from,theme);if(error!=null){from?.SendMessage(error);return false;}
-            if(!SafeClearing(Map,Location)){from.SendMessage("This camp needs relocating to a clear outdoor area. Please reopen the menu after relocation.");Ensure();return false;}
+            if(!ValidEncounterSite()){from.SendMessage("This camp needs relocating to a clear outdoor area. Please reopen the menu after relocation.");if(GetType()==typeof(HavenMiniChamp))Ensure();return false;}
             _theme=theme;_stage=0;_deadline=DateTime.UtcNow.AddMinutes(theme==3?30:20);_emptySince=DateTime.MinValue;_participants.Clear();
             SpawnWave();return Active;
         }
-        private bool SpawnPoint(out Point3D p) {
+        protected virtual bool SpawnPoint(out Point3D p) {
             for(int tries=0;tries<80;tries++) {
                 int x=X+Utility.RandomMinMax(-12,12),y=Y+Utility.RandomMinMax(-12,12);
                 p=new Point3D(x,y,Map.GetAverageZ(x,y));
@@ -102,11 +102,14 @@ namespace Server.HavenPrototype
             }
             p=Point3D.Zero;return false;
         }
+        protected virtual bool IslandRewards {get{return false;}}
+        protected virtual bool ValidEncounterSite(){return SafeClearing(Map,Location);}
+        protected virtual HavenMiniEnemy CreateEnemy(int theme,int stage){return new HavenMiniEnemy(this,theme,stage);}
         private void SpawnWave() {
             if(!Active)return;
             for(int i=0;i<(_stage==3?(Challenge?3:1):(Challenge?15:5));i++) {
                 Point3D p;if(!SpawnPoint(out p)){Abort();return;}
-                var enemy=new HavenMiniEnemy(this,Challenge?i%3:_theme,_stage);_foes.Add(enemy);enemy.MoveToWorld(p,Map);
+                var enemy=CreateEnemy(Challenge?i%3:_theme,_stage);_foes.Add(enemy);enemy.MoveToWorld(p,Map);
             }
             foreach(var player in _participants)if(player!=null && !player.Deleted)player.SendMessage(_stage==3?"The expedition boss has arrived!":"Expedition wave "+(_stage+1)+" has begun.");
         }
@@ -127,7 +130,7 @@ namespace Server.HavenPrototype
             _stage=-1;_cooldown=DateTime.UtcNow.AddMinutes(2);
             foreach(var player in _participants.ToArray()) {
                 if(player==null || player.Deleted || !(player.Account is Account))continue;
-                for(int theme=Challenge?0:_theme;theme<=(Challenge?2:_theme);theme++)new HavenMiniPrize(player,theme).Deliver(player);
+                for(int theme=Challenge?0:_theme;theme<=(Challenge?2:_theme);theme++)new HavenMiniPrize(player,theme,IslandRewards).Deliver(player);
                 if(Challenge){var bonus=new HavenMiniPrize(player,Utility.Random(3));bonus.DropItem(new AstralShard(1));bonus.Deliver(player);}
                 HavenMarks.Award(player,Challenge?80:20);Increment(player,"Wins");
                 player.SendMessage(Challenge?"Challenge won: four reward sets, 80 Marks, one bonus Astral Shard. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Full-pack rewards remain pending.");
@@ -154,7 +157,7 @@ namespace Server.HavenPrototype
         }
         public override void OnDelete(){HavenExpeditionMarker.Remove(this);Abort();if(_timer!=null)_timer.Stop();base.OnDelete();}
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_stage);w.Write(_theme);w.Write(_deadline);w.Write(_cooldown);w.Write(_foes.Count);foreach(var m in _foes)w.Write(m);w.Write(_participants.Count);foreach(var m in _participants)w.Write(m);}
-        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_stage=r.ReadInt();_theme=r.ReadInt();_deadline=r.ReadDateTime();_cooldown=r.ReadDateTime();int count=r.ReadInt();for(int i=0;i<count;i++)_foes.Add(r.ReadMobile());count=r.ReadInt();for(int i=0;i<count;i++){var p=r.ReadMobile();if(p!=null)_participants.Add(p);}StartTimer();if(Active && _foes.Count==0)Timer.DelayCall(TimeSpan.FromSeconds(3),SpawnWave);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);_foes.Clear();_participants.Clear();r.ReadInt();_stage=r.ReadInt();_theme=r.ReadInt();_deadline=r.ReadDateTime();_cooldown=r.ReadDateTime();int count=r.ReadInt();for(int i=0;i<count;i++)_foes.Add(r.ReadMobile());count=r.ReadInt();for(int i=0;i<count;i++){var p=r.ReadMobile();if(p!=null)_participants.Add(p);}StartTimer();if(Active && _foes.Count==0)Timer.DelayCall(TimeSpan.FromSeconds(3),SpawnWave);}
     }
     public class HavenMiniEnemy : BaseCreature
     {
