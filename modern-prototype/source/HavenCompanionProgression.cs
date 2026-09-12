@@ -15,6 +15,7 @@ namespace Server.HavenPrototype {
    int whole=(int)slow;
    return ordinary+whole+(roll<slow-whole?1:0);
   }
-  public static int Amount(Mobile from,Skill skill,int amount){return from is HavenCompanion?Scaled(skill.BaseFixedPoint,amount,Utility.RandomDouble()):amount;}
+  public static int TrainingMultiplier(Mobile from){return HavenPreview.Enabled&&from is HavenCompanion&&from.Map==Map.Trammel&&from.X>=3314&&from.X<3814&&from.Y>=2345&&from.Y<3095?2:1;}
+  public static int Amount(Mobile from,Skill skill,int amount){return from is HavenCompanion?Scaled(skill.BaseFixedPoint,amount*TrainingMultiplier(from),Utility.RandomDouble()):amount;}
  }
 }

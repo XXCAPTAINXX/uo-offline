@@ -53,7 +53,7 @@ public partial class HavenCompanionAssignedPet : Item
             owner.Map!=Companion.Map || !owner.InRange(Companion,12) || !owner.Alive) { return false; }
         var claim=HavenPetTicket.Store(Pet,owner,Companion.Backpack);
         if(claim==null) { return false; }
-        Pet=null;Delete();owner.SendMessage("Your pet's claim is in the companion pack.");return true;
+        Pet=null;Delete();owner.SendMessage(claim.Parent is HavenPetBook?"Your bonded pet is safe in your pet book. Use [petbook to release it.":"Your pet's claim is in the companion pack.");return true;
     }
     public override void OnDelete()
     {

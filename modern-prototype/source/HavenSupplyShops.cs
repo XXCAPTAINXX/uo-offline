@@ -23,6 +23,7 @@ namespace Server.HavenPrototype {
   static Bag Reagents(){var bag=new Bag{Name="100 of each magery reagent"};foreach(var item in new Item[]{new BlackPearl(100),new Bloodmoss(100),new Garlic(100),new Ginseng(100),new MandrakeRoot(100),new Nightshade(100),new SulfurousAsh(100),new SpidersSilk(100)})bag.DropItem(item);return bag;}
   static Bag Potions(){var bag=new Bag{Name="10 heal, cure and refresh potions"};for(int i=0;i<10;i++){bag.DropItem(new GreaterHealPotion());bag.DropItem(new GreaterCurePotion());bag.DropItem(new TotalRefreshPotion());}return bag;}
   static List<HavenShopEntry> Arcane(){return new List<HavenShopEntry>{
+   new HavenShopEntry("Smoke bombs: 20",1000,()=>new SmokeBomb {Amount=20,Stackable=true},"Twenty smoke teleports. No Magery, Ninjitsu or mana required. Double-click a bomb in your backpack, then target a visible location within 12 tiles. One bomb per successful teleport; 3-second cooldown."),
    new HavenShopEntry("Full Magery spellbook",500,()=>Full(new Spellbook()),"All 64 Magery spells. Normal casting requirements apply."),
    new HavenShopEntry("Full Necromancy book",1500,()=>Full(new NecromancerSpellbook()),"All native Necromancy spells."),
    new HavenShopEntry("Full Chivalry book",1000,()=>Full(new BookOfChivalry()),"All native Chivalry abilities. Requires tithing points."),

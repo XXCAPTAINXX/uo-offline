@@ -29,10 +29,10 @@ namespace Server.HavenPrototype {
    if((pet is PackHorse||pet is PackLlama||pet is Beetle)&&pet.Backpack!=null&&pet.Backpack.Items.Count>0){p.SendMessage("Unload your pack pet before shrinking it.");return false;}
    var enemy=pet.Combatant as Mobile;if(enemy!=null&&enemy.Map==pet.Map&&pet.InRange(enemy,12)){p.SendMessage("Your pet must finish fighting before it can be shrunk.");return false;}
    var ticket=HavenPetTicket.Store(pet,p,p.Backpack);if(ticket==null){p.SendMessage("Make room in your backpack for the pet ticket.");return false;}
-   p.SendMessage("Your exact pet is stored in its claim ticket. Double-click the ticket to bring it back.");return true;
+   p.SendMessage(pet.IsBonded?"Your bonded pet is safe in your pet book. Use [petbook to inspect or release it.":"Your exact pet is stored in its claim ticket. Double-click the ticket to bring it back.");return true;
   }
   class PetTarget:Target {readonly Item _post;public PetTarget(Item post):base(3,false,TargetFlags.None){_post=post;}protected override void OnTarget(Mobile p,object target){ShrinkFrom(_post,p,target as BaseCreature);}}
-  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Double-click: shrink your pet for free");list.Add("Exact pet and training preserved in a claim ticket");}
+  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Double-click: shrink your pet for free");list.Add("Bonded pets go to your pet book; other pets become tickets");}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
  }

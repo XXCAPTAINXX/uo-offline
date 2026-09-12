@@ -10,7 +10,7 @@ namespace Server.HavenPrototype {
   static string Key(Mobile p){return "Haven.PetCredits:"+p.Serial.Value;}
   public static int Balance(Mobile p){int n;var a=p.Account as Account;return a!=null&&int.TryParse(a.GetTag(Key(p)),out n)?Math.Max(0,Math.Min(1000000,n)):0;}
   static void Set(Mobile p,int n){((Account)p.Account).SetTag(Key(p),n.ToString());}
-  public static bool Eligible(Mobile p,HavenPetTicket t){return HavenMarks.CanUse(p)&&t!=null&&!t.Deleted&&t.Owner==p&&t.Rarity<3&&t.Kind>=-1&&t.Kind<12&&p.Backpack!=null&&t.IsChildOf(p.Backpack)&&HavenResources.Accessible(p,t)&&t.Pet!=null&&!t.Pet.Deleted&&HavenPetDefenses.Tier(t.Pet)<3&&t.Pet.Map==Map.Internal&&!t.Pet.Controlled;}
+  public static bool Eligible(Mobile p,HavenPetTicket t){return HavenMarks.CanUse(p)&&t!=null&&!t.Deleted&&t.Owner==p&&t.Rarity<3&&t.Kind>=-1&&t.Kind<12&&p.Backpack!=null&&t.IsChildOf(p.Backpack)&&HavenResources.Accessible(p,t)&&t.Pet!=null&&!t.Pet.Deleted&&HavenPetDefenses.Tier(t.Pet)<3&&t.Pet.Map==Map.Internal&&!t.Pet.IsBonded&&!(t.Parent is HavenPetBook)&&!t.Pet.Controlled;}
   public static int Value(HavenPetTicket t){return new[]{1,3,8,20}[Math.Max(0,Math.Min(3,t.Rarity))];}
   public static bool Exchange(Mobile p,HavenPetTicket t){if(!Eligible(p,t))return false;int value=Value(t),balance=Balance(p);if(balance>1000000-value)return false;Set(p,balance+value);t.Delete();return true;}
   public static int Cost(int tier){return tier==1?10:tier==2?30:tier==3?80:int.MaxValue;}
@@ -25,7 +25,7 @@ namespace Server.HavenPrototype {
  public class HavenPetExchangeGump:HavenMenuGump {
   readonly HavenPetTicket[] _tickets;readonly int _page;
   public HavenPetExchangeGump(Mobile p,int page=0):base(50,50){_tickets=p.Backpack==null?new HavenPetTicket[0]:p.Backpack.FindItemsByType(typeof(HavenPetTicket),true).Cast<HavenPetTicket>().Where(t=>HavenPetExchange.Eligible(p,t)).ToArray();_page=Math.Max(0,Math.Min(page,Math.Max(0,(_tickets.Length-1)/6)));
-   AddBackground(0,0,710,545,3000);AddLabel(24,22,0,"MISSION PET EXCHANGE    Credits: "+HavenPetExchange.Balance(p));AddHtml(24,58,660,42,"Exchange pet tickets in your backpack for credits toward a higher-rarity pet. Stored pets are accepted. Legendary pets cannot be exchanged. Confirming surrenders the pet.",false,false);
+   AddBackground(0,0,710,545,3000);AddLabel(24,22,0,"MISSION PET EXCHANGE    Credits: "+HavenPetExchange.Balance(p));AddHtml(24,58,660,42,"Exchange pet tickets in your backpack for credits toward a higher-rarity pet. Stored pets are accepted. Bonded and Legendary pets cannot be exchanged. Confirming surrenders the pet.",false,false);
    AddLabel(24,111,0,"Available pet tickets");for(int row=0;row<6;row++){int index=_page*6+row;if(index>=_tickets.Length)break;var t=_tickets[index];FlatButton(24,143+row*34,660,100+index,(t.Pet.Name??"Pet")+" | "+HavenPetExchange.Value(t)+" credits");t.SendPropertiesTo(p);AddItemProperty(t.Serial);}
    if(_tickets.Length==0)AddLabel(24,151,0,"No eligible tickets. Legendary pets are protected; other claims must be in your backpack.");
    if(_page>0)FlatButton(24,354,120,1,"Previous");AddLabel(200,354,0,"Page "+(_page+1)+" / "+Math.Max(1,(_tickets.Length+5)/6));if((_page+1)*6<_tickets.Length)FlatButton(554,354,130,2,"Next");
