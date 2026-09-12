@@ -3,6 +3,8 @@ using System.Linq;
 using Server;
 using Server.Commands;
 using Server.Items;
+using Server.Engines.Points;
+using System.Collections.Generic;
 namespace Server.HavenPrototype {
  public class HavenTrashBag : TrashBarrel {
   public HavenTrashBag(){ItemID=0xE76;Name="trash bag";Hue=0x3B2;Movable=true;Weight=1;LootType=LootType.Blessed;MaxItems=49;}
@@ -14,9 +16,35 @@ namespace Server.HavenPrototype {
   public override bool OnDragDrop(Mobile p,Item item){return Accept(p,item)&&base.OnDragDrop(p,item);}
   public override bool OnDragDropInto(Mobile p,Item item,Point3D point){return Accept(p,item)&&base.OnDragDropInto(p,item,point);}
   public override void OnDoubleClick(Mobile p){if(CanUse(p))base.OnDoubleClick(p);}
-  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Trash empties 3 minutes after the last deposit");list.Add("Retrieve mistakes before it empties; maximum 49 items");}
-  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
+  public override bool AddCleanupItem(Mobile p,Item item){
+   bool added=base.AddCleanupItem(p,item);
+   var pending=m_Cleanup.Where(x=>x.mobiles==p&&!x.confirm).Sum(x=>x.points);
+   p.SendMessage(added?"Pending CUB points: "+pending.ToString("N0")+". Credited when the trash empties.":"This item has no native CUB point value.");
+   return added;
+  }
+  public override void OnItemRemoved(Item item){
+   base.OnItemRemoved(item);
+   if(m_Cleanup!=null)m_Cleanup.RemoveAll(x=>!x.confirm&&(x.items==item||(x.items!=null&&x.items.IsChildOf(item))));
+  }
+  public override void OnSubItemRemoved(Item item){
+   base.OnSubItemRemoved(item);
+   if(m_Cleanup!=null)m_Cleanup.RemoveAll(x=>!x.confirm&&(x.items==item||(x.items!=null&&x.items.IsChildOf(item))));
+  }
+  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Trash empties 3 minutes after the last deposit");list.Add("Retrieve mistakes before it empties; maximum 49 items");list.Add("Eligible trash earns Clean Up Britannia points when emptied");}
+  public override void Serialize(GenericWriter w){
+   base.Serialize(w);w.Write(1);WritePendingCleanup(w);
+  }
+  internal void WritePendingCleanup(GenericWriter w){
+   var pending=m_Cleanup.Where(x=>!x.confirm&&x.items!=null&&!x.items.Deleted&&x.items.IsChildOf(this)&&x.mobiles!=null&&!x.mobiles.Deleted).ToList();
+   w.Write(pending.Count);foreach(var entry in pending){w.Write(entry.mobiles);w.Write(entry.items);w.Write(entry.points);}
+  }
+  public override void Deserialize(GenericReader r){
+   base.Deserialize(r);int version=r.ReadInt();
+   if(version>=1)ReadPendingCleanup(r);
+  }
+  internal void ReadPendingCleanup(GenericReader r){
+   {int count=r.ReadInt();for(int i=0;i<count;i++){var owner=r.ReadMobile();var item=r.ReadItem();double points=r.ReadDouble();if(owner!=null&&item!=null&&points>0)m_Cleanup.Add(new CleanupArray{mobiles=owner,items=item,serials=item.Serial,points=points});}}
+  }
  }
  public class HavenPublicTrashChest : HavenTrashBag {
   public HavenPublicTrashChest(){ItemID=0xE41;Name="Haven public trash chest";Movable=false;}

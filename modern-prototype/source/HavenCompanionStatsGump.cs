@@ -23,13 +23,13 @@ namespace Server.HavenPrototype {
   }
 
   public static int[] Rows(HavenCompanion c,int filter,int sort,double[] baseline){var rows=Enumerable.Range(0,c.Skills.Length).Where(i=>filter==2||Used(c,(SkillName)i)&&(filter==1||c.Skills[i].Base<c.Skills[i].Cap&&(c.Skills[i].Lock==SkillLock.Up||i==(int)SkillName.Mining||i==(int)SkillName.Lumberjacking||i==(int)SkillName.AnimalLore)));return (sort==1?rows.OrderByDescending(i=>c.Skills[i].Base).ThenBy(i=>c.Skills[i].Name):sort==2?rows.OrderByDescending(i=>c.Skills[i].Base-baseline[i]).ThenBy(i=>c.Skills[i].Name):rows.OrderBy(i=>c.Skills[i].Name)).ToArray();}
-  public HavenCompanionStatsGump(HavenCompanion c,int page=0,double[] baseline=null,int filter=0,int sort=0):base(45,45){_c=c;_filter=filter;_sort=sort;_baseline=baseline??new double[c.Skills.Length];if(baseline==null)for(int i=0;i<c.Skills.Length;i++)_baseline[i]=c.Skills[i].Base;var rows=Rows(c,filter,sort,_baseline);int pages=Math.Max(1,(rows.Length+11)/12);_page=Math.Max(0,Math.Min(pages-1,page));
+  public HavenCompanionStatsGump(HavenCompanion c,int page=0,double[] baseline=null,int filter=2,int sort=0):base(45,45){_c=c;_filter=filter;_sort=sort;_baseline=baseline??new double[c.Skills.Length];if(baseline==null)for(int i=0;i<c.Skills.Length;i++)_baseline[i]=c.Skills[i].Base;var rows=Rows(c,filter,sort,_baseline);int pages=Math.Max(1,(rows.Length+11)/12);_page=Math.Max(0,Math.Min(pages-1,page));
    AddBackground(0,0,610,580,0xA28);Text(24,22,555,25,"<B>"+System.Security.SecurityElement.Escape(c.Name)+" - stats and skills</B>");
    Text(24,56,555,25,"Hits "+c.Hits+"/"+c.HitsMax+" | Mana "+c.Mana+"/"+c.ManaMax+" | Stamina "+c.Stam+"/"+c.StamMax);
    Text(24,85,555,25,"Str "+c.Str+" | Dex "+c.Dex+" | Int "+c.Int+" | "+c.Role+" | "+c.ControlOrder);
    Text(24,111,555,24,"Current weapon skill: "+c.Skills[AttackSkill(c)].Name);
    Text(24,139,555,24,"Base = trained; Now = with bonuses; Gain = since opening.");
-   Button(24,169,4,new[]{"Show: Trainable","Show: Used skills","Show: All skills"}[filter],220);Button(320,169,5,new[]{"Sort: Name","Sort: Highest base","Sort: Biggest gain"}[sort],240);
+   Button(24,169,4,new[]{"Show: Trainable","Show: Used skills","Show: All skills"}[filter]+" ("+rows.Length+")",220);Button(320,169,5,new[]{"Sort: Name","Sort: Highest base","Sort: Biggest gain"}[sort],240);
    Text(24,207,190,24,"<B>Skill</B>");Text(220,207,75,24,"<B>Base</B>");Text(302,207,75,24,"<B>Now</B>");Text(384,207,75,24,"<B>Cap</B>");Text(466,207,105,24,"<B>Gain</B>");
    for(int row=0;row<12;row++){int index=_page*12+row;if(index>=rows.Length)break;int i=rows[index];var sk=c.Skills[i];int y=238+row*23;Text(24,y,190,23,sk.Name);Text(220,y,75,23,sk.Base.ToString("F1"));Text(302,y,75,23,sk.Value.ToString("F1"));Text(384,y,75,23,sk.Cap.ToString("F1"));Text(466,y,105,23,(sk.Base-_baseline[i]).ToString("+0.0;-0.0;0.0"));}
    if(rows.Length==0)Text(24,248,555,60,"No trainable skills below cap in this view. Switch to Used skills or All skills to inspect caps.");

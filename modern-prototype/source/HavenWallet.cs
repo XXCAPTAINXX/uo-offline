@@ -46,6 +46,7 @@ namespace Server.HavenPrototype {
    Text(269,158,165,22,"Gold per action");
    Button(24,201,2,"Withdraw to pack",180); Button(242,201,3,"Tithe gold",170);
    Text(24,242,410,42,"Uses your bank gold directly. Withdraw up to 60,000.<BR>Tithing costs 1 gold per point added.");
+   Text(24,290,290,24,"CUB points: "+Server.Engines.Points.PointsSystem.CleanUpBritannia.GetPoints(p).ToString("N0"));
    Button(340,290,0,"Close",70);
   }
   private void Text(int x,int y,int width,int height,string text){AddHtml(x,y,width,height,"<BASEFONT COLOR=#F2F2F2>"+text+"</BASEFONT>",false,false);}

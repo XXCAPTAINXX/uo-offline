@@ -41,7 +41,7 @@ public partial class HavenAbyssTrial : Item
     }
     internal static bool Go(Mobile from)
     {
-        if (from?.Deleted != false || !from.Alive || from.Criminal || from.Spell != null || SpellHelper.CheckCombat(from) ||
+        if (from?.Deleted != false || !from.Alive || from.Spell != null || SpellHelper.CheckCombat(from) ||
             !SpellHelper.CheckTravel(from, TravelCheckType.RecallFrom)) { return false; }
         foreach (var trial in Registry)
         {

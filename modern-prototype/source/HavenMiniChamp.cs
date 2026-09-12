@@ -118,8 +118,9 @@ namespace Server.HavenPrototype
             foreach(var player in _participants.ToArray()) {
                 if(player==null || player.Deleted || !(player.Account is Account))continue;
                 for(int theme=Challenge?0:_theme;theme<=(Challenge?2:_theme);theme++)new HavenMiniPrize(player,theme).Deliver(player);
-                HavenMarks.Award(player,Challenge?60:20);Increment(player,"Wins");
-                player.SendMessage(Challenge?"Challenge won: all three reward sets, 60 Marks and ship supplies. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Corsair raiders also award ship supplies. Full-pack rewards remain pending.");
+                if(Challenge)new HavenMiniPrize(player,Utility.Random(3)).Deliver(player);
+                HavenMarks.Award(player,Challenge?80:20);Increment(player,"Wins");
+                player.SendMessage(Challenge?"Challenge won: four reward sets, 80 Marks and ship supplies. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Corsair raiders also award ship supplies. Full-pack rewards remain pending.");
             }
             _participants.Clear();
         }
@@ -188,7 +189,7 @@ namespace Server.HavenPrototype
             AddLabel(20,127,1152,camp.Active?"Active: wave "+(camp.Stage+1)+" / 4, "+camp.Remaining+" enemies":"Ready in "+Math.Max(0,Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds))+" seconds");
             for(int i=0;i<4;i++){AddButton(20,160+i*30,0xFA5,0xFA7,10+i,GumpButtonType.Reply,0);AddLabel(54,160+i*30,1152,"Start "+HavenMiniChamp.Themes[i]);}
             AddHtml(300,160,250,105,"<BASEFONT COLOR=#FFFFFF>Each participant: 10,000 gold, 20 Marks, 250 themed resources as a deed. Five 105/110 Power Scrolls, Alacrity and Transcendence. Full packs keep rewards pending.</BASEFONT>",false,false);
-            AddHtml(20,290,530,52,"<BASEFONT COLOR=#3B2A1A>Challenge: three waves of 15 mixed enemies, then all three bosses together. Three reward sets / 60 Marks. Corsair loot includes 25 cannonballs, powder charges and fuse cords.</BASEFONT>",false,false);
+            AddHtml(20,290,530,52,"<BASEFONT COLOR=#3B2A1A>Challenge: three waves of 15 mixed enemies, then all three bosses together. Four reward sets / 80 Marks. Corsair loot includes 25 cannonballs, powder charges and fuse cords.</BASEFONT>",false,false);
             AddLabel(20,347,1152,"Wins: "+HavenMiniChamp.Wins(p)+" | Pending rewards: "+HavenMiniPrize.Pending(p));
             Button(20,385,1,"Travel to camp");Button(300,385,2,"Collect pending rewards");Button(20,423,3,"Refresh");Button(450,423,0,"Close");
         }
