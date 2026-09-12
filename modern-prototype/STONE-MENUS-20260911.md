@@ -7,3 +7,5 @@ Converted all Haven service-stone entry pages and their travel/test, supply shop
 Validation: isolated ServUO build zero warnings/errors; diff whitespace checks clean, no old arrow/gem calls remain in the seven converted screen classes. Checked button widths against adjacent columns/footer controls. Actual client appearance needs review after deployment, particularly the native stone texture and engraved text effect.
 
 Include source/HavenStoneGump.cs, HavenPreview.cs, HavenStarterHub.cs, HavenSupplyShops.cs, HavenMarks.cs, HavenRecovery.cs and HavenStarterGear.cs in the next deployment, together with pending ledger/wallet UI files. Do not restart solely for these cosmetic updates.
+
+Deployment update: now LIVE with FREE-TRAINING-120-20260911.md. Build/start/login probe passed. Client visual review still pending.
