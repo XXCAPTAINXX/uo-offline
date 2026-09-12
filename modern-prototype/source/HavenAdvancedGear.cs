@@ -87,11 +87,28 @@ namespace Server.HavenPrototype
             EventSink.ServerStarted += () => { if (HavenPreview.Enabled) foreach (var item in World.Items.Values.ToArray()) if (AutoKind(item) > 0) Attach(item, AutoKind(item)); };
             EventSink.CreatureDeath += e => {
                 var victim = e.Creature as BaseCreature; var owner = e.Killer == null ? null : e.Killer.GetDamageMaster(victim) ?? e.Killer;
+                AwardCompanionEquipment(victim);
                 if (!HavenStarterGear.Eligible(victim, owner)) return;
                 int xp = Math.Max(1, Math.Min(20, victim.HitsMax / 100));
                 foreach (var item in owner.Items.ToArray()) { var record = Find(item) ?? Attach(item, AutoKind(item)); if (record != null) record.Gain(xp); }
                 HavenAdvancedRewards.Award(victim, owner);
             };
+        }
+        public static void AwardCompanionEquipment(BaseCreature victim)
+        {
+            if (victim == null) return;
+            int xp = Math.Max(1, Math.Min(20, victim.HitsMax / 100));
+            foreach (var companion in victim.DamageEntries.Where(d => !d.HasExpired && d.DamageGiven > 0).Select(d => d.Damager).OfType<HavenCompanion>().Distinct())
+            {
+                if (!companion.Alive || companion.Map != victim.Map || !companion.InRange(victim, 18) || !HavenStarterGear.Eligible(victim, companion.BoundOwner)) continue;
+                foreach (var item in companion.Items.ToArray())
+                {
+                    // Supplied role equipment has its own saved progression and XP handler.
+                    if (HavenEquipmentEvolution.Find(item) != null) continue;
+                    var record = Find(item) ?? Attach(item, AutoKind(item));
+                    if (record != null) record.Gain(xp);
+                }
+            }
         }
         public override void Serialize(GenericWriter w) { base.Serialize(w); w.Write(0); w.Write(Equipment); w.Write(Experience); w.Write(AppliedLevel); w.Write(Kind); w.Write(OriginalName); }
         public override void Deserialize(GenericReader r) { base.Deserialize(r); r.ReadInt(); Equipment = r.ReadItem(); Experience = r.ReadInt(); AppliedLevel = r.ReadInt(); Kind = r.ReadInt(); OriginalName = r.ReadString(); if (Equipment != null) Records[Equipment.Serial.Value] = this; }
@@ -147,9 +164,19 @@ namespace Server.HavenPrototype
         }
         public static void Deliver(Mobile player, BaseCreature victim, Item item)
         {
+            CelebrateDrop(player);
             if (player.Backpack != null && player.Backpack.TryDropItem(player, item, false)) { player.SendMessage("Found " + item.Name + " in your backpack."); return; }
             if (victim.Corpse != null && !victim.Corpse.Deleted) { victim.Corpse.DropItem(item); player.SendMessage("Your pack is full; " + item.Name + " is in the corpse."); }
             else { item.MoveToWorld(player.Location, player.Map); player.SendMessage("Your pack is full; " + item.Name + " is at your feet."); }
+        }
+        private sealed class DropCelebration { }
+        public static void CelebrateDrop(Mobile player)
+        {
+            if (player == null || player.Deleted || player.Map == null || player.Map == Map.Internal || !player.BeginAction(typeof(DropCelebration))) return;
+            var location = new Point3D(player.X, player.Y, player.Z + 20);
+            Effects.SendLocationEffect(location, player.Map, 0x373A, 16, 10, 1153, 0);
+            player.PlaySound(0x7FFE); // Dedicated TazUO SoundOverrides/32766.mp3 alert.
+            Timer.DelayCall(TimeSpan.FromSeconds(3), () => player.EndAction(typeof(DropCelebration)));
         }
         public static void Award(BaseCreature victim, Mobile player)
         {

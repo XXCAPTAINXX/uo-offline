@@ -159,9 +159,9 @@ namespace Server.HavenPrototype
     public class HavenMiniEnemy : BaseCreature
     {
         public override bool CanFlee { get { return false; } }
-        private HavenMiniChamp _camp;private bool _boss;
+        private HavenMiniChamp _camp;private bool _boss;private int _lootTheme;
         public HavenMiniEnemy(HavenMiniChamp camp,int theme,int stage):base(stage==3 && theme==2?AIType.AI_Mage:AIType.AI_Melee,FightMode.Closest,12,1,0.2,0.4) {
-            _camp=camp;_boss=stage==3;
+            _camp=camp;_boss=stage==3;_lootTheme=theme;
             Body=theme==0?47:theme==1?17:(_boss?24:50);
             Name=theme==0?(_boss?"the Blighted Heartwood":"a wildwood ravager"):theme==1?(_boss?"Captain Ironhook":"a corsair raider"):(_boss?"the Grave Regent":"a restless warrior");
             Hue=_boss?0x489:0;BaseSoundID=theme==0?442:theme==1?0x45A:0x48D;
@@ -175,9 +175,41 @@ namespace Server.HavenPrototype
         public HavenMiniEnemy(Serial serial):base(serial){}
         public override void OnDamage(int amount,Mobile from,bool willKill){if(_camp!=null)_camp.Credit(this,from,amount);base.OnDamage(amount,from,willKill);}
         public override void OnThink(){base.OnThink();if(_camp==null || _camp.Deleted){Delete();return;}if(Map!=_camp.Map || !InRange(_camp,20)){Combatant=null;MoveToWorld(_camp.Location,_camp.Map);}}
-        public override void OnDeath(Container corpse){base.OnDeath(corpse);if(!_boss && corpse is Corpse)((Corpse)corpse).BeginDecay(TimeSpan.FromSeconds(45));if(_camp!=null)_camp.Defeated(this);}
-        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_camp);w.Write(_boss);}
-        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_camp=r.ReadItem() as HavenMiniChamp;_boss=r.ReadBool();}
+        public override void OnDeath(Container corpse)
+        {
+            base.OnDeath(corpse);
+            // Each boss gets one roll, including each of the three challenge bosses.
+            if (_boss && corpse != null && !corpse.Deleted)
+                HavenMiniBossLoot.Drop(corpse, _lootTheme);
+            if (!_boss && corpse is Corpse) ((Corpse)corpse).BeginDecay(TimeSpan.FromSeconds(45));
+            if (_camp != null) _camp.Defeated(this);
+        }
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(_camp);w.Write(_boss);w.Write(_lootTheme);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();_camp=r.ReadItem() as HavenMiniChamp;_boss=r.ReadBool();_lootTheme=version>=1?r.ReadInt():Body==47?0:Body==17?1:2;}
+    }
+    public static class HavenMiniBossLoot
+    {
+        // Independent rolls per corpse, not per participant. Challenge runs all three tables.
+        public static void Drop(Container corpse, int theme)
+        {
+            theme = Math.Max(0, Math.Min(2, theme));
+            if (Utility.RandomDouble() < 0.25)
+                corpse.DropItem(new TreasureMap(Utility.RandomMinMax(3, 5), corpse.Map == Map.Felucca ? Map.Felucca : Map.Trammel));
+            if (Utility.RandomDouble() < 0.50)
+                corpse.DropItem(new HavenResourceDeed(theme == 0 ? 12 : theme == 1 ? 0 : 34, 100));
+            if (Utility.RandomDouble() < 0.10)
+                corpse.DropItem(new ScrollOfAlacrity(theme == 0 ? SkillName.Lumberjacking : theme == 1 ? SkillName.Tactics : SkillName.Magery));
+            if (Utility.RandomDouble() < 0.02)
+            {
+                var set = new Bag { Name = "Cyclone weapon and shield set" };
+                set.DropItem(HavenAreaWeapons.Create(theme == 0 ? 6 : theme == 1 ? 5 : 7));
+                var shield = new MetalShield { Name = theme == 0 ? "Heartwood bulwark" : theme == 1 ? "Ironhook's guard" : "Regent's ward", Hue = theme == 0 ? 0x59D : theme == 1 ? 0x972 : 0x455 };
+                shield.Attributes.DefendChance = 10; shield.Attributes.RegenMana = 2; shield.Attributes.LowerManaCost = 5;
+                HavenAdvancedGear.Attach(shield, 5);
+                set.DropItem(shield);
+                corpse.DropItem(set);
+            }
+        }
     }
     public class HavenMiniPrize : Container
     {

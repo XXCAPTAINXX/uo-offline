@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Server.Accounting;
 using Server.Commands;
@@ -68,6 +69,29 @@ namespace Server.HavenPrototype
         {
             CommandSystem.Register("c", AccessLevel.Player, Open);
             CommandSystem.Register("companion", AccessLevel.Player, Open);
+            EventSink.ServerStarted += () => {
+                if (!HavenPreview.Enabled) return;
+                foreach (var companion in World.Mobiles.Values.OfType<HavenCompanion>().ToArray())
+                {
+                    var owner = companion.BoundOwner;
+                    var account = owner == null ? null : owner.Account as Account;
+                    if (owner == null || owner.Name != "Rictor Quake" || account == null || account.GetTag("Haven.JennaAppearanceApplied") != null) continue;
+                    companion.Female = true; companion.Body = 0x191; companion.FacialHairItemID = 0;
+                    companion.Name = "Jenna Ashford";
+                    account.SetTag("Haven.JennaAppearanceApplied", "true");
+                }
+            };
+            CommandSystem.Register("companionfemale", AccessLevel.Player, e => {
+                var companion = Claim(e.Mobile);
+                if (companion == null) return;
+                companion.Female = true;
+                companion.Body = 0x191;
+                companion.FacialHairItemID = 0;
+                string oldName = companion.Name ?? string.Empty;
+                int surname = oldName.IndexOf(' ');
+                companion.Name = "Jenna" + (surname >= 0 ? oldName.Substring(surname) : string.Empty);
+                e.Mobile.SendMessage("Your companion is now female. Her skills, equipment and progress are preserved.");
+            });
         }
 
         private static void Open(CommandEventArgs e)
@@ -284,6 +308,7 @@ namespace Server.HavenPrototype
 
         public override void OnThink()
         {
+            ThinkEncouragement();
             if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
             RecoverResources(DateTime.UtcNow);
             ThinkAssignedPets();
@@ -374,7 +399,41 @@ namespace Server.HavenPrototype
         {
             // The prototype's order gump deliberately omits release, transfer and drop-all.
         }
-        public override void OnDoubleClick(Mobile from) { Show(from); }
+        public override void OnDoubleClick(Mobile from)
+        {
+            if (ShowAwayTimer(from)) return;
+            if (CanOpenPack(from)) DisplayPaperdollTo(from);
+            Show(from);
+        }
+
+        private DateTime _nextEncouragement = DateTime.UtcNow.AddMinutes(8);
+        private int _lastEncouragement = -1;
+        private static readonly string[] Encouragement = {
+            "I've got your back.", "We're making good progress.",
+            "One step at a time. We'll get there.", "Ready when you are.",
+            "It's good to have someone to share the road with.", "We make a good team."
+        };
+        private static readonly string[] JennaEncouragement = {
+            "I've got your back, handsome.",
+            "You handle the monsters. I'll handle admiring you.",
+            "Another adventure with you? That's my kind of date.",
+            "Stay close. I like having you around.",
+            "We make a pretty good team, don't we?",
+            "Try not to look so heroic. It's distracting."
+        };
+        private void ThinkEncouragement()
+        {
+            if (DateTime.UtcNow < _nextEncouragement || _owner == null || _owner.NetState == null ||
+                !_owner.Alive || !Alive || IsDeadPet || OnMission || IsStabled || Map != _owner.Map ||
+                !InRange(_owner, 8) || !InLOS(_owner)) return;
+            _nextEncouragement = DateTime.UtcNow.AddMinutes(Utility.RandomMinMax(8, 15));
+            var lines = Female && (Name == "Jenna" || (Name ?? string.Empty).StartsWith("Jenna ")) ? JennaEncouragement : Encouragement;
+            int choice = Utility.Random(lines.Length - 1);
+            if (choice >= _lastEncouragement && _lastEncouragement >= 0) choice++;
+            _lastEncouragement = choice;
+            _owner.SendMessage(0x59B, Name + ": " + lines[choice]);
+        }
+        public override bool AllowEquipFrom(Mobile from) { return CanOpenPack(from); }
         public void Show(Mobile from, bool expanded = false)
         {
             if (!IsOwner(from)) return;
@@ -394,7 +453,7 @@ namespace Server.HavenPrototype
         }
         public override bool CheckNonlocalLift(Mobile from, Item item)
         {
-            return CanOpenPack(from) && item != Backpack && item.IsChildOf(Backpack);
+            return CanOpenPack(from) && item != Backpack && (item.IsChildOf(Backpack) || (item.Parent == this && item.Movable));
         }
         public override bool CheckNonlocalDrop(Mobile from, Item item, Item target)
         {

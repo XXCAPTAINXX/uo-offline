@@ -40,6 +40,20 @@ namespace Server.HavenPrototype
     public class HavenPetTicket:Item
     {
         public Mobile Owner;public BaseCreature Pet;public int Kind,Rarity;private Bag _supplies;
+        public static void Initialize(){EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)foreach(var ticket in World.Items.Values.OfType<HavenPetTicket>().ToArray())ticket.ApplySpeciesColor();};}
+        private void ApplySpeciesColor()
+        {
+            if(Pet==null || Pet.Deleted)return;
+            string[] types={"PackHorse","Horse","ForestOstard","Beetle","Dragon","WhiteWyrm","HavenEmberwing","HavenMoonfang","HavenStormscale","HavenFrostmane","HavenVerdantLlama","HavenStormhorn"};
+            int[] hues={0x59B,0x972,0x59D,0x53D,0x21,0x47E,0x489,0x455,0x515,0x480,0x48F,0x48D};
+            int species=Array.IndexOf(types,Pet.GetType().Name);
+            Hue=species>=0?hues[species]:0x59B;
+        }
+        public void ShowLore(Mobile from)
+        {
+            if(from==null||!from.Alive||Deleted||Owner!=from||from.Backpack==null||!IsChildOf(from.Backpack)||!HavenResources.Accessible(from,this)||Pet==null||Pet.Deleted)return;
+            HavenAnimalLoreGump.DisplayTo(from,Pet);
+        }
         public Bag TakeSupplies(){var bag=_supplies;_supplies=null;return bag;}
         public HavenPetTicket(Mobile owner,int kind,int minutes=5,int minimumRarity=0):base(0x14F0)
         {
@@ -47,9 +61,9 @@ namespace Server.HavenPrototype
             _supplies=new Bag{Name="taming mission bonus supplies"};_supplies.Internalize();
             for(int i=0;i<HavenTamingSupplies.SearchRolls(minutes);i++){double roll=Utility.RandomDouble();int tier=kind<6?0:roll<0.4?0:roll<0.75?1:roll<0.95?2:3;Rarity=Math.Max(Rarity,tier);var bonus=HavenTamingSupplies.Bonus(Utility.RandomDouble());if(bonus!=null)_supplies.DropItem(bonus);}
             Rarity=Math.Max(Rarity,Math.Max(0,Math.Min(3,minimumRarity)));Pet=HavenPetMissions.Create(kind);AnimalTaming.ScaleSkills(Pet,0.90,true);if(Pet.StatLossAfterTame)AnimalTaming.ScaleStats(Pet,0.5);
-            HavenPetMissions.ApplyRarity(Pet,Rarity);Pet.Internalize();Name="Pet claim: "+Pet.Name;Internalize();
+            HavenPetMissions.ApplyRarity(Pet,Rarity);Pet.Internalize();Name="Pet claim: "+Pet.Name;ApplySpeciesColor();Internalize();
         }
-        private HavenPetTicket(BaseCreature pet,Mobile owner):base(0x14F0){Pet=pet;Owner=owner;Kind=-1;Rarity=HavenPetDefenses.Tier(pet);Weight=1;Hue=0x59B;LootType=LootType.Blessed;Name="Pet claim: "+pet.Name;}
+        private HavenPetTicket(BaseCreature pet,Mobile owner):base(0x14F0){Pet=pet;Owner=owner;Kind=-1;Rarity=HavenPetDefenses.Tier(pet);Weight=1;Hue=0x59B;LootType=LootType.Blessed;Name="Pet claim: "+pet.Name;ApplySpeciesColor();}
         public static HavenPetTicket Store(BaseCreature pet,Mobile owner,Container pack){if(pet==null||pet.Deleted||owner==null||owner.Deleted||pack==null||pack.Deleted||pet.IsDeadPet||pet.Summoned||!(pet.ControlMaster==owner||(pet.ControlMaster is HavenCompanion&&((HavenCompanion)pet.ControlMaster).BoundOwner==owner)))return null;var ticket=new HavenPetTicket(pet,owner);if(!pack.TryDropItem(owner,ticket,false)){ticket.Pet=null;ticket.Delete();return null;}var mount=pet as BaseMount;if(mount!=null)mount.Rider=null;pet.Combatant=null;pet.ControlTarget=null;pet.ControlOrder=OrderType.Stay;pet.Internalize();pet.SetControlMaster(null);pet.SummonMaster=null;return ticket;}
         public HavenPetTicket(Serial serial):base(serial){}
         public bool Claim(Mobile p)

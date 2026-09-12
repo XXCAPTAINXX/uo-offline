@@ -104,7 +104,18 @@ namespace Server.HavenPrototype
             CurrentState=new DesignState(this,list);CurrentState.Revision=++LastRevision;DesignState=new DesignState(CurrentState);BackupState=new DesignState(CurrentState);
         }
         private void Place(Item item,int x,int y,int z) {item.Movable=false;item.MoveToWorld(new Point3D(X+x,Y+y,Z+z),Map);Fixtures.Add(item);var addon=item as BaseAddon;if(addon!=null)Addons.Add(addon,Owner);}
-        private void Decor(int id,string name,int x,int y,int z) {Place(new Static(id){Name=name},x,y,z);}
+        private void Decor(int id,string name,int x,int y,int z)
+        {
+            if(id==0xE3F) { StorageCrate(name,x,y,z); return; }
+            Place(new Static(id){Name=name},x,y,z);
+        }
+        private void StorageCrate(string name,int x,int y,int z)
+        {
+            var crate=new LargeCrate {Name=name,ItemID=0xE3F};
+            Place(crate,x,y,z);
+            crate.IsSecure=true;
+            Secures.Add(new SecureInfo(crate,SecureLevel.Owner,Owner));
+        }
         private void Chest(string name,int x,int y)
         {
             var chest=new HavenHomeChest {Name=name,MaxItems=1000};Place(chest,x,y,7);chest.Movable=false;chest.IsSecure=true;Secures.Add(new SecureInfo(chest,SecureLevel.Owner,Owner));
@@ -134,9 +145,23 @@ namespace Server.HavenPrototype
             Decor(0x14F7,"Recovered ship's anchor",7,6,7);Decor(0xE3F,"Rigging stores",8,6,7);
             Decor(0xE3F,"Rigging stores",8,6,10);Decor(0xE3F,"Ready export cargo",8,7,7);Decor(0xE3F,"Ready export cargo",7,7,7);
             Decor(0x11CA,"Porch flowers",-6,6,7);Decor(0x11CA,"Porch flowers",2,6,7);
+            EnsurePracticeChest();
+        }
+        private void EnsurePracticeChest()
+        {
+            if (!Fixtures.OfType<HavenHomePracticeChest>().Any(i=>!i.Deleted))
+                Place(new HavenHomePracticeChest(),4,0,7);
         }
         public void RepairLegacyDoors()
         {
+            EnsurePracticeChest();
+            // Upgrade only this lodge's tracked decorative crates, never player containers.
+            foreach(var old in Fixtures.OfType<Static>().Where(i=>!i.Deleted && i.ItemID==0xE3F).ToArray())
+            {
+                StorageCrate(old.Name,old.X-X,old.Y-Y,old.Z-Z);
+                Fixtures.Remove(old);
+                old.Delete();
+            }
             foreach(var old in Doors.OfType<DarkWoodDoor>().ToArray())
             {
                 old.Open=false;
