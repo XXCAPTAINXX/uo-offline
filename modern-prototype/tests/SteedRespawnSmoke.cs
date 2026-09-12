@@ -12,7 +12,7 @@ public static class SteedRespawnSmoke {
   var second=spawner.GetSpawn().OfType<BaseCreature>().Single();
   check(first!=second&&!first.Deleted&&first.ControlMaster==owner&&!second.Controlled,"steed replacement excludes and preserves tamed predecessor");
   spawner.Spawn();check(spawner.GetSpawn().Single()==second,"full steed habitat does not duplicate wild pet");
-  second.Delete();spawner.Spawn();check(spawner.GetSpawn().OfType<BaseCreature>().Single()!=second,"dead steed replaced on next spawn tick");
+  second.Owners.Add(owner);second.Internalize();spawner.Spawn();check(!second.Deleted&&spawner.GetSpawn().OfType<BaseCreature>().Single()!=second,"stored previously tamed steed frees slot without deleting pet");second.Delete();var wild=spawner.GetSpawn().OfType<BaseCreature>().Single();wild.Delete();spawner.Spawn();check(spawner.GetSpawn().OfType<BaseCreature>().Single()!=second,"dead steed replaced on next spawn tick");
   spawner.Delete();first.Delete();
  }
 }

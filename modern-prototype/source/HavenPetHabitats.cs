@@ -10,7 +10,7 @@ namespace Server.HavenPrototype
  {
   public HavenVampiricSteedSpawner():base(1,TimeSpan.FromSeconds(10),TimeSpan.FromSeconds(15),0,0,new List<string>{"VampiricSteed"}){}
   // Clear tamed/deleted entries before the native availability check, which otherwise skips cleanup when full.
-  public override void Spawn(){Defrag();base.Spawn();}
+  public override void Spawn(){foreach(var pet in GetSpawn().OfType<BaseCreature>().ToArray()){if(pet.Owners.Count>0||pet.Map==Map.Internal)RemoveSpawn(pet);}Defrag();base.Spawn();}
   public HavenVampiricSteedSpawner(Serial serial):base(serial){}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();MinDelay=TimeSpan.FromSeconds(10);MaxDelay=TimeSpan.FromSeconds(15);NextSpawn=TimeSpan.FromSeconds(10);}
