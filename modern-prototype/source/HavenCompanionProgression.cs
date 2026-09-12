@@ -2,6 +2,18 @@ using System;
 using Server;
 namespace Server.HavenPrototype {
  public static class HavenCompanionProgression {
+  // Called only after native Peacemaking rejects invalid and already-calmed targets.
+  public static bool CheckPeaceAttempt(Mobile from, Mobile target, double min, double max) {
+   if(!HavenPreview.Enabled || !(from is HavenCompanion))
+    return from.CheckTargetSkill(SkillName.Peacemaking,target,min,max);
+   double value=from.Skills.Peacemaking.Value;
+   bool success=value>=max || (value>=min && Utility.Random(100)<=(int)((value-min)/(max-min)*100));
+   // Train once per valid attempt, including failures and easy targets. Gain applies
+   // locks, caps and the existing 3x multiplier; do not also run the native gain roll.
+   if(from.Alive) Server.Misc.SkillCheck.Gain(from,from.Skills.Peacemaking,1);
+   EventSink.InvokeSkillCheck(new SkillCheckEventArgs(from,from.Skills.Peacemaking,success));
+   return success;
+  }
   public static int TamingTraining(int trained,int minutes,double roll) {
    int budget=minutes*2*HavenRegionalMissions.Bonus(minutes)/100;
    int fast=Math.Min(Math.Max(0,1000-trained),budget*5);
