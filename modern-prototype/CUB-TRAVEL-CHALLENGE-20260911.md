@@ -12,3 +12,4 @@ Validation: isolated build and runtime suite COMPLETE. Verified delayed CUB cred
 
 Deployment backup: E:/Backups/Haven/Prototypes/servuo-before-cub-travel-challenge-20260911-195908. Save hashes matched. Only five custom source files and native patch 0017 deployed; other staged roles/timer/repair work remains separate.
 Live rebuild: zero warnings/errors. Server restarted on 2699; account login, populated server list and game relay passed.
+Follow-up live: Challenge adds one guaranteed Astral Shard in the fourth parcel. Runtime award test passed. Backup E:/Backups/Haven/Prototypes/servuo-before-challenge-shard-20260911-200326; build and login passed.
