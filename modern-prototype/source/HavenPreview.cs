@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using Server.Accounting;
 using Server.Commands;
@@ -75,7 +76,17 @@ namespace Server.HavenPrototype
         public static bool CanTravel(Mobile from)
         {
             return Enabled && from != null && from.Player && !from.Deleted && from.Alive && from.Map != Map.Internal &&
-                from.Combatant == null && from.Aggressors.Count == 0 && from.Aggressed.Count == 0;
+                TravelCombatSeconds(from) == 0;
+        }
+        // Travel cooldown is independent of criminal status and native aggression expiry.
+        public static int TravelCombatSeconds(Mobile from)
+        {
+            if (from == null) return 0;
+            var now = DateTime.UtcNow;
+            return from.Aggressors.Concat(from.Aggressed)
+                .Where(a => !a.Expired)
+                .Select(a => Math.Max(0, (int)Math.Ceiling((a.LastCombatTime.AddSeconds(15) - now).TotalSeconds)))
+                .DefaultIfEmpty(0).Max();
         }
         public static bool FindLanding(Destination destination, out Point3D landing)
         {

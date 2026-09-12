@@ -8,6 +8,7 @@ namespace Server.HavenPrototype
 {
  public class HavenLegendaryPetSkills:Item
  {
+  public IEnumerable<SkillName> Boosted { get { return _boosted.AsReadOnly(); } }
   readonly List<SkillName> _boosted=new List<SkillName>();
   public HavenLegendaryPetSkills():base(1){Visible=false;Movable=false;Weight=0;Name="legendary pet skill roll";}
   public HavenLegendaryPetSkills(Serial serial):base(serial){}

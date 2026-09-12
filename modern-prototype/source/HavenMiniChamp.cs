@@ -84,10 +84,8 @@ namespace Server.HavenPrototype
             if(Active)return "An expedition is already active: wave "+(_stage+1)+", "+Remaining+" enemies remaining.";
             if(DateTime.UtcNow<_cooldown)return "Camp cooldown: "+Math.Ceiling((_cooldown-DateTime.UtcNow).TotalSeconds)+" seconds remaining.";
             if(from.Map!=Map||(!from.InRange(this,8)&&!HavenExpeditionMarker.Nearby(this,from)))return "Move beside the camp sign or supplies, or use Travel to camp. You are "+(from.Map==Map?Math.Max(Math.Abs(from.X-X),Math.Abs(from.Y-Y)).ToString()+" tiles from the clearing.":"on another facet.");
-            var target=from.Combatant as Mobile;
-            if(target!=null&&!target.Deleted&&target.Alive&&target.Map==from.Map&&from.InRange(target,18))return "Still engaged with "+target.Name+" nearby. Finish combat before starting.";
-            var recent=from.Aggressors.Concat(from.Aggressed).Where(a=>!a.Expired).ToArray();
-            if(recent.Length>0)return "Recent combat: wait up to "+Math.Max(1,Math.Ceiling(recent.Max(a=>(a.LastCombatTime+AggressorInfo.ExpireDelay-DateTime.UtcNow).TotalSeconds)))+" seconds after the last attack.";
+            int combatSeconds=HavenPreview.TravelCombatSeconds(from);
+            if(combatSeconds>0)return "Recent combat: wait "+combatSeconds+" seconds after the last attack.";
             return null;
         }
         public bool Begin(Mobile from,int theme) {
