@@ -130,7 +130,7 @@ namespace Server.HavenPrototype
                 for(int theme=Challenge?0:_theme;theme<=(Challenge?2:_theme);theme++)new HavenMiniPrize(player,theme).Deliver(player);
                 if(Challenge){var bonus=new HavenMiniPrize(player,Utility.Random(3));bonus.DropItem(new AstralShard(1));bonus.Deliver(player);}
                 HavenMarks.Award(player,Challenge?80:20);Increment(player,"Wins");
-                player.SendMessage(Challenge?"Challenge won: four reward sets, 80 Marks, one bonus Astral Shard and ship supplies. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Corsair raiders also award ship supplies. Full-pack rewards remain pending.");
+                player.SendMessage(Challenge?"Challenge won: four reward sets, 80 Marks, one bonus Astral Shard. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Full-pack rewards remain pending.");
             }
             _participants.Clear();
         }
@@ -182,7 +182,8 @@ namespace Server.HavenPrototype
     public class HavenMiniPrize : Container
     {
         private Mobile _owner;
-        public HavenMiniPrize(Mobile owner,int theme):base(0xE76){_owner=owner;Movable=false;Visible=false;DropItem(new BankCheck(10000));if(theme==1){DropItem(new Cannonball(25));DropItem(new PowderCharge(25));DropItem(new FuseCord(25));}DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
+        public HavenMiniPrize(Mobile owner,int theme,bool islandRewards=false):base(0xE76){_owner=owner;Movable=false;Visible=false;var whirlwind=WhirlwindReward(Utility.RandomDouble(),Utility.Random(3));if(whirlwind!=null)DropItem(whirlwind);DropItem(new BankCheck(10000));if(islandRewards){DropItem(new Cannonball(25));DropItem(new PowderCharge(25));DropItem(new FuseCord(25));}DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
+        public static BaseWeapon WhirlwindReward(double roll,int choice){return roll>=0&&roll<0.05?HavenAreaWeapons.Create(5+Math.Max(0,Math.Min(2,choice))):null;}
         public HavenMiniPrize(Serial serial):base(serial){}
         public bool Deliver(Mobile from){if(Deleted || from!=_owner || !HavenMarks.CanUse(from) || from.Backpack==null)return false;int count=0,weight=0;foreach(var item in Items){if(!from.Backpack.CheckHold(from,item,false,true,count,weight))return false;count+=1+item.TotalItems;weight+=item.PileWeight+item.TotalWeight;}foreach(var item in Items.ToArray())from.Backpack.DropItem(item);Delete();return true;}
         public static void Collect(Mobile p){foreach(var parcel in World.Items.Values.OfType<HavenMiniPrize>().Where(x=>x._owner==p).ToArray())parcel.Deliver(p);}
@@ -199,7 +200,7 @@ namespace Server.HavenPrototype
             AddLabel(20,127,1152,camp.Active?"Active: wave "+(camp.Stage+1)+" / 4, "+camp.Remaining+" enemies":"Ready in "+Math.Max(0,Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds))+" seconds");
             for(int i=0;i<4;i++)FlatButton(20,160+i*30,265,10+i,HavenMiniChamp.Themes[i]);
             AddHtml(300,160,250,105,"<BASEFONT COLOR=#FFFFFF>Each participant: 10,000 gold, 20 Marks, 250 themed resources as a deed. Five 105/110 Power Scrolls, Alacrity and Transcendence. Full packs keep rewards pending.</BASEFONT>",false,false);
-            AddHtml(20,290,530,52,"<BASEFONT COLOR=#3B2A1A>Challenge: three waves of 15 mixed enemies, then all three bosses together. Four reward sets, 80 Marks and +1 Astral Shard per player. Includes Corsair ship ammunition.</BASEFONT>",false,false);
+            AddHtml(20,290,530,52,"<BASEFONT COLOR=#3B2A1A>Challenge: three waves of 15 mixed enemies, then all three bosses together. Four reward sets, 80 Marks and +1 Astral Shard per player. </BASEFONT>",false,false);
             AddLabel(20,347,1152,"Wins: "+HavenMiniChamp.Wins(p)+" | Pending rewards: "+HavenMiniPrize.Pending(p));
             Button(20,385,1,"Travel to camp");Button(300,385,2,"Collect pending rewards");Button(20,423,3,"Refresh");Button(450,423,0,"Close");
         }

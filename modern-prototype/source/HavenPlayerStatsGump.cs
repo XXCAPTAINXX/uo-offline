@@ -10,7 +10,7 @@ namespace Server.HavenPrototype {
   readonly int _page;
   public static void Initialize(){CommandSystem.Register("mystats",AccessLevel.Player,e=>{if(HavenPreview.Enabled){e.Mobile.CloseGump(typeof(HavenPlayerStatsGump));e.Mobile.SendGump(new HavenPlayerStatsGump(e.Mobile));}});}
   public HavenPlayerStatsGump(Mobile p,int page=0):base(30,30){
-   var skills=p.Skills.Cast<Skill>().OrderBy(s=>s.Name).ToArray();const int rows=23;_page=Math.Max(0,Math.Min(page,(skills.Length-1)/rows));
+   var skills=p.Skills.Cast<Skill>().OrderByDescending(s=>s.Base).ThenBy(s=>s.Name).ToArray();const int rows=23;_page=Math.Max(0,Math.Min(page,(skills.Length-1)/rows));
    AddBackground(0,0,740,725,3000);AddLabel(24,22,0,p.Name+" - character stats");
    AddLabel(24,53,0,"Str "+p.Str+"   Dex "+p.Dex+"   Int "+p.Int+"   |   Raw stat total "+(p.RawStr+p.RawDex+p.RawInt)+" / "+p.StatCap);
    Vital(24,90,"Health",p.Hits,p.HitsMax);Vital(263,90,"Stamina",p.Stam,p.StamMax);Vital(502,90,"Mana",p.Mana,p.ManaMax);
@@ -25,7 +25,7 @@ namespace Server.HavenPrototype {
    AddLabel(30,548,0,"Casting: FC "+AosAttributes.GetValue(p,AosAttribute.CastSpeed)+" / FCR "+AosAttributes.GetValue(p,AosAttribute.CastRecovery));
    AddLabel(30,574,0,"Luck "+p.Luck+"   Followers "+p.Followers+" / "+p.FollowersMax);
    AddHtml(30,604,266,45,"Equipment totals shown above; combat caps and situational effects still apply.",false,false);
-   AddLabel(338,164,0,"SKILLS");AddLabel(508,164,0,"Base");AddLabel(575,164,0,"Now");AddLabel(645,164,0,"Cap");
+   AddLabel(338,164,0,"SKILLS - highest first");AddLabel(508,164,0,"Base");AddLabel(575,164,0,"Now");AddLabel(645,164,0,"Cap");
    for(int row=0;row<rows;row++){int i=_page*rows+row;if(i>=skills.Length)break;var skill=skills[i];int y=194+row*19;AddLabel(338,y,0,skill.Name+(HavenPlayerCaps.IsFree(p,skill)?" *":""));AddLabel(508,y,0,skill.Base.ToString("F1"));AddLabel(575,y,0,skill.Value.ToString("F1"));AddLabel(645,y,0,skill.Cap.ToString("F1"));}
    AddLabel(338,635,0,"* Free skill | Counted: "+(HavenPlayerCaps.Counted(p.Skills)/10.0).ToString("F1")+" / "+(p.Skills.Cap/10.0).ToString("F1"));
    FlatButton(24,685,120,1,"Refresh");if(_page>0)FlatButton(168,685,110,2,"Previous");AddLabel(300,685,0,"Skills "+(_page+1)+" / "+((skills.Length+rows-1)/rows));if((_page+1)*rows<skills.Length)FlatButton(446,685,110,3,"Next");FlatButton(590,685,120,0,"Close");

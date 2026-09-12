@@ -4,6 +4,22 @@ namespace Server.HavenPrototype
 {
     public interface IHavenAreaWeapon { int Element { get; } }
     public interface IHavenWhirlwindWeapon { }
+    public class HavenCycloneMace : Mace, IHavenWhirlwindWeapon
+    {
+        public override WeaponAbility PrimaryAbility {get{return WeaponAbility.WhirlwindAttack;}}
+        [Constructable] public HavenCycloneMace(){HavenAreaWeapons.InitializeWeapon(this,"Cyclone Mace",0x482);}
+        public HavenCycloneMace(Serial serial):base(serial){}
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
+    }
+    public class HavenCycloneKryss : Kryss, IHavenWhirlwindWeapon
+    {
+        public override WeaponAbility PrimaryAbility {get{return WeaponAbility.WhirlwindAttack;}}
+        [Constructable] public HavenCycloneKryss(){HavenAreaWeapons.InitializeWeapon(this,"Cyclone Kryss",0x47E);}
+        public HavenCycloneKryss(Serial serial):base(serial){}
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
+    }
     public class HavenCycloneScimitar : RadiantScimitar, IHavenWhirlwindWeapon
     {
         [Constructable] public HavenCycloneScimitar() { HavenAreaWeapons.InitializeWeapon(this, "Cyclone Scimitar", 0x482); }
@@ -44,7 +60,7 @@ namespace Server.HavenPrototype
             weapon.WeaponAttributes.HitLeechHits = 20;
             HavenAdvancedGear.Attach(weapon, 6);
         }
-        public static BaseWeapon Create(int index) { if(index==5)return new HavenCycloneScimitar();if(index==3)return new HavenCycloneAxe();if(index==4)return new HavenTempestStaff();return index == 0 ? (BaseWeapon)new HavenStormblade() : index == 1 ? new HavenCindermaul() : (BaseWeapon)new HavenFrostwakeBow(); }
+        public static BaseWeapon Create(int index) { if(index==7)return new HavenCycloneKryss();if(index==6)return new HavenCycloneMace();if(index==5)return new HavenCycloneScimitar();if(index==3)return new HavenCycloneAxe();if(index==4)return new HavenTempestStaff();return index == 0 ? (BaseWeapon)new HavenStormblade() : index == 1 ? new HavenCindermaul() : (BaseWeapon)new HavenFrostwakeBow(); }
     }
     public class HavenStormblade : Longsword, IHavenAreaWeapon
     {
