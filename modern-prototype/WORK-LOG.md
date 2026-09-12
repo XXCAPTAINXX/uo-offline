@@ -374,3 +374,5 @@ Training hover descriptions (staged): attach native description tooltip to abili
 
 Fine Mana controls (staged): share exact whole-training-point increment calculation between purchase validation and UI. Mana/Int/Stamina weight0.5 now use +/-2 and +/-20; Dexterity weight0.1 keeps +/-10 and +/-100. Prevents fractional rounding discounts. Not deployed; joins queued tooltip/category/travel cleanup.
 Fine Mana verification: Release build zero warnings/errors; full isolated regression COMPLETE, including +2 Mana costing exactly one point and fractional purchase rejection.
+
+One-handed Whirlwind and affordable Max (staged): Cyclone Scimitar uses native one-handed RadiantScimitar (Whirlwind/Bladeweave), shared level20 XP progression, 150 Marks under Weapons and existing legendary area-weapon pool. Max affordable selects the largest whole-point increase within remaining training budget, individual cap and aggregate limits; separate Limit label retained. Build zero warnings/errors, isolated regression COMPLETE including one-handed native move and one-point/+2Mana Max checks. Not deployed.

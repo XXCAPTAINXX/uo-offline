@@ -72,6 +72,17 @@ namespace Server.HavenPrototype
             for(int step=1;step<=100;step++){decimal cost=step*(decimal)point.Weight;if(cost==decimal.Truncate(cost))return step;}
             return 100;
         }
+        public static int AffordableMaximum(BaseCreature pet,TrainingPoint point) {
+            int current=Current(pet,point),best=current,step=point.TrainPoint is SkillName?50:AdjustmentStep(point);
+            int points=PetTrainingHelper.GetTrainingProfile(pet,true).TrainingPoints;
+            for(int value=current+step;value<=point.GetMax(pet);value+=step){
+                int cost=PetTrainingHelper.GetTotalCost(point,pet,value,current);if(cost>points)break;
+                double increase=(value-current)*point.Weight;
+                if(point.TrainPoint is ResistanceType&&PetTrainingHelper.GetTotalResistWeight(pet)+increase>PetTrainingHelper.GetTrainingCapTotal((ResistanceType)point.TrainPoint))break;
+                if(point.TrainPoint is PetStat&&(PetStat)point.TrainPoint<=PetStat.Mana){var stat=(PetStat)point.TrainPoint;int total=stat<=PetStat.Int?PetTrainingHelper.GetTotalStatWeight(pet):PetTrainingHelper.GetTotalAttributeWeight(pet);if(total+increase>PetTrainingHelper.GetTrainingCapTotal(stat))break;}
+                if(cost>0)best=value;
+            }return best;
+        }
         public static bool Purchase(Mobile owner, BaseCreature pet, TrainingPoint tp, int expected, int value) {
             if(!CanUse(owner,pet)||!Peaceful(owner,pet)||tp==null||!Available(pet,tp))return false;
             var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
@@ -155,7 +166,7 @@ namespace Server.HavenPrototype
                 AddLabel(324,204,0,"RESULTS");AddLabel(324,232,0,"Points: "+profile.TrainingPoints+" - "+cost+" = "+(profile.TrainingPoints-cost));
                 AddLabel(324,260,0,"Current: "+HavenPetTrainingMenu.ValueText(pet,point)+"   Result: "+Result(_value));
                 AddLabel(324,288,0,"Limit: "+Result(point.GetMax(pet)));
-                if(point.Start!=point.Max){int[] delta=point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};for(int i=0;i<delta.Length;i++)FlatButton(24+i*142,340,132,100+i,(delta[i]>0?"+":"")+(point.TrainPoint is SkillName?delta[i]/10:delta[i]));}
+                if(point.Start!=point.Max){int[] delta=point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};for(int i=0;i<delta.Length;i++)FlatButton(24+i*112,340,102,100+i,(delta[i]>0?"+":"")+(point.TrainPoint is SkillName?delta[i]/10:delta[i]));FlatButton(472,340,122,2,"Max affordable");}
                 if(point.TrainPoint is MagicalAbility)AddLabel(24,370,0,"Choosing a magic school can replace its current school.");
                 FlatButton(24,415,270,1,profile.TrainingMode==TrainingMode.Planning?"Add to training plan":"Confirm training purchase");
             }
@@ -164,6 +175,7 @@ namespace Server.HavenPrototype
         string Result(int value){return _point.TrainPoint is SkillName?(100+value/10.0).ToString("F1"):_point.Start==_point.Max?"Learned":value.ToString();}
         int Step(){return HavenPetTrainingMenu.AdjustmentStep(_point);}
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(!HavenPetTrainingMenu.CanUse(p,_pet))return;
+            if(info.ButtonID==2&&_point!=null&&_point.Start!=_point.Max){p.SendGump(new HavenPetUpgradeGump(_pet,_point,_expected,_category,_page,HavenPetTrainingMenu.AffordableMaximum(_pet,_point)));return;}
             if(info.ButtonID>=100&&_point!=null&&_point.Start!=_point.Max){int[] delta=_point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};int i=info.ButtonID-100;if(i<delta.Length)p.SendGump(new HavenPetUpgradeGump(_pet,_point,_expected,_category,_page,_value+delta[i]));return;}
             if(info.ButtonID==1){var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
                 if(_point==null){if(profile.CanApplyOptions&&HavenPetTrainingMenu.Peaceful(p,_pet))profile.EndTraining();else p.SendMessage("Complete combat training before finishing this stage.");}

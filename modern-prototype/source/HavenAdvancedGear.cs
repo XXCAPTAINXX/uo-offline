@@ -135,7 +135,7 @@ namespace Server.HavenPrototype
         }
         public static Item CreateLegendary()
         {
-            if (Utility.Random(5) == 0) return HavenAreaWeapons.Create(Utility.Random(5));
+            if (Utility.Random(5) == 0) return HavenAreaWeapons.Create(Utility.Random(6));
             Item item = Utility.Random(5) == 0 ? (Item)new Spellbook(ulong.MaxValue) : Loot.RandomArmorOrShieldOrWeaponOrJewelry();
             BaseRunicTool.ApplyAttributesTo(item, false, 0, item is Spellbook ? 6 : 8, 90, 100);
             var a = HavenAdvancedGear.Attributes(item);
