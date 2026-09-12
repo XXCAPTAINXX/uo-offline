@@ -12,7 +12,7 @@ namespace Server.HavenPrototype
 {
     public static class HavenPetTrainingMenu
     {
-        public static readonly string[] Categories = { "Stats", "Resists", "Magic skill caps", "Combat skill caps", "Abilities" };
+        public static readonly string[] Categories = { "Stats", "Resists", "Magic skill caps", "Combat skill caps", "Magical abilities", "Special abilities", "Special moves", "Area effect abilities" };
         public static void Initialize() { CommandSystem.Register("pettrain", AccessLevel.Player, e => { if(HavenPreview.Enabled) e.Mobile.Target = new TrainingTarget(); }); }
         sealed class TrainingTarget : Target {
             public TrainingTarget() : base(12, false, TargetFlags.None) { }
@@ -40,10 +40,10 @@ namespace Server.HavenPrototype
             else if(category==2 || category==3)foreach(var skill in category==2?PetTrainingHelper.MagicSkills:PetTrainingHelper.CombatSkills) { if(pet.Skills[skill].Base>0)add(skill); }
             else {
                 var def=PetTrainingHelper.GetTrainingDefinition(pet); if(def==null)return result;
-                foreach(var ability in PetTrainingHelper.MagicalAbilities)if(PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);
-                foreach(var ability in SpecialAbility.Abilities)if(ability!=null && PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);
-                foreach(var ability in def.WeaponAbilities)if(ability!=null)add(ability);
-                foreach(var ability in AreaEffect.Effects)if(ability!=null && PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);
+                if(category==4)foreach(var ability in PetTrainingHelper.MagicalAbilities)if(PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);
+                if(category==5)foreach(var ability in SpecialAbility.Abilities)if(ability!=null && PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);
+                if(category==6)foreach(var ability in def.WeaponAbilities)if(ability!=null)add(ability);
+                if(category==7)foreach(var ability in AreaEffect.Effects)if(ability!=null && PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);
             }
             return result;
         }
@@ -101,14 +101,15 @@ namespace Server.HavenPrototype
         readonly BaseCreature _pet; readonly int _category,_page; readonly List<TrainingPoint> _options;
         const int Rows=10;
         public HavenPetTrainingGump(BaseCreature pet,int category=0,int page=0):base(20,30) {
-            _pet=pet;_category=Math.Max(0,Math.Min(4,category));_options=HavenPetTrainingMenu.Options(pet,_category);_page=Math.Max(0,Math.Min(Math.Max(0,(_options.Count-1)/Rows),page));
+            _pet=pet;_category=Math.Max(0,Math.Min(HavenPetTrainingMenu.Categories.Length-1,category));_options=HavenPetTrainingMenu.Options(pet,_category);_page=Math.Max(0,Math.Min(Math.Max(0,(_options.Count-1)/Rows),page));
             var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
             AddBackground(0,0,740,590,3000);AddLabel(24,20,0,"ANIMAL TRAINING - "+pet.Name);
             double progress=profile.TrainingProgressMax<=0?0:profile.TrainingProgressPercentile*100;
             AddLabel(24,52,0,"Slots "+pet.ControlSlots+" / "+pet.ControlSlotsMax+"    Combat progress "+progress.ToString("F1")+"%    Points "+profile.TrainingPoints);
             AddLabel(24,82,0,profile.CanApplyOptions?"Ready to choose upgrades":profile.HasBegunTraining?"Training active - fight suitable enemies":"Begin training to earn upgrade points");
             AddBackground(18,116,198,296,0xBB8);AddBackground(220,116,500,296,0xBB8);AddLabel(24,126,0,"CATEGORIES");AddLabel(230,126,0,"SELECTIONS");
-            for(int i=0;i<5;i++)FlatButton(24,165+i*44,184,10+i,(_category==i?"[":"")+HavenPetTrainingMenu.Categories[i]+(_category==i?"]":""));
+            for(int i=0;i<HavenPetTrainingMenu.Categories.Length;i++)FlatButton(24,157+i*31,184,10+i,(_category==i?"[":"")+HavenPetTrainingMenu.Categories[i]+(_category==i?"]":""));
+            if(_options.Count==0)AddLabel(230,164,0,"No eligible options for this pet in this category.");
             for(int row=0;row<Rows;row++) { int index=_page*Rows+row;if(index>=_options.Count)break;var tp=_options[index];int y=164+row*25;
                 if(tp.Name.Number>0)AddHtmlLocalized(230,y,240,24,tp.Name.Number,false,false);else AddLabel(230,y,0,tp.Name.String??tp.TrainPoint.ToString());
                 AddLabel(480,y,0,HavenPetTrainingMenu.ValueText(pet,tp));FlatButton(590,y,120,100+index,"Choose upgrade");
@@ -120,7 +121,7 @@ namespace Server.HavenPrototype
         public override void OnResponse(NetState sender,RelayInfo info) {
             var p=sender.Mobile;int id=info.ButtonID;if(id==0||!HavenPetTrainingMenu.CanUse(p,_pet))return;
             var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
-            if(id>=10&&id<15){HavenPetTrainingMenu.Show(p,_pet,id-10);return;}
+            if(id>=10&&id<10+HavenPetTrainingMenu.Categories.Length){HavenPetTrainingMenu.Show(p,_pet,id-10);return;}
             if(id==7){BaseGump.SendGump(new PetTrainingPlanningGump((PlayerMobile)p,_pet));return;}if(id==8){BaseGump.SendGump(new PetTrainingInfoGump((PlayerMobile)p));return;}if(id==5){HavenAnimalLoreGump.DisplayTo(p,_pet);return;}
             if(id==1&&!profile.HasBegunTraining){if(HavenPetTrainingMenu.Peaceful(p,_pet)&&_pet.ControlSlots<_pet.ControlSlotsMax)profile.BeginTraining();else p.SendMessage("Leave combat and check available training stages.");}
             if(id==4){p.SendGump(new HavenPetUpgradeGump(_pet,null,0,_category,_page));return;}

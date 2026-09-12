@@ -35,8 +35,10 @@ public static class RestoredItemsSmoke {
   check(HavenPetExchange.Balance(p)==10,"pet credits accumulate separately from Marks");
   check(HavenPetExchange.Redeem(p,6,1)&&HavenPetExchange.Balance(p)==0,"credits redeem qualified rare pet reward");var reward=p.Backpack.FindItemsByType(typeof(HavenPetTicket),true).Cast<HavenPetTicket>().First(t=>t.Kind==6);check(reward.Rarity>=1,"credit redemption guarantees minimum rarity");reward.Delete();
   var ordinary=new Horse();ordinary.SetControlMaster(p);ordinary.MoveToWorld(p.Location,p.Map);var stored=HavenPetTicket.Store(ordinary,p,p.Backpack);check(stored!=null&&!HavenPetExchange.Eligible(p,stored)&&!HavenPetExchange.Exchange(p,stored),"claimed stored pets excluded from exchange");stored.Delete();
+  var categoryPet=new HavenMoonfang();
+  for(int cat=4;cat<8;cat++){var options=HavenPetTrainingMenu.Options(categoryPet,cat);check(options.All(t=>cat==4?t.TrainPoint is MagicalAbility:cat==5?t.TrainPoint is SpecialAbility:cat==6?t.TrainPoint is WeaponAbility:t.TrainPoint is AreaEffect),"ability category contains only its native type "+cat);}categoryPet.Delete();
   foreach(int group in Enumerable.Range(0,5))check(HavenSupplyShops.Catalogs[2].Any(e=>e.Group==group),"reward category has catalog entries "+group);
   var screen=new HavenSupplyShopGump(p,2,0,group:4);check(screen.Entries.OfType<Server.Gumps.GumpButton>().Any(b=>b.ButtonID==1),"grouped shop includes purchase action");screen.OnServerClose(null);
-  for(int category=0;category<5;category++){var training=new HavenPetTrainingGump(c,category);check(training.Entries.Count>0,"training category renders "+category);}
+  for(int category=0;category<HavenPetTrainingMenu.Categories.Length;category++){var training=new HavenPetTrainingGump(c,category);check(training.Entries.Count>0,"training category renders "+category);}
  }
 }
