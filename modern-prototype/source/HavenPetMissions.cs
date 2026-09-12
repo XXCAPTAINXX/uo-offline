@@ -41,12 +41,12 @@ namespace Server.HavenPrototype
     {
         public Mobile Owner;public BaseCreature Pet;public int Kind,Rarity;private Bag _supplies;
         public Bag TakeSupplies(){var bag=_supplies;_supplies=null;return bag;}
-        public HavenPetTicket(Mobile owner,int kind,int minutes=5):base(0x14F0)
+        public HavenPetTicket(Mobile owner,int kind,int minutes=5,int minimumRarity=0):base(0x14F0)
         {
             Owner=owner;Kind=kind;Weight=1;Hue=0x59B;LootType=LootType.Blessed;
             _supplies=new Bag{Name="taming mission bonus supplies"};_supplies.Internalize();
             for(int i=0;i<HavenTamingSupplies.SearchRolls(minutes);i++){double roll=Utility.RandomDouble();int tier=kind<6?0:roll<0.4?0:roll<0.75?1:roll<0.95?2:3;Rarity=Math.Max(Rarity,tier);var bonus=HavenTamingSupplies.Bonus(Utility.RandomDouble());if(bonus!=null)_supplies.DropItem(bonus);}
-            Pet=HavenPetMissions.Create(kind);AnimalTaming.ScaleSkills(Pet,0.90,true);if(Pet.StatLossAfterTame)AnimalTaming.ScaleStats(Pet,0.5);
+            Rarity=Math.Max(Rarity,Math.Max(0,Math.Min(3,minimumRarity)));Pet=HavenPetMissions.Create(kind);AnimalTaming.ScaleSkills(Pet,0.90,true);if(Pet.StatLossAfterTame)AnimalTaming.ScaleStats(Pet,0.5);
             HavenPetMissions.ApplyRarity(Pet,Rarity);Pet.Internalize();Name="Pet claim: "+Pet.Name;Internalize();
         }
         private HavenPetTicket(BaseCreature pet,Mobile owner):base(0x14F0){Pet=pet;Owner=owner;Kind=-1;Rarity=HavenPetDefenses.Tier(pet);Weight=1;Hue=0x59B;LootType=LootType.Blessed;Name="Pet claim: "+pet.Name;}

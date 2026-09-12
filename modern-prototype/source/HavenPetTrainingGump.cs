@@ -99,7 +99,7 @@ namespace Server.HavenPrototype
     public class HavenPetTrainingGump : HavenMenuGump
     {
         readonly BaseCreature _pet; readonly int _category,_page; readonly List<TrainingPoint> _options;
-        const int Rows=7;
+        const int Rows=10;
         public HavenPetTrainingGump(BaseCreature pet,int category=0,int page=0):base(20,30) {
             _pet=pet;_category=Math.Max(0,Math.Min(4,category));_options=HavenPetTrainingMenu.Options(pet,_category);_page=Math.Max(0,Math.Min(Math.Max(0,(_options.Count-1)/Rows),page));
             var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
@@ -107,21 +107,21 @@ namespace Server.HavenPrototype
             double progress=profile.TrainingProgressMax<=0?0:profile.TrainingProgressPercentile*100;
             AddLabel(24,52,0,"Slots "+pet.ControlSlots+" / "+pet.ControlSlotsMax+"    Combat progress "+progress.ToString("F1")+"%    Points "+profile.TrainingPoints);
             AddLabel(24,82,0,profile.CanApplyOptions?"Ready to choose upgrades":profile.HasBegunTraining?"Training active - fight suitable enemies":"Begin training to earn upgrade points");
-            AddLabel(24,126,0,"CATEGORIES");AddLabel(230,126,0,"SELECTIONS");
+            AddBackground(18,116,198,296,0xBB8);AddBackground(220,116,500,296,0xBB8);AddLabel(24,126,0,"CATEGORIES");AddLabel(230,126,0,"SELECTIONS");
             for(int i=0;i<5;i++)FlatButton(24,165+i*44,184,10+i,(_category==i?"[":"")+HavenPetTrainingMenu.Categories[i]+(_category==i?"]":""));
-            for(int row=0;row<Rows;row++) { int index=_page*Rows+row;if(index>=_options.Count)break;var tp=_options[index];int y=164+row*36;
+            for(int row=0;row<Rows;row++) { int index=_page*Rows+row;if(index>=_options.Count)break;var tp=_options[index];int y=164+row*25;
                 if(tp.Name.Number>0)AddHtmlLocalized(230,y,240,24,tp.Name.Number,false,false);else AddLabel(230,y,0,tp.Name.String??tp.TrainPoint.ToString());
                 AddLabel(480,y,0,HavenPetTrainingMenu.ValueText(pet,tp));FlatButton(590,y,120,100+index,"Choose upgrade");
             }
-            FlatButton(230,426,100,2,"Previous");AddLabel(359,426,0,"Page "+(_page+1)+" / "+Math.Max(1,(_options.Count+Rows-1)/Rows));FlatButton(590,426,120,3,"Next");
+            if(_page>0)FlatButton(230,426,100,2,"Previous");AddLabel(359,426,0,"Page "+(_page+1)+" / "+Math.Max(1,(_options.Count+Rows-1)/Rows));if((_page+1)*Rows<_options.Count)FlatButton(590,426,120,3,"Next");
             AddHtml(24,464,686,42,"Train through combat to 100%, then spend points. The first purchase adds a follower slot. Skill caps require matching power scrolls.",false,false);
-            FlatButton(24,518,184,1,profile.HasBegunTraining?"Training status":"Begin training");FlatButton(230,518,180,4,"Finish stage");FlatButton(432,518,130,5,"Animal Lore");FlatButton(590,518,120,6,"Refresh");FlatButton(590,554,120,0,"Close");
+            FlatButton(24,518,184,1,profile.HasBegunTraining?"Training status":"Begin training");FlatButton(230,518,180,4,"Finish stage");FlatButton(432,518,130,5,"Animal Lore");FlatButton(590,518,120,6,"Refresh");FlatButton(24,554,184,7,"Plan training");FlatButton(230,554,180,8,"Training info");FlatButton(590,554,120,0,"Close");
         }
         public override void OnResponse(NetState sender,RelayInfo info) {
             var p=sender.Mobile;int id=info.ButtonID;if(id==0||!HavenPetTrainingMenu.CanUse(p,_pet))return;
             var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
             if(id>=10&&id<15){HavenPetTrainingMenu.Show(p,_pet,id-10);return;}
-            if(id==5){HavenAnimalLoreGump.DisplayTo(p,_pet);return;}
+            if(id==7){BaseGump.SendGump(new PetTrainingPlanningGump((PlayerMobile)p,_pet));return;}if(id==8){BaseGump.SendGump(new PetTrainingInfoGump((PlayerMobile)p));return;}if(id==5){HavenAnimalLoreGump.DisplayTo(p,_pet);return;}
             if(id==1&&!profile.HasBegunTraining){if(HavenPetTrainingMenu.Peaceful(p,_pet)&&_pet.ControlSlots<_pet.ControlSlotsMax)profile.BeginTraining();else p.SendMessage("Leave combat and check available training stages.");}
             if(id==4){p.SendGump(new HavenPetUpgradeGump(_pet,null,0,_category,_page));return;}
             if(id>=100&&id-100<_options.Count){var tp=_options[id-100];p.SendGump(new HavenPetUpgradeGump(_pet,tp,HavenPetTrainingMenu.Current(_pet,tp),_category,_page));return;}
@@ -130,24 +130,39 @@ namespace Server.HavenPrototype
     }
     public class HavenPetUpgradeGump : HavenMenuGump
     {
-        readonly BaseCreature _pet;readonly TrainingPoint _point;readonly int _expected,_category,_page;
-        public HavenPetUpgradeGump(BaseCreature pet,TrainingPoint point,int expected,int category,int page):base(80,80) {
+        readonly BaseCreature _pet;readonly TrainingPoint _point;readonly int _expected,_category,_page,_value;
+        public HavenPetUpgradeGump(BaseCreature pet,TrainingPoint point,int expected,int category,int page,int value=-1):base(80,80) {
             _pet=pet;_point=point;_expected=expected;_category=category;_page=page;
-            AddBackground(0,0,560,300,3000);AddLabel(24,20,0,point==null?"Finish training stage":"Choose training upgrade");
-            if(point==null){AddHtml(24,65,510,85,"Finishing discards all remaining training points. This cannot be undone.",false,false);FlatButton(24,230,240,1,"Confirm finish stage");}
+            _value=point==null?0:value<0?(point.Start==point.Max?point.Start:expected):Math.Max(expected,Math.Min(point.GetMax(pet),value));
+            var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
+            AddBackground(0,0,620,455,3000);AddLabel(24,20,0,point==null?"Finish training stage":"TRAINING CONFIRMATION");
+            if(point==null){AddHtml(24,65,560,85,"Finishing discards all remaining training points. This cannot be undone.",false,false);FlatButton(24,390,280,1,"Confirm finish stage");}
             else {
-                if(point.Name.Number>0)AddHtmlLocalized(24,58,510,24,point.Name.Number,false,false);else AddLabel(24,58,0,point.Name.String??point.TrainPoint.ToString());
-                if(point.Description.Number>0)AddHtmlLocalized(24,92,510,68,point.Description.Number,false,true);else AddHtml(24,92,510,68,point.Description.String??"",false,true);
-                AddLabel(24,173,0,"Current: "+HavenPetTrainingMenu.ValueText(pet,point)+"    Max: "+(point.TrainPoint is SkillName?"120":point.GetMax(pet).ToString()));
-                int[] values=Values();for(int i=0;i<values.Length;i++){int value=values[i];string label=point.TrainPoint is SkillName?"Cap "+(100+value/10):point.Start==point.Max?"Learn":"+"+(value-expected);int cost=PetTrainingHelper.GetTotalCost(point,pet,value,expected);FlatButton(24+i*128,207,120,100+i,label+" / "+cost+" pts");}
+                AddBackground(20,55,280,125,0xBB8);AddBackground(312,55,288,125,0xBB8);
+                if(point.Name.Number>0)AddHtmlLocalized(32,69,254,30,point.Name.Number,false,false);else AddLabel(32,69,0,point.Name.String??point.TrainPoint.ToString());
+                AddLabel(32,113,0,"Weight per point: "+point.Weight.ToString("0.##"));
+                if(point.Description.Number>0)AddHtmlLocalized(324,69,260,95,point.Description.Number,false,true);else AddHtml(324,69,260,95,HavenMenuText.Encode(point.Description.String??""),false,true);
+                AddBackground(20,192,280,130,0xBB8);AddBackground(312,192,288,130,0xBB8);
+                AddLabel(32,204,0,"REQUIREMENTS");AddHtml(32,234,254,77,point.TrainPoint is SkillName?"Matching power scroll in your main backpack. Completed combat training, enough points and follower capacity.":"Completed combat training, enough points and follower capacity. Native pet limits apply.",false,false);
+                int cost=PetTrainingHelper.GetTotalCost(point,pet,_value,expected);
+                AddLabel(324,204,0,"RESULTS");AddLabel(324,232,0,"Points: "+profile.TrainingPoints+" - "+cost+" = "+(profile.TrainingPoints-cost));
+                AddLabel(324,260,0,"Current: "+HavenPetTrainingMenu.ValueText(pet,point)+"   Result: "+Result(_value));
+                AddLabel(324,288,0,"Limit: "+Result(point.GetMax(pet)));
+                if(point.Start!=point.Max){int[] delta=point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};for(int i=0;i<delta.Length;i++)FlatButton(24+i*142,340,132,100+i,(delta[i]>0?"+":"")+(point.TrainPoint is SkillName?delta[i]/10:delta[i]));}
+                if(point.TrainPoint is MagicalAbility)AddLabel(24,370,0,"Choosing a magic school can replace its current school.");
+                FlatButton(24,415,270,1,profile.TrainingMode==TrainingMode.Planning?"Add to training plan":"Confirm training purchase");
             }
-            FlatButton(414,263,120,0,"Back");
+            FlatButton(464,415,130,0,"Back");
         }
+        string Result(int value){return _point.TrainPoint is SkillName?(100+value/10.0).ToString("F1"):_point.Start==_point.Max?"Learned":value.ToString();}
         int Step(){return _point.Weight>0&&_point.Weight<1?Math.Max(1,(int)(_point.Weight*100)):1;}
-        int[] Values(){if(_point==null)return new int[0];return _point.TrainPoint is SkillName?new[]{50,100,150,200}.Where(v=>v>_expected).ToArray():_point.Start==_point.Max?new[]{_point.Start}:new[]{_expected+Step(),_expected+Step()*10}.Where(v=>v<=_point.GetMax(_pet)).ToArray();}
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(!HavenPetTrainingMenu.CanUse(p,_pet))return;
-            if(info.ButtonID==1&&_point==null){var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);if(profile.CanApplyOptions&&HavenPetTrainingMenu.Peaceful(p,_pet))profile.EndTraining();else p.SendMessage("Complete combat training before finishing this stage.");}
-            if(info.ButtonID>=100&&_point!=null){var values=Values();int index=info.ButtonID-100;bool ok=index<values.Length&&HavenPetTrainingMenu.Purchase(p,_pet,_point,_expected,values[index]);p.SendMessage(ok?"Pet training applied.":"No change: check completed training, points, limits, follower capacity and the matching scroll in your main backpack.");}
+            if(info.ButtonID>=100&&_point!=null&&_point.Start!=_point.Max){int[] delta=_point.TrainPoint is SkillName?new[]{-50,50}:new[]{-10*Step(),-Step(),Step(),10*Step()};int i=info.ButtonID-100;if(i<delta.Length)p.SendGump(new HavenPetUpgradeGump(_pet,_point,_expected,_category,_page,_value+delta[i]));return;}
+            if(info.ButtonID==1){var profile=PetTrainingHelper.GetTrainingProfile(_pet,true);
+                if(_point==null){if(profile.CanApplyOptions&&HavenPetTrainingMenu.Peaceful(p,_pet))profile.EndTraining();else p.SendMessage("Complete combat training before finishing this stage.");}
+                else if(profile.TrainingMode==TrainingMode.Planning){if(_value>_expected&&HavenPetTrainingMenu.Available(_pet,_point)){PetTrainingHelper.GetPlanningProfile(_pet,true).AddToPlan(_point.TrainPoint,_value,PetTrainingHelper.GetTotalCost(_point,_pet,_value,_expected));p.SendMessage("Added to your plan. No training points or scrolls spent.");}}
+                else p.SendMessage(HavenPetTrainingMenu.Purchase(p,_pet,_point,_expected,_value)?"Pet training applied.":"No change: check completed training, points, limits, follower capacity and the matching scroll in your main backpack.");
+            }
             HavenPetTrainingMenu.Show(p,_pet,_category,_page);
         }
     }

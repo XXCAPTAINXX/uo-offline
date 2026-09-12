@@ -3,6 +3,21 @@ using Server.Items;
 namespace Server.HavenPrototype
 {
     public interface IHavenAreaWeapon { int Element { get; } }
+    public interface IHavenWhirlwindWeapon { }
+    public class HavenCycloneAxe : DoubleAxe, IHavenWhirlwindWeapon
+    {
+        [Constructable] public HavenCycloneAxe() { HavenAreaWeapons.InitializeWeapon(this, "Cyclone Axe", 0x482); }
+        public HavenCycloneAxe(Serial serial) : base(serial) { }
+        public override void Serialize(GenericWriter w) { base.Serialize(w); w.Write(0); }
+        public override void Deserialize(GenericReader r) { base.Deserialize(r); r.ReadInt(); }
+    }
+    public class HavenTempestStaff : BlackStaff, IHavenWhirlwindWeapon
+    {
+        [Constructable] public HavenTempestStaff() { HavenAreaWeapons.InitializeWeapon(this, "Tempest Staff", 0x47E); }
+        public HavenTempestStaff(Serial serial) : base(serial) { }
+        public override void Serialize(GenericWriter w) { base.Serialize(w); w.Write(0); }
+        public override void Deserialize(GenericReader r) { base.Deserialize(r); r.ReadInt(); }
+    }
     public static class HavenAreaWeapons
     {
         public static void Apply(BaseWeapon weapon, int level)
@@ -22,7 +37,7 @@ namespace Server.HavenPrototype
             weapon.WeaponAttributes.HitLeechHits = 20;
             HavenAdvancedGear.Attach(weapon, 6);
         }
-        public static BaseWeapon Create(int index) { return index == 0 ? (BaseWeapon)new HavenStormblade() : index == 1 ? new HavenCindermaul() : (BaseWeapon)new HavenFrostwakeBow(); }
+        public static BaseWeapon Create(int index) { if(index==3)return new HavenCycloneAxe();if(index==4)return new HavenTempestStaff();return index == 0 ? (BaseWeapon)new HavenStormblade() : index == 1 ? new HavenCindermaul() : (BaseWeapon)new HavenFrostwakeBow(); }
     }
     public class HavenStormblade : Longsword, IHavenAreaWeapon
     {

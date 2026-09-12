@@ -24,7 +24,7 @@ namespace Server.HavenPrototype {
 
   public static int[] Rows(HavenCompanion c,int filter,int sort,double[] baseline){var rows=Enumerable.Range(0,c.Skills.Length).Where(i=>filter==2||Used(c,(SkillName)i)&&(filter==1||c.Skills[i].Base<c.Skills[i].Cap&&(c.Skills[i].Lock==SkillLock.Up||i==(int)SkillName.Mining||i==(int)SkillName.Lumberjacking||i==(int)SkillName.AnimalLore)));return (sort==1?rows.OrderByDescending(i=>c.Skills[i].Base).ThenBy(i=>c.Skills[i].Name):sort==2?rows.OrderByDescending(i=>c.Skills[i].Base-baseline[i]).ThenBy(i=>c.Skills[i].Name):rows.OrderBy(i=>c.Skills[i].Name)).ToArray();}
   public HavenCompanionStatsGump(HavenCompanion c,int page=0,double[] baseline=null,int filter=2,int sort=0):base(45,45){_c=c;_filter=filter;_sort=sort;_baseline=baseline??new double[c.Skills.Length];if(baseline==null)for(int i=0;i<c.Skills.Length;i++)_baseline[i]=c.Skills[i].Base;var rows=Rows(c,filter,sort,_baseline);int pages=Math.Max(1,(rows.Length+11)/12);_page=Math.Max(0,Math.Min(pages-1,page));
-   AddBackground(0,0,610,580,0xA28);Text(24,22,555,25,"<B>"+System.Security.SecurityElement.Escape(c.Name)+" - stats and skills</B>");
+   AddBackground(0,0,610,580,0xA28);Text(24,22,555,25,"<B>"+HavenMenuText.Encode(c.Name)+" - stats and skills</B>");
    Text(24,56,555,25,"Hits "+c.Hits+"/"+c.HitsMax+" | Mana "+c.Mana+"/"+c.ManaMax+" | Stamina "+c.Stam+"/"+c.StamMax);
    Text(24,85,555,25,"Str "+c.Str+" | Dex "+c.Dex+" | Int "+c.Int+" | "+c.Role+" | "+c.ControlOrder);
    Text(24,111,555,24,"Current weapon skill: "+c.Skills[AttackSkill(c)].Name);

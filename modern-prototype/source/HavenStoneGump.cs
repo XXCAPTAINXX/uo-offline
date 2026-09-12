@@ -23,8 +23,8 @@ namespace Server.HavenPrototype
             width = System.Math.Max(38, width);
             for (int offset = 0; offset < width; offset += 19)
                 base.AddButton(x + System.Math.Min(offset, width - 19), y, 210, 210, id, GumpButtonType.Reply, 0);
-            base.AddImageTiled(x, y, width, 19, 2624);
-            string label = System.Security.SecurityElement.Escape(text);
+            base.AddImageTiled(x, y, width, 19, 5058);
+            string label = HavenMenuText.Encode(text);
             base.AddHtml(x + 1, y + 2, width - 2, 18, "<CENTER><BASEFONT COLOR=#000000>" + label + "</BASEFONT></CENTER>", false, false);
             base.AddHtml(x, y + 1, width, 18, "<CENTER><BASEFONT COLOR=#E4E0D3>" + label + "</BASEFONT></CENTER>", false, false);
         }

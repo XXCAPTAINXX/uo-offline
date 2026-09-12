@@ -27,7 +27,7 @@ namespace Server.HavenPrototype
         static readonly HashSet<string> QuestNames = new HashSet<string>(new[] { "ArmsOfArmstrong", "BulwarkLeggings", "BraceletOfResilience", "EscutcheonDeAriadne", "EmberStaff", "ClaspOfConcentration", "ChurchillsWarMace", "Heartseeker", "HealersTouch", "HallowedSpellbook", "GlovesOfSafeguarding", "TheDragonsTail", "JocklesQuicksword", "JacobsPickaxe", "PhilosophersHat", "RecarosRiposte", "TunicOfGuarding", "SilverSerpentBlade", "RingOfTheSavant", "TwilightJacket", "WalkersLeggings", "HavenQuestNecromancerBook" });
         public static int AutoKind(Item item)
         {
-            if (item is IHavenAreaWeapon) return 6;
+            if (item is IHavenAreaWeapon || item is IHavenWhirlwindWeapon) return 6;
             if (item is AstralWeaversRing || item is AstralGuardianMantle || item is AstralFortuneEarrings) return 1;
             if (QuestNames.Contains(item.GetType().Name)) return 4;
             if (item is IHavenShieldWarriorGear || HavenJewelrySets.BraceletTheme(item) >= 0 || item is HavenChampionPendant) return 5;
@@ -135,7 +135,7 @@ namespace Server.HavenPrototype
         }
         public static Item CreateLegendary()
         {
-            if (Utility.Random(5) == 0) return HavenAreaWeapons.Create(Utility.Random(3));
+            if (Utility.Random(5) == 0) return HavenAreaWeapons.Create(Utility.Random(5));
             Item item = Utility.Random(5) == 0 ? (Item)new Spellbook(ulong.MaxValue) : Loot.RandomArmorOrShieldOrWeaponOrJewelry();
             BaseRunicTool.ApplyAttributesTo(item, false, 0, item is Spellbook ? 6 : 8, 90, 100);
             var a = HavenAdvancedGear.Attributes(item);

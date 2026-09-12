@@ -26,10 +26,12 @@ namespace Server.HavenPrototype
                 creature.IsBonded || creature.NoKillAwards || creature.IsInvulnerable || creature.Owners.Count != 0 ||
                 creature is BaseVendor || creature is HavenCompanion || !Attempts.GetOrCreateValue(creature).Add(player.Serial)) return false;
             // The original 0.2% utility-item branch is separate; preserve the 2.5% clothing interval.
-            if (roll < .002 || roll >= .027) return false;
+            if (roll < 0 || roll >= .027) return false;
+            if (roll < .002) { HavenAdvancedRewards.Deliver(player, creature, UtilityItem(Utility.Random(4))); return true; }
             HavenAdvancedRewards.Deliver(player, creature, Clothing(Utility.RandomDouble(), Utility.Random(7), Utility.Random(10)));
             return true;
         }
+        public static Item UtilityItem(int index) { switch(index) { case 0:return new HavenGoldenShovel();case 1:return new HavenEndlessBandage();case 2:return new HavenResourceSatchel();default:return new HavenTideSteedDeed();} }
         public static BaseClothing Clothing(double roll, int profile, int style)
         {
             int tier = roll < .60 ? 0 : roll < .85 ? 1 : roll < .95 ? 2 : roll < .99 ? 3 : 4;

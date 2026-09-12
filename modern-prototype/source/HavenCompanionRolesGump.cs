@@ -17,7 +17,7 @@ namespace Server.HavenPrototype {
   public HavenCompanionRolesGump(HavenCompanion c,int selected=-1):base(50,50){
    _companion=c;_selected=Math.Max(0,Math.Min(4,selected<0?(int)c.Role:selected));
    AddBackground(0,0,680,425,3000);
-   Text(24,20,630,28,"<B>"+System.Security.SecurityElement.Escape(c.Name)+" - combat roles</B>");
+   Text(24,20,630,28,"<B>"+HavenMenuText.Encode(c.Name)+" - combat roles</B>");
    Text(24,53,630,24,"Active role: "+Names[(int)c.Role]+" | All roles can heal");
    AddBackground(16,90,224,271,3000);AddBackground(250,90,414,271,3000);
    Text(28,105,200,25,"<B>1. Choose a role</B>");

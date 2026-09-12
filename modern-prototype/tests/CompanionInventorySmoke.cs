@@ -10,6 +10,12 @@ public static class CompanionInventorySmoke {
  public static void Initialize(){if(File.Exists("INVENTORY-TEST-ONLY"))EventSink.ServerStarted+=()=>Timer.DelayCall(TimeSpan.FromSeconds(3),Run);}
  static void Check(bool ok,string label){if(!ok)throw new Exception(label);File.AppendAllText("inventory-checks.log","PASS "+label+"\n");}
  static void Run(){try{
+ foreach(var whirlwind in new BaseWeapon[]{new HavenCycloneAxe(),new HavenTempestStaff()}){
+  Check(whirlwind.PrimaryAbility==WeaponAbility.WhirlwindAttack||whirlwind.SecondaryAbility==WeaponAbility.WhirlwindAttack,"leveling whirlwind weapon exposes native special move");
+  var progression=HavenAdvancedGear.Find(whirlwind);Check(progression!=null&&HavenAdvancedGear.AutoKind(whirlwind)==6,"whirlwind progression survives equipment recognition");
+  progression.Gain(1900);Check(progression.Level==20&&progression.Experience==1900&&whirlwind.WeaponAttributes.HitLeechMana>30,"whirlwind weapon levels and grows mana leech");
+  Check(whirlwind.WeaponAttributes.HitFireArea==0&&whirlwind.WeaponAttributes.HitColdArea==0&&whirlwind.WeaponAttributes.HitEnergyArea==0,"whirlwind weapon uses active special rather than elemental proc");progression.Delete();whirlwind.Delete();
+ }
  Check(HavenCompanionProgression.TamingTraining(500,5,0.99)==50,"five minute early tame training gives five points");
  Check(HavenCompanionProgression.TamingTraining(1000,5,0.99)==10,"normal training above100");
  Check(HavenCompanionProgression.TamingTraining(1200,5,0.99)==0,"over120 remains twenty times slower");
@@ -91,6 +97,7 @@ var bag=new Bag();var gold=new Gold(200);bag.DropItem(gold);c.Backpack.DropItem(
  var stranger=new PlayerMobile{Player=true};stranger.Criminal=true;Check(owner.IsBeneficialCriminal(stranger),"unrelated criminal aid remains criminal");
  c.Criminal=false;owner.Criminal=false;c.Internalize();c.CriminalAction(false);Check(owner.Criminal,"actual companion crime still flags owner");
  owner.Criminal=false;c.Criminal=false;c.MoveToWorld(owner.Location,owner.Map);stranger.Delete();
+RestoredItemsSmoke.Run(owner,c,Check);
 c.Delete();owner.Delete();File.AppendAllText("inventory-checks.log","COMPLETE\n");
  }catch(Exception e){File.AppendAllText("inventory-checks.log","FAIL "+e+"\n");}Core.Kill(false);}
 }

@@ -37,7 +37,7 @@ default: return "Every creature has a history beyond its training ledger. Watch 
     {
         var lines = new List<string>();
         foreach (var section in Sections(pet))
-        { lines.Add($"<B>{WebUtility.HtmlEncode(section.Heading)}</B><BR>{WebUtility.HtmlEncode(section.Text)}"); }
+        { lines.Add($"<B>{HavenMenuText.Encode(section.Heading)}</B><BR>{HavenMenuText.Encode(section.Text)}"); }
         return string.Join("<BR><BR>", lines);
     }
     internal static List<Section> Sections(BaseCreature pet)
@@ -90,7 +90,7 @@ public sealed class HavenPetLoreGump : Gump
         _pet = pet; _tab = HavenLoreCompatibility.Clamp(tab, 0, 4);
         AddBackground(0, 0, 650, 530, 9270);
         AddBackground(10, 10, 630, 510, 3000);
-        Text(28, 24, 594, 28, WebUtility.HtmlEncode(pet.Name), true);
+        Text(28, 24, 594, 28, HavenMenuText.Encode(pet.Name), true);
         var rarity = HavenPetRarity.Find(pet);
         var rank = HavenPetSignatures.Kind(pet)!=0 ? HavenPetRarity.Label(rarity?.Tier ?? 0) + "  |  " : "";
         AddLabel(28, 55, 0, $"{rank}{pet.ControlSlots} follower slot{(pet.ControlSlots == 1 ? "" : "s")}  |  {(pet.IsBonded ? "Bonded" : pet.Controlled ? "Tamed" : "Wild")}");
@@ -115,8 +115,8 @@ public sealed class HavenPetLoreGump : Gump
         {
             var section = sections[_page * 2 + i]; var y = 128 + i * 168;
             AddBackground(24, y, 602, height, 3000);
-            Text(40, y + 12, 566, 25, WebUtility.HtmlEncode(section.Heading), true);
-            var body = WebUtility.HtmlEncode(section.Text);
+            Text(40, y + 12, 566, 25, HavenMenuText.Encode(section.Heading), true);
+            var body = HavenMenuText.Encode(section.Text);
             if (_tab != 4) { body = body.Replace("; ", "<BR>").Replace(". ", ".<BR>"); }
             // Each card owns its overflow. Longer descriptions cannot cover the tabs or footer.
             AddHtml(40, y + 41, 566, height - 52, $"<BASEFONT COLOR={Ink}>{body}</BASEFONT>", false, true);

@@ -65,7 +65,7 @@ namespace Server.HavenPrototype
             if(_tab!=2)
             {
                 Button(139,520,4,"Ledger",85);
-                Button(276,520,5,"Pet tickets ("+companion.PendingPetTickets+")",160);
+                Button(254,520,5,"Tickets ("+companion.PendingPetTickets+")",100);Button(386,520,8,"Pet exchange",105);
                 Button(511,520,7,"Offline setup",145);
             }
         }
@@ -96,7 +96,7 @@ namespace Server.HavenPrototype
             if(id==2){_companion.Show(p);return;}
             if(id==3&&!_companion.Recall(p))p.SendMessage("Cannot recall while in combat or unable to travel.");
             if(id==4){_companion.OpenResourceLedger(p);return;}
-            if(id==5)_companion.DeliverPetTickets();
+            if(id==5)_companion.DeliverPetTickets();if(id==8){HavenPetExchange.Show(p);return;}
 
             if(id==7&&_tab!=2){p.SendGump(new HavenOfflineMissionGump(HavenOfflineMissionPlan.Ensure(_companion),_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection),_minutes));return;}
             int tab=id>=10&&id<=12?id-10:_tab;
