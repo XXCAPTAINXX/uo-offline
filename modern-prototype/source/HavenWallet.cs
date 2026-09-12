@@ -35,22 +35,22 @@ namespace Server.HavenPrototype {
  public class HavenWalletGump:HavenMenuGump {
   private readonly HavenWallet _wallet;
   public HavenWalletGump(HavenWallet w,Mobile p):base(50,50){
-   _wallet=w; AddBackground(0,0,460,331,0x13BE);
-   Text(24,22,400,24,"<B>ADVENTURER'S WALLET</B>");
-   Text(24,56,260,22,"Bank gold: "+w.Balance.ToString("N0"));
-   Text(295,56,140,22,"Marks: "+HavenMarks.Balance(p).ToString("N0"));
-   Text(295,82,140,22,"Shards: "+w.AstralShards.ToString("N0"));
-   Text(24,82,270,22,"Tithing: "+p.TithingPoints.ToString("N0")+" / 100,000");
-   Button(24,116,1,"Deposit gold / checks / shards",360);
-   Text(24,158,85,22,"Amount"); AddBackground(110,151,145,32,0xBB8); AddTextEntry(119,157,127,22,0,1,"1000");
-   Text(269,158,165,22,"Gold per action");
-   Button(24,201,2,"Withdraw to pack",180); Button(242,201,3,"Tithe gold",170);
-   Text(24,242,410,42,"Uses your bank gold directly. Withdraw up to 60,000.<BR>Tithing costs 1 gold per point added.");
-   Text(24,290,290,24,"CUB points: "+Server.Engines.Points.PointsSystem.CleanUpBritannia.GetPoints(p).ToString("N0"));
-   Button(340,290,0,"Close",70);
+   _wallet=w; AddBackground(0,0,520,370,3000);
+   Text(24,20,470,24,"<B>ADVENTURER'S WALLET</B>");
+   Text(24,57,275,22,"Bank gold: "+w.Balance.ToString("N0"));
+   Text(310,57,185,22,"Marks: "+HavenMarks.Balance(p).ToString("N0"));
+   Text(24,84,275,22,"Tithing: "+p.TithingPoints.ToString("N0")+" / 100,000");
+   Text(310,84,185,22,"Shards: "+w.AstralShards.ToString("N0"));
+   Text(24,111,470,22,"CUB points: "+Server.Engines.Points.PointsSystem.CleanUpBritannia.GetPoints(p).ToString("N0"));
+   FlatButton(24,149,470,1,"Deposit pack gold, checks and shards");
+   Text(24,196,85,22,"Amount"); AddBackground(110,188,145,32,0xBB8);
+   AddTextEntry(119,194,127,22,0,1,"1000"); Text(275,196,215,22,"Gold per action");
+   FlatButton(24,239,225,2,"Withdraw to backpack");
+   FlatButton(269,239,225,3,"Tithe gold");
+   Text(24,278,470,42,"Withdraw up to 60,000 gold from your bank.<BR>Tithing costs 1 gold per point added.");
+   FlatButton(394,332,100,0,"Close");
   }
   private void Text(int x,int y,int width,int height,string text){AddHtml(x,y,width,height,"<BASEFONT COLOR=#F2F2F2>"+text+"</BASEFONT>",false,false);}
-  private void Button(int x,int y,int id,string text,int width){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+34,y+1,width,24,text);}
   public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0||!_wallet.CanUse(p))return;if(info.ButtonID==1)p.SendMessage("Deposited "+_wallet.DepositPack(p)+" gold.");else{int amount;var entry=info.GetTextEntry(1);bool ok=entry!=null&&int.TryParse(entry.Text,out amount);if(!ok){p.SendMessage("Enter a positive whole number.");return;}int.TryParse(entry.Text,out amount);ok=info.ButtonID==2?_wallet.Withdraw(p,amount):info.ButtonID==3?_wallet.Tithe(p,amount):false;p.SendMessage(ok?"Done.":"Could not complete: check amount, funds and backpack capacity.");}p.SendGump(new HavenWalletGump(_wallet,p));}
  }
 }

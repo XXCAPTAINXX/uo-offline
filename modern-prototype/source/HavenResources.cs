@@ -157,7 +157,7 @@ namespace Server.HavenPrototype
             if (!HavenResources.Valid(_resourceId) || _units<1 || _units>60000) throw new InvalidOperationException("Invalid resource deed");
         }
     }
-    public class ResourceLedgerGump : Gump
+    public class ResourceLedgerGump : HavenMenuGump
     {
         private readonly HavenResourceLedger _ledger;
         private readonly int _page, _amount;
@@ -166,21 +166,33 @@ namespace Server.HavenPrototype
         public ResourceLedgerGump(HavenResourceLedger ledger,int page,int amount,bool deeds) : base(60,60)
         {
             _ledger=ledger; _page=Math.Max(0,Math.Min((HavenResources.Types.Length-1)/PageSize,page)); _amount=amount; _deeds=deeds;
-            AddBackground(0,0,540,585,0xA28); AddLabel(24,20,0,ledger is HavenGuildResourceLedger ? "Shared guild resource ledger (all members)" : "Resource ledger");
-            AddLabel(24,55,0,"Select a resource to withdraw the amount below.");
+            AddBackground(0,0,580,650,3000);
+            AddLabel(24,20,0,ledger is HavenGuildResourceLedger ? "Guild resource ledger" : "Resource ledger");
+            AddLabel(24,52,0,"Choose a resource to withdraw. Set the amount below.");
+            AddLabel(24,85,0,"RESOURCE"); AddLabel(410,85,0,"STORED");
             for(int row=0;row<PageSize;row++)
             {
                 int id=_page*PageSize+row; if(id>=HavenResources.Types.Length) break;
-                Button(24,95+row*31,100+id,HavenResources.Names[id]); AddLabel(385,95+row*31,0,ledger.Balance(id).ToString("N0"));
+                FlatButton(24,114+row*29,358,100+id,HavenResources.Names[id]);
+                AddLabel(410,114+row*29,0,ledger.Balance(id).ToString("N0"));
             }
-            AddLabel(24,385,0,"Amount (1-60,000)"); AddBackground(185,379,108,28,0xBB8); AddTextEntry(194,384,90,22,0,1,amount.ToString());
-            Button(315,384,4,deeds?"Deeds":"Loose resources");
-            Button(24,430,1,"Absorb my pack"); Button(285,430,2,"Target item / bag");
-            Button(24,468,3,"Transfer all..."); Button(285,468,5,"Previous"); Button(405,468,6,"Next");
-            AddLabel(24,509,0,"Page "+(_page+1)+" / "+((HavenResources.Types.Length-1)/PageSize+1)); Button(405,549,0,"Close");
-            Button(24,509,7,"Give to me"); Button(190,509,8,"Give to guild"); Button(355,509,9,"Guild ledger");
+            FlatButton(24,384,100,5,"Previous");
+            AddLabel(155,384,0,"Page "+(_page+1)+" / "+((HavenResources.Types.Length-1)/PageSize+1));
+            FlatButton(280,384,100,6,"Next");
+            AddLabel(24,423,0,"WITHDRAWAL");
+            AddLabel(24,454,0,"Amount"); AddBackground(102,445,115,30,0xBB8);
+            AddTextEntry(111,450,95,22,0,1,amount.ToString());
+            FlatButton(240,451,150,4,deeds?"As resource deed":"As loose resources");
+            AddLabel(410,451,0,"1 - 60,000");
+            AddLabel(24,492,0,"DEPOSIT / TRANSFER");
+            FlatButton(24,520,162,1,"Absorb my pack");
+            FlatButton(198,520,162,2,"Target item / bag");
+            FlatButton(372,520,182,3,"Transfer to ledger...");
+            FlatButton(24,554,162,7,"Give to me");
+            FlatButton(198,554,162,8,"Give to guild");
+            FlatButton(372,554,182,9,"Open guild ledger");
+            FlatButton(454,606,100,0,"Close");
         }
-        private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var from=sender.Mobile; if(info.ButtonID==0 || !_ledger.CanUse(from)) return;
