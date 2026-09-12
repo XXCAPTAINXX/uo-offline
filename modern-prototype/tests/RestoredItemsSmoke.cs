@@ -7,6 +7,9 @@ using Server.Mobiles;
 using Server.HavenPrototype;
 public static class RestoredItemsSmoke {
  public static void Run(Mobile p,HavenCompanion c,Action<bool,string> check){
+  check(HavenMissionLuck.Seconds(60,0)==3600&&HavenMissionLuck.Seconds(60,100)==3528,"mission luck saves two percent per hundred");
+  check(HavenMissionLuck.Seconds(60,1667)==2400&&HavenMissionLuck.Seconds(60,int.MaxValue)==2400,"mission luck caps sixty minute trip at forty minutes");
+  check(HavenMissionLuck.Seconds(5,2000)==200&&HavenMissionLuck.Seconds(15,2000)==600&&HavenMissionLuck.Seconds(30,2000)==1200,"mission luck applies same cap to every duration");
   p.Combatant=null;p.Aggressors.Clear();p.Aggressed.Clear();p.Criminal=false;c.Combatant=null;
   p.MoveToWorld(new Point3D(3500,2580,14),Map.Trammel);c.MoveToWorld(p.Location,p.Map);
   var combatFoe=new Horse();combatFoe.MoveToWorld(p.Location,p.Map);var combatRecord=AggressorInfo.Create(c,combatFoe,false);c.Aggressed.Add(combatRecord);c.Combatant=combatFoe;

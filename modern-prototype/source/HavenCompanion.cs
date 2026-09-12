@@ -421,7 +421,7 @@ namespace Server.HavenPrototype
             if (!PrepareResourceMission(kind, minutes)) { from.SendMessage("Cannot start: collect pending resources or pet tickets first; reward storage is full."); return false; }
             ClearMissionReturn();
             _missionMinutes = minutes;
-            _missionDue = DateTime.UtcNow.AddMinutes(minutes);
+            _missionDue = DateTime.UtcNow.AddSeconds(HavenMissionLuck.Seconds(minutes,from.Luck));
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
             StopTamingAssist();ClearRoleSupport();ParkAssignedPets();
             Internalize();

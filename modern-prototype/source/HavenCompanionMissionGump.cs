@@ -57,9 +57,9 @@ namespace Server.HavenPrototype
                 Text(322,268,365,62,Requirement(companion,_tab,_selection));
                 Text(322,334,365,24,"Rewards on completion");
                 Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes));
-                if(!companion.OnMission)Button(322,455,1,"Start "+_minutes+"-minute mission",320);
+                if(!companion.OnMission)Button(322,455,1,"Start "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" mission",320);
                 else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
-                Text(24,496,670,22,"Auto-returns on completion. Early recall forfeits rewards.");
+                Text(24,496,670,22,"Luck "+(companion.BoundOwner==null?0:companion.BoundOwner.Luck)+": "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" duration, full "+_minutes+"m rewards. Early recall forfeits rewards.");
             }
             Button(24,520,0,"Back",65);
             if(_tab!=2)
