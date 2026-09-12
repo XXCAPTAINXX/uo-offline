@@ -144,28 +144,44 @@ namespace Server.HavenPrototype
             return true;
         }
     }
-    public class HavenPetTrainingGump : HavenPetMenuGump
+    public class HavenTrainingMenuGump : HavenPetMenuGump
+    {
+        public HavenTrainingMenuGump(int x,int y):base(x,y){}
+        // Native button art handles the whole surface; plain labels do not add an HTML hit layer.
+        public new void FlatButton(int x,int y,int width,int id,string text,int tooltip=0) {
+            bool wide=width>=160;
+            int normal=wide?11390:10800,pressed=wide?11391:10801,buttonWidth=wide?160:109;
+            if(text=="Confirm training purchase"){text="Train pet";normal=10820;pressed=10821;buttonWidth=109;}
+            else if(text=="Add to training plan")text="Add to plan";
+            else if(text=="Confirm finish stage"){text="Finish stage";normal=10840;pressed=10841;buttonWidth=109;}
+            ((Gump)this).AddButton(x,y,normal,pressed,id,GumpButtonType.Reply,0);
+            if(tooltip>0)AddTooltip(tooltip);
+            AddLabel(x+Math.Max(5,(buttonWidth-text.Length*6)/2),y+(wide&&buttonWidth==160?7:5),1152,text);
+        }
+    }
+
+    public class HavenPetTrainingGump : HavenTrainingMenuGump
     {
         readonly BaseCreature _pet; readonly int _category,_page; readonly List<TrainingPoint> _options;
         const int Rows=10;
         public HavenPetTrainingGump(BaseCreature pet,int category=0,int page=0):base(20,30) {
             _pet=pet;_category=Math.Max(0,Math.Min(HavenPetTrainingMenu.Categories.Length-1,category));_options=HavenPetTrainingMenu.Options(pet,_category);_page=Math.Max(0,Math.Min(Math.Max(0,(_options.Count-1)/Rows),page));
             var profile=PetTrainingHelper.GetTrainingProfile(pet,true);
-            AddBackground(0,0,740,590,3000);AddLabel(24,20,0,"ANIMAL TRAINING - "+pet.Name);
+            AddBackground(0,0,740,674,3000);AddLabel(24,20,0,"ANIMAL TRAINING - "+pet.Name);
             double progress=profile.TrainingProgressMax<=0?0:profile.TrainingProgressPercentile*100;
             AddLabel(24,52,0,"Slots "+pet.ControlSlots+" / "+pet.ControlSlotsMax+"    Combat progress "+progress.ToString("F1")+"%    Points "+profile.TrainingPoints);
             AddLabel(24,82,0,profile.CanApplyOptions?"Ready to choose upgrades":profile.HasBegunTraining?"Training active - fight suitable enemies":"Begin training to earn upgrade points");
-            AddBackground(18,116,198,296,0xBB8);AddBackground(220,116,500,296,0xBB8);AddLabel(24,126,53,"CATEGORIES");AddLabel(230,126,53,"SELECTIONS");
-            for(int i=0;i<HavenPetTrainingMenu.Categories.Length;i++)FlatButton(24,157+i*31,184,10+i,(_category==i?"[":"")+HavenPetTrainingMenu.Categories[i]+(_category==i?"]":""));
+            AddBackground(18,116,198,366,0xBB8);AddBackground(220,116,500,366,0xBB8);AddLabel(24,126,53,"CATEGORIES");AddLabel(230,126,53,"SELECTIONS");
+            for(int i=0;i<HavenPetTrainingMenu.Categories.Length;i++)FlatButton(24,157+i*34,184,10+i,(_category==i?"[":"")+HavenPetTrainingMenu.Categories[i]+(_category==i?"]":""));
             if(_options.Count==0)AddLabel(230,164,0,"No eligible options for this pet in this category.");
-            for(int row=0;row<Rows;row++) { int index=_page*Rows+row;if(index>=_options.Count)break;var tp=_options[index];int y=164+row*25;
+            for(int row=0;row<Rows;row++) { int index=_page*Rows+row;if(index>=_options.Count)break;var tp=_options[index];int y=164+row*31;
                 if(tp.Name.Number>0)AddHtmlLocalized(230,y,240,24,tp.Name.Number,false,false);else AddLabel(230,y,0,tp.Name.String??tp.TrainPoint.ToString());
                 if(tp.Description.Number>0)AddTooltip(tp.Description.Number);
-                AddLabel(480,y,0,HavenPetTrainingMenu.ValueText(pet,tp));FlatButton(590,y,120,100+index,"Choose upgrade",tp.Description.Number);
+                AddLabel(480,y,0,HavenPetTrainingMenu.ValueText(pet,tp));FlatButton(590,y,120,100+index,"Upgrade",tp.Description.Number);
             }
-            if(_page>0)FlatButton(230,426,100,2,"Previous");AddLabel(359,426,0,"Page "+(_page+1)+" / "+Math.Max(1,(_options.Count+Rows-1)/Rows));if((_page+1)*Rows<_options.Count)FlatButton(590,426,120,3,"Next");
-            AddHtml(24,464,686,42,"Train through combat to 100%, then spend points. The first purchase adds a follower slot. Skill caps require matching power scrolls.",false,false);
-            FlatButton(24,518,184,1,profile.HasBegunTraining?"Training status":"Begin training");FlatButton(230,518,180,4,"Finish stage");FlatButton(432,518,130,5,"Animal Lore");FlatButton(590,518,120,6,"Refresh");FlatButton(24,554,184,7,"Plan training");FlatButton(230,554,180,8,"Training info");FlatButton(590,554,120,0,"Close");
+            if(_page>0)FlatButton(230,496,100,2,"Previous");AddLabel(359,496,0,"Page "+(_page+1)+" / "+Math.Max(1,(_options.Count+Rows-1)/Rows));if((_page+1)*Rows<_options.Count)FlatButton(590,496,120,3,"Next");
+            AddHtml(24,534,686,42,"Train through combat to 100%, then spend points. The first purchase adds a follower slot. Skill caps require matching power scrolls.",false,false);
+            FlatButton(24,588,184,1,profile.HasBegunTraining?"Training status":"Begin training");FlatButton(230,588,180,4,"Finish stage");FlatButton(432,588,130,5,"Animal Lore");FlatButton(590,588,120,6,"Refresh");FlatButton(24,628,184,7,"Plan training");FlatButton(230,628,180,8,"Training info");FlatButton(590,628,120,0,"Close");
         }
         public override void OnResponse(NetState sender,RelayInfo info) {
             var p=sender.Mobile;int id=info.ButtonID;if(id==0||!HavenPetTrainingMenu.CheckUse(p,_pet))return;
@@ -178,7 +194,7 @@ namespace Server.HavenPrototype
             HavenPetTrainingMenu.Show(p,_pet,_category,_page+(id==2?-1:id==3?1:0));
         }
     }
-    public class HavenPetUpgradeGump : HavenPetMenuGump
+    public class HavenPetUpgradeGump : HavenTrainingMenuGump
     {
         readonly BaseCreature _pet;readonly TrainingPoint _point;readonly int _expected,_category,_page,_value;
         public HavenPetUpgradeGump(BaseCreature pet,TrainingPoint point,int expected,int category,int page,int value=-1):base(80,80) {
