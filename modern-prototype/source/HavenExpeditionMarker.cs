@@ -25,6 +25,7 @@ namespace Server.HavenPrototype {
     item.MoveToWorld(new Point3D(x,y,z),camp.Map);
    }
   }
+  public static bool Nearby(HavenMiniChamp camp,Mobile p){return p!=null&&World.Items.Values.OfType<HavenExpeditionMarker>().Any(x=>!x.Deleted&&x._camp==camp&&x.Map==p.Map&&p.InRange(x,3)&&p.InLOS(x));}
   public static void Remove(HavenMiniChamp camp){foreach(var item in World.Items.Values.OfType<HavenExpeditionMarker>().Where(x=>x._camp==camp).ToArray())item.Delete();}
   private HavenExpeditionMarker(HavenMiniChamp camp,int part):base(Art[part]){_camp=camp;_part=part;Movable=false;Name=part<2?"Corsair expeditions - mini champion":part==2?"expedition supplies":part==3?"expedition lantern":part==4?"fresh water barrel":part==5?"scout bedroll":part==8?"expedition campfire":"camp stool";if(part==1)Hue=0x8A5;if(part==3||part==8)Light=LightType.Circle300;}
   public HavenExpeditionMarker(Serial serial):base(serial){}

@@ -77,9 +77,21 @@ namespace Server.HavenPrototype
             if(!HavenPreview.FindLanding(d,out landing))return false;
             BaseCreature.TeleportPets(from,landing,Map);from.MoveToWorld(landing,Map);return true;
         }
+        public string StartError(Mobile from,int theme){
+            if(!HavenPreview.Enabled||Deleted)return "This camp is unavailable.";
+            if(from==null||!HavenMarks.CanUse(from))return "You must be alive and signed in to start an expedition.";
+            if(theme<0||theme>=Themes.Length)return "Choose one of the listed expeditions.";
+            if(Active)return "An expedition is already active: wave "+(_stage+1)+", "+Remaining+" enemies remaining.";
+            if(DateTime.UtcNow<_cooldown)return "Camp cooldown: "+Math.Ceiling((_cooldown-DateTime.UtcNow).TotalSeconds)+" seconds remaining.";
+            if(from.Map!=Map||(!from.InRange(this,8)&&!HavenExpeditionMarker.Nearby(this,from)))return "Move beside the camp sign or supplies, or use Travel to camp. You are "+(from.Map==Map?Math.Max(Math.Abs(from.X-X),Math.Abs(from.Y-Y)).ToString()+" tiles from the clearing.":"on another facet.");
+            var target=from.Combatant as Mobile;
+            if(target!=null&&!target.Deleted&&target.Alive&&target.Map==from.Map&&from.InRange(target,18))return "Still engaged with "+target.Name+" nearby. Finish combat before starting.";
+            var recent=from.Aggressors.Concat(from.Aggressed).Where(a=>!a.Expired).ToArray();
+            if(recent.Length>0)return "Recent combat: wait up to "+Math.Max(1,Math.Ceiling(recent.Max(a=>(a.LastCombatTime+AggressorInfo.ExpireDelay-DateTime.UtcNow).TotalSeconds)))+" seconds after the last attack.";
+            return null;
+        }
         public bool Begin(Mobile from,int theme) {
-            if(!HavenPreview.Enabled || !HavenMarks.CanUse(from) || from.Map!=Map || !from.InRange(this,8) ||
-                Active || DateTime.UtcNow<_cooldown || theme<0 || theme>=Themes.Length || !HavenPreview.CanTravel(from))return false;
+            var error=StartError(from,theme);if(error!=null){from?.SendMessage(error);return false;}
             if(!SafeClearing(Map,Location)){from.SendMessage("This camp needs relocating to a clear outdoor area. Please reopen the menu after relocation.");Ensure();return false;}
             _theme=theme;_stage=0;_deadline=DateTime.UtcNow.AddMinutes(theme==3?30:20);_emptySince=DateTime.MinValue;_participants.Clear();
             SpawnWave();return Active;
@@ -187,14 +199,14 @@ namespace Server.HavenPrototype
             _camp=camp;AddBackground(0,0,570,455,0x13BE);AddLabel(20,16,1152,"Corsair expeditions - mini champion");
             AddHtml(20,50,530,70,"<BASEFONT COLOR=#FFFFFF>Three waves of five enemies, then a boss. Everyone who damages an enemy earns the completion reward; companion and pet damage counts for their owner. Run away to abandon the fight.</BASEFONT>",false,false);
             AddLabel(20,127,1152,camp.Active?"Active: wave "+(camp.Stage+1)+" / 4, "+camp.Remaining+" enemies":"Ready in "+Math.Max(0,Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds))+" seconds");
-            for(int i=0;i<4;i++){AddButton(20,160+i*30,0xFA5,0xFA7,10+i,GumpButtonType.Reply,0);AddLabel(54,160+i*30,1152,"Start "+HavenMiniChamp.Themes[i]);}
+            for(int i=0;i<4;i++)FlatButton(20,160+i*30,265,10+i,HavenMiniChamp.Themes[i]);
             AddHtml(300,160,250,105,"<BASEFONT COLOR=#FFFFFF>Each participant: 10,000 gold, 20 Marks, 250 themed resources as a deed. Five 105/110 Power Scrolls, Alacrity and Transcendence. Full packs keep rewards pending.</BASEFONT>",false,false);
             AddHtml(20,290,530,52,"<BASEFONT COLOR=#3B2A1A>Challenge: three waves of 15 mixed enemies, then all three bosses together. Four reward sets, 80 Marks and +1 Astral Shard per player. Includes Corsair ship ammunition.</BASEFONT>",false,false);
             AddLabel(20,347,1152,"Wins: "+HavenMiniChamp.Wins(p)+" | Pending rewards: "+HavenMiniPrize.Pending(p));
             Button(20,385,1,"Travel to camp");Button(300,385,2,"Collect pending rewards");Button(20,423,3,"Refresh");Button(450,423,0,"Close");
         }
-        private void Button(int x,int y,int id,string text){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);AddLabel(x+34,y,1152,text);}
-        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and wait for recent combat to expire before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13 && !_camp.Begin(p,info.ButtonID-10))p.SendMessage("Stand within eight tiles of camp, leave combat, and wait for the previous expedition to finish cooling down.");_camp.Show(p);}
+        private void Button(int x,int y,int id,string text){FlatButton(x,y,id==0?100:id==2?245:230,id,text);}
+        public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and wait for recent combat to expire before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13)_camp.Begin(p,info.ButtonID-10);_camp.Show(p);}
     }
 }
 
