@@ -29,8 +29,7 @@ namespace Server.HavenPrototype
             owner.CloseGump(typeof(HavenPetTrainingGump)); owner.SendGump(new HavenPetTrainingGump(pet,category,page));
         }
         public static bool Peaceful(Mobile owner, BaseCreature pet) {
-            return !Server.Spells.SpellHelper.CheckCombat(owner) && !Server.Spells.SpellHelper.CheckCombat(pet) &&
-                !pet.Aggressed.Any(a=>!a.Expired) && pet.Combatant == null;
+            return HavenPreview.TravelCombatSeconds(owner)==0 && HavenPreview.TravelCombatSeconds(pet)==0;
         }
         public static List<TrainingPoint> Options(BaseCreature pet, int category) {
             var result = new List<TrainingPoint>();

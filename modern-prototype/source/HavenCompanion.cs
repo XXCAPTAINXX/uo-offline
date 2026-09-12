@@ -132,7 +132,7 @@ namespace Server.HavenPrototype
         public bool SetRole(Mobile from, CompanionRole role)
         {
             if (!CanCommand(from) || role < CompanionRole.Warrior || role > CompanionRole.Healer || Spell != null ||
-                Combatant != null || from.Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return false;
+                HavenPreview.TravelCombatSeconds(this)>0 || HavenPreview.TravelCombatSeconds(from)>0) return false;
             if (role == _role) return true;
             var hands = new List<Item>();
             var one = FindItemOnLayer(Layer.OneHanded); var two = FindItemOnLayer(Layer.TwoHanded);
@@ -441,8 +441,7 @@ namespace Server.HavenPrototype
             if (!Controlled || ControlMaster != from) return "Your companion is not currently under your control.";
             if (!offline&&(Map == Map.Internal || from.Map != Map || !from.InRange(this,14))) return "Move within 14 tiles of your companion before starting a mission.";
             if (!offline&&!from.InLOS(this)) return "Move into sight of your companion before starting a mission.";
-            if (Combatant != null || from.Combatant != null) return "Cannot start while you or your companion have a combat target. Finish combat first.";
-            if (Aggressors.Count > 0 || Aggressed.Count > 0 || from.Aggressors.Count > 0 || from.Aggressed.Count > 0) return "Recent combat is still active. Wait for combat aggression to expire before sending a mission.";
+            if (HavenPreview.TravelCombatSeconds(this)>0 || HavenPreview.TravelCombatSeconds(from)>0) return "Wait 15 seconds after the last combat action before sending a mission.";
             if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
             if (minutes != 5 && minutes != 15 && minutes != 30 && minutes != 60) return "Choose a 5, 15, 30 or 60 minute mission.";
             if (kind < CompanionMission.Supply || kind > CompanionMission.AbyssIngredients) return "That mission is unavailable.";
@@ -507,8 +506,8 @@ namespace Server.HavenPrototype
                 !Alive || IsDeadPet ? "Your companion needs resurrection before Recall." :
                 IsStabled ? "Your companion is stabled; reclaim him before Recall." :
                 from.Map == null || from.Map == Map.Internal ? "Your current location is unavailable for Recall." :
-                from.Combatant != null || from.Aggressors.Count > 0 || from.Aggressed.Count > 0 ? "Your combat is still active; Recall is available after it clears." :
-                Combatant != null || Aggressors.Count > 0 || Aggressed.Count > 0 ? "Your companion's combat is still active; Recall is available after it clears." : null;
+                HavenPreview.TravelCombatSeconds(from)>0 ? "Your combat is still active; Recall is available after it clears." :
+                HavenPreview.TravelCombatSeconds(this)>0 ? "Your companion's combat is still active; Recall is available after it clears." : null;
             if (blocked != null) { from.SendMessage(blocked); return false; }
             if (!Controlled && !SetControlMaster(from)) return false;
             if (ControlMaster != from) return false;
