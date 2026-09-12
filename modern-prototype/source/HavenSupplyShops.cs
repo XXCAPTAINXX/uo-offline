@@ -59,7 +59,7 @@ namespace Server.HavenPrototype {
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Timer.DelayCall(TimeSpan.Zero,Delete);}
  }
- public class HavenSupplyShopGump:Gump {
+ public class HavenSupplyShopGump:HavenStoneGump {
   readonly int _kind,_selected;const int PageSize=8;
   HavenShopPreviewHolder _holder; Item _preview; Dictionary<int,Item> _items;
   void Cleanup(){if(_holder!=null&&!_holder.Deleted)_holder.Delete();}
@@ -67,13 +67,13 @@ namespace Server.HavenPrototype {
   public HavenSupplyShopGump(Mobile p,int kind,int selected,HavenShopPreviewHolder holder=null,Dictionary<int,Item> items=null):base(40,40){_kind=kind;var entries=HavenSupplyShops.Catalogs[kind];_selected=Math.Max(0,Math.Min(entries.Count-1,selected));int page=_selected/PageSize;
    AddBackground(0,0,660,470,0xA28);Text(24,22,610,25,"<B>"+HavenSupplyShops.Names[kind]+"</B>");Text(24,54,610,25,"Bank gold: "+Server.Mobiles.Banker.GetBalance(p).ToString("N0")+" | Marks: "+HavenMarks.Balance(p));
    _holder=holder!=null&&!holder.Deleted?holder:new HavenShopPreviewHolder();_items=items??new Dictionary<int,Item>();
-   for(int row=0;row<PageSize;row++){int index=page*PageSize+row;if(index>=entries.Count)break;Item item;if(!_items.TryGetValue(index,out item)||item.Deleted){item=entries[index].Create();if(HavenGearDurability.Supported(item))HavenGearDurability.Apply(item);_holder.DropItem(item);_items[index]=item;}HavenMenuGump.ItemArrow(this,p,item,24,94+row*33,100+index);Text(57,94+row*33,275,29,entries[index].Name);}
+   for(int row=0;row<PageSize;row++){int index=page*PageSize+row;if(index>=entries.Count)break;Item item;if(!_items.TryGetValue(index,out item)||item.Deleted){item=entries[index].Create();if(HavenGearDurability.Supported(item))HavenGearDurability.Apply(item);_holder.DropItem(item);_items[index]=item;}ItemButton(p,item,24,94+row*33,300,100+index,entries[index].Name);}
    var entry=entries[_selected];Text(345,96,285,40,"<B>"+entry.Name+"</B>");Text(345,140,285,40,entry.FreeClaim!=null?"Free first claim; 250 gold replacements":entry.Shards>0?entry.Shards+" Astral shards (wallet: "+(HavenWallet.Find(p)==null?0:HavenWallet.Find(p).AstralShards)+")":entry.Marks>0?entry.Marks+" Marks"+(entry.Gold>0?" or "+entry.Gold.ToString("N0")+" gold":""):entry.Gold.ToString("N0")+" gold");Text(345,267,285,120,entry.Details);
-   _preview=_items[_selected];AddItem(370,185,_preview.ItemID,_preview.Hue);_preview.SendPropertiesTo(p);AddItemProperty(_preview.Serial);Text(425,190,195,60,"Hover an arrow or item to inspect its full properties.");HavenMenuGump.ItemArrow(this,p,_preview,345,394,1);Text(378,394,250,29,"Buy selected");
+   _preview=_items[_selected];AddItem(370,185,_preview.ItemID,_preview.Hue);_preview.SendPropertiesTo(p);AddItemProperty(_preview.Serial);Text(425,190,195,60,"Hover a button or item to inspect its full properties.");ItemButton(p,_preview,345,394,285,1,"Buy selected");
    if(page>0)Button(24,428,2,"Previous",100);Text(148,428,160,25,"Page "+(page+1)+" / "+((entries.Count+7)/8));if((page+1)*PageSize<entries.Count)Button(300,428,3,"Next",100);Button(550,428,0,"Close",65);
   }
   void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#342B23>"+text+"</BASEFONT>",false,false);}
-  void Button(int x,int y,int id,string text,int width){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,29,text);}
+  void Button(int x,int y,int id,string text,int width){FlatButton(x,y,width,id,text);}
   public override void OnResponse(NetState state,RelayInfo info){var p=state.Mobile;if(info.ButtonID==0||!HavenMarks.CanUse(p)){Cleanup();return;}int selected=_selected;if(info.ButtonID==1){if(!HavenSupplyShops.Near(p))p.SendMessage("Stand beside a Haven shop stone to buy.");else HavenSupplyShops.Buy(p,_kind,_selected,_preview);}else if(info.ButtonID==2)selected=Math.Max(0,(_selected/8-1)*8);else if(info.ButtonID==3)selected=(_selected/8+1)*8;else if(info.ButtonID>=100)selected=info.ButtonID-100;if(selected>=0&&selected<HavenSupplyShops.Catalogs[_kind].Count){if(info.ButtonID>=100&&selected/8==_selected/8&&!_holder.Deleted){var holder=_holder;_holder=null;p.SendGump(new HavenSupplyShopGump(p,_kind,selected,holder,_items));}else{Cleanup();p.SendGump(new HavenSupplyShopGump(p,_kind,selected));}}else Cleanup();}
  }
 }

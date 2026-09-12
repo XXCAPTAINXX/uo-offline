@@ -149,7 +149,7 @@ namespace Server.HavenPrototype
             return true;
         }
     }
-    public class PreviewGump : Gump
+    public class PreviewGump : HavenStoneGump
     {
         private readonly int _page;
         public PreviewGump(int page=0) : base(50,50)
@@ -166,7 +166,7 @@ namespace Server.HavenPrototype
             AddHtml(24,430,540,75,"<BASEFONT COLOR=#202020>Pages: 1 - modern adventures; 2 - towns and gateways; 3 - dungeons and hunting; 4 - Warden. Trammel dungeon entrances use non-PvP rules.</BASEFONT>",false,false);
             if(_page>0)Button(24,526,3,"Previous");AddLabel(165,526,0,"Page "+(_page+1)+" / "+((HavenPreview.Destinations.Length+9)/10));if((_page+1)*10<HavenPreview.Destinations.Length)Button(280,526,4,"Next");Button(430,526,0,"Close");
         }
-        private void Button(int x,int y,int id,string label) { AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0); AddLabel(x+34,y,0,label); }
+        private void Button(int x,int y,int id,string label) { FlatButton(x,y,id>=100?260:id==1?270:id==2?230:110,id,label); }
         public override void OnResponse(NetState sender, RelayInfo info)
         {
             if (!HavenPreview.Enabled || sender.Mobile == null || info.ButtonID == 0) return;
