@@ -153,7 +153,7 @@ public partial class HavenAbyssTrial : Item
         Guardians.Clear();
         if (Hound?.Deleted == false && !Hound.Controlled && Hound.Owners.Count == 0) { Hound.Delete(); }
         Hound = null; Challenger = null; Kills = 0; Stage = 0;
-        NextStart = DateTime.UtcNow + TimeSpan.FromMinutes(10); 
+        NextStart = DateTime.UtcNow + TimeSpan.FromSeconds(15); 
     }
     public override void OnDoubleClick(Mobile from)
     {
@@ -162,7 +162,7 @@ public partial class HavenAbyssTrial : Item
     }
     public HavenAbyssTrial(Serial serial):base(serial){}
     public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Challenger);w.Write(Guardians.Count);foreach(var g in Guardians)w.Write(g);w.Write(Hound);w.Write(Kills);w.Write(Stage);w.Write(Expires);w.Write(NextStart);}
-    public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Challenger=r.ReadMobile();int count=r.ReadInt();if(count<0||count>3)throw new InvalidOperationException("Invalid guardian count");for(int i=0;i<count;i++){var g=r.ReadMobile() as HavenAbyssGuardian;if(g!=null)Guardians.Add(g);}Hound=r.ReadMobile() as HavenAncientHellhound;Kills=r.ReadInt();Stage=r.ReadInt();Expires=r.ReadDateTime();NextStart=r.ReadDateTime();Timer.DelayCall(TimeSpan.Zero,Recover);}
+    public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Challenger=r.ReadMobile();int count=r.ReadInt();if(count<0||count>3)throw new InvalidOperationException("Invalid guardian count");for(int i=0;i<count;i++){var g=r.ReadMobile() as HavenAbyssGuardian;if(g!=null)Guardians.Add(g);}Hound=r.ReadMobile() as HavenAncientHellhound;Kills=r.ReadInt();Stage=r.ReadInt();Expires=r.ReadDateTime();NextStart=r.ReadDateTime();if(NextStart>DateTime.UtcNow.AddSeconds(15))NextStart=DateTime.UtcNow.AddSeconds(15);Timer.DelayCall(TimeSpan.Zero,Recover);}
     public override void OnDelete() { Finish(); Registry.Remove(this); base.OnDelete(); }
     public static void Initialize()
     {
@@ -206,7 +206,7 @@ public sealed class HavenAbyssTrialGump : Gump
         AddBackground(0, 0, 470, 350, 0xA28); AddLabel(30, 25, 0, "The Ancient Hunt");
         AddHtml(30, 65, 410, 130, "<BASEFONT COLOR=#342B23>Defeat two waves of guardians to reveal a wild Ancient Hellhound. Tame it before it leaves.<BR><BR>Innate Healing, fire breath, high Dexterity and stamina. Rare, Epic or Legendary; Legendary starts with one follower slot.</BASEFONT>",false,false);
         AddLabel(30, 200, 0, $"Taming {from.Skills.AnimalTaming.Base:F1} / 110    Lore {from.Skills.AnimalLore.Base:F1} / 110");
-        AddLabel(30, 232, 0, trial.Stage == 0 ? DateTime.UtcNow < trial.NextStart ? $"Ready in {Math.Ceiling((trial.NextStart - DateTime.UtcNow).TotalMinutes)} minutes" : "Ready to begin" :
+        AddLabel(30, 232, 0, trial.Stage == 0 ? DateTime.UtcNow < trial.NextStart ? $"Ready in {Math.Ceiling((trial.NextStart - DateTime.UtcNow).TotalSeconds)} seconds" : "Ready to begin" :
             trial.Stage == 3 ? "A hellhound is waiting to be tamed" : $"Wave {trial.Stage} / 2 — {trial.Kills} / 3 defeated");
         AddButton(30, 285, 4005, 4007, 1,GumpButtonType.Reply,0); AddLabel(65, 285, 0, "Begin hunt");
         AddButton(305, 285, 4017, 4019, 0,GumpButtonType.Reply,0); AddLabel(340, 285, 0, "Close");

@@ -19,7 +19,7 @@ public partial class HavenChelonia : Item
     private void Register()
     {
         Registry.Add(this); _timer?.Stop();
-        _timer = Timer.DelayCall(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), Tick);
+        _timer = Timer.DelayCall(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2), Tick);
     }
     internal void Build()
     {
@@ -40,7 +40,7 @@ public partial class HavenChelonia : Item
         {
             var pet = Tortoises[i];
             if (pet == null || pet.Deleted || pet.Controlled || pet.Owners.Count > 0)
-            { Tortoises.RemoveAt(i); NextSpawn = DateTime.UtcNow + TimeSpan.FromMinutes(5);  }
+            { Tortoises.RemoveAt(i); NextSpawn = DateTime.UtcNow + TimeSpan.FromSeconds(15);  }
             else if (pet.Map != Map || !pet.InRange(this, 50))
             { pet.MoveToWorld(new Point3D(X + 6 + i * 3, Y + 4, 0), Map); }
         }
@@ -54,11 +54,11 @@ public partial class HavenChelonia : Item
     public override void OnDoubleClick(Mobile from)
     {
         if (from.Map != Map || !from.InRange(this, 4)) { return; }
-        from.SendMessage("Chelonia's tide tortoises fight on land and at sea. Rare/Epic/Legendary need 90/100/110 Taming. Feed fish or produce. Wild replacements return after five minutes; tamed pets are preserved.");
+        from.SendMessage("Chelonia's tide tortoises fight on land and at sea. Rare/Epic/Legendary need 90/100/110 Taming. Feed fish or produce. Wild replacements return in about 15 seconds; tamed pets are preserved.");
     }
     public HavenChelonia(Serial serial):base(serial){}
     public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Fixtures.Count);foreach(var item in Fixtures)w.Write(item);w.Write(Tortoises.Count);foreach(var pet in Tortoises)w.Write(pet);w.Write(NextSpawn);}
-    public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();int count=r.ReadInt();if(count<0||count>200)throw new InvalidOperationException("Invalid sanctuary fixture count");for(int i=0;i<count;i++){var item=r.ReadItem();if(item!=null)Fixtures.Add(item);}count=r.ReadInt();if(count<0||count>2)throw new InvalidOperationException("Invalid sanctuary pet count");for(int i=0;i<count;i++){var pet=r.ReadMobile() as HavenChelonian;if(pet!=null)Tortoises.Add(pet);}NextSpawn=r.ReadDateTime();Timer.DelayCall(TimeSpan.Zero,Register);}
+    public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();int count=r.ReadInt();if(count<0||count>200)throw new InvalidOperationException("Invalid sanctuary fixture count");for(int i=0;i<count;i++){var item=r.ReadItem();if(item!=null)Fixtures.Add(item);}count=r.ReadInt();if(count<0||count>2)throw new InvalidOperationException("Invalid sanctuary pet count");for(int i=0;i<count;i++){var pet=r.ReadMobile() as HavenChelonian;if(pet!=null)Tortoises.Add(pet);}NextSpawn=r.ReadDateTime();if(NextSpawn>DateTime.UtcNow.AddSeconds(15))NextSpawn=DateTime.UtcNow.AddSeconds(15);Timer.DelayCall(TimeSpan.Zero,Register);}
     public override void OnDelete()
     {
         _timer?.Stop(); _timer = null; Registry.Remove(this);

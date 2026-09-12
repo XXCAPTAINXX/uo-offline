@@ -33,7 +33,7 @@ public partial class HavenSnowBearDen : Item
     
     private void Register()
     {
-        Registry.Add(this); _timer?.Stop(); _timer = Timer.DelayCall(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10), Tick);
+        Registry.Add(this); _timer?.Stop(); _timer = Timer.DelayCall(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2), Tick);
     }
     internal static bool TryFloor(Point3D center, Map map, out Point3D point)
     {
@@ -60,7 +60,7 @@ public partial class HavenSnowBearDen : Item
     {
         if (Deleted || Map != Map.Tokuno) { return; }
         if (Bear != null && (Bear.Deleted || Bear.Controlled || Bear.Owners.Count > 0))
-        { Bear = null; NextSpawn = DateTime.UtcNow + TimeSpan.FromMinutes(5); }
+        { Bear = null; NextSpawn = DateTime.UtcNow + TimeSpan.FromSeconds(15); }
         if (Bear == null)
         {
             if (DateTime.UtcNow < NextSpawn || !TryFloor(Location, Map, out var point)) { return; }
@@ -74,11 +74,11 @@ public partial class HavenSnowBearDen : Item
     public override void OnDoubleClick(Mobile from)
     {
         if (from.Map == Map && from.InRange(this, 4))
-        { from.SendMessage("Frostbound bears roam this clearing. Rare / Epic / Legendary require 100 / 110 / 120 taming. One bear returns five minutes after the last is tamed or killed."); }
+        { from.SendMessage("Frostbound bears roam this clearing. Rare / Epic / Legendary require 100 / 110 / 120 taming. One bear returns about 15 seconds after the last is tamed or killed."); }
     }
     public HavenSnowBearDen(Serial serial):base(serial){}
     public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Bear);w.Write(NextSpawn);}
-    public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Bear=r.ReadMobile() as HavenSnowBear;NextSpawn=r.ReadDateTime();Timer.DelayCall(TimeSpan.Zero,Register);}
+    public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Bear=r.ReadMobile() as HavenSnowBear;NextSpawn=r.ReadDateTime();if(NextSpawn>DateTime.UtcNow.AddSeconds(15))NextSpawn=DateTime.UtcNow.AddSeconds(15);Timer.DelayCall(TimeSpan.Zero,Register);}
     public override void OnDelete()
     {
         _timer?.Stop(); _timer = null; Registry.Remove(this);
