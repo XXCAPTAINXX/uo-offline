@@ -167,6 +167,7 @@ default:return "This species keeps its native abilities.";
     internal static int GuardPercent(BaseCreature pet) => Active(pet) && Kind(pet)==7 && Find(pet)?.GuardUntil>DateTime.UtcNow ? 12+Tier(pet)*4 : 0;
     public static void AddProperties(BaseCreature pet,ObjectPropertyList list)
     {
+        list.Add("Rarity: "+HavenPetRarity.Label(HavenPetDefenses.Tier(pet)));
         if(Kind(pet)!=0) { list.Add($"{"Species signature:"} {Describe(pet)}"); }
         HavenPetDefenses.AddProperties(pet,list);HavenLegendaryPetSkills.AddProperties(pet,list);
     }
