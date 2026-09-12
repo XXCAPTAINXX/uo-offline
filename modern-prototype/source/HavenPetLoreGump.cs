@@ -45,7 +45,7 @@ default: return "Every creature has a history beyond its training ledger. Watch 
         var lines = new List<Section>();
         void Add(string heading, string value)
         {
-            var tab = heading.StartsWith("Rarity:", StringComparison.Ordinal) || heading == "Legendary skill rolls" ? 1 :
+            var tab = heading.StartsWith("Rarity:", StringComparison.Ordinal) || (heading == "Legendary skill rolls" || heading == "Overcap benefits") ? 1 :
                 (heading == "Training" || heading == "Learned Healing" || heading == "Trained abilities") ? 2 : heading == "Care and natural abilities" ? 3 : 0;
             lines.Add(new Section(tab, heading, value));
         }
@@ -63,6 +63,8 @@ default: return "Every creature has a history beyond its training ledger. Watch 
             { var skill = pet.Skills[name]; skills.Add($"{skill.Name}: {skill.Base:F1} / {skill.Cap:F1}"); }
             Add("Legendary skill rolls", skills.Count == 0 ? "No over-cap skills rolled." : string.Join("; ", skills));
         }
+        var overcap = HavenOvercapBenefits.Describe(pet);
+        if(overcap.Length>0)Add("Overcap benefits",overcap);
         var training = HavenLoreCompatibility.Training(pet);
         if (training != null)
         {
@@ -79,12 +81,12 @@ default: return "Every creature has a history beyond its training ledger. Watch 
     }
 }
 
-public sealed class HavenPetLoreGump : Gump
+public sealed class HavenPetLoreGump : HavenPetMenuGump
 {
     private readonly BaseCreature _pet;
     private readonly int _tab;
     private readonly int _page;
-    private const string Ink = "#181818";
+    private const string Ink = "#FFFFFF";
     internal HavenPetLoreGump(BaseCreature pet, int tab = 0, int page = 0) : base(45, 45)
     {
         _pet = pet; _tab = HavenLoreCompatibility.Clamp(tab, 0, 4);
@@ -132,7 +134,7 @@ public sealed class HavenPetLoreGump : Gump
     }
     private void AddHtml(int x,int y,int w,int h,string text){base.AddHtml(x,y,w,h,text,false,false);}
     private void Text(int x, int y, int width, int height, string encoded, bool bold)
-        => AddHtml(x, y, width, height, $"<BASEFONT COLOR={Ink}>{(bold ? "<B>" : "")}{encoded}{(bold ? "</B>" : "")}</BASEFONT>");
+        => AddHtml(x, y, width, height, $"<BASEFONT COLOR={(bold ? "#FFFF00" : Ink)}>{(bold ? "<B>" : "")}{encoded}{(bold ? "</B>" : "")}</BASEFONT>");
     public override void OnResponse(NetState state, RelayInfo info)
     {
         if (info.ButtonID == 0 || !HavenAnimalLoreGump.CanInspect(state.Mobile, _pet)) { return; }

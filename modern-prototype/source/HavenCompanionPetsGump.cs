@@ -8,7 +8,7 @@ using Server.Network;
 using Server.Targeting;
 namespace Server.HavenPrototype
 {
- public class HavenCompanionPetsGump:HavenMenuGump
+ public class HavenCompanionPetsGump:HavenPetMenuGump
  {
   readonly HavenCompanion _companion;readonly HavenCompanionAssignedPet[] _pets;readonly int _page;
   public static void Initialize(){CommandSystem.Register("companionpets",AccessLevel.Player,e=>{var c=World.Mobiles.Values.OfType<HavenCompanion>().FirstOrDefault(x=>x.IsOwner(e.Mobile));Show(e.Mobile,c);});}

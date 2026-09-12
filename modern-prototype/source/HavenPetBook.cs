@@ -52,14 +52,14 @@ namespace Server.HavenPrototype
         public override void OnDoubleClick(Mobile p)
         {
             if(!CanUse(p))return;
-            foreach(var ticket in p.Backpack.FindItemsByType(typeof(HavenPetTicket),true).Cast<HavenPetTicket>().Where(t=>t.Owner==p&&t.Pet!=null&&!t.Pet.Deleted&&t.Pet.IsBonded&&t.Parent!=this).ToArray())
-                if(HavenResources.Accessible(p,ticket))TryDropItem(p,ticket,false);
+            foreach(var ticket in p.Backpack.FindItemsByType(typeof(HavenPetTicket),true).Cast<HavenPetTicket>().Where(t=>t.Owner==p&&t.Pet!=null&&!t.Pet.Deleted&&!t.Pet.Controlled&&t.Pet.Map==Map.Internal&&!(t.Parent is HavenPetBook)).ToArray())
+                if(HavenResources.Accessible(p,ticket)&&(MaxItems<=0||Items.Count<MaxItems))DropItem(ticket);
             p.CloseGump(typeof(PetBookGump));p.SendGump(new PetBookGump(this,0));
         }
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Owner);}
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();if(ItemID==0x2259){ItemID=0xFF4;Hue=0x59D;Name="Pet sanctuary book";}}
     }
-    public class PetBookGump:HavenMenuGump
+    public class PetBookGump:HavenPetMenuGump
     {
         readonly HavenPetBook _book; readonly HavenPetTicket[] _tickets; readonly int _page,_sort,_filter;readonly string _search;
         static readonly string[] Sorts={"Recently added","Rarity","Name","Follower slots","Taming skill"};
@@ -85,7 +85,7 @@ namespace Server.HavenPrototype
             for(int i=0;i<_tickets.Length;i++){
                 var t=_tickets[i];var pet=t.Pet;int y=169+i*52;int tier=Math.Max(t.Rarity,HavenPetDefenses.Tier(pet));
                 string name=pet.Name??"Unnamed pet";if(name.Length>42)name=name.Substring(0,39)+"...";
-                AddLabel(24,y,0,(t.Favorite?"* ":"")+name);
+                AddLabel(24,y,new[]{1152,68,1159,53}[Math.Max(0,Math.Min(3,tier))],(t.Favorite?"* ":"")+name);
                 AddLabel(24,y+19,0,HavenPetRarity.Label(tier)+" | "+pet.ControlSlots+" slots | Taming "+pet.MinTameSkill.ToString("0.0")+(pet.IsBonded?" | Bonded":""));
                 FlatButton(420,y+6,84,100+i*3,"Lore");FlatButton(514,y+6,90,101+i*3,"Claim");
                 FlatButton(742,y+6,84,300+i,t.Favorite?"Unfavorite":"Favorite");
@@ -97,10 +97,12 @@ namespace Server.HavenPrototype
             if(_page>0)FlatButton(24,509,110,1,"Previous");AddLabel(151,509,0,"Page "+(_page+1)+" / "+pages);
             if(_page+1<pages)FlatButton(275,509,100,2,"Next");
             FlatButton(420,509,184,6,"Spend pet credits");FlatButton(614,509,118,0,"Close");
+            FlatButton(24,547,300,9,"Turn in Rare and below...");
         }
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var p=sender.Mobile;int id=info.ButtonID;if(id==0||!_book.CanUse(p))return;
+            if(id==9){p.SendGump(new HavenPetBulkExchangeConfirm(_book));return;}
             if(id==3){_book.BeginAdd(p);return;}if(id>=300&&id<300+_tickets.Length){var t=_tickets[id-300];if(!t.Deleted&&t.Parent==_book&&t.Owner==p){t.Favorite=!t.Favorite;t.InvalidateProperties();}p.SendGump(new PetBookGump(_book,_page,_sort,_filter,_search));return;}if(id==6){HavenPetExchange.Show(p);return;}
             if(id>=100){int index=(id-100)/3;if(index<0||index>=_tickets.Length)return;var t=_tickets[index];if(t.Deleted||t.Parent!=_book||t.Owner!=p)return;
                 int action=(id-100)%3;if(action==0){t.ShowLore(p);return;}

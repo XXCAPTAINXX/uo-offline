@@ -35,6 +35,7 @@ namespace Server.HavenPrototype {
    Text(266,280,190,24,"<B>Relevant skills</B>");Text(453,280,58,24,"Base");Text(515,280,58,24,"Now");Text(581,280,62,24,"Cap");
    var skills=RoleSkills[_selected];for(int i=0;i<skills.Length;i++){var skill=c.Skills[skills[i]];int y=307+i*23;Text(266,y,182,23,HavenMenuText.Encode(skill.Name));Text(453,y,58,23,skill.Base.ToString("F1"));Text(515,y,58,23,skill.Value.ToString("F1"));Text(581,y,62,23,skill.Cap.ToString("F1"));}
    Text(28,377,196,104,"Base = trained skill.<BR>Now = current bonuses.<BR>Cap = training limit.<BR><BR>Now reflects equipped gear.");
+   if(_selected==3)Text(28,483,196,100,HavenMenuText.Encode(c.BardStatus()));
    if(_selected==(int)c.Role)Text(266,552,380,24,"This role is active.");
    else FlatButton(266,552,380,1,"Use "+Names[_selected]+" role");
    Text(24,595,630,24,"Change roles nearby, outside combat. Equipment and trained skills are kept.");

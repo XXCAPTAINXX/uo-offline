@@ -21,7 +21,7 @@ case 3:return "Winter's Grasp — cold strike and 6s attack-speed chill, reducin
 case 4:return "Sanctuary Grove — heals owner and owned pets within 3 tiles over 8s, without needing melee. Epic cures up to regular poison; Legendary up to greater. Cooldown 18s.";
 case 5:return "Ranged hunter — holds 4–6 tiles, firing lightning every 3s. Chain Tempest jumps between 2–5 engaged enemies, losing 25% damage each jump. Chain cooldown 14s.";
 case 6:return "Arcane Reservoir — spends 15 mana to restore 12–27 owner mana. In melee, siphons enemy mana instead. Legendary siphons can interrupt spells using normal interruption rules. Cooldown 10s.";
-case 7:return "Guardian Roar — draws a vulnerable enemy off its owner and reduces incoming melee damage by 12–24% for 6s. Works alongside Colossal Rage. Cooldown 18s.";
+case 7:return "Guardian Roar — draws a vulnerable enemy off its owner and reduces incoming melee damage by 12–24% for 6s. Works alongside Colossal Rage and innate self/owner Healing. Cooldown 18s.";
 case 8:return "Ashen Wound — ranged fire strike suppresses enemy healing for 3–6s. Keeps innate self/owner Healing and fire breath. Cooldown 18s.";
 case 9:return "Sanguine Rescue — physical life drain heals its owner below half health, otherwise the steed. Healing cannot exceed actual damage dealt. Cooldown 12s.";
 case 10:return "Tidal Jet — cold strike at range 6, drains 8–20 stamina; 12s cooldown. Living Shell reduces melee damage below half health. Amphibious with cargo.";

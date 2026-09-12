@@ -22,7 +22,7 @@ namespace Server.HavenPrototype {
   public static void Initialize(){CommandSystem.Register("petexchange",AccessLevel.Player,e=>Show(e.Mobile));}
   public static void Show(Mobile p){if(HavenMarks.CanUse(p)){p.CloseGump(typeof(HavenPetExchangeGump));p.SendGump(new HavenPetExchangeGump(p));}}
  }
- public class HavenPetExchangeGump:HavenMenuGump {
+ public class HavenPetExchangeGump:HavenPetMenuGump {
   readonly HavenPetTicket[] _tickets;readonly int _page;
   public HavenPetExchangeGump(Mobile p,int page=0):base(50,50){_tickets=p.Backpack==null?new HavenPetTicket[0]:p.Backpack.FindItemsByType(typeof(HavenPetTicket),true).Cast<HavenPetTicket>().Where(t=>HavenPetExchange.Eligible(p,t)).ToArray();_page=Math.Max(0,Math.Min(page,Math.Max(0,(_tickets.Length-1)/6)));
    AddBackground(0,0,710,545,3000);AddLabel(24,22,0,"MISSION PET EXCHANGE    Credits: "+HavenPetExchange.Balance(p));AddHtml(24,58,660,42,"Exchange pet tickets in your backpack for credits toward a higher-rarity pet. Stored pets are accepted. Bonded and Legendary pets cannot be exchanged. Confirming surrenders the pet.",false,false);
@@ -33,12 +33,12 @@ namespace Server.HavenPrototype {
   }
   public override void OnResponse(NetState s,RelayInfo info){var p=s.Mobile;int id=info.ButtonID;if(!HavenMarks.CanUse(p)||id==0)return;if(id>=100&&id-100<_tickets.Length){var t=_tickets[id-100];if(HavenPetExchange.Eligible(p,t))p.SendGump(new HavenPetExchangeConfirm(t));return;}if(id>=10&&id<=12){p.SendGump(new HavenPetRedeemGump(p,id-9));return;}p.SendGump(new HavenPetExchangeGump(p,_page+(id==1?-1:id==2?1:0)));}
  }
- public class HavenPetExchangeConfirm:HavenMenuGump {
+ public class HavenPetExchangeConfirm:HavenPetMenuGump {
   readonly HavenPetTicket _ticket;readonly int _rarity;readonly HavenPetBook _book;
   public HavenPetExchangeConfirm(HavenPetTicket ticket,HavenPetBook book=null):base(80,80){_book=book;_ticket=ticket;_rarity=ticket.Rarity;AddBackground(0,0,540,240,3000);AddLabel(24,24,0,"Confirm pet ticket exchange");AddHtml(24,65,490,95,HavenMenuText.Encode(ticket.Pet.Name)+"<BR>Receive "+HavenPetExchange.Value(ticket)+" pet credits.<BR>This permanently consumes this ticket and the exact pet stored inside, including its training.",false,false);FlatButton(24,193,300,1,"Exchange this ticket");FlatButton(354,193,160,0,"Keep my ticket");}
   public override void OnResponse(NetState s,RelayInfo i){if(i.ButtonID==1)s.Mobile.SendMessage(_ticket.Rarity==_rarity&&HavenPetExchange.Exchange(s.Mobile,_ticket,_book)?"Ticket exchanged for pet credits.":"No exchange: ticket is unavailable or your credit balance is full.");if(_book!=null&&_book.CanUse(s.Mobile))_book.OnDoubleClick(s.Mobile);else HavenPetExchange.Show(s.Mobile);}
  }
- public class HavenPetRedeemGump:HavenMenuGump {
+ public class HavenPetRedeemGump:HavenPetMenuGump {
   readonly int _tier,_kind;
   public HavenPetRedeemGump(Mobile p,int tier,int kind=-1):base(80,80){_tier=tier;_kind=kind;AddBackground(0,0,550,410,3000);AddLabel(24,24,0,"Redeem "+HavenPetRarity.Label(tier)+" or better | "+HavenPetExchange.Cost(tier)+" credits");
    if(kind<0){AddLabel(24,64,0,"Species unlocked by your companion's mission skills:");int row=0;for(int k=6;k<12;k++)if(HavenPetExchange.Qualified(p,k))FlatButton(24,105+row++*36,500,100+k,HavenPetMissions.Names[k]);if(row==0)AddLabel(24,110,0,"Your companion has not unlocked a rare-pet mission yet.");}

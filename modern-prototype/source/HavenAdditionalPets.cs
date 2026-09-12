@@ -5,7 +5,7 @@ using Server.Mobiles;
 using Server.ContextMenus;
 using System.Collections.Generic;
 namespace Server.HavenPrototype {
-public class HavenSnowBear : BaseMount {
+public partial class HavenSnowBear : BaseMount {
  public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
  DateTime _rageUntil,_nextRage;
 [Constructable]
@@ -19,6 +19,7 @@ public class HavenSnowBear : BaseMount {
         SetResistance(ResistanceType.Energy, 45, 55);
         HavenRarePetAbility.Skills(this, 105);
         Skills.Anatomy.Base = 90;
+        EnsureNativeHealing();
         Tamable = true; MinTameSkill = 100; ControlSlots = 3; Fame = 8000; Karma = 0;
     }
     public override FoodType FavoriteFood => FoodType.Meat | FoodType.Fish | FoodType.FruitsAndVegies;
@@ -46,14 +47,14 @@ public class HavenSnowBear : BaseMount {
     }
 
  public override int GetResistance(ResistanceType type){int tier=HavenPetDefenses.Tier(this);return Math.Max(base.GetResistance(type),type==ResistanceType.Physical?65+tier*5:type==ResistanceType.Cold?75+tier*5:0);}
- public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);}
+ public override void OnThink(){if(Rider!=null)return;base.OnThink();SupportHealing();HavenPetSignatures.Think(this);}
  public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
  public HavenSnowBear(Serial serial):base(serial){}
- public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
- public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
+ public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);}
+ public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();if(version<1)EnsureNativeHealing();}
 }
-public class HavenAncientHellhound : HellHound {
+public partial class HavenAncientHellhound : HellHound, IMount {
  public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
 [Constructable]
     public HavenAncientHellhound()
@@ -75,12 +76,12 @@ public class HavenAncientHellhound : HellHound {
  DateTime _nextHeal; bool _healing;
  void Support(){if(!Controlled||IsDeadPet||!Alive||_healing||DateTime.UtcNow<_nextHeal)return;Mobile patient=ControlMaster;if(patient==null||!patient.Alive||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient)||(!patient.Poisoned&&patient.Hits==patient.HitsMax))patient=this;if(!patient.Poisoned&&patient.Hits==patient.HitsMax)return;HealStart(patient);}
  public override void HealStart(Mobile patient){if(_healing||DateTime.UtcNow<_nextHeal||!Controlled||IsDeadPet||!Alive||patient==null||!patient.Alive||(patient!=this&&patient!=ControlMaster)||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient))return;_healing=true;_nextHeal=DateTime.UtcNow.AddSeconds(8);Timer.DelayCall(TimeSpan.FromSeconds(2),()=>{_healing=false;if(Deleted||!Alive||IsDeadPet||!Controlled||patient.Deleted||!patient.Alive||(patient!=this&&patient!=ControlMaster)||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient))return;base.Heal(patient);});}
- public override void OnThink(){base.OnThink();HavenPetSignatures.Think(this);Support();}
+ public override void OnThink(){if(Rider!=null)return;base.OnThink();HavenPetSignatures.Think(this);Support();}
  public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
  public HavenAncientHellhound(Serial serial):base(serial){}
- public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
- public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
+ public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(_rider);w.Write(_mountItem);}
+ public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();if(version>=1){_rider=r.ReadMobile();_mountItem=r.ReadItem() as HavenHellhoundMountItem;Timer.DelayCall(TimeSpan.Zero,ValidateRider);}}
 }
 public class VampiricSteed : BaseMount {
  public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
