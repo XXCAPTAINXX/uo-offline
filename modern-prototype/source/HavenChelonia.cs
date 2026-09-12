@@ -47,7 +47,7 @@ public partial class HavenChelonia : Item
         if (Tortoises.Count >= 2 || DateTime.UtcNow < NextSpawn) { return; }
         var point = new Point3D(X + 6 + Tortoises.Count * 3, Y + 4, 0);
         if (!Map.CanSpawnMobile(point)) { return; }
-        var created = new HavenChelonian(); var roll = Utility.RandomDouble(); var tier = roll < .45 ? 1 : roll < .80 ? 2 : 3;
+        var created = new HavenChelonian(); var roll = Utility.RandomDouble(); var tier = roll < .40 ? 1 : roll < .75 ? 2 : 3;
         HavenPetMissions.ApplyRarity(created, tier); created.MinTameSkill = 80 + tier * 10;
         created.Home = point; created.RangeHome = 12; created.MoveToWorld(point, Map); Tortoises.Add(created); 
     }

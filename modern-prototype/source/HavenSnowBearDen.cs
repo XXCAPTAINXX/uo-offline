@@ -64,7 +64,7 @@ public partial class HavenSnowBearDen : Item
         if (Bear == null)
         {
             if (DateTime.UtcNow < NextSpawn || !TryFloor(Location, Map, out var point)) { return; }
-            var bear = new HavenSnowBear(); var roll = Utility.RandomDouble(); var tier = roll < .50 ? 1 : roll < .85 ? 2 : 3;
+            var bear = new HavenSnowBear(); var roll = Utility.RandomDouble(); var tier = roll < .40 ? 1 : roll < .75 ? 2 : 3;
             HavenPetMissions.ApplyRarity(bear, tier); bear.MinTameSkill = tier == 3 ? 120 : tier == 2 ? 110 : 100;
             bear.Home = Location; bear.RangeHome = 12; bear.MoveToWorld(point, Map); Bear = bear;
         }

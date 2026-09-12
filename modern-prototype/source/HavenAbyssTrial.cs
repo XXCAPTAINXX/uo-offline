@@ -145,7 +145,7 @@ public partial class HavenAbyssTrial : Item
         hound.Home = Location; hound.RangeHome = 8; hound.MoveToWorld(point, Map);
         Challenger?.SendMessage("An ancient hellhound has emerged! You have 20 minutes to tame it. Use Animal Lore to inspect its rarity and stats.");
     }
-    internal static int RollRarity(double roll) => roll < .50 ? 1 : roll < .85 ? 2 : 3;
+    internal static int RollRarity(double roll) => roll < .30 ? 1 : roll < .75 ? 2 : 3;
     internal void Finish()
     {
         _timer?.Stop(); _timer = null;

@@ -39,6 +39,7 @@ namespace Server.HavenPrototype
     }
     public class HavenPetTicket:Item
     {
+        public bool Favorite;public DateTime AcquiredAt=DateTime.UtcNow;
         public Mobile Owner;public BaseCreature Pet;public int Kind,Rarity;private Bag _supplies;
         public static void Initialize(){EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)foreach(var ticket in World.Items.Values.OfType<HavenPetTicket>().ToArray())ticket.ApplySpeciesColor();};}
         private void ApplySpeciesColor()
@@ -76,8 +77,8 @@ namespace Server.HavenPrototype
         public override void OnDoubleClick(Mobile p){if(!Claim(p))p.SendMessage("Keep your own ticket in your backpack and free enough follower slots. The ticket is preserved.");}
         public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Owner: "+(Owner==null?"none":Owner.Name));list.Add("Rarity: "+HavenPetRarity.Label(Pet==null?Rarity:HavenPetDefenses.Tier(Pet)));if(Pet!=null&&!Pet.Deleted){list.Add("Follower slots: "+Pet.ControlSlots+"; taming requirement: "+Pet.MinTameSkill.ToString("0.0"));list.Add("Hits "+Pet.HitsMax+"; Str "+Pet.RawStr+"; Dex "+Pet.RawDex+"; Int "+Pet.RawInt);list.Add("Double-click to claim this exact pet; no rerolls");}}
         public override void OnDelete(){if(_supplies!=null&&!_supplies.Deleted)_supplies.Delete();if(Pet!=null&&!Pet.Deleted)Pet.Delete();base.OnDelete();}
-        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(Owner);w.Write(Pet);w.Write(Kind);w.Write(Rarity);w.Write(_supplies);}
-        public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Owner=r.ReadMobile();Pet=r.ReadMobile() as BaseCreature;Kind=r.ReadInt();Rarity=r.ReadInt();if(version>=1)_supplies=r.ReadItem() as Bag;}
+        public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(2);w.Write(Owner);w.Write(Pet);w.Write(Kind);w.Write(Rarity);w.Write(_supplies);w.Write(Favorite);w.Write(AcquiredAt);}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Owner=r.ReadMobile();Pet=r.ReadMobile() as BaseCreature;Kind=r.ReadInt();Rarity=r.ReadInt();if(version>=1)_supplies=r.ReadItem() as Bag;if(version>=2){Favorite=r.ReadBool();AcquiredAt=r.ReadDateTime();}else AcquiredAt=DateTime.MinValue;}
     }
     public partial class HavenCompanion
     {
@@ -86,7 +87,7 @@ namespace Server.HavenPrototype
         void PreparePetMission(CompanionMission kind,int minutes){if(_scheduledPet!=null&&!_scheduledPet.Deleted)_scheduledPet.Delete();_scheduledPet=HavenPetMissions.Valid(kind)?new HavenPetTicket(BoundOwner,(int)kind-6,minutes):null;}
         void CompletePetMission(){if(_scheduledPet==null||_scheduledPet.Deleted)return;var supplies=_scheduledPet.TakeSupplies();if(supplies!=null){if(supplies.Items.Count>0)Backpack.DropItem(supplies);else supplies.Delete();}_pendingPets.Add(_scheduledPet);_scheduledPet=null;foreach(var skill in new[]{Skills.AnimalTaming,Skills.AnimalLore})skill.BaseFixedPoint=Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint+HavenCompanionProgression.TamingTraining(skill.BaseFixedPoint,_missionMinutes,Utility.RandomDouble()));}
         void CancelPetMission(){if(_scheduledPet!=null&&!_scheduledPet.Deleted)_scheduledPet.Delete();_scheduledPet=null;}
-        public void DeliverPetTickets(){var owner=BoundOwner;if(owner==null||owner.Deleted||owner.Backpack==null)return;foreach(var ticket in _pendingPets.ToArray()){if(ticket==null||ticket.Deleted){_pendingPets.Remove(ticket);continue;}if(!owner.Backpack.TryDropItem(owner,ticket,false))break;_pendingPets.Remove(ticket);owner.SendMessage("Your pet mission ticket is in your backpack.");}}
+        public void DeliverPetTickets(){var owner=BoundOwner;if(owner==null||owner.Deleted||owner.Backpack==null)return;foreach(var ticket in _pendingPets.ToArray()){if(ticket==null||ticket.Deleted){_pendingPets.Remove(ticket);continue;}var book=HavenPetBook.Ensure(owner);if(book==null||!book.TryDropItem(owner,ticket,false))break;ticket.AcquiredAt=DateTime.UtcNow;_pendingPets.Remove(ticket);owner.SendMessage("Your mission pet is in [petbook.");}}
         void SerializePetMissions(GenericWriter w){w.Write(_scheduledPet);w.Write(_pendingPets.Count);foreach(var ticket in _pendingPets)w.Write(ticket);}
         void DeserializePetMissions(GenericReader r){_scheduledPet=r.ReadItem() as HavenPetTicket;int count=r.ReadInt();if(count<0||count>50)throw new InvalidOperationException("Invalid pet ticket count");for(int i=0;i<count;i++){var ticket=r.ReadItem() as HavenPetTicket;if(ticket!=null)_pendingPets.Add(ticket);}}
     }
