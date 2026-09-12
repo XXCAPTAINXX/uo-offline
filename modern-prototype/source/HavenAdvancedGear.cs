@@ -27,6 +27,7 @@ namespace Server.HavenPrototype
         static readonly HashSet<string> QuestNames = new HashSet<string>(new[] { "ArmsOfArmstrong", "BulwarkLeggings", "BraceletOfResilience", "EscutcheonDeAriadne", "EmberStaff", "ClaspOfConcentration", "ChurchillsWarMace", "Heartseeker", "HealersTouch", "HallowedSpellbook", "GlovesOfSafeguarding", "TheDragonsTail", "JocklesQuicksword", "JacobsPickaxe", "PhilosophersHat", "RecarosRiposte", "TunicOfGuarding", "SilverSerpentBlade", "RingOfTheSavant", "TwilightJacket", "WalkersLeggings", "HavenQuestNecromancerBook" });
         public static int AutoKind(Item item)
         {
+            if (item is IHavenAreaWeapon) return 6;
             if (item is AstralWeaversRing || item is AstralGuardianMantle || item is AstralFortuneEarrings) return 1;
             if (QuestNames.Contains(item.GetType().Name)) return 4;
             if (item is IHavenShieldWarriorGear || HavenJewelrySets.BraceletTheme(item) >= 0 || item is HavenChampionPendant) return 5;
@@ -35,7 +36,7 @@ namespace Server.HavenPrototype
         public static HavenAdvancedGear Find(Item item) { HavenAdvancedGear record; return item != null && Records.TryGetValue(item.Serial.Value, out record) && !record.Deleted ? record : null; }
         public static HavenAdvancedGear Attach(Item item, int kind)
         {
-            if (item == null || item.Deleted || Attributes(item) == null || kind < 1 || kind > 5) return null;
+            if (item == null || item.Deleted || Attributes(item) == null || kind < 1 || kind > 6) return null;
             HavenGearDurability.Apply(item);
             return Find(item) ?? new HavenAdvancedGear(item, kind);
         }
@@ -53,10 +54,10 @@ namespace Server.HavenPrototype
             int levels = Math.Max(0, Level - AppliedLevel), milestones = Math.Max(0, Level / 5 - AppliedLevel / 5), steps = Level - 1;
             a.Luck += levels * 5; a.BonusStr += milestones; a.BonusDex += milestones; a.BonusInt += milestones;
             var weapon = Equipment as BaseWeapon;
-            if (Kind == 2 || Kind == 3 || Kind == 4) {
+            if (Kind == 2 || Kind == 3 || Kind == 4 || Kind == 6) {
                 if (weapon != null && Kind != 3) {
                     a.WeaponDamage += levels * 2; a.WeaponSpeed += milestones * 5;
-                    if (Kind == 2) { weapon.WeaponAttributes.HitLeechMana += milestones * 5; weapon.WeaponAttributes.HitLeechHits += milestones * 5; }
+                    if (Kind == 2 || Kind == 6) { weapon.WeaponAttributes.HitLeechMana += milestones * 5; weapon.WeaponAttributes.HitLeechHits += milestones * 5; }
                 } else {
                     a.SpellDamage += levels; a.RegenHits += milestones; a.RegenMana += milestones;
                     if (Kind != 4) a.WeaponDamage += levels;
@@ -74,6 +75,7 @@ namespace Server.HavenPrototype
                 a.RegenMana = Math.Max(a.RegenMana, 4 + steps / 3); a.Luck = Math.Max(a.Luck, 400 + steps * 20);
                 a.WeaponDamage = Math.Max(a.WeaponDamage, steps); a.SpellDamage = Math.Max(a.SpellDamage, steps);
             }
+            if (weapon != null) HavenAreaWeapons.Apply(weapon, Level);
             AppliedLevel = Level;
             Equipment.Name = (Kind == 2 ? "Legendary " : Kind == 3 ? "Reforged " : "") + OriginalName + " [level " + Level + "/20]";
             Equipment.InvalidateProperties();
@@ -133,6 +135,7 @@ namespace Server.HavenPrototype
         }
         public static Item CreateLegendary()
         {
+            if (Utility.Random(5) == 0) return HavenAreaWeapons.Create(Utility.Random(3));
             Item item = Utility.Random(5) == 0 ? (Item)new Spellbook(ulong.MaxValue) : Loot.RandomArmorOrShieldOrWeaponOrJewelry();
             BaseRunicTool.ApplyAttributesTo(item, false, 0, item is Spellbook ? 6 : 8, 90, 100);
             var a = HavenAdvancedGear.Attributes(item);
