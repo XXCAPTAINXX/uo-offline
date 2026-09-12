@@ -30,8 +30,8 @@ namespace Server.HavenPrototype
             AddLabelCropped(20,19,190,25,0,CompanionActivityGump.MissionName(companion.MissionKind));
             int seconds=Math.Max(0,(int)Math.Ceiling((companion.MissionDue-DateTime.UtcNow).TotalSeconds));
             AddLabelCropped(220,19,70,25,0,companion.OnMission?(seconds/60).ToString("00")+":"+(seconds%60).ToString("00"):"Done");
-            AddButton(20,61,0xFA5,0xFA7,1,GumpButtonType.Reply,0);AddLabel(54,61,0,"Missions");
-            AddButton(170,61,0xFA5,0xFA7,2,GumpButtonType.Reply,0);AddLabel(204,61,0,"Recall now");
+            FlatButton(20,61,120,1,"Missions");
+            FlatButton(170,61,120,2,"Recall now");
             // One refresh only while this exact panel remains open. Closing/expanding stops updates.
             if(companion.OnMission && owner.NetState!=null) Timer.DelayCall(TimeSpan.FromSeconds(1),()=> {
                 if(!companion.IsOwner(owner) || owner.NetState==null || !owner.NetState.Gumps.Contains(this)) return;

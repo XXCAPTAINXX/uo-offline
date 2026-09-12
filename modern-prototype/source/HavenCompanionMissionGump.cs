@@ -82,12 +82,12 @@ namespace Server.HavenPrototype
         }
         public static string Reward(int tab,int selection,int minutes)
         {
-            if(tab==1)return "One pet ticket. Taming/Lore train 5x faster below 100; slower above 100 and very slow above 120.";
+            if(tab==1)return "One pet ticket; "+HavenTamingSupplies.SearchRolls(minutes)+" rarity / supply rolls. Bonus supplies go into the companion pack. Leash, bonding potion, 105 combat scroll or rare house post.";
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
             switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
         }
         void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#3B2A1A>"+text+"</BASEFONT>",false,false);}
-        void Button(int x,int y,int id,string label,int width,int height=27){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,width,height,label);}
+        void Button(int x,int y,int id,string label,int width,int height=27){FlatButton(x,y,width+20,id,label);}
         public override void OnResponse(NetState state,RelayInfo info)
         {
             var p=state.Mobile;int id=info.ButtonID;if(!_companion.IsOwner(p))return;_companion.ShowAwayTimer(p);

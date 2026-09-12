@@ -28,8 +28,8 @@ namespace Server.HavenPrototype
         {
             _companion=companion;
             Closable=false;
-            AddBackground(0,0,350,100,5054);
-            AddLabelCropped(12,8,165,20,53,companion.Name);
+            AddBackground(0,0,350,100,3000);
+            AddLabelCropped(12,8,165,20,0,companion.Name);
             Button(176,8,7,"Menu");Button(258,8,9,"Close");
             Button(12,39,1,"Follow");Button(94,39,2,"Guard");
             Button(176,39,4,"Stay");Button(258,39,3,"Attack");

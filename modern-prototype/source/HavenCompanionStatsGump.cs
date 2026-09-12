@@ -36,7 +36,7 @@ namespace Server.HavenPrototype {
    Button(24,533,1,"Refresh",85);if(_page>0)Button(145,533,2,"Prev",65);Text(245,533,95,25,(_page+1)+" / "+pages);if(_page+1<pages)Button(337,533,3,"Next",70);Button(489,533,0,"Close",70);
   }
   void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#342B23>"+text+"</BASEFONT>",false,false);}
-  void Button(int x,int y,int id,string text,int w){AddButton(x,y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);Text(x+33,y,w,24,text);}
+  void Button(int x,int y,int id,string text,int w){FlatButton(x,y,w+15,id,text);}
   public override void OnResponse(NetState state,RelayInfo info){if(info.ButtonID==0||_c.Deleted||!_c.IsOwner(state.Mobile))return;state.Mobile.SendGump(new HavenCompanionStatsGump(_c,info.ButtonID==4||info.ButtonID==5?0:info.ButtonID==2?_page-1:info.ButtonID==3?_page+1:_page,_baseline,info.ButtonID==4?(_filter+1)%3:_filter,info.ButtonID==5?(_sort+1)%3:_sort));}
  }
 }

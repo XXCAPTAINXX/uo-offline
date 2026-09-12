@@ -67,7 +67,7 @@ namespace Server.HavenPrototype
                 int pending; _pendingResources.TryGetValue(pair.Key,out pending);
                 if (pair.Value > HavenResourceLedger.MaxBalance-pending) return false;
             }
-            PreparePetMission(kind);
+            PreparePetMission(kind,minutes);
             _missionKind = kind; _scheduledResources.Clear();
             foreach (var pair in rewards) _scheduledResources.Add(pair.Key,pair.Value);
             return true;

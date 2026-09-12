@@ -699,7 +699,7 @@ namespace Server.HavenPrototype
             Button(24, 417, 9, "Refresh / collect"); Button(220,417,14,"Pets"); Button(330, 417, 0, "Close");
             if(companion.OnMission) Button(330,72,11,"Minimize");
         }
-        private void Button(int x, int y, int id, string text) { AddButton(x, y, 0xFA5, 0xFA7, id, GumpButtonType.Reply, 0); AddLabel(x + 34, y, 0, text); }
+        private void Button(int x, int y, int id, string text) { FlatButton(x,y,id==12||id==11||id==0?120:id==14?90:190,id,text); }
         public override void OnResponse(NetState sender, RelayInfo info)
         {
             var from = sender.Mobile;
