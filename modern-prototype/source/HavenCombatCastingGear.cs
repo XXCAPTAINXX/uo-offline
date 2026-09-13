@@ -29,14 +29,14 @@ namespace Server.HavenPrototype {
   }
   public static void AddCatalog(List<HavenShopEntry> list){
    list.Add(new HavenShopEntry("Stormguard basher shield",0,()=>new HavenStormguardShield(),"Levels 1-20: Soul Charge 20-39%, stamina and hit chance. Native Parrying mastery governs Shield Bash.",200));
-   list.Add(new HavenShopEntry("Ironwake bulwark",0,()=>new HavenIronwakeShield(),"Levels 1-20: Soul Charge 10-29%, health and regeneration. A defensive basher shield.",200));   list.Add(new HavenShopEntry("Tidecaller robe",0,()=>new HavenTidecallerRobe(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
+      list.Add(new HavenShopEntry("Tidecaller robe",0,()=>new HavenTidecallerRobe(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
    list.Add(new HavenShopEntry("Navigator sage hat",0,()=>new HavenSageHat(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
    list.Add(new HavenShopEntry("Channeler gloves",0,()=>new HavenChannelerGloves(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
    list.Add(new HavenShopEntry("Manawalk boots",0,()=>new HavenManawalkBoots(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
-   list.Add(new HavenShopEntry("Tidecasting ring",0,()=>new HavenTidecastingRing(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
-   list.Add(new HavenShopEntry("Deepcasting bracelet",0,()=>new HavenDeepcastingBracelet(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
-   list.Add(new HavenShopEntry("Tidecaller spellbook",0,()=>new HavenTidecallerBook(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
-   list.Add(new HavenShopEntry("Drowned grimoire",0,()=>new HavenDrownedGrimoire(),"Evolving caster equipment, levels 1-20. Inspect properties for its casting bonuses.",150));
+   
+   
+   
+   
   }
  }
  public class HavenTidecallerRobe:Robe,IHavenCastingGear {

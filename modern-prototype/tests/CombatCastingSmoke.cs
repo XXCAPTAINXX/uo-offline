@@ -18,7 +18,8 @@ public static class CombatCastingSmoke {
    if(snapshot!=attrs.Luck+","+attrs.SpellDamage+","+attrs.RegenMana+","+attrs.BonusInt+","+attrs.LowerManaCost)throw new Exception("Repeat apply inflation");
    log("PASS "+item.GetType().Name+" level20; SoulCharge="+soul+"; stable repeated apply");
   }
-  var catalog=new System.Collections.Generic.List<HavenShopEntry>();HavenCombatCastingGear.AddCatalog(catalog);if(catalog.Count!=10)throw new Exception("Missing catalog options");log("PASS all ten new catalog entries");
+  var catalog=new System.Collections.Generic.List<HavenShopEntry>();HavenCombatCastingGear.AddCatalog(catalog);if(catalog.Count!=5)throw new Exception("Missing catalog options");log("PASS five starter catalog entries; advanced pieces earned from invasions");
   }finally{foreach(var item in items){HavenAdvancedGear.Find(item)?.Delete();item.Delete();}}
  }
 }
+
