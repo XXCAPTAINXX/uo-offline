@@ -1,0 +1,11 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -3306,6 +3306,7 @@
+ 
+         public override void OnDeath(Container c)
+         {
++            Server.UOOffline.HavenSeaBossShips.OnDeath(this);
+             if (IsBonded)
+             {
+                 Effects.PlaySound(this, GetDeathSound());

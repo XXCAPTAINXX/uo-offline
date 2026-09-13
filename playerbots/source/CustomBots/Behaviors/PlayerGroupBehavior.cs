@@ -33,6 +33,8 @@ namespace Server.CustomBots
 {
     public class PlayerGroupBehavior : AdventurerBehavior
     {
+        private readonly HavenPartySupport _support = new();
+        public override void OnDetached(PlayerBot bot) { _support.Cancel(); base.OnDetached(bot); }
         public override string SerializableName => "PlayerGroup";
 
         // Follow tuning.
@@ -132,9 +134,12 @@ namespace Server.CustomBots
                 }
             }
 
+            if (_support.Tick(bot)) { StopStepTimer(); return; }
             base.Tick(bot);
         }
 
+        // Follow party fights without pulling fresh encounters.
+        protected override bool WantsFreshFights => false;
         private const int AssistRange = 14;
 
         // Nearest thing fighting a member of the player's party. A monster
@@ -217,7 +222,7 @@ namespace Server.CustomBots
 
         // A monster fighting ANY member of my party is attacking a friend.
         protected override bool IsPartyFriend(PlayerBot bot, Mobile m) =>
-            m != null && Party.Get(bot) is Party mine && Party.Get(m) == mine;
+            m != null && Party.Get(bot) is Party mine && Party.Get(m is BaseCreature pet ? pet.GetMaster() ?? m : m) == mine;
 
         // Follow slot: a stable per-bot spot on a small ring around the
         // leader, so a full party fans out instead of stacking on one tile.

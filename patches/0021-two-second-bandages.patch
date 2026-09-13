@@ -1,0 +1,35 @@
+diff --git a/Projects/UOContent/Items/Skill Items/Misc/Bandage.cs b/Projects/UOContent/Items/Skill Items/Misc/Bandage.cs
+index bcf59d04d..7aa406bc9 100644
+--- a/Projects/UOContent/Items/Skill Items/Misc/Bandage.cs	
++++ b/Projects/UOContent/Items/Skill Items/Misc/Bandage.cs	
+@@ -2,6 +2,7 @@
+ using System.Collections.Generic;
+ using ModernUO.Serialization;
+ using Server.Engines.ConPVP;
++using Server.Engines.BuffIcons;
+ using Server.Factions;
+ using Server.Gumps;
+ using Server.Misc;
+@@ -163,6 +164,7 @@ public void Slip()
+     public void StopHeal()
+     {
+         _table.Remove(Healer);
++        (Healer as PlayerMobile)?.RemoveBuff(BuffIcon.Healing);
+         Stop();
+     }
+ 
+@@ -528,11 +530,13 @@ public static BandageContext BeginHeal(Mobile healer, Mobile patient)
+             var context = GetContext(healer);
+ 
+             context?.StopHeal();
+-            seconds *= 1000;
++            seconds = Math.Clamp(seconds, 0.1, 2.0) * 1000;
+ 
+             context = new BandageContext(healer, patient, TimeSpan.FromMilliseconds(seconds));
+             _table[healer] = context;
+             context.Start();
++            (healer as PlayerMobile)?.AddBuff(new BuffInfo(BuffIcon.Healing, 500956, 500956,
++                TimeSpan.FromMilliseconds(seconds)));
+ 
+             if (!onSelf)
+             {

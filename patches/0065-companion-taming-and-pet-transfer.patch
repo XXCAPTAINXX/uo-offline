@@ -1,0 +1,37 @@
+diff --git a/Projects/UOContent/Skills/AnimalTaming.cs b/Projects/UOContent/Skills/AnimalTaming.cs
+--- a/Projects/UOContent/Skills/AnimalTaming.cs
++++ b/Projects/UOContent/Skills/AnimalTaming.cs
+@@ -278,6 +278,8 @@
+
+                 protected override void OnTick()
+                 {
++                    if (m_Tamer is Server.UOOffline.HavenCompanion companion && !companion.ContinuingAssistedTame(m_Creature))
++                    { m_BeingTamed.Remove(m_Creature);m_Tamer.NextSkillTime=Core.TickCount;Stop();return; }
+                     m_Count++;
+
+                     var de = m_Creature.FindMostRecentDamageEntry(false);
+@@ -447,6 +449,7 @@
+                             m_Creature.IsBonded = false;
+                             m_Creature.ControlTarget = m_Tamer;
+                             m_Creature.ControlOrder = OrderType.Follow;
++                            if (m_Tamer is Server.UOOffline.HavenCompanion helper) { helper.FinishAssistedTame(m_Creature); }
+                         }
+                         else
+                         {
+diff --git a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
+@@ -505,6 +505,13 @@
+         var from = Mobile.ControlMaster;
+         var to = Mobile.ControlTarget;
+
++        if (to is Server.UOOffline.HavenCompanion companion)
++        {
++            if (!companion.AcceptAssignedPet(from,Mobile)) { from?.SendMessage("Transfer refused: stand together out of combat, with an eligible pet and sufficient companion Taming/Lore and follower space."); }
++            ResumePersistentOrder();
++            return true;
++        }
++
+         if (from?.Deleted == false && to?.Deleted == false && from != to && to.Player)
+         {
+             this.DebugSayFormatted($"Beginning transfer with {to.Name}");

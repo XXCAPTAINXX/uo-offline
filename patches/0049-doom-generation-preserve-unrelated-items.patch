@@ -1,0 +1,12 @@
+diff --git a/Projects/UOContent/Engines/Doom/GenGauntlet.cs b/Projects/UOContent/Engines/Doom/GenGauntlet.cs
+--- a/Projects/UOContent/Engines/Doom/GenGauntlet.cs
++++ b/Projects/UOContent/Engines/Doom/GenGauntlet.cs
+@@ -232,7 +232,7 @@ namespace Server.Engines.Doom
+         {
+             foreach (var item in Map.Malas.GetItemsAt(x, y))
+             {
+-                if (item is T && z == -1 || item.Z == z)
++                if (item is T && (z == -1 || item.Z == z))
+                 {
+                     item.Delete();
+                     break;

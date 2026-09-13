@@ -1,0 +1,17 @@
+--- a/Scripts/Spells/Base/MagerySpell.cs
++++ b/Scripts/Spells/Base/MagerySpell.cs
+@@ -34,6 +34,14 @@
+ 
+         public override void GetCastSkills(out double min, out double max)
+         {
++            if (Server.HavenPrototype.HavenPreview.Enabled && Caster is Server.Mobiles.PlayerMobile &&
++                (this is Server.Spells.Fourth.RecallSpell || this is Server.Spells.Sixth.MarkSpell ||
++                 this is Server.Spells.Seventh.GateTravelSpell))
++            {
++                min = max = 0;
++                return;
++            }
++
+             int circle = (int)Circle;
+ 
+             if (Scroll != null)

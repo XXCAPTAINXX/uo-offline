@@ -1,0 +1,32 @@
+diff --git a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Controller.cs b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Controller.cs
+index b6dfb69..5255c2e 100644
+--- a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Controller.cs	
++++ b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Controller.cs	
+@@ -224,14 +224,14 @@ namespace Server.Engines.Shadowguard
+                 {
+                     foreach (PartyMemberInfo info in p.Members)
+                     {
+-                        if (Table == null || !Table.ContainsKey(info.Mobile) || (Table[info.Mobile] & EncounterType.Required) != EncounterType.Required)
++                        if (!Server.HavenPrototype.HavenShadowguard.HasRequiredRooms(this, info.Mobile))
+                         {
+                             m.SendLocalizedMessage(1156249); // All members of your party must complete each of the Shadowguard Towers before attempting the finale. 
+                             return false;
+                         }
+                     }
+                 }
+-                else if (Table == null || !Table.ContainsKey(m) || (Table[m] & EncounterType.Required) != EncounterType.Required)
++                else if (!Server.HavenPrototype.HavenShadowguard.HasRequiredRooms(this, m))
+                 {
+                     m.SendLocalizedMessage(1156196); // You must complete each level of Shadowguard before attempting the Roof.
+                     return false;
+@@ -635,8 +635,9 @@ namespace Server.Engines.Shadowguard
+                     Table = new Dictionary<Mobile, EncounterType>();
+ 
+                 Mobile m = reader.ReadMobile();
++                EncounterType completed = (EncounterType)reader.ReadInt();
+                 if (m != null)
+-                    Table[m] = (EncounterType)reader.ReadInt();
++                    Table[m] = completed;
+             }
+ 
+             count = reader.ReadInt();

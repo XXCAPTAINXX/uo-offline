@@ -1,0 +1,12 @@
+diff --git a/Projects/UOContent/Multis/Boats/BaseBoat.cs b/Projects/UOContent/Multis/Boats/BaseBoat.cs
+--- a/Projects/UOContent/Multis/Boats/BaseBoat.cs
++++ b/Projects/UOContent/Multis/Boats/BaseBoat.cs
+@@ -253,7 +253,7 @@
+             return Rotate(p, (int)_facing / 2);
+         }
+ 
+-        public void UpdateComponents()
++        public virtual void UpdateComponents()
+         {
+             if (PPlank != null)
+             {

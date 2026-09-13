@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using ModernUO.Serialization;
 using Server.Engines.Spawners;
+using Server.Gumps;
 using Server.Items;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
 using Server.Multis;
 using Server.Multis.Deeds;
 using Server.Network;
+using Server.Logging;
 
 namespace Server.UOOffline;
 
@@ -35,6 +37,7 @@ public partial class OldHavenWarden : BaseCreature
     [Constructible]
     public OldHavenWarden() : base(AIType.AI_Melee)
     {
+        RangeHome = 6;
         Body = 0x3CA;
         Hue = 0x455;
         BaseSoundID = 0x107;
@@ -69,16 +72,28 @@ public partial class OldHavenWarden : BaseCreature
 
     public override void GenerateLoot()
     {
-        PackGold(500, 900);
-        PackItem(new HavenMark(Utility.RandomMinMax(1, 2)));
-        AddLoot(LootPack.Average);
+        AddLoot(LootPack.Rich);
+        if (m_Spawning) { return; }
+        PackGold(1500, 2500);
+        PackItem(new HavenMark(Utility.RandomMinMax(3, 6)));
+        PackItem(CreateBossGear(m_KillersLuck));
+        PackItem(CreateBossGear(m_KillersLuck));
+        if (Utility.RandomDouble() < 0.15) { PackItem(SpecialBraceletFactory.CreateRandom()); }
+        if (Utility.RandomDouble() < 0.20) { PackItem(new HavenSetRing(Utility.Random(9))); }
+    }
 
-        // The bracelets are a meaningful early chase reward without making
-        // the boss an end-game money printer.
-        if (Utility.RandomDouble() < 0.15)
+    internal static Item CreateBossGear(int luckChance)
+    {
+        var item = Loot.RandomArmorOrShieldOrWeaponOrJewelry();
+        var properties = Utility.RandomMinMax(3, 5);
+        switch (item)
         {
-            PackItem(SpecialBraceletFactory.CreateRandom());
+            case BaseWeapon weapon: BaseRunicTool.ApplyAttributesTo(weapon, false, luckChance, properties, 50, 85); break;
+            case BaseArmor armor: BaseRunicTool.ApplyAttributesTo(armor, false, luckChance, properties, 50, 85); break;
+            case BaseHat hat: BaseRunicTool.ApplyAttributesTo(hat, false, luckChance, properties, 50, 85); break;
+            case BaseJewel jewel: BaseRunicTool.ApplyAttributesTo(jewel, false, luckChance, properties, 50, 85); break;
         }
+        return item;
     }
 }
 
@@ -120,8 +135,8 @@ public partial class OldHavenBossSpawner : Spawner
     [Constructible]
     public OldHavenBossSpawner() : base(
         1,
-        TimeSpan.FromMinutes(10),
-        TimeSpan.FromMinutes(15),
+        TimeSpan.FromMinutes(2),
+        TimeSpan.FromMinutes(3),
         0,
         default,
         nameof(OldHavenWarden)
@@ -136,8 +151,8 @@ public partial class VampiricSteedSpawner : Spawner
     [Constructible]
     public VampiricSteedSpawner() : base(
         1,
-        TimeSpan.FromMinutes(25),
-        TimeSpan.FromMinutes(40),
+        TimeSpan.FromSeconds(30),
+        TimeSpan.FromSeconds(60),
         0,
         default,
         nameof(VampiricSteed)
@@ -166,23 +181,29 @@ public partial class StarterSupplyStone : Item
             return;
         }
 
-        from.SendMenu(new StarterSupplyMenu());
+        from.CloseGump<HavenListGump>();
+        from.SendGump(new HavenListGump(this, new StarterSupplyMenu()));
     }
 
-    private sealed class StarterSupplyMenu : ItemListMenu
+    internal sealed class StarterSupplyMenu : ItemListMenu, IHavenShop
     {
         private static readonly ItemListEntry[] MenuEntries =
         [
-            new("Cleanup trash bag - 100 gold", 0xE76, 0x455),
-            new("Adventurer's wallet - 100 gold", 0xE79),
-            new("New Haven starter robe - 500 gold", 0x1F03, 0x59B),
-            new("Full apprentice grimoire - 500 gold", 0xEFA, 0x482),
-            new("Apprentice blade - 250 gold", 0xF61),
-            new("Apprentice fencer - 250 gold", 0x1401),
-            new("Apprentice mace - 250 gold", 0x1407),
-            new("Apprentice bow - 250 gold", 0x13B2),
-            new("Champion progression archive - 250 gold", 0x2259, 0x489),
-            new("Peerless key vault - 250 gold", 0x9A8, 0x497)
+            new("Cleanup trash bag - free", 0xE76, 0x455),
+            new("Adventurer's wallet - free", 0xE79),
+            new("New Haven starter robe - free", 0x1F03, 0x59B),
+            new("Full apprentice grimoire - free", 0xEFA, 0x482),
+            new("Apprentice blade - free", 0xF61),
+            new("Apprentice fencer - free", 0x1401),
+            new("Apprentice mace - free", 0x1407),
+            new("Apprentice bow - free", 0x13B2),
+            new("Champion's Codex - free", 0x2259, 0x489),
+            new("Peerless key vault - free", 0x9A8, 0x497),
+            new("Starter Fortune Earrings - free", 0x1087, 0x501),
+            new("Blessed Travel Book - free", 0x22C5),
+            new("Leveling cape - free", 0x1515, 0x59B),
+            new("Evolving sash - free", 0x1541, 0x59B),
+            new("Claim earned Haven training rewards - free", 0x14F0, 0x489)
         ];
 
         public StarterSupplyMenu() : base("New Haven Starter Supplies", MenuEntries)
@@ -197,20 +218,21 @@ public partial class StarterSupplyStone : Item
                 return;
             }
 
-            var price = index switch
+            if (index == 12) { HavenLevelingCape.Claim(from); return; }
+            if (index == 13) { HavenStarterSash.Claim(from); return; }
+            if (index == 14) { HavenTrainingRewards.Claim(from); return; }
+            var item = CreateItem(index);
+            if (item == null)
             {
-                0 or 1 => 100,
-                2 or 3 => 500,
-                _ => 250
-            };
-
-            if (!HavenEconomy.TryPay(from, price))
-            {
-                from.SendMessage($"You need {price:N0} gold for that item.");
                 return;
             }
+            if (!from.Backpack.CheckHold(from, item, false)) { item.Delete(); from.SendMessage("Make room in your backpack."); return; }
+            BindStarterItem(item, from);
+            from.Backpack.DropItem(item);
+            from.SendMessage("Your free starter item is in your backpack.");
+        }
 
-            Item item = index switch
+        public Item CreateItem(int index) => index switch
             {
                 0 => new CleanupTrashBag(),
                 1 => new AdventurersWallet(),
@@ -222,18 +244,13 @@ public partial class StarterSupplyStone : Item
                 7 => new ApprenticeBow(),
                 8 => new ProgressionArchive(),
                 9 => new PeerlessKeyVault(),
+                10 => new StarterFortuneEarrings(),
+                11 => new OfflineTravelBook(),
+                12 => new HavenLevelingCape(),
+                13 => new HavenStarterSash(),
+                14 => new Item(0x14F0) { Name = "Claim once for each Haven training quest whose base skill requirement you already meet" },
                 _ => null
             };
-
-            if (item == null)
-            {
-                return;
-            }
-
-            BindStarterItem(item, from);
-            from.Backpack.DropItem(item);
-            from.SendMessage($"Purchased {item.DefaultName} for {price:N0} gold.");
-        }
     }
 
     internal static void BindStarterItem(Item item, Mobile from)
@@ -276,7 +293,18 @@ public partial class HavenUpgradeStone : Item
 
     public override void OnDoubleClick(Mobile from)
     {
-        if (!from.InRange(GetWorldLocation(), 3))
+        if (from.Map != Map || !from.InRange(GetWorldLocation(), 3))
+        {
+            from.SendMessage("You are too far away to use the upgrade stone.");
+            return;
+        }
+        from.CloseGump<HavenUpgradeGump>();
+        from.SendGump(new HavenUpgradeGump(this, from));
+    }
+
+    internal void ApplyUpgrade(Mobile from, int expectedTier)
+    {
+        if (Deleted || from.Map != Map || !from.InRange(GetWorldLocation(), 3))
         {
             from.SendMessage("You are too far away to use the upgrade stone.");
             return;
@@ -303,9 +331,16 @@ public partial class HavenUpgradeStone : Item
             return;
         }
 
+        if (robe.UpgradeTier != expectedTier)
+        {
+            from.SendMessage("The upgrade price has changed. Review the updated cost first.");
+            OnDoubleClick(from);
+            return;
+        }
+
         var markCost = robe.UpgradeTier + 1;
         var goldCost = markCost * 5000;
-        var paidWithMarks = pack.ConsumeTotal(typeof(HavenMark), markCost);
+        var paidWithMarks = HavenEconomy.TryPayMarks(from, markCost);
 
         if (!paidWithMarks && !HavenEconomy.TryPay(from, goldCost))
         {
@@ -342,10 +377,11 @@ public partial class SpecialRewardStone : Item
             return;
         }
 
-        from.SendMenu(new RewardMenu());
+        from.CloseGump<HavenListGump>();
+        HavenMarkRewards.DisplayTo(from, this);
     }
 
-    private sealed class RewardMenu : ItemListMenu
+    internal sealed class RewardMenu : ItemListMenu, IHavenShop
     {
         private const int MarkCost = 15;
         private const int GoldFallbackCost = 25000;
@@ -360,19 +396,35 @@ public partial class SpecialRewardStone : Item
             new("Artisan bracelet", 0x1086, 0x96D),
             new("Fortune bracelet", 0x1086, 0x8A5),
             new("Guardian bracelet", 0x1086, 0x497),
-            new("Night bracelet", 0x1086, 0x455)
+            new("Night bracelet", 0x1086, 0x455),
+            new("Champion pendant - 250 Haven marks only", 0x1088, 0x489),
+            new("Vanguard ring - 30 Haven marks", 0x108A, 0x972),
+            new("Arcane Focus ring - 30 Haven marks", 0x108A, 0x482),
+            new("Wind ring - 30 Haven marks", 0x108A, 0x47F),
+            new("Beastmaster ring - 30 Haven marks", 0x108A, 0x59B),
+            new("Virtuoso ring - 30 Haven marks", 0x108A, 0x489),
+            new("Artisan ring - 30 Haven marks", 0x108A, 0x96D),
+            new("Fortune ring - 30 Haven marks", 0x108A, 0x8A5),
+            new("Guardian ring - 30 Haven marks", 0x108A, 0x497),
+            new("Night ring - 30 Haven marks", 0x108A, 0x455),
+            new("Concord talisman - 150 Haven marks", 0x2F5A, 0x489)
         ];
 
         public RewardMenu() : base(
-            $"Special Bracelets - {MarkCost} Haven marks or {GoldFallbackCost:N0} gold",
+            "Haven rewards: bracelets, matching rings and treasures",
             MenuEntries
         )
         {
         }
 
-        public override void OnResponse(NetState state, int index)
+        public Item CreateItem(int index) => CreateReward(index);
+        internal static Item CreateReward(int index) => index switch
+        { 9 => new HavenChampionPendant(), >= 10 and <= 18 => new HavenSetRing(index - 10), 19 => new HavenConcordTalisman(), _ => SpecialBraceletFactory.Create(index) };
+
+        public override void OnResponse(NetState state, int index) => Buy(state.Mobile, index);
+
+        internal static void Buy(Mobile from, int index)
         {
-            var from = state.Mobile;
             var pack = from?.Backpack;
 
             if (pack == null || index < 0 || index >= MenuEntries.Length)
@@ -380,29 +432,21 @@ public partial class SpecialRewardStone : Item
                 return;
             }
 
-            var paidWithMarks = pack.ConsumeTotal(typeof(HavenMark), MarkCost);
-            if (!paidWithMarks && !HavenEconomy.TryPay(from, GoldFallbackCost))
+            var reward = CreateReward(index);
+            if (reward == null) { return; }
+            if (!pack.CheckHold(from, reward, false)) { reward.Delete(); from.SendMessage("Make room in your backpack."); return; }
+            var markCost = index switch { 9 => 250, 19 => 150, >= 10 and <= 18 => 30, _ => MarkCost };
+            var paidWithMarks = HavenEconomy.TryPayMarks(from, markCost);
+            if (!paidWithMarks && (index >= 9 || !HavenEconomy.TryPay(from, GoldFallbackCost)))
             {
-                from.SendMessage(
-                    $"You need {MarkCost} Haven marks or {GoldFallbackCost:N0} gold for a bracelet."
-                );
+                reward.Delete();
+                from.SendMessage($"You need {markCost} Haven marks for this reward. Bracelets also accept 25,000 gold.");
                 return;
             }
-
-            var reward = SpecialBraceletFactory.Create(index);
-            if (reward == null)
-            {
-                if (paidWithMarks)
-                {
-                    pack.DropItem(new HavenMark(MarkCost));
-                }
-                return;
-            }
-
             pack.DropItem(reward);
             from.SendMessage(
                 paidWithMarks
-                    ? $"You exchange {MarkCost} Haven marks for {reward.DefaultName}."
+                    ? $"You exchange {markCost} Haven marks for {reward.DefaultName}."
                     : $"You purchase {reward.DefaultName} for {GoldFallbackCost:N0} gold."
             );
         }
@@ -411,6 +455,30 @@ public partial class SpecialRewardStone : Item
 
 public static class HavenEconomy
 {
+    public static bool TryPayMarks(Mobile from, int amount)
+    {
+        if (from?.Backpack == null || amount <= 0) { return false; }
+        var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
+        var walletMarks = (int)Math.Min(amount, Math.Max(0, wallet?.HavenMarks ?? 0));
+        var looseMarks = amount - walletMarks;
+        if (from.Backpack.GetAmount(typeof(HavenMark)) < looseMarks) { return false; }
+        if (looseMarks > 0 && !from.Backpack.ConsumeTotal(typeof(HavenMark), looseMarks)) { return false; }
+        if (walletMarks > 0) { wallet.HavenMarks -= walletMarks; }
+        return true;
+    }
+    public static bool CanPay(Mobile from, int amount)
+    {
+        if (from?.Backpack == null || amount <= 0) { return false; }
+        var remaining = amount - Math.Min(amount, from.Backpack.GetAmount(typeof(Gold)));
+        // Banker includes carried wallets, so count them only once.
+        return remaining <= 0 || Banker.GetBalance(from) >= remaining;
+    }
+    public static bool HasStableCargo(BaseCreature pet)
+    {
+        if (pet.Backpack == null) { return false; }
+        foreach (var item in pet.Backpack.Items) { if (!item.IsVirtualItem) { return true; } }
+        return false;
+    }
     public static bool TryPay(Mobile from, int amount)
     {
         if (from?.Backpack == null || amount <= 0)
@@ -418,27 +486,40 @@ public static class HavenEconomy
             return false;
         }
 
-        var wallet = from.Backpack.FindItemByType<AdventurersWallet>();
-        if (wallet?.Balance >= amount && wallet.TrySpend(amount))
+        var walletGold = Math.Min(amount, HavenBankPayments.WalletBalance(from));
+        var backpackGold = Math.Min(amount - walletGold, from.Backpack.GetAmount(typeof(Gold)));
+        var walletAndBankGold = amount - backpackGold;
+        // Banker preflights and spends wallet + account + bank funds together.
+        // Keep the existing wallet, loose backpack gold, then bank priority.
+        if (walletAndBankGold > 0 && !Banker.Withdraw(from, walletAndBankGold))
         {
-            return true;
+            return false;
         }
-
-        if (from.Backpack.ConsumeTotal(typeof(Gold), amount))
-        {
-            return true;
-        }
-
-        return Banker.Withdraw(from, amount);
+        if (backpackGold > 0) { from.Backpack.ConsumeTotal(typeof(Gold), backpackGold); }
+        return true;
     }
 }
 
 public static class StarterProvisioner
 {
+    public static void Configure() =>
+        CommandSystem.Register("StarterKit", AccessLevel.Player, e => StarterBundleClaims.Claim(e.Mobile));
+
     public static void Provision(Mobile mobile)
     {
-        if (mobile?.Backpack == null || mobile.AccessLevel != AccessLevel.Player)
+        if (mobile?.Backpack == null || !mobile.Player)
         {
+            return;
+        }
+
+        // Recovery for staff characters skipped by older releases. Never replace
+        // existing progression items or repeatedly hand out starter house deeds.
+        if (mobile.Backpack.FindItemByType<NewHavenAdventurersRobe>() != null ||
+            mobile.FindItemOnLayer(Layer.OuterTorso) is NewHavenAdventurersRobe ||
+            mobile.Backpack.FindItemByType<ApprenticeGrimoire>() != null ||
+            mobile.FindItemOnLayer(Layer.OneHanded) is ApprenticeGrimoire)
+        {
+            mobile.SendMessage("You already have starter progression equipment. Use a supply stone for replacements.");
             return;
         }
 
@@ -461,11 +542,21 @@ public static class StarterProvisioner
         mobile.Backpack.DropItem(weapon);
         mobile.Backpack.DropItem(new AdventurersWallet());
         mobile.Backpack.DropItem(new CleanupTrashBag());
+        mobile.Backpack.DropItem(new HavenFieldGuideBook());
         mobile.Backpack.DropItem(house);
         mobile.Backpack.DropItem(new Bandage(50));
+        mobile.Backpack.DropItem(new StarterFortuneEarrings());
+        mobile.Backpack.DropItem(new HavenStarterSash());
+        mobile.Backpack.DropItem(new HavenLevelingCape { BoundTo = mobile });
+        if (weapon is ApprenticeBow)
+        {
+            mobile.Backpack.DropItem(new Arrow(100));
+        }
+        mobile.SendMessage("Your Haven starter equipment is in your backpack.");
+        StarterBundleClaims.MarkClaimed(mobile);
     }
 
-    private static Item SelectStarterWeapon(Mobile mobile)
+    internal static Item SelectStarterWeapon(Mobile mobile)
     {
         var archery = mobile.Skills[SkillName.Archery].Value;
         var fencing = mobile.Skills[SkillName.Fencing].Value;
@@ -493,12 +584,14 @@ public static class StarterProvisioner
 
 public static class HavenContentBootstrap
 {
-    private static readonly Point2D NewHavenSupply = new(3481, 2582);
-    private static readonly Point2D NewHavenUpgrade = new(3483, 2582);
-    private static readonly Point2D NewHavenRewards = new(3485, 2582);
-    private static readonly Point2D NewHavenHitchingPost = new(3487, 2582);
-    private static readonly Point2D NewHavenDungeonPortal = new(3489, 2582);
-    private static readonly Point2D OldHavenBoss = new(3670, 2587);
+    private static readonly ILogger logger = LogFactory.GetLogger(typeof(HavenContentBootstrap));
+    internal static readonly Point2D HavenWildernessSteed = new(3675, 2410);
+    private static readonly Point2D NewHavenSupply = new(3501, 2574);
+    private static readonly Point2D NewHavenUpgrade = new(3504, 2571);
+    private static readonly Point2D NewHavenRewards = new(3508, 2571);
+    private static readonly Point2D NewHavenHitchingPost = new(3513, 2580);
+    private static readonly Point2D NewHavenDungeonPortal = new(3499, 2579);
+    internal static readonly Point2D OldHavenBoss = new(3698, 2595);
     private static readonly Point2D OldHavenSteed = new(3690, 2525);
 
     private static readonly Point2D BritainSupply = new(1428, 1697);
@@ -511,27 +604,187 @@ public static class HavenContentBootstrap
     public static void Initialize() =>
         Timer.DelayCall(TimeSpan.FromSeconds(15), EnsureContent);
 
-    private static void EnsureContent()
+    public static void EnsureContent()
     {
+        HavenRecovery.EnsureServices();
         RemoveBrokenNewHavenDungeonPortal();
 
         // Intended ML-era hub.
-        EnsureItem<StarterSupplyStone>(Map.Trammel, NewHavenSupply);
-        EnsureItem<HavenUpgradeStone>(Map.Trammel, NewHavenUpgrade);
-        EnsureItem<SpecialRewardStone>(Map.Trammel, NewHavenRewards);
-        EnsureItem<FreePetHitchingPost>(Map.Trammel, NewHavenHitchingPost);
-        EnsureItem<UOOfflineDungeonPortal>(Map.Trammel, NewHavenDungeonPortal);
+        EnsureHavenPlaza();
+        RelocateHavenWarden();
         EnsureSpawner<OldHavenBossSpawner>(Map.Trammel, OldHavenBoss);
-        EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, OldHavenSteed);
+        RelocateOldHavenSteeds();
+        EnsureSpawner<VampiricSteedSpawner>(Map.Trammel, HavenWildernessSteed);
+        foreach (var bossSpawner in Map.Trammel.GetItemsInRange<OldHavenBossSpawner>(AtSurface(Map.Trammel, OldHavenBoss), 2))
+        {
+            logger.Information("Old Haven Warden spawner at {Location}: running={Running}, spawned={Count}, next={Next}", bossSpawner.Location, bossSpawner.Running, bossSpawner.Spawned.Count, bossSpawner.NextSpawn);
+        }
 
-        // The current installer is Felucca-only. These fallbacks guarantee
-        // every custom reward remains obtainable on a completely fresh install.
+        // Also retain the established Felucca bank services.
         EnsureItem<StarterSupplyStone>(Map.Felucca, BritainSupply);
         EnsureItem<HavenUpgradeStone>(Map.Felucca, BritainUpgrade);
         EnsureItem<SpecialRewardStone>(Map.Felucca, BritainRewards);
         EnsureItem<FreePetHitchingPost>(Map.Felucca, BritainHitchingPost);
         EnsureItem<UOOfflineDungeonPortal>(Map.Felucca, BritainDungeonPortal);
         EnsureSpawner<VampiricSteedSpawner>(Map.Felucca, FeluccaSteed);
+    }
+
+    internal static void RelocateOldHavenSteeds()
+    {
+        var map = Map.Trammel;
+        var preferred = AtSurface(map, HavenWildernessSteed);
+        if (!HavenRecovery.FindLocation(preferred, out var destination, 8))
+        {
+            throw new InvalidOperationException("No walkable location for the Haven wilderness steeds.");
+        }
+        var oldLocation = AtSurface(map, OldHavenSteed);
+        var spawners = new List<VampiricSteedSpawner>();
+        var steeds = new HashSet<VampiricSteed>();
+        foreach (var spawner in map.GetItemsInRange<VampiricSteedSpawner>(oldLocation, 2))
+        {
+            spawners.Add(spawner);
+            foreach (var spawn in spawner.Spawned.Keys)
+            {
+                if (spawn is VampiricSteed steed && !steed.Controlled && !steed.Summoned) { steeds.Add(steed); }
+            }
+        }
+        foreach (var steed in map.GetMobilesInRange<VampiricSteed>(oldLocation, 100))
+        {
+            if (!steed.Controlled && !steed.Summoned) { steeds.Add(steed); }
+        }
+        foreach (var spawner in spawners) { spawner.MoveToWorld(preferred, map); }
+        foreach (var steed in steeds)
+        {
+            steed.Combatant = null;
+            steed.Home = destination;
+            steed.MoveToWorld(destination, map);
+        }
+        logger.Information("Haven steeds relocated: {Spawners} spawners, {Steeds} wild steeds; destination {Destination}", spawners.Count, steeds.Count, destination);
+    }
+    internal static void RelocateHavenWarden()
+    {
+        var map = Map.Trammel;
+        var old = new Point3D(3670, 2587, 0);
+        var destination = AtSurface(map, OldHavenBoss);
+        var spawners = new List<OldHavenBossSpawner>();
+        var wardens = new HashSet<OldHavenWarden>();
+        foreach (var spawner in map.GetItemsInRange<OldHavenBossSpawner>(old, 2))
+        {
+            spawners.Add(spawner);
+            foreach (var spawn in spawner.Spawned.Keys) { if (spawn is OldHavenWarden warden) { wardens.Add(warden); } }
+        }
+        foreach (var warden in map.GetMobilesInRange<OldHavenWarden>(old, 40)) { wardens.Add(warden); }
+        foreach (var spawner in spawners) { spawner.MoveToWorld(destination, map); }
+        foreach (var warden in wardens)
+        {
+            if (warden.Controlled || warden.Summoned) { continue; }
+            warden.Combatant = null; warden.Home = destination; warden.RangeHome = 6;
+            warden.MoveToWorld(destination, map);
+        }
+    }
+    internal static void EnsureHavenPlaza()
+    {
+        ArrangeHavenItem<StarterSupplyStone>(NewHavenSupply);
+        ArrangeHavenItem<HavenUpgradeStone>(NewHavenUpgrade);
+        ArrangeHavenItem<SpecialRewardStone>(NewHavenRewards);
+        ArrangeHavenItem<ArcaneSupplyStone>(new Point2D(3504, 2583));
+        ArrangeHavenItem<HavenTrainingStone>(new Point2D(3508, 2583));
+        ArrangeHavenItem<FreePetHitchingPost>(NewHavenHitchingPost);
+        ArrangeHavenItem<UOOfflineDungeonPortal>(NewHavenDungeonPortal);
+        ArrangeHavenItem<HavenRepairBench>(new Point2D(3502, 2581));
+        var oldDecorations = new List<Item>();
+        foreach (var item in Map.Trammel.GetItemsInRange<Item>(new Point3D(3490, 2582, 20), 30))
+        {
+            if (item.Name == "Haven welcome garden") { oldDecorations.Add(item); }
+        }
+        foreach (var item in oldDecorations) { item.Delete(); }
+        EnsureHavenDecoration(new Point3D(3501, 2582, 14), false);
+        EnsureHavenDecoration(new Point3D(3509, 2570, 14), false);
+    }
+
+    public static void EnsureBankServices(Map map, Point3D bank)
+    {
+        if (map == Map.Trammel && Utility.InRange(bank, new Point3D(3490, 2582, 20), 20))
+        {
+            EnsureHavenPlaza();
+            return;
+        }
+        EnsureBankItem<StarterSupplyStone>(map, bank, -4, 3);
+        EnsureBankItem<HavenUpgradeStone>(map, bank, -2, 3);
+        EnsureBankItem<SpecialRewardStone>(map, bank, 0, 3);
+        EnsureBankItem<FreePetHitchingPost>(map, bank, 2, 3);
+        EnsureBankItem<UOOfflineDungeonPortal>(map, bank, 4, 3);
+        EnsureBankItem<HavenRepairBench>(map, bank, -2, 5);
+        EnsureBankItem<ArcaneSupplyStone>(map, bank, 2, 5);
+        EnsureBankItem<HavenTrainingStone>(map, bank, 4, 5);
+    }
+
+    private static void ArrangeHavenItem<T>(Point2D position) where T : Item, new()
+    {
+        var preferred = new Point3D(position.X, position.Y, 14);
+        var found = new List<T>();
+        foreach (var item in Map.Trammel.GetItemsInRange<T>(new Point3D(3495, 2580, 20), 30))
+        {
+            if (!item.Deleted && item.GetType() == typeof(T)) { found.Add(item); }
+        }
+        if (found.Count > 0 && found[0].X == position.X && found[0].Y == position.Y) { return; }
+        if (!HavenRecovery.FindLocation(preferred, out var location, 1)) { return; }
+        var service = found.Count == 0 ? new T() : found[0];
+        service.Movable = false;
+        service.MoveToWorld(location, Map.Trammel);
+    }
+
+    private static void EnsureHavenDecoration(Point3D preferred, bool lamp)
+    {
+        foreach (var item in Map.Trammel.GetItemsInRange<Item>(preferred, 1))
+        {
+            if (item.Name == "Haven square flowers") { return; }
+        }
+        if (!HavenRecovery.FindLocation(preferred, out var location, 1)) { return; }
+        Item decoration = lamp ? new LampPost1 { Burning = true } : new PottedPlant1();
+        decoration.Name = "Haven square flowers";
+        decoration.Movable = false;
+        decoration.MoveToWorld(location, Map.Trammel);
+    }
+
+    private static void EnsureBankItem<T>(Map map, Point3D bank, int dx, int dy) where T : Item, new()
+    {
+        foreach (var existing in map.GetItemsInRange<T>(bank, 18))
+        {
+            if (!existing.Deleted)
+            {
+                return;
+            }
+        }
+        var preferred = new Point3D(bank.X + dx, bank.Y + dy, bank.Z);
+        for (var radius = 0; radius <= 8; radius++)
+        {
+            for (var x = -radius; x <= radius; x++)
+            {
+                for (var y = -radius; y <= radius; y++)
+                {
+                    if (Math.Max(Math.Abs(x), Math.Abs(y)) != radius)
+                    {
+                        continue;
+                    }
+                    var px = preferred.X + x;
+                    var py = preferred.Y + y;
+                    var z = preferred.Z;
+                    if (!map.CanSpawnMobile(px, py, z))
+                    {
+                        z = map.GetAverageZ(px, py);
+                        if (!map.CanSpawnMobile(px, py, z))
+                        {
+                            continue;
+                        }
+                    }
+                    var item = new T { Movable = false };
+                    item.MoveToWorld(new Point3D(px, py, z), map);
+                    return;
+                }
+            }
+        }
+        throw new InvalidOperationException($"No walkable location for {typeof(T).Name} near {map} bank {bank}.");
     }
 
     private static void RemoveBrokenNewHavenDungeonPortal()
@@ -578,7 +831,7 @@ public static class HavenContentBootstrap
         var loc = AtSurface(map, p);
         foreach (var existing in map.GetItemsInRange<T>(loc, 2))
         {
-            if (!existing.Deleted)
+            if (!existing.Deleted && existing.GetType() == typeof(T))
             {
                 return;
             }
@@ -588,13 +841,25 @@ public static class HavenContentBootstrap
         item.MoveToWorld(loc, map);
     }
 
+    internal static void ApplyRespawnTiming(Spawner spawner)
+    {
+        if (spawner is OldHavenBossSpawner)
+        { spawner.MinDelay = TimeSpan.FromMinutes(2); spawner.MaxDelay = TimeSpan.FromMinutes(3); }
+        else if (spawner is VampiricSteedSpawner)
+        { spawner.MinDelay = TimeSpan.FromSeconds(30); spawner.MaxDelay = TimeSpan.FromSeconds(60); }
+        else { return; }
+        if (spawner.NextSpawn > spawner.MaxDelay)
+        { spawner.Running = false; spawner.NextSpawn = spawner.MinDelay; }
+        spawner.Running = true;
+    }
     private static void EnsureSpawner<T>(Map map, Point2D p) where T : Spawner, new()
     {
         var loc = AtSurface(map, p);
         foreach (var existing in map.GetItemsInRange<T>(loc, 2))
         {
-            if (!existing.Deleted)
+            if (!existing.Deleted && existing.GetType() == typeof(T))
             {
+                ApplyRespawnTiming(existing);
                 return;
             }
         }

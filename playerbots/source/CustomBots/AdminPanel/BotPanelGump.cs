@@ -51,7 +51,7 @@ namespace Server.CustomBots
         // ---- Layout constants ----
 
         private const int PanelW        = 620;
-        private const int PanelH        = 820;
+        private const int PanelH        = 560;
         private const int PadX          = 14;
         private const int LineH         = 22;
         private const int SectionGap    = 10;
@@ -59,7 +59,7 @@ namespace Server.CustomBots
         private const int ButtonW       = 110;
 
         // ModernUO gump art IDs.
-        private const int BgArt         = 9270;     // beige scroll background
+        private const int BgArt         = 5054;     // beige scroll background
         private const int BtnNormal     = 4005;     // generic button up
         private const int BtnPressed    = 4007;     // generic button down
         private const int PlusUp        = 0x983;
@@ -69,7 +69,7 @@ namespace Server.CustomBots
         private const int ExitUp        = 0xFB1;
         private const int ExitDown      = 0xFB3;
 
-        private const int LabelHue      = 1153;
+        private const int LabelHue      = 0;
 
         private static int DefaultCountFor(string behaviorName) =>
             behaviorName switch
@@ -95,9 +95,11 @@ namespace Server.CustomBots
         {
             Close = 1,
             Refresh,
+            Section,
 
             // World setup — one button does the whole first-time pass.
             FirstTimeSetup = 10,
+            RepairWorld,
 
             // Draft
             DraftAddBehavior  = 30,
@@ -137,11 +139,13 @@ namespace Server.CustomBots
 
         // ---- Per-instance state ----
         private readonly bool _pickerOpen;
+        private readonly int _section;
 
         // ---- Constructor ----
-        public BotPanelGump(Mobile from, bool pickerOpen = false) : base(50, 10)
+        public BotPanelGump(Mobile from, bool pickerOpen = false, int section = 0) : base(20, 20)
         {
             _pickerOpen = pickerOpen;
+            _section = Math.Clamp(section, 0, 3);
             BuildLayout(from);
         }
 
@@ -162,13 +166,14 @@ namespace Server.CustomBots
         {
             AddPage(0);
             AddBackground(0, 0, PanelW, PanelH, BgArt);
+            AddBackground(8, 8, PanelW - 16, PanelH - 16, 3000);
 
             int y = 14;
 
             // ── Title and close button ──────────────────────────────────
             AddHtml(PadX, y, PanelW - 80, 22,
-                "<BASEFONT COLOR=#F4F4F4 SIZE=4><B>GM Panel</B></BASEFONT>");
-            AddButton(PanelW - 36, y, ExitUp, ExitDown, ButtonID(Act.Close));
+                "<BASEFONT COLOR=#111111 SIZE=4><B>GM Panel</B></BASEFONT>");
+            AddButton(PanelW - 48, y, ExitUp, ExitDown, ButtonID(Act.Close));
             y += LineH + 4;
 
             // ── Header: location + counts ───────────────────────────────
@@ -180,22 +185,22 @@ namespace Server.CustomBots
                 $"Nearby (20 tiles): {botCount} bot(s), {spawnerCount} spawner(s)");
             y += LineH + SectionGap;
 
-            // ── Section 1: World ───────────────────────────────────────
-            y = AddSectionHeader(y, "WORLD");
-            y = BuildWorldSection(y);
-
-            // ── Section 2: Spawn Here (draft) ──────────────────────────
-            y = AddSectionHeader(y, "SPAWN HERE");
-            y = BuildSpawnSection(from, y);
-
-            // ── Section 3: Travel ──────────────────────────────────────
-            y = AddSectionHeader(y, "TRAVEL");
-            y = BuildTravelSection(y);
-
-            // ── Section 4: Cleanup ─────────────────────────────────────
-            y = AddSectionHeader(y, "CLEANUP");
-            y = BuildCleanupSection(y);
-
+            var tabs = new[] { "World", "Spawn bots", "Travel", "Cleanup" };
+            for (var tab = 0; tab < tabs.Length; tab++)
+            {
+                var x = PadX + tab * 145;
+                AddButton(x, y, BtnNormal, BtnPressed, ButtonID(Act.Section, tab));
+                AddLabel(x + 30, y + 2, LabelHue, tabs[tab]);
+            }
+            y += 38;
+            y = AddSectionHeader(y, tabs[_section]);
+            switch (_section)
+            {
+                case 0: y = BuildWorldSection(y); break;
+                case 1: y = BuildSpawnSection(from, y); break;
+                case 2: y = BuildTravelSection(y); break;
+                case 3: y = BuildCleanupSection(y); break;
+            }
             // ── Log line ───────────────────────────────────────────────
             var logQueue = BotPanelState.GetLog(from);
             if (logQueue != null && logQueue.Count > 0)
@@ -204,16 +209,16 @@ namespace Server.CustomBots
                 // so we take the last entry via ToArray.
                 var arr = logQueue.ToArray();
                 string logMsg = arr[arr.Length - 1];
-                y += SectionGap;
-                AddHtml(PadX, y, PanelW - 28, 22,
-                    $"<BASEFONT COLOR=#B4E1A8><I>{logMsg}</I></BASEFONT>");
+                y = PanelH - 62;
+                AddHtml(PadX, y, PanelW - 28, 48,
+                    $"<BASEFONT COLOR=#184020><I>{logMsg}</I></BASEFONT>");
             }
         }
 
         private int AddSectionHeader(int y, string title)
         {
             AddHtml(PadX, y, PanelW - 28, 22,
-                $"<BASEFONT COLOR=#FFD080 SIZE=3><B>{title}</B></BASEFONT>");
+                $"<BASEFONT COLOR=#111111 SIZE=3><B>{title}</B></BASEFONT>");
             return y + LineH;
         }
 
@@ -228,12 +233,20 @@ namespace Server.CustomBots
         // -------------------------------------------------------------------
         private int BuildWorldSection(int y)
         {
+            AddButton(PadX, y, BtnNormal, BtnPressed, ButtonID(Act.RepairWorld));
+            AddLabel(PadX + 32, y + 2, LabelHue, "Repair missing creatures, NPCs and bank services");
+            y += 34;
+            AddHtml(PadX, y, PanelW - 32, 58, Server.UOOffline.HavenWorldPopulation.Status);
+            y += 62;
+            AddButton(PadX, y, BtnNormal, BtnPressed, ButtonID(Act.Refresh));
+            AddLabel(PadX + 32, y + 2, LabelHue, "Refresh progress");
+            y += 42;
             AddButton(PadX, y, BtnNormal, BtnPressed, ButtonID(Act.FirstTimeSetup));
             AddLabel(PadX + 30, y + 2, LabelHue, "★ First Time Setup");
             y += ButtonH + 2;
 
             AddHtml(PadX + 30, y, PanelW - PadX - 44, 36,
-                "<BASEFONT COLOR=#C8C0A8><I>Decor, signs, teleporters, moongates, " +
+                "<BASEFONT COLOR=#333333><I>Decor, signs, teleporters, moongates, " +
                 "criers and spawners, then every player bot including the reds. " +
                 "Saves when it is done. Safe to run again.</I></BASEFONT>");
 
@@ -396,7 +409,7 @@ namespace Server.CustomBots
 
             // Footer note
             AddHtml(PadX, y, PanelW - 28, 22,
-                "<BASEFONT COLOR=#B0B0B0 SIZE=2>* = will ask for confirmation</BASEFONT>");
+                "<BASEFONT COLOR=#333333 SIZE=2>* = will ask for confirmation</BASEFONT>");
             y += LineH;
 
             return y + SectionGap;
@@ -407,15 +420,22 @@ namespace Server.CustomBots
         public override void OnResponse(NetState sender, in RelayInfo info)
         {
             var from = sender?.Mobile;
-            if (from == null) return;
+            if (from == null || from.AccessLevel < AccessLevel.GameMaster) return;
 
             var (action, row) = DecodeButtonID(info.ButtonID);
 
             bool reopen     = true;
-            bool keepPicker = false;
+            bool keepPicker = _pickerOpen;
+            int section = _section;
 
             switch (action)
             {
+                case Act.Section:
+                    section = Math.Clamp(row, 0, 3);
+                    break;
+                case Act.RepairWorld:
+                    Server.UOOffline.HavenWorldPopulation.Start(from);
+                    break;
                 case Act.Close:
                     reopen = false;
                     break;
@@ -437,7 +457,7 @@ namespace Server.CustomBots
                     BotPanelActions.RunCommand(from, "GeneratePKs");
                     BotPanelActions.SaveWorld(from);
                     BotPanelState.Log(from,
-                        $"First Time Setup complete — target {BotPopulation.TargetCount} " +
+                        $"First Time Setup complete — target {BotPopulation.EffectiveTargetCount} " +
                         $"bots plus reds.");
                     break;
 
@@ -533,7 +553,7 @@ namespace Server.CustomBots
             }
 
             if (reopen)
-                from.SendGump(new BotPanelGump(from, keepPicker));
+                from.SendGump(new BotPanelGump(from, keepPicker, section));
         }
 
         // ---- Single-target remove target ----

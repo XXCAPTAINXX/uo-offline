@@ -1,0 +1,19 @@
+--- a/Scripts/Items/Consumables/SmokeBomb.cs
++++ b/Scripts/Items/Consumables/SmokeBomb.cs
+@@ -11,7 +11,7 @@
+ 			: base(0x2808)
+ 		{
+ 			Stackable = Core.ML;
+-			Weight = 1.0;
++			Weight = Server.HavenPrototype.HavenPreview.Enabled ? 0.1 : 1.0;
+ 		}
+ 
+ 		public SmokeBomb(Serial serial)
+@@ -23,6 +23,7 @@
+ 
+         public override void OnDoubleClick(Mobile from)
+ 		{
++			if (Server.HavenPrototype.HavenPreview.Enabled) { Server.HavenPrototype.HavenSmokeTeleport.Begin(from,this); return; }
+ 			if (!IsChildOf(from.Backpack))
+ 			{
+ 				// The item must be in your backpack to use it.

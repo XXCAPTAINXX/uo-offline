@@ -1,0 +1,25 @@
+diff --git a/Projects/UOContent/Misc/AOS.cs b/Projects/UOContent/Misc/AOS.cs
+index 6a9ec27..a221e91 100644
+--- a/Projects/UOContent/Misc/AOS.cs
++++ b/Projects/UOContent/Misc/AOS.cs
+@@ -707,7 +707,7 @@ namespace Server
+                 }
+             }
+ 
+-            return value;
++            return value + Server.UOOffline.HavenJewelrySets.GetBonus(m, attribute);
+         }
+ 
+         public override string ToString() => "...";
+diff --git a/Projects/UOContent/Items/Weapons/BaseWeapon.cs b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+index 8564cf4..79b74b9 100644
+--- a/Projects/UOContent/Items/Weapons/BaseWeapon.cs
++++ b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+@@ -2276,6 +2276,7 @@ public abstract partial class BaseWeapon
+ 
+     public virtual CheckSlayerResult CheckSlayers(Mobile attacker, Mobile defender)
+     {
++        if (Server.UOOffline.HavenCompanionWeaponEvolution.Slays(this, attacker, defender)) { return CheckSlayerResult.Slayer; }
+         if (WeaponAbility.GetCurrentAbility(attacker) is not LightningArrow)
+         {
+             var atkWeapon = attacker.Weapon as BaseWeapon;

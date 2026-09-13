@@ -1,0 +1,10 @@
+--- a/Scripts/Mobiles/PlayerMobile.cs
++++ b/Scripts/Mobiles/PlayerMobile.cs
+@@ -3706,6 +3706,7 @@
+ 
+ 		private bool FindItems_Callback(Item item)
+ 		{
++            if (Server.HavenPrototype.HavenProtectedArchives.KeepNested(this, item)) return false;
+ 			if (!item.Deleted && (item.LootType == LootType.Blessed || item.Insured))
+ 			{
+ 				if (Backpack != item.Parent)

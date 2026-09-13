@@ -1,0 +1,46 @@
+diff --git a/Projects/UOContent/Mobiles/PlayerMobile.cs b/Projects/UOContent/Mobiles/PlayerMobile.cs
+index 8c5cb75fb..9d426d087 100644
+--- a/Projects/UOContent/Mobiles/PlayerMobile.cs
++++ b/Projects/UOContent/Mobiles/PlayerMobile.cs
+@@ -203,6 +203,7 @@ public PlayerMobile()
+ 
+             m_GameTime = TimeSpan.Zero;
+             m_GuildRank = RankDefinition.Lowest;
++            Server.UOOffline.HavenPlayerStats.Apply(this);
+         }
+ 
+         public PlayerMobile(Serial s) : base(s)
+diff --git a/Projects/UOContent/Items/Special/Special Scrolls/StatCapScroll.cs b/Projects/UOContent/Items/Special/Special Scrolls/StatCapScroll.cs
+index 92dcd54de..0cefce5bd 100644
+--- a/Projects/UOContent/Items/Special/Special Scrolls/StatCapScroll.cs
++++ b/Projects/UOContent/Items/Special/Special Scrolls/StatCapScroll.cs
+@@ -89,12 +89,7 @@ public override bool CanUse(Mobile from)
+             return false;
+         }
+ 
+-        var newValue = (int)Value;
+-
+-        if (from is PlayerMobile { HasStatReward: true })
+-        {
+-            newValue += 5;
+-        }
++        var newValue = Server.UOOffline.HavenPlayerStats.ScrollCap(from, (int)Value);
+ 
+         if (from.StatCap >= newValue)
+         {
+@@ -114,14 +109,7 @@ public override void Use(Mobile from)
+ 
+         from.SendLocalizedMessage(1049512); // You feel a surge of magic as the scroll enhances your powers!
+ 
+-        if (from is PlayerMobile { HasStatReward: true } mobile)
+-        {
+-            mobile.StatCap = (int)Value + 5;
+-        }
+-        else
+-        {
+-            from.StatCap = (int)Value;
+-        }
++        from.StatCap = Server.UOOffline.HavenPlayerStats.ScrollCap(from, (int)Value);
+ 
+         Effects.SendLocationParticles(
+             EffectItem.Create(from.Location, from.Map, EffectItem.DefaultDuration),

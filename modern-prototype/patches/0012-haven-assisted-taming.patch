@@ -1,0 +1,21 @@
+--- a/Scripts/Skills/AnimalTaming.cs
++++ b/Scripts/Skills/AnimalTaming.cs
+@@ -53,7 +53,9 @@
+ 			return TimeSpan.FromSeconds(40.0);
+ 		}
+ 
+-		public static bool MustBeSubdued(BaseCreature bc)
++		public static bool IsBeingTamed(BaseCreature bc){return m_BeingTamed.Contains(bc);}
++
++        public static bool MustBeSubdued(BaseCreature bc)
+ 		{
+ 			if (bc.Owners.Count > 0)
+ 			{
+@@ -287,6 +289,7 @@
+ 
+ 				protected override void OnTick()
+ 				{
++					if(m_Tamer is Server.HavenPrototype.HavenCompanion && !((Server.HavenPrototype.HavenCompanion)m_Tamer).ContinuingAssistedTame(m_Creature)){m_BeingTamed.Remove(m_Creature);m_Tamer.NextSkillTime=Core.TickCount;Stop();return;}
+ 					m_Count++;
+ 
+ 					DamageEntry de = m_Creature.FindMostRecentDamageEntry(false);

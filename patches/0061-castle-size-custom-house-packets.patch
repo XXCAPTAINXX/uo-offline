@@ -1,0 +1,30 @@
+--- a/Projects/UOContent/Multis/Houses/HousePackets.cs
++++ b/Projects/UOContent/Multis/Houses/HousePackets.cs
+@@ -150,7 +150,7 @@
+ 
+                 index = (x * size + y) * 2;
+ 
+-                if (x >= 0 && y >= 0 && y < size && index + 1 < maxPlaneLength)
++                if (x >= 0 && y >= 0 && y < size && index + 1 < (width <= 32 && height <= 33 ? 0x1000 : maxPlaneLength))
+                 {
+                     var planeUsed = planesUsed[plane];
+                     var planeWriterIndex = planeLength * plane;
+@@ -214,14 +214,16 @@
+         }
+ 
+         index = 0;
++        var offsetEntriesWritten = 0;
+         while (totalPlaneOffsets > 0)
+         {
+             var count = Math.Min(maxPerPlaneOffsetBuffer, totalPlaneOffsets);
+             totalPlaneOffsets -= count;
+             var size = count * 5;
+ 
+-            var source = planeOffsetWriter.RawBuffer.Slice(index * 5, size);
+-
++            var source = planeOffsetWriter.RawBuffer.Slice(offsetEntriesWritten * 5, size);
++
++            offsetEntriesWritten += count;
+             writer.Write((byte)(9 + index++));
+             writer.Write((byte)size);
+             WritePacked(source, ref writer, out var destLength);

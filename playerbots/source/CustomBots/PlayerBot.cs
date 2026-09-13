@@ -250,6 +250,7 @@ namespace Server.CustomBots
         // a bot of a chosen class (e.g. a Mage) for testing.
         public PlayerBot(BotClass cls, BotSkillTier tier) : base()
         {
+            BehaviorTickManager.Register(this);
             // Mark this mobile as a player from the system's perspective.
             // PlayerMobile's default constructor doesn't set m_Player = true
             // (account creation normally does that), so we have to. Without
@@ -496,6 +497,7 @@ namespace Server.CustomBots
 
         public PlayerBot(Serial serial) : base(serial)
         {
+            BehaviorTickManager.Register(this);
             // State restored in Deserialize.
         }
 
@@ -853,6 +855,9 @@ namespace Server.CustomBots
         // -------------------------------------------------------------------
         public override void OnAfterDelete()
         {
+            _behavior?.OnDetached(this);
+            _behavior = null;
+            BehaviorTickManager.Unregister(this);
             BotMountHelper.DismountAndDelete(this);
             BotPackAnimals.Release(this);
             BotCombatPets.Release(this);

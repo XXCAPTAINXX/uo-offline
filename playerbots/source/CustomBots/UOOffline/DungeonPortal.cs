@@ -1,5 +1,6 @@
 using System;
 using ModernUO.Serialization;
+using Server.Gumps;
 using Server.Menus.ItemLists;
 using Server.Mobiles;
 using Server.Network;
@@ -32,10 +33,11 @@ public partial class UOOfflineDungeonPortal : Item
             return;
         }
 
-        from.SendMenu(new DungeonMenu(this));
+        from.CloseGump<HavenListGump>();
+        from.SendGump(new HavenListGump(this, new DungeonMenu(this), reopen: false));
     }
 
-    private sealed class DungeonDestination
+    internal sealed class DungeonDestination
     {
         public string Name { get; }
         public Point3D Location { get; }
@@ -92,7 +94,7 @@ public partial class UOOfflineDungeonPortal : Item
         return destinations;
     }
 
-    private static readonly DungeonDestination[] Destinations = BuildDestinations();
+    internal static readonly DungeonDestination[] Destinations = BuildDestinations();
 
     private sealed class DungeonMenu : ItemListMenu
     {
@@ -100,12 +102,13 @@ public partial class UOOfflineDungeonPortal : Item
 
         private static ItemListEntry[] BuildEntries()
         {
-            var entries = new ItemListEntry[Destinations.Length];
+            var entries = new ItemListEntry[Destinations.Length + 1];
+            entries[0] = new ItemListEntry("Haven Commons — market, library and training", 0xF6C);
 
             for (var i = 0; i < Destinations.Length; i++)
             {
                 var d = Destinations[i];
-                entries[i] = new ItemListEntry(
+                entries[i + 1] = new ItemListEntry(
                     d.Name,
                     0xF6C,
                     d.Map == Map.Felucca ? 0x489 : 0x482
@@ -125,7 +128,7 @@ public partial class UOOfflineDungeonPortal : Item
 
             if (from == null || _portal?.Deleted != false ||
                 !from.InRange(_portal.GetWorldLocation(), 3) ||
-                index < 0 || index >= Destinations.Length)
+                from.Map != _portal.Map || index < 0 || index > Destinations.Length)
             {
                 return;
             }
@@ -141,7 +144,8 @@ public partial class UOOfflineDungeonPortal : Item
                 return;
             }
 
-            var destination = Destinations[index];
+            if (index == 0) { HavenCommunityCenter.Travel(from); return; }
+            var destination = Destinations[index - 1];
 
             BaseCreature.TeleportPets(from, destination.Location, destination.Map);
             from.MoveToWorld(destination.Location, destination.Map);

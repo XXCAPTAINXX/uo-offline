@@ -1,0 +1,33 @@
+diff --git a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
+@@ -68,5 +68,5 @@
+             case OrderType.Guard:
+                 {
+-                    HandleGuardOrder();
++                    HandleGuardOrder(previous);
+                     break;
+                 }
+@@ -155,5 +155,5 @@
+     }
+
+-    private void HandleGuardOrder()
++    private void HandleGuardOrder(OrderType previous)
+     {
+         if (Mobile.ControlMaster?.Alive != true)
+@@ -165,7 +165,12 @@
+         Mobile.FocusMob = null;
+         Mobile.Warmode = true;
+-        Mobile.PlaySound(Mobile.GetAttackSound());
+-        Mobile.ControlMaster?.SendLocalizedMessage(1049671, Mobile.Name);
+-        // ~1_NAME~ is now guarding you.
++        // Automatic returns and repeated Guard assignments keep the standing
++        // order; acknowledge only a newly selected guarding stance.
++        if (!_resolvingOrder && previous != OrderType.Guard && PersistentOrder != OrderType.Guard)
++        {
++            Mobile.PlaySound(Mobile.GetAttackSound());
++            Mobile.ControlMaster.SendLocalizedMessage(1049671, Mobile.Name);
++            // ~1_NAME~ is now guarding you.
++        }
+         _commandIssuer = null;
+     }

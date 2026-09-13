@@ -1,0 +1,177 @@
+PHASE fresh
+PASS preview conveniences disabled without explicit marker
+PASS preview landing fits modern map: New Haven
+PASS preview landing fits modern map: Luna bank
+PASS preview landing fits modern map: Royal City
+PASS preview landing fits modern map: Underworld entrance
+PASS preview landing fits modern map: Doom entrance
+PASS preview landing fits modern map: Doom Gauntlet
+PASS preview landing fits modern map: Blackthorn - Trammel
+PASS preview landing fits modern map: Blackthorn - Felucca
+PASS preview landing fits modern map: Shadowguard lobby
+PASS preview landing fits modern map: Abyss - Silver Sapling
+PASS full backpack rejects entire preview kit
+PASS preview kit uses native leech gear and skill caps
+PASS preview kit cannot be claimed twice
+PASS preview travel rejects active combat and invalid destinations
+PASS preview travel changes facet
+PASS every catalog resource constructs with correct amount
+PASS nested bags absorb supported resources and retain other items
+PASS native commodity deeds deposit exactly once
+PASS withdraw deed and reabsorb conserves resources
+PASS deed redemption produces native stack once
+PASS invalid amounts and insufficient balances cannot withdraw
+PASS foreign inventory and locked bags cannot be consumed
+PASS full pack withdrawal is atomic
+PASS ledger transfer is atomic on target overflow
+PASS ledger transfer preserves each resource and rejects replay
+PASS persist resource fixtures
+PASS companion begins with accessible ledger
+PASS owner can use ledger in companion pack without snooping
+PASS resource mission snapshots tier and scales by duration
+PASS companion ledger transfers to owner's book
+PASS wood and leather missions unlock higher resource types
+PASS regional missions enforce skill and award native catalog resources
+PASS full pack still receives resources into existing ledger
+PASS ledger overflow remains pending and delivers only available room
+PASS Shadowguard roof denies owner missing rooms
+PASS Shadowguard companion shares qualified owner's room eligibility
+PASS Shadowguard still requires every real party member's rooms
+PASS native Shadowguard bar advances all pirate waves and grants room credit
+PASS native Shadowguard roof sequences four bosses and consumes room credit
+PASS Doom advances all six native boss stages and restarts its cycle
+PASS Britannian ship moves with native hold cargo intact
+PASS Haven service stones are complete and setup is idempotent
+PASS service actions reject distant players
+PASS full pack preserves unclaimed starter supplies
+PASS normal starter supplies preserve skills and stats and cannot duplicate
+PASS arcane kit preserves progression and repair restores durability only
+PASS player checklist records valid results and rejects invalid indexes
+PASS checklist travel reaches services without changing test results
+PASS checklist travel obeys combat restriction
+PASS pirate lodge uses a safe native plot and claim cannot duplicate
+PASS lodge doors open for owner and reject strangers including after legacy repair
+PASS pirate lodge shares ownership with account but rejects strangers
+PASS home arrival and secured cargo work without changing progression
+PASS native spiral staircase provides both floor destinations
+PASS early recall cancels Supply without rewards and restores Follow
+PASS early recall cancels Mining without rewards and restores Follow
+PASS early recall cancels Lumber without rewards and restores Follow
+PASS early recall cancels Leather without rewards and restores Follow
+PASS early recall cancels Malas without rewards and restores Follow
+PASS early recall cancels Abyss without rewards and restores Follow
+PASS automatic placement returns completed mission once
+PASS optional test allowance funds any reward once per account
+PASS Marks are per character and awards clamp at cap
+PASS full pack and invalid reward preserve Marks
+PASS purchase spends exact price and supplies advertised weapon
+PASS all reward previews create valid items without charging
+PASS old camp footprint rejects native building
+PASS mini champion camp is open unguarded land and setup is idempotent
+PASS mini champion rejects invalid starts and duplicate encounter
+PASS three waves and boss credit companion owner and all damage participants
+PASS mini champion rewards cannot replay or be collected by stranger
+PASS administratively deleted enemies abort without completion rewards
+PASS save an active undead wave without replaying its spawns
+PASS Haven recovery NPCs are present once
+PASS companion baseline regeneration uses three-second cadence and resource caps
+PASS Healing and Veterinary cap at two seconds for all dex and resurrection
+PASS dead companion returns from another facet with gear and Follow
+PASS companion recovers after five seconds near owner, with full resources
+PASS automatic recovery waits for nearby owner
+PASS pet clinic resurrects only owner's nearby ghosts
+PASS player healer accepts ghost and corpse recall preserves contents
+PASS corpse recall denies other owners and remote use
+PASS owner finds clear twelve-tile test position
+PASS twelve-tile pack nested inventory and ledger access
+PASS companion bandages owner at twelve tiles and completes range check
+PASS strangers and unrelated bags retain ordinary range
+PASS thirteen tiles rejects pack ledger and bandage
+PASS starter gear full-pack refusal and single claim
+PASS credited native monster kill advances equipped gear
+PASS weapon levels cap at20 and100 percent mana leech with binding
+PASS robe upgrades charge exact Marks and reject stale menu
+PASS wallet absorbs gold checks and tithes only room below cap
+PASS wallet withdrawal preserves funds when full and bank transfers conserve gold
+PASS Haven Luck adds1000 only in original area
+PASS native accelerated skill gains stop at100 and respect power-scroll cap
+PASS raising caps preserves trained stats skills and individual caps
+PASS all 25 published free skills gain at counted cap and respect individual caps
+PASS free natural skill gain works at counted cap
+PASS counted gain cannot consume free skills to bypass cap
+PASS transcendence increases free skill at counted cap
+PASS NPC teaching can raise free skill at counted cap
+PASS low-Dex companion follows at travel pace in every role
+PASS create player fixture on traversable modern map
+PASS claim binds owner and one follower slot
+PASS repeat claim does not duplicate
+PASS stranger cannot issue orders
+PASS transfer release and drop-all blocked
+PASS pet speech guard stay and follow
+PASS owner can deposit and withdraw nested items
+PASS remote pack access and stale command denied
+PASS companion joins owner party idempotently
+PASS all kill shares native target with ordinary pet
+PASS guard chooses hostile and excludes wild tameable
+PASS guard restores cleared follow target and pursues owner beyond command range
+PASS successful native spell advances equipped grimoire
+PASS guard closes distance while retaining guard order
+PASS native greater heal starts
+PASS native spell heals owner and spends mana
+PASS direct attack starts native combat
+PASS native melee damages target
+PASS companion damage credit belongs to real owner
+PASS role switch rejects stranger and invalid role
+PASS full pack leaves role and equipped gear intact
+PASS caster installs one native mage AI
+PASS ranged role accepts explicit enemy: Caster
+PASS combat prevents changing role
+PASS native mage AI deals damage outside melee range
+PASS stay cancels queued casting and targets
+PASS archer equips native bow and AI
+PASS ranged role accepts explicit enemy: Archer
+PASS combat prevents changing role
+PASS native archer damages target at range
+PASS repeated roles preserve one sword shield and bow
+PASS warrior starts self heal and respects cooldown
+PASS self heal completes native spell without a cursor
+PASS companion starts one bandage and consumes one supply
+PASS companion bandage finishes within two-second application window
+PASS gold rewards merge existing pile
+PASS full pack queues rewards without loss
+PASS mission rejects invalid length and stranger
+PASS mission blocks duplicate starts and early rewards
+PASS due mission rewards once and reports
+PASS second reward keeps one gold pile
+PASS save pending mission and companion
+COMPLETE failures=0
+PHASE reload
+PASS preview kit claim survives save and restart
+PASS ledger and deed balances survive world restart
+PASS resource mission rewards and ledger persist without replay
+PASS Shadowguard reload consumes orphaned player records without corrupting saved data
+PASS Doom six-stage sequence survives world reload
+PASS Britannian ship preserves owner and native hold cargo after reload
+PASS Haven service stones are complete and setup is idempotent
+PASS starter supply claim persists without replay
+PASS player checklist status survives reload
+PASS pirate lodge owner secure storage and cargo survive reload
+PASS cancelled mission remains cancelled after reload
+PASS Marks balance and purchased reward survive reload
+PASS test allowance cannot replay after reload
+PASS mini champion active wave and full-pack prize survive reload
+PASS Haven recovery NPCs are present once
+PASS evolving gear wallet ownership and balances persist
+PASS player caps and free skill budget survive reload
+PASS low-Dex companion follows at travel pace in every role
+PASS owner and companion references persist
+PASS role and native AI persist
+PASS overdue mission completes while owner is offline
+PASS mission report persists
+PASS inventory and stacked gold persist
+PASS restart does not duplicate rewards
+PASS simulate native login location restoration
+PASS claim after login returns same companion
+PASS owner can recall recovered companion
+PASS reloaded role responds to guard command
+COMPLETE failures=0

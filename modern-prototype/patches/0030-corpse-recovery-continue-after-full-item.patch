@@ -1,0 +1,12 @@
+--- a/Scripts/Items/Corpses/Corpse.cs
++++ b/Scripts/Items/Corpses/Corpse.cs
+@@ -1258,7 +1258,8 @@
+ 
+                     bool checkRobe = true;
+ 
+-                    for (int i = 0; !didntFit && i < items.Count; ++i)
++                    // A full bag must not prevent later equipment from being recovered.
++                    for (int i = 0; i < items.Count && (!didntFit || Server.HavenPrototype.HavenPreview.Enabled); ++i)
+                     {
+                         Item item = items[i];
+                         Point3D loc = item.Location;

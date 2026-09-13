@@ -1,0 +1,69 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+index 1c9c7f8..2538e3a 100644
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -1141,20 +1141,20 @@ namespace Server.Mobiles
+ 
+         public virtual bool CanTeach => false;
+ 
+-        public virtual bool CanHeal => false;
+-        public virtual bool CanHealOwner => false;
++        public virtual bool CanHeal => Controlled && Server.UOOffline.HavenPetTraining.HealingRank(this) > 0;
++        public virtual bool CanHealOwner => Controlled && Server.UOOffline.HavenPetTraining.HealingRank(this) > 0;
+         public virtual double HealScalar => 1.0;
+ 
+         public virtual int HealSound => 0x57;
+-        public virtual int HealStartRange => 2;
+-        public virtual int HealEndRange => RangePerception;
++        public virtual int HealStartRange => Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 ? 12 : 2;
++        public virtual int HealEndRange => Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 ? 12 : RangePerception;
+         public virtual double HealTrigger => 0.78;
+-        public virtual double HealDelay => 6.5;
++        public virtual double HealDelay => Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 ? 2.0 : 6.5;
+         public virtual double HealInterval => 0.0;
+         public virtual bool HealFully => true;
+-        public virtual double HealOwnerTrigger => 0.78;
+-        public virtual double HealOwnerDelay => 6.5;
+-        public virtual double HealOwnerInterval => 30.0;
++        public virtual double HealOwnerTrigger => Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 ? 1.0 : 0.78;
++        public virtual double HealOwnerDelay => Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 ? 2.0 : 6.5;
++        public virtual double HealOwnerInterval => Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 ? 8.0 : 30.0;
+         public virtual bool HealOwnerFully => false;
+ 
+         public bool IsHealing => _healTimerToken.Running;
+@@ -1631,6 +1631,7 @@ namespace Server.Mobiles
+ 
+         public override void OnDamage(int amount, Mobile from, bool willKill)
+         {
++            Server.UOOffline.HavenPetTraining.AwardDamage(this, from, amount);
+             if (BardPacified && (HitsMax - Hits) * 0.001 > Utility.RandomDouble())
+             {
+                 Unpacify();
+@@ -2943,6 +2944,8 @@ namespace Server.Mobiles
+         public override void AddNameProperties(IPropertyList list)
+         {
+             base.AddNameProperties(list);
++            Server.UOOffline.HavenPetTraining.AddProperties(this, list);
++            Server.UOOffline.HavenPetRarity.AddProperties(this, list);
+ 
+             if (MLQuestSystem.Enabled && CanGiveMLQuest)
+             {
+@@ -5498,12 +5501,18 @@ namespace Server.Mobiles
+             }
+ 
+             var seconds = (onSelf ? HealDelay : HealOwnerDelay) + (patient.Alive ? 0.0 : 5.0);
++            if (Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 && patient is PlayerMobile player)
++            {
++                player.AddBuff(new Server.Engines.BuffIcons.BuffInfo(Server.Engines.BuffIcons.BuffIcon.Healing,
++                    1042971, 1042971, TimeSpan.FromSeconds(seconds), "Your trained pet is healing you."));
++            }
+ 
+             Timer.StartTimer(TimeSpan.FromSeconds(seconds), () => Heal(patient), out _healTimerToken);
+         }
+ 
+         public virtual void Heal(Mobile patient)
+         {
++            if (Server.UOOffline.HavenPetTraining.HealingRank(this) > 0 && !InLOS(patient)) { StopHeal(); return; }
+             if (!Alive || Map == Map.Internal || !CanBeBeneficial(patient, true, true) || patient.Map != Map ||
+                 !InRange(patient, HealEndRange))
+             {

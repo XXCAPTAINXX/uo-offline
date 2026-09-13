@@ -150,16 +150,19 @@ namespace Server.CustomBots
                         $"{sp.Serial}: {ex.Message}");
                 }
             }
+            Server.Logging.LogFactory.GetLogger(typeof(BotStartupManager)).Information(
+                "Bot population rebuilt: {LiveBots} live bots ({PKBots} PKs) from {Spawners} spawners at two-thirds density",
+                CountBots(), CountBots(true), respawned);
             return respawned;
         }
 
         // Count live PlayerBots in the world.
-        private static int CountBots()
+        private static int CountBots(bool pksOnly = false)
         {
             int n = 0;
             foreach (var m in World.Mobiles.Values)
             {
-                if (m is PlayerBot bot && !bot.Deleted)
+                if (m is PlayerBot bot && !bot.Deleted && (!pksOnly || bot.Behavior is PKBehavior))
                     n++;
             }
             return n;

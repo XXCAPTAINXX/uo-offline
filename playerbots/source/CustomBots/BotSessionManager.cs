@@ -67,7 +67,7 @@ namespace Server.CustomBots
         public static double CurveNow => HourCurve[DateTime.Now.Hour];
 
         public static int TargetNow =>
-            Math.Max(1, (int)(BotPopulation.TargetCount * CurveNow));
+            Math.Max(1, (int)(BotPopulation.EffectiveTargetCount * CurveNow));
 
         public static void Configure()
         {
@@ -225,6 +225,7 @@ namespace Server.CustomBots
         // catch it once things calm down. Ghosts don't say "gtg", and a
         // bot mid corpse-run finishes the story before logging.
         private static bool CanLogoutNow(PlayerBot bot) =>
+            !Server.UOOffline.HavenGuildCrew.Retained(bot) &&
             bot.Alive &&
             !bot.LoggingOut &&
             !bot.CorpseRunPending &&
@@ -248,7 +249,7 @@ namespace Server.CustomBots
             // A beat between "gtg" and vanishing, like a real logout timer.
             Timer.DelayCall(TimeSpan.FromSeconds(Utility.RandomMinMax(3, 6)), () =>
             {
-                if (!bot.Deleted)
+                if (!bot.Deleted && !Server.UOOffline.HavenGuildCrew.Retained(bot))
                 {
                     bot.Delete();
                 }
@@ -309,7 +310,7 @@ namespace Server.CustomBots
             e.Mobile.SendMessage(
                 $"Bot sessions: {(Enabled ? "ON" : "OFF")}. Live {CountLive()}, " +
                 $"target {TargetNow} (curve {CurveNow:P0} at {hour:00}:00, " +
-                $"cap {BotPopulation.TargetCount}).");
+                $"cap {BotPopulation.EffectiveTargetCount}).");
         }
     }
 }

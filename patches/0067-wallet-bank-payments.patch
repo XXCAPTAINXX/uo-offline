@@ -1,0 +1,122 @@
+diff --git a/Projects/UOContent/Mobiles/Townfolk/Banker.cs b/Projects/UOContent/Mobiles/Townfolk/Banker.cs
+--- a/Projects/UOContent/Mobiles/Townfolk/Banker.cs
++++ b/Projects/UOContent/Mobiles/Townfolk/Banker.cs
+@@ -6,6 +6,7 @@
+ using Server.ContextMenus;
+ using Server.Items;
+ using Server.Network;
++using Server.UOOffline;
+
+ namespace Server.Mobiles;
+
+@@ -30,11 +31,11 @@
+
+     public static int GetBalance(Mobile m)
+     {
+-        long balance = 0;
++        long balance = HavenBankPayments.WalletBalance(m);
+
+         if (AccountGold.Enabled && m.Account != null)
+         {
+-            balance = m.Account.GetTotalGold();
++            balance += HavenBankPayments.AccountBalance(m.Account);
+             if (balance >= int.MaxValue)
+             {
+                 return int.MaxValue;
+@@ -66,13 +67,13 @@
+
+     public static int GetBalance(Mobile m, out List<Gold> gold, out List<BankCheck> checks)
+     {
+-        long balance = 0;
++        long balance = HavenBankPayments.WalletBalance(m);
+         gold = null;
+         checks = null;
+
+         if (AccountGold.Enabled && m.Account != null)
+         {
+-            balance = m.Account.GetTotalGold();
++            balance += HavenBankPayments.AccountBalance(m.Account);
+
+             if (balance >= int.MaxValue)
+             {
+@@ -157,16 +158,44 @@
+
+     public static bool Withdraw(Mobile from, int amount)
+     {
+-        // If for whatever reason the TOL checks fail, we should still try old methods for withdrawing currency.
+-        if (AccountGold.Enabled && from.Account?.WithdrawGold(amount) == true)
++        if (from?.Deleted != false || amount < 0)
++        {
++            return false;
++        }
++
++        if (amount == 0)
+         {
+             return true;
+         }
+
+-        if (!HasRequiredBalance(amount, from, out var gold, out var checks))
++        var walletGold = Math.Min(amount, HavenBankPayments.WalletBalance(from));
++        var accountGold = AccountGold.Enabled
++            ? (int)Math.Min(amount - walletGold, HavenBankPayments.AccountBalance(from.Account))
++            : 0;
++        var bankGold = amount - walletGold - accountGold;
++        PooledRefList<Gold> gold = default;
++        PooledRefList<BankCheck> checks = default;
++
++        // Preflight all sources before changing any balance. Fees may span a
++        // carried wallet, account gold/platinum, physical bank gold and checks.
++        if (bankGold > 0 && !HasRequiredBalance(bankGold, from, out gold, out checks))
+         {
+             return false;
+         }
++
++        if (!HavenBankPayments.WithdrawAccount(from.Account, accountGold))
++        {
++            gold.Dispose();
++            checks.Dispose();
++            return false;
++        }
++
++        if (walletGold > 0)
++        {
++            HavenBankPayments.SpendWalletGold(from, walletGold);
++        }
++
++        amount = bankGold;
+
+         for (var i = 0; amount > 0 && i < gold.Count; ++i)
+         {
+diff --git a/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs b/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs
+--- a/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs
++++ b/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs
+@@ -40,6 +40,7 @@
+             builder.AddHtmlLocalized(25, 191, 120, 26, 1063035, 0x0); // Abbreviation:
+             builder.AddBackground(155, 186, 320, 26, 0xBB8);
+             builder.AddTextEntry(160, 189, 315, 21, 0x481, 6, _guildAbbrev);
++            builder.AddLabel(25, 220, 0x481, "Payment: wallet + bank gold");
+             builder.AddButton(415, 217, 0xF7, 0xF8, 1);
+             builder.AddButton(345, 217, 0xF2, 0xF1, 0);
+
+@@ -106,8 +107,7 @@
+                         }
+                         else
+                         {
+-                            // ~1_AMOUNT~ gold has been withdrawn from your bank box.
+-                            pm.SendLocalizedMessage(1060398, Guild.RegistrationFee.ToString());
++                            pm.SendMessage($"Paid {Guild.RegistrationFee:N0} gold from your wallet and bank funds.");
+
+                             pm.SendLocalizedMessage(1063238); // Your new guild has been founded.
+                             pm.Guild = new Guild(pm, guildName, guildAbbrev);
+diff --git a/Projects/UOContent/Gumps/PlayerVendorGumps.cs b/Projects/UOContent/Gumps/PlayerVendorGumps.cs
+--- a/Projects/UOContent/Gumps/PlayerVendorGumps.cs
++++ b/Projects/UOContent/Gumps/PlayerVendorGumps.cs
+@@ -87,7 +87,7 @@
+                     return;
+                 }
+
+-                var totalGold = 0;
++                long totalGold = 0;
+
+                 if (from.Backpack != null)
+                 {

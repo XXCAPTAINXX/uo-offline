@@ -1,0 +1,15 @@
+--- a/Scripts/VendorInfo/SBTailor.cs
++++ b/Scripts/VendorInfo/SBTailor.cs
+@@ -34,7 +34,11 @@
+                 Add(new GenericBuyInfo(typeof(SewingKit), 3, 20, 0xF9D, 0)); 
+                 Add(new GenericBuyInfo(typeof(Scissors), 11, 20, 0xF9F, 0));
+                 Add(new GenericBuyInfo(typeof(DyeTub), 8, 20, 0xFAB, 0)); 
+-                Add(new GenericBuyInfo(typeof(Dyes), 8, 20, 0xFA9, 0)); 
++                Add(new GenericBuyInfo(typeof(Dyes), 8, 20, 0xFA9, 0));
++                Add(new GenericBuyInfo(typeof(LeatherDyeTub), 1000, 20, 0xFAB, 0));
++                Add(new GenericBuyInfo(typeof(FurnitureDyeTub), 1000, 20, 0xFAB, 0));
++                Add(new GenericBuyInfo(typeof(RunebookDyeTub), 1000, 20, 0xFAB, 0));
++                Add(new GenericBuyInfo(typeof(Server.HavenPrototype.HavenUniversalDyeTub), 5000, 20, 0xFAB, 0)); 
+ 
+                 Add(new GenericBuyInfo(typeof(Shirt), 12, 20, 0x1517, 0));
+                 Add(new GenericBuyInfo(typeof(ShortPants), 7, 20, 0x152E, 0));

@@ -1,0 +1,13 @@
+--- a/Scripts/Mobiles/PlayerMobile.cs
++++ b/Scripts/Mobiles/PlayerMobile.cs
+@@ -3556,6 +3556,10 @@
+ 
+         public override bool IsBeneficialCriminal(Mobile target)
+         {
++            var companion = target as Server.HavenPrototype.HavenCompanion;
++            if (companion != null && companion.BoundOwner == this && companion.ControlMaster == this)
++                return false; // Caring for your own companion must not restart your existing flag.
++
+             if (!target.Criminal && target is BaseCreature && ((BaseCreature)target).GetMaster() == this)
+                 return false;
+ 
