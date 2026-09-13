@@ -509,6 +509,7 @@ namespace Server.HavenPrototype
             if (!Controlled || ControlMaster != from) return "Your companion is not currently under your control.";
             if (!offline&&(Map == Map.Internal || from.Map != Map || !from.InRange(this,SupportRange))) return "Move within 24 tiles of your companion before starting a mission.";
             if (!offline&&!from.InLOS(this)) return "Move into sight of your companion before starting a mission.";
+            if (HavenAfkMissions.CombatActive(this,from)) return "Your companion stays while you, she, or your nearby pets are in combat. Wait until the fight is over.";
             if (HavenPreview.TravelCombatSeconds(this)>0 || HavenPreview.TravelCombatSeconds(from)>0) return "Wait 15 seconds after the last combat action before sending a mission.";
             if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
             if (minutes != 5 && minutes != 15 && minutes != 30 && minutes != 60) return "Choose a 5, 15, 30 or 60 minute mission.";

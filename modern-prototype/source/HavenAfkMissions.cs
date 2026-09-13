@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Server.Commands;
 using Server.Network;
+using Server.Mobiles;
 namespace Server.HavenPrototype {
  public static class HavenAfkMissions {
   sealed class State {public bool Manual;public DateTime Activity=DateTime.UtcNow;}
@@ -9,7 +10,16 @@ namespace Server.HavenPrototype {
   public static readonly TimeSpan IdleDelay=TimeSpan.FromMinutes(5);
   public static bool IsManual(Mobile p){return p!=null&&States.GetOrCreateValue(p).Manual;}
   public static bool IsIdle(DateTime activity,DateTime now){return now-activity>=IdleDelay;}
-  public static bool IsAway(Mobile p,bool auto){return p!=null&&(p.NetState==null||IsManual(p)||(auto&&IsIdle(States.GetOrCreateValue(p).Activity,DateTime.UtcNow)));}
+  public static bool IsAway(Mobile p,bool auto){return p!=null&&(p.NetState==null||IsManual(p));}
+  static bool Fighting(Mobile mobile){var foe=mobile?.Combatant as Mobile;return mobile!=null && mobile.Alive && (HavenPreview.TravelCombatSeconds(mobile)>0 || (foe!=null&&!foe.Deleted&&foe.Alive&&foe.Map==mobile.Map&&mobile.InRange(foe,HavenCompanion.SupportRange)));}
+  public static bool CombatActive(HavenCompanion companion,Mobile owner)
+  {
+   if(Fighting(owner)||Fighting(companion))return true;
+   if(companion==null||companion.Map==null||companion.Map==Map.Internal)return false;
+   var nearby=companion.GetMobilesInRange(HavenCompanion.SupportRange);
+   try{foreach(Mobile mobile in nearby){var pet=mobile as BaseCreature;if(pet!=null&&pet.Controlled&&(pet.ControlMaster==owner||pet.ControlMaster==companion)&&Fighting(pet))return true;var target=mobile.Combatant as Mobile;var targetPet=target as BaseCreature;if(mobile.Alive&&target!=null&&(target==owner||target==companion||(targetPet!=null&&targetPet.Controlled&&(targetPet.ControlMaster==owner||targetPet.ControlMaster==companion))))return true;}}finally{nearby.Free();}
+   return false;
+  }
   public static void Activity(Mobile p,bool movement=false){if(p==null)return;var s=States.GetOrCreateValue(p);s.Activity=DateTime.UtcNow;if(movement&&s.Manual){s.Manual=false;p.SendMessage("AFK mode ended. Your mission return setting now applies.");}}
   public static void Set(Mobile p,bool enabled){if(p==null)return;var s=States.GetOrCreateValue(p);s.Manual=enabled;s.Activity=DateTime.UtcNow;p.SendMessage(enabled?"AFK mode on. Enabled offline mission plans can repeat. Move or use [afk off to return.":"AFK mode off. Your mission return setting now applies.");}
   public static void Initialize(){
