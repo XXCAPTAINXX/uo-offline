@@ -14,6 +14,12 @@ namespace Server.HavenPrototype
         internal void EnsureWardrobe()
         {
             if (Deleted) return;
+            if (Name == "Jenna" || (Name ?? "").StartsWith("Jenna "))
+            {
+                Female = true;
+                Body = 0x191;
+                FacialHairItemID = 0;
+            }
             foreach (var item in Items.ToArray())
                 if (item is BaseClothing || (item is BaseArmor && !(item is BaseShield))) item.Movable = true;
             bool covered = new[] { Layer.Shirt, Layer.InnerTorso, Layer.MiddleTorso, Layer.OuterTorso }
