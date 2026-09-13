@@ -48,7 +48,8 @@ namespace Server.HavenPrototype {
    public override void OnResponse(NetState s,RelayInfo r){if(r.ButtonID!=1)return;bool ok=_item!=null&&!_item.Deleted&&Value(_item)==_value&&Exchange(s.Mobile as PlayerMobile,_item);s.Mobile.SendMessage(ok?"Doubloons credited. Use [cargo to browse rewards.":"Turn-in unavailable; keep the unchanged items in your backpack.");}
   }
  }
- public class HavenHooksShield:MetalShield {
+ public class HavenHooksShield:MetalShield,IHavenCombatShield {
+  public int ShieldStyle {get{return 0;}}
   public static void Initialize(){if(HavenPreview.Enabled)Server.Timer.DelayCall(TimeSpan.Zero,()=>{    AddReward(typeof(HavenHooksShield),0x1B7B,5000);
     AddReward(typeof(MessageInABottle),0x99F,300);
     AddReward(typeof(SpecialFishingNet),0xDCA,600);
@@ -62,6 +63,7 @@ namespace Server.HavenPrototype {
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
  }
 }
+
 
 
 

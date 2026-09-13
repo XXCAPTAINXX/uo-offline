@@ -27,6 +27,7 @@ namespace Server.HavenPrototype
         static readonly HashSet<string> QuestNames = new HashSet<string>(new[] { "ArmsOfArmstrong", "BulwarkLeggings", "BraceletOfResilience", "EscutcheonDeAriadne", "EmberStaff", "ClaspOfConcentration", "ChurchillsWarMace", "Heartseeker", "HealersTouch", "HallowedSpellbook", "GlovesOfSafeguarding", "TheDragonsTail", "JocklesQuicksword", "JacobsPickaxe", "PhilosophersHat", "RecarosRiposte", "TunicOfGuarding", "SilverSerpentBlade", "RingOfTheSavant", "TwilightJacket", "WalkersLeggings", "HavenQuestNecromancerBook" });
         public static int AutoKind(Item item)
         {
+            if (item is IHavenCombatShield || item is IHavenCastingGear) return 5;
             if (item is IHavenAreaWeapon || item is IHavenWhirlwindWeapon) return 6;
             if (item is AstralWeaversRing || item is AstralGuardianMantle || item is AstralFortuneEarrings) return 1;
             if (QuestNames.Contains(item.GetType().Name)) return 4;
@@ -76,6 +77,7 @@ namespace Server.HavenPrototype
                 a.WeaponDamage = Math.Max(a.WeaponDamage, steps); a.SpellDamage = Math.Max(a.SpellDamage, steps);
             }
             if (weapon != null) HavenAreaWeapons.Apply(weapon, Level);
+            HavenCombatCastingGear.Apply(Equipment,Level);
             AppliedLevel = Level;
             Equipment.Name = (Kind == 2 ? "Legendary " : Kind == 3 ? "Reforged " : "") + OriginalName + " [level " + Level + "/20]";
             Equipment.InvalidateProperties();
@@ -84,7 +86,7 @@ namespace Server.HavenPrototype
         public static void Initialize()
         {
             Timer.DelayCall(TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1), () => { foreach (var record in Records.Values.ToArray()) if (record.Equipment == null || record.Equipment.Deleted) record.Delete(); });
-            EventSink.ServerStarted += () => { if (HavenPreview.Enabled) foreach (var item in World.Items.Values.ToArray()) if (AutoKind(item) > 0) Attach(item, AutoKind(item)); };
+            EventSink.ServerStarted += () => { if (HavenPreview.Enabled) foreach (var item in World.Items.Values.ToArray()) if (AutoKind(item) > 0) Attach(item, AutoKind(item))?.Apply(); };
             EventSink.CreatureDeath += e => {
                 var victim = e.Creature as BaseCreature; var owner = e.Killer == null ? null : e.Killer.GetDamageMaster(victim) ?? e.Killer;
                 AwardCompanionEquipment(victim);
@@ -189,3 +191,4 @@ namespace Server.HavenPrototype
         }
     }
 }
+
