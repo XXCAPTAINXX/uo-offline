@@ -9,7 +9,7 @@ namespace Server.HavenPrototype
     {
         public HavenHomePracticeChest() { Name = "Lockpicking and Remove Trap trainer"; Movable = false; Locked = true; }
         public HavenHomePracticeChest(Serial serial) : base(serial) { }
-        private bool CanPractice(Mobile from)
+        protected virtual bool CanPractice(Mobile from)
         {
             var house = BaseHouse.FindHouseAt(this);
             return from.Alive && from.Map == Map && from.InRange(this, 2) && from.InLOS(this) && house != null && house.IsOwner(from);
@@ -19,7 +19,7 @@ namespace Server.HavenPrototype
             if (!CanPractice(from)) return;
             int skill = (int)from.Skills.Lockpicking.Value;
             RequiredSkill = Math.Max(0, skill - 10);
-            LockLevel = skill - 20;
+            LockLevel = skill == 20 ? -1 : skill - 20;
             MaxLockLevel = skill + 20;
             Locked = true;
             from.SendMessage("Practice lock reset to your skill. Use lockpicks here, or use Remove Trap and target this chest. The practice trap deals no damage.");

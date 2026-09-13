@@ -125,7 +125,7 @@ namespace Server.HavenPrototype
                 if (!IsInside(new Point3D(X+p.X,Y+p.Y,Z+p.Z),16) || !Map.CanFit(X+p.X,Y+p.Y,Z+p.Z,16,false,false))
                     throw new InvalidOperationException("Recovered ladder landing blocked: " + p);
         }
-        internal void CheckWalkingRoutes()
+        internal void CheckWalkingRoutes(bool galleryStairsOnly = false)
         {
             var probe=new Mobile {Body=0x190};
             var visited=new HashSet<Point3D>();var pending=new Queue<Point3D>();
@@ -142,6 +142,7 @@ namespace Server.HavenPrototype
                         var next=new Point3D(x,y,nextZ);if(visited.Add(next))pending.Enqueue(next);
                     }
                     for(int i=0;i<LadderSites.Length;i++) {
+                        if(galleryStairsOnly && (i==0 || i==1))continue;
                         var site=LadderSites[i];
                         if(Math.Abs(at.X-X-site.X)>2||Math.Abs(at.Y-Y-site.Y)>2||Math.Abs(at.Z-Z-site.Z)>8)continue;
                         var ladder=CompanyFixtures.OfType<HavenRecoveredLadder>().First(l=>l.X==X+site.X&&l.Y==Y+site.Y&&l.Z==Z+site.Z);
@@ -200,3 +201,4 @@ namespace Server.HavenPrototype
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_house=r.ReadItem() as HavenRecoveredHeadquarters;_index=r.ReadInt();}
     }
 }
+

@@ -284,6 +284,7 @@ public partial class HavenEncounterChest : MetalGoldenChest
     internal void Fill()
     {
         var gear=HavenEncounterBossLoot.Roll(Tier,Utility.RandomDouble(),Utility.Random(100));if(gear!=null)DropItem(gear);
+        if(Tier>=5&&Utility.RandomDouble()<.08)DropItem(new HavenInfiniteLockpick());
         DropItem(new Gold(5000 + Tier * 1500)); DropItem(new Diamond(5 + Tier)); DropItem(new AstralShard(1 + Tier / 4));
         DropItem(HavenWorldDiscoveries.Clothing(Math.Min(.999, .60 + Tier * .02), Utility.Random(7), Utility.Random(10)));
         if (Utility.RandomDouble() < .25) { DropItem(new RunicHammer(Tier >= 12 ? CraftResource.Agapite : Tier >= 6 ? CraftResource.Bronze : CraftResource.DullCopper, 10 + Tier)); }
