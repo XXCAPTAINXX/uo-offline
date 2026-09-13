@@ -21,13 +21,12 @@ namespace Server.HavenPrototype
         public void FlatButton(int x, int y, int width, int id, string text)
         {
             width = System.Math.Max(38, width);
-            for (int offset = 0; offset < width; offset += 19)
-                base.AddButton(x + System.Math.Min(offset, width - 19), y, 210, 210, id, GumpButtonType.Reply, 0);
-            // Dark slate separates the controls from the light stone panel.
-            base.AddImageTiled(x, y, width, 19, 2624);
+            // Small native hit targets stay within the plain rectangular surface.
+            for (int offset = 0; offset < width; offset += 26)
+                base.AddButton(x + System.Math.Min(offset, width - 26), y, 0xFA5, 0xFA7, id, GumpButtonType.Reply, 0);
+            base.AddImageTiled(x, y, width, 19, 5058);
             string label = HavenMenuText.Encode(text);
-            base.AddHtml(x + 1, y + 2, width - 2, 18, "<CENTER><BASEFONT COLOR=#000000>" + label + "</BASEFONT></CENTER>", false, false);
-            base.AddHtml(x, y + 1, width, 18, "<CENTER><BASEFONT COLOR=#E4E0D3>" + label + "</BASEFONT></CENTER>", false, false);
+            base.AddHtml(x + 2, y + 1, width - 4, 18, "<CENTER><BASEFONT COLOR=#202020>" + label + "</BASEFONT></CENTER>", false, false);
         }
         public void ItemButton(Mobile viewer, Item item, int x, int y, int width, int id, string label)
         {

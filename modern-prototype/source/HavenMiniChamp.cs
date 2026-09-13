@@ -131,7 +131,7 @@ namespace Server.HavenPrototype
             foreach(var player in _participants.ToArray()) {
                 if(player==null || player.Deleted || !(player.Account is Account))continue;
                 for(int theme=Challenge?0:_theme;theme<=(Challenge?2:_theme);theme++)new HavenMiniPrize(player,theme,IslandRewards).Deliver(player);
-                if(Challenge){var bonus=new HavenMiniPrize(player,Utility.Random(3));bonus.DropItem(new AstralShard(1));bonus.Deliver(player);}
+                if(Challenge){var bonus=new HavenMiniPrize(player,Utility.Random(3),IslandRewards);bonus.DropItem(new AstralShard(1));bonus.Deliver(player);}
                 HavenMarks.Award(player,Challenge?80:20);Increment(player,"Wins");
                 player.SendMessage(Challenge?"Challenge won: four reward sets, 80 Marks, one bonus Astral Shard. Full-pack rewards remain pending.":"Expedition won: 20 Marks and themed rewards. Full-pack rewards remain pending.");
             }
