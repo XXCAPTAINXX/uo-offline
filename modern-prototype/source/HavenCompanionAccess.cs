@@ -7,7 +7,7 @@ namespace Server.HavenPrototype
         {
             var c = item == null ? null : item.RootParent as HavenCompanion;
             return HavenPreview.Enabled && c != null && c.CanOpenPack(owner) &&
-                (item == c.Backpack || item.IsChildOf(c.Backpack)) ? HavenCompanion.SupportRange : 2;
+                (item == c.Backpack || item.IsChildOf(c.Backpack) || (item.Parent == c && item.Movable)) ? HavenCompanion.SupportRange : 2;
         }
         public static int BandageRange(Mobile healer, Mobile patient)
         {

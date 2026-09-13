@@ -74,6 +74,7 @@ namespace Server.HavenPrototype
                 if (!HavenPreview.Enabled) return;
                 foreach (var companion in World.Mobiles.Values.OfType<HavenCompanion>().ToArray())
                 {
+                    companion.EnsureWardrobe();
                     var owner = companion.BoundOwner;
                     var account = owner == null ? null : owner.Account as Account;
                     if (owner == null || owner.Name != "Rictor Quake" || account == null || account.GetTag("Haven.JennaAppearanceApplied") != null) continue;
@@ -157,6 +158,7 @@ namespace Server.HavenPrototype
             SetSkill(SkillName.Mining, 50); SetSkill(SkillName.Lumberjacking, 50); SetSkill(SkillName.AnimalLore, 50);
             EnsureResourceLedger();
             EnsureEvolvingEquipment();
+            EnsureWardrobe();
         }
 
         public bool SetRole(Mobile from, CompanionRole role)
@@ -373,6 +375,7 @@ namespace Server.HavenPrototype
             if (_owner == null || _owner.Deleted || ControlMaster != _owner || IsStabled || OnMission ||
                 Map == null || Map == Map.Internal || _owner.Map != Map || !InRange(_owner, SupportRange) || now < _reviveAt) return false;
             ResurrectPet();
+            EnsureWardrobe();
             Hits = HitsMax; Stam = StamMax; Mana = ManaMax;
             Combatant = null; FocusMob = null; Warmode = false;
             ControlTarget = _owner; ControlOrder = OrderType.Follow;
@@ -409,8 +412,7 @@ namespace Server.HavenPrototype
         public override void OnDoubleClick(Mobile from)
         {
             if (ShowAwayTimer(from)) return;
-            if (CanOpenPack(from)) DisplayPaperdollTo(from);
-            Show(from);
+            OpenPaperdoll(from);
         }
 
         private DateTime _nextEncouragement = DateTime.UtcNow.AddMinutes(8);
@@ -757,7 +759,7 @@ namespace Server.HavenPrototype
         public CompanionGump(HavenCompanion companion) : base(50, 50)
         {
             _companion = companion;
-            AddBackground(0, 0, 480, 460, 0xA28);
+            AddBackground(0, 0, 480, 500, 0xA28);
             AddLabel(24, 18, 0, companion.Name + " — Companion");
             Button(330,18,12,"Combat");
             AddLabel(24, 45, 0, "HP " + companion.Hits + "/" + companion.HitsMax + "    Mana " + companion.Mana + "/" + companion.ManaMax);
@@ -773,6 +775,7 @@ namespace Server.HavenPrototype
             AddHtml(24, 320, 430, 48, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
             AddLabel(24, 379, 0, "Pending gold: " + companion.PendingGold);
             Button(24, 417, 9, "Refresh / collect"); Button(220,417,14,"Pets"); Button(330, 417, 0, "Close");
+            Button(24,455,16,"Paperdoll / dress");
             if(companion.OnMission) Button(330,72,11,"Minimize");
         }
         private void Button(int x, int y, int id, string text) { FlatButton(x,y,id==12||id==11||id==0?120:id==14?90:190,id,text); }
@@ -799,6 +802,7 @@ namespace Server.HavenPrototype
                 case 12: _companion.ShowCombatBar(from); return;
                 case 13: from.SendGump(new HavenCompanionStatsGump(_companion)); return;
                 case 14: HavenCompanionPetsGump.Show(from,_companion); return;
+                case 16: _companion.OpenPaperdoll(from); return;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
             _companion.Show(from);
