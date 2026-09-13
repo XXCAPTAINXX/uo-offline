@@ -1,5 +1,9 @@
 # Doom reconnaissance, mission selection and stairs
 
+Historical release: the later TAME-DOOM-LOOT-RESTART-20260913.md removes the
+Doom Resistance requirement and adds artifact rolls with protected returns.
+The stair and mission-selection fixes below remain current.
+
 Doom: artifact reconnaissance is available under companion Gathering missions,
 including offline/AFK focus and rotation. It requires 100 Magic Resistance and
 100 Tactics, Magery or Archery. Nominal 5/15/30/60 minute runs earn

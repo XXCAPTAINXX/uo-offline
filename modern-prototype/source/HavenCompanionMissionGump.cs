@@ -25,6 +25,7 @@ namespace Server.HavenPrototype
             Text(24,52,664,25,companion.OnMission?"Away: "+MissionName(companion.MissionKind)+" | "+CompanionMissionTimerGump.Remaining(companion):"Ready | Combat role: "+companion.Role);
             Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
             Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
+            Button(406,87,9,"Doom loot ("+HavenDoomMissionLoot.Pending(companion.BoundOwner)+")",265);
 
             AddBackground(14,122,282,348,3000);
             AddBackground(306,122,397,374,3000);
@@ -73,7 +74,7 @@ namespace Server.HavenPrototype
         public static string Requirement(HavenCompanion c,int tab,int selection)
         {
             if(tab==1){double required=HavenPetMissions.Requirements[selection];return "Taming and Animal Lore: "+required.ToString("0.0")+" each.<BR>Yours: "+c.Skills.AnimalTaming.Base.ToString("0.0")+" / "+c.Skills.AnimalLore.Base.ToString("0.0");}
-            if(selection>=6){var kind=GatheringKind(selection);return HavenRegionalMissions.Requirement(kind)+" combat / resist rating.<BR>Yours: "+HavenRegionalMissions.Rating(c).ToString("0.0");}
+            if(selection>=6){var kind=GatheringKind(selection);return (kind==CompanionMission.DoomRecon?"100 Tactics, Magery or Archery. No Resist requirement.":HavenRegionalMissions.Requirement(kind)+" combat / resist rating.")+"<BR>Yours: "+HavenRegionalMissions.Rating(c,kind).ToString("0.0");}
             if(selection==4||selection==5)return (selection==4?"60":"80")+" Magery or Tactics.<BR>Yours: "+c.Skills.Magery.Base.ToString("0.0")+" / "+c.Skills.Tactics.Base.ToString("0.0");
             if(selection==1)return "Mining determines the metal collected. Half basic, half unlocked metal when a special tier is selected.";
             if(selection==2)return "Lumberjacking determines the wood collected. Half ordinary logs when a special wood is selected.";
@@ -93,6 +94,7 @@ namespace Server.HavenPrototype
             var p=state.Mobile;int id=info.ButtonID;if(!_companion.IsOwner(p))return;_companion.ShowAwayTimer(p);
             if(id==0){_companion.Show(p,true);return;}
             if(id==1){bool ok=_tab==2?_companion.SetRole(p,(CompanionRole)_selection):_companion.StartMission(p,_minutes,(_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection)));if(ok&&_tab!=2){_companion.Show(p);return;}if(!ok&&_tab==2)p.SendMessage("Move near your companion and finish combat before changing roles.");}
+            if(id==9)HavenDoomMissionLoot.Collect(p);
             if(id==2){_companion.Show(p);return;}
             if(id==3&&!_companion.Recall(p))p.SendMessage("Cannot recall: your current location is unavailable.");
             if(id==4){_companion.OpenResourceLedger(p);return;}

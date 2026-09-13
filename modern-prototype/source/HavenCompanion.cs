@@ -511,7 +511,7 @@ namespace Server.HavenPrototype
             if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
             if (minutes != 5 && minutes != 15 && minutes != 30 && minutes != 60) return "Choose a 5, 15, 30 or 60 minute mission.";
             if (kind < CompanionMission.Supply || kind > CompanionMission.DoomRecon) return "That mission is unavailable.";
-            if(HavenRegionalMissions.Valid(kind)&&!HavenRegionalMissions.CanStart(this,kind))return "This route needs "+HavenRegionalMissions.Requirement(kind)+" Magic Resistance AND a combat skill (Tactics, Magery or Archery).";
+            if(HavenRegionalMissions.Valid(kind)&&!HavenRegionalMissions.CanStart(this,kind))return kind==CompanionMission.DoomRecon?"Doom reconnaissance needs 100 Tactics, Magery or Archery; Magic Resistance is not required.":"This route needs "+HavenRegionalMissions.Requirement(kind)+" Magic Resistance AND a combat skill (Tactics, Magery or Archery).";
             if (_pendingGold > Int32.MaxValue - minutes * 100) return "Collect your companion's pending gold before starting another mission.";
             if ((kind == CompanionMission.Malas || kind == CompanionMission.Abyss) && Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < (kind == CompanionMission.Malas ? 60 : 80)) return "Your companion needs " + (kind == CompanionMission.Malas ? "60" : "80") + " trained Magery or Tactics for this route.";
             if (HavenPetMissions.Valid(kind) && !HavenPetMissions.CanStart(this,kind)) return "Your companion needs " + HavenPetMissions.Requirements[(int)kind-6].ToString("0.0") + " trained Animal Taming AND Animal Lore for this pet.";
