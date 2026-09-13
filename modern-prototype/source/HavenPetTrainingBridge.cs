@@ -14,7 +14,7 @@ namespace Server.HavenPrototype
   public static TrainingDefinition Definition(BaseCreature pet)
   {
    if(HavenPetSignatures.Kind(pet)==0||PetTrainingHelper.Definitions==null)return null;
-   Type template=pet is HavenSnowBear?typeof(PolarBear):pet is HavenChelonian?typeof(Alligator):pet is VampiricSteed?typeof(Nightmare):pet.GetType().BaseType;
+   Type template=pet is HavenStonehornTriceratops?typeof(Triceratops):pet is HavenSunfangTiger?typeof(SabertoothedTiger):pet is HavenSnowBear?typeof(PolarBear):pet is HavenChelonian?typeof(Alligator):pet is VampiricSteed?typeof(Nightmare):pet.GetType().BaseType;
    var def=PetTrainingHelper.Definitions.FirstOrDefault(x=>x.CreatureType==template);
    if(def==null)return null;
    if(pet is HavenSnowBear) {

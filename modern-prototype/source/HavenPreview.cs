@@ -56,7 +56,9 @@ namespace Server.HavenPrototype
             new Destination("Chelonia sanctuary",Map.Trammel,4094,3475,0),
             new Destination("Corsair island estate",Map.Trammel,4196,2886,0),
             new Destination("Island community center",Map.Trammel,3984,2897,0),
-            HavenWardenPost.Arrival
+            HavenWardenPost.Arrival,
+            new Destination("Eodon - Stonehorn triceratops",Map.TerMur,652,2104,40),
+            new Destination("Eodon - Sunfang tiger",Map.TerMur,636,2236,80)
         };
         public static void Initialize()
         {

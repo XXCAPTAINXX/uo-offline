@@ -12,7 +12,7 @@ namespace Server.HavenPrototype
 public static class HavenPetSignatures
 {
     internal static int Clamp(int value,int min,int max){return Math.Max(min,Math.Min(max,value));}
-    internal static int Kind(BaseCreature pet) { if(pet==null)return 0;switch(pet.GetType().Name){case "HavenEmberwing":return 1;case "HavenMoonfang":return 2;case "HavenFrostmane":return 3;case "HavenVerdantLlama":return 4;case "HavenStormscale":return 5;case "HavenStormhorn":return 6;case "HavenSnowBear":return 7;case "HavenAncientHellhound":return 8;case "VampiricSteed":return 9;case "HavenChelonian":return 10;default:return 0;}}
+    internal static int Kind(BaseCreature pet) { if(pet==null)return 0;switch(pet.GetType().Name){case "HavenEmberwing":return 1;case "HavenMoonfang":return 2;case "HavenFrostmane":return 3;case "HavenVerdantLlama":return 4;case "HavenStormscale":return 5;case "HavenStormhorn":return 6;case "HavenSnowBear":return 7;case "HavenAncientHellhound":return 8;case "VampiricSteed":return 9;case "HavenChelonian":return 10;case "HavenStonehornTriceratops":return 11;case "HavenSunfangTiger":return 12;default:return 0;}}
     internal static int Tier(BaseCreature pet){return HavenPetDefenses.Tier(pet);}
     public static string Describe(BaseCreature pet){switch(Kind(pet)){
 case 1:return "Cinderwake — ranged fire patch, 6 seconds; burns engaged enemies standing in it. Epic+ increases its radius. Cooldown 18s.";
@@ -25,6 +25,8 @@ case 7:return "Guardian Roar — draws a vulnerable enemy off its owner and redu
 case 8:return "Ashen Wound — ranged fire strike suppresses enemy healing for 3–6s. Keeps innate self/owner Healing and fire breath. Cooldown 18s.";
 case 9:return "Sanguine Rescue — physical life drain heals its owner below half health, otherwise the steed. Healing cannot exceed actual damage dealt. Cooldown 12s.";
 case 10:return "Tidal Jet — cold strike at range 6, drains 8–20 stamina; 12s cooldown. Living Shell reduces melee damage below half health. Amphibious with cargo.";
+case 11:return "Horn Guard - horn strike drains 10-22 stamina and reduces incoming melee damage by 12-24% for 6s. Cooldown 18s.";
+case 12:return "Sunfang Pounce - physical strike for 12-27 damage before resistance. Cooldown 12s.";
 default:return "This species keeps its native abilities.";
 }}
     internal static bool Active(BaseCreature pet) {var mount=pet as BaseMount;return pet!=null&&!pet.Deleted&&Kind(pet)!=0&&pet.Controlled&&!pet.Summoned&&!pet.IsDeadPet&&pet.Alive&&!pet.Frozen&&!pet.Paralyzed&&pet.ControlMaster!=null&&!pet.ControlMaster.Deleted&&pet.ControlMaster.Alive&&pet.Map!=null&&pet.Map!=Map.Internal&&pet.ControlMaster.Map==pet.Map&&pet.InRange(pet.ControlMaster,18)&&(mount==null||mount.Rider==null);}
@@ -88,7 +90,7 @@ default:return "This species keeps its native abilities.";
         if(kind==4) { return Support(pet); }
         if(kind==6 && target.Mana<=0) { return Support(pet); }
         if(kind==2 && !HavenPetHex.Apply(pet,(BaseCreature)target,0,5+3*tier,8)) { return false; }
-        var state=Ensure(pet);var seconds=(kind==1||kind==4||kind==7||kind==8) ? 18 : (kind==3||kind==5) ? 14 : kind==6 ? 10 : 12;
+        var state=Ensure(pet);var seconds=(kind==1||kind==4||kind==7||kind==8||kind==11) ? 18 : (kind==3||kind==5) ? 14 : kind==6 ? 10 : 12;
         state.Next=DateTime.UtcNow+TimeSpan.FromSeconds(seconds);pet.DoHarmful(target);
         switch(kind)
         {
@@ -125,6 +127,11 @@ default:return "This species keeps its native abilities.";
                 Damage(pet,target,20+tier*6,ResistanceType.Cold);
                 if(!target.Deleted && target.Alive) { target.Stam=Math.Max(0,target.Stam-8-tier*4); target.FixedEffect(0x374A,10,12); }
                 break;
+            case 11:
+                state.GuardUntil=DateTime.UtcNow.AddSeconds(6); target.Stam=Math.Max(0,target.Stam-10-tier*4);
+                pet.FixedParticles(0x376A,10,15,5017,EffectLayer.Waist); break;
+            case 12:
+                Damage(pet,target,12+tier*5,ResistanceType.Physical); break;
             case 9:
                 var dealt=Damage(pet,target,12+tier*5,ResistanceType.Physical);var patient=pet.ControlMaster;
                 if(patient.Hits*2>=patient.HitsMax || !pet.InRange(patient,12) || !pet.InLOS(patient)) { patient=pet; }
@@ -164,7 +171,7 @@ default:return "This species keeps its native abilities.";
         AOS.Damage(target,pet,amount,type==ResistanceType.Physical ? 100 : 0,type==ResistanceType.Fire ? 100 : 0,type==ResistanceType.Cold ? 100 : 0,0,type==ResistanceType.Energy ? 100 : 0);
         return Clamp(before-Math.Max(0,target.Hits),0,amount);
     }
-    internal static int GuardPercent(BaseCreature pet) => Active(pet) && Kind(pet)==7 && Find(pet)?.GuardUntil>DateTime.UtcNow ? 12+Tier(pet)*4 : 0;
+    internal static int GuardPercent(BaseCreature pet) => Active(pet) && (Kind(pet)==7 || Kind(pet)==11) && Find(pet)?.GuardUntil>DateTime.UtcNow ? 12+Tier(pet)*4 : 0;
     public static void AddProperties(BaseCreature pet,ObjectPropertyList list)
     {
         list.Add("Rarity: "+HavenPetRarity.Label(HavenPetDefenses.Tier(pet)));
