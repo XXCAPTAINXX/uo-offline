@@ -1,0 +1,91 @@
+--- a/Scripts/Mobiles/Named/ShadowKnight.cs
++++ b/Scripts/Mobiles/Named/ShadowKnight.cs
+@@ -10,6 +10,39 @@
+ 
+         private Timer m_SoundTimer;
+         private bool m_HasTeleportedAway;
++        private DateTime m_HavenHideUntil;
++        private DateTime m_HavenNextDetect;
++        public void ProcessHavenHiding(DateTime now)
++        {
++            if (!Server.HavenPrototype.HavenPreview.Enabled || Deleted || !Alive || !Hidden) return;
++            if (m_HavenHideUntil == DateTime.MinValue) m_HavenHideUntil = now.AddSeconds(8);
++            bool reveal = now >= m_HavenHideUntil;
++            if (!reveal && now >= m_HavenNextDetect && Map != null && Map != Map.Internal)
++            {
++                m_HavenNextDetect = now.AddSeconds(2.5);
++                var nearby = GetMobilesInRange(10);
++                try
++                {
++                    foreach (Mobile mobile in nearby)
++                    {
++                        var pet = mobile as BaseCreature;
++                        if (pet == null || !pet.Alive || pet.IsDeadPet || !pet.Controlled || pet.Summoned || pet.Frozen || pet.Paralyzed || !(pet.ControlMaster is PlayerMobile) || !pet.ControlMaster.Alive || pet.ControlMaster.Map != Map || !pet.ControlMaster.InRange(this, 18) || pet.Skills.DetectHidden.Value <= 0 || !pet.InLOS(this)) continue;
++                        if (pet.CheckSkill(SkillName.DetectHidden, Skills.Hiding.Value - 25, Skills.Hiding.Value + 25))
++                        {
++                            pet.ControlMaster.SendMessage(0x48D, pet.Name + " detects the hidden Shadow Knight!");
++                            reveal = true; break;
++                        }
++                    }
++                }
++                finally { nearby.Free(); }
++            }
++            if (reveal)
++            {
++                RevealingAction(); Frozen = false;
++                if (m_SoundTimer != null) m_SoundTimer.Stop();
++                m_SoundTimer = null;
++            }
++        }
+         [Constructable]
+         public ShadowKnight()
+             : base(AIType.AI_NecroMage, FightMode.Closest, 10, 1, 0.2, 0.4)
+@@ -163,6 +196,8 @@
+ 
+         public virtual void SendTrackingSound()
+         {
++            if (Deleted) { if (m_SoundTimer != null) m_SoundTimer.Stop(); m_SoundTimer = null; return; }
++            ProcessHavenHiding(DateTime.UtcNow);
+             if (Hidden)
+             {
+                 Effects.PlaySound(Location, Map, 0x2C8);
+@@ -206,6 +241,7 @@
+                         Location = to;
+                         ProcessDelta();
+                         Hidden = true;
++                        m_HavenHideUntil = DateTime.UtcNow.AddSeconds(8);
+                         Combatant = null;
+ 
+                         Effects.SendLocationParticles(EffectItem.Create(from, map, EffectItem.DefaultDuration), 0x3728, 10, 10, 2023);
+@@ -214,7 +250,7 @@
+                         Effects.PlaySound(to, map, 0x1FE);
+ 
+                         m_HasTeleportedAway = true;
+-                        m_SoundTimer = Timer.DelayCall(TimeSpan.FromSeconds(5.0), TimeSpan.FromSeconds(2.5), new TimerCallback(SendTrackingSound));
++                        m_SoundTimer = Timer.DelayCall(TimeSpan.FromSeconds(Server.HavenPrototype.HavenPreview.Enabled ? 1 : 5), TimeSpan.FromSeconds(Server.HavenPrototype.HavenPreview.Enabled ? 1 : 2.5), new TimerCallback(SendTrackingSound));
+ 
+                         Frozen = true;
+ 
+@@ -229,13 +265,21 @@
+         public override void Serialize(GenericWriter writer)
+         {
+             base.Serialize(writer);
+-            writer.Write((int)0);
++            writer.Write((int)1);
++            writer.Write(m_HasTeleportedAway);
+         }
+ 
+         public override void Deserialize(GenericReader reader)
+         {
+             base.Deserialize(reader);
+             int version = reader.ReadInt();
++            if (version >= 1) m_HasTeleportedAway = reader.ReadBool();
++            if (Server.HavenPrototype.HavenPreview.Enabled && Hidden)
++            {
++                m_HasTeleportedAway = true;
++                m_HavenHideUntil = DateTime.UtcNow.AddSeconds(8);
++                m_SoundTimer = Timer.DelayCall(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), SendTrackingSound);
++            }
+         }
+     }
+ }

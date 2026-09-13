@@ -185,6 +185,7 @@ namespace Server.HavenPrototype
             double chance = victim.HitsMax >= 4000 ? 1 : victim.HitsMax >= 1000 ? 0.15 : 0.05;
             if (Utility.RandomDouble() < chance) Deliver(player, victim, new AstralShard(victim.HitsMax >= 4000 ? 3 : 1));
             HavenDoomReforging.Award(victim, player);
+            HavenDungeonWeapons.Award(victim, player);
         }
     }
 }

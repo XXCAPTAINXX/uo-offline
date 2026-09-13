@@ -17,7 +17,11 @@ namespace Server.HavenPrototype
    Type template=pet is HavenSnowBear?typeof(PolarBear):pet is HavenChelonian?typeof(Alligator):pet is VampiricSteed?typeof(Nightmare):pet.GetType().BaseType;
    var def=PetTrainingHelper.Definitions.FirstOrDefault(x=>x.CreatureType==template);
    if(def==null)return null;
-   return new TrainingDefinition(pet.GetType(),def.Class,def.MagicalAbilities,def.SpecialAbilities,def.WeaponAbilities,def.AreaEffects,1,5);
+   if(pet is HavenSnowBear) {
+    MagicalAbility magic=MagicalAbility.None;foreach(var ability in PetTrainingHelper.MagicalAbilities)magic|=ability;
+    return new TrainingDefinition(pet.GetType(),def.Class,magic,PetTrainingHelper.Definitions.SelectMany(d=>d.SpecialAbilities??new SpecialAbility[0]).Distinct().ToArray(),PetTrainingHelper.Definitions.SelectMany(d=>d.WeaponAbilities??new WeaponAbility[0]).Distinct().ToArray(),PetTrainingHelper.Definitions.SelectMany(d=>d.AreaEffects??new AreaEffect[0]).Distinct().ToArray(),1,5);
+   }
+   return new TrainingDefinition(pet.GetType(),def.Class,def.MagicalAbilities,pet is HavenAncientHellhound && def.SpecialAbilities!=null?def.SpecialAbilities.Where(a=>a!=SpecialAbility.DragonBreath).ToArray():def.SpecialAbilities,def.WeaponAbilities,def.AreaEffects,1,5);
   }
   public static void Award(BaseCreature target,Mobile attacker,int damage)
   {

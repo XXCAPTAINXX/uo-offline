@@ -76,7 +76,7 @@ public partial class HavenAncientHellhound : HellHound, IMount {
  DateTime _nextHeal; bool _healing;
  void Support(){if(!Controlled||IsDeadPet||!Alive||_healing||DateTime.UtcNow<_nextHeal)return;Mobile patient=ControlMaster;if(patient==null||!patient.Alive||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient)||(!patient.Poisoned&&patient.Hits==patient.HitsMax))patient=this;if(!patient.Poisoned&&patient.Hits==patient.HitsMax)return;HealStart(patient);}
  public override void HealStart(Mobile patient){if(_healing||DateTime.UtcNow<_nextHeal||!Controlled||IsDeadPet||!Alive||patient==null||!patient.Alive||(patient!=this&&patient!=ControlMaster)||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient))return;_healing=true;_nextHeal=DateTime.UtcNow.AddSeconds(8);Timer.DelayCall(TimeSpan.FromSeconds(2),()=>{_healing=false;if(Deleted||!Alive||IsDeadPet||!Controlled||patient.Deleted||!patient.Alive||(patient!=this&&patient!=ControlMaster)||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient))return;base.Heal(patient);});}
- public override void OnThink(){if(Rider!=null)return;base.OnThink();HavenPetSignatures.Think(this);Support();}
+ public override void OnThink(){if(Rider!=null)return;HavenHellhoundBreath.Ensure(this);base.OnThink();HavenHellhoundBreath.Think(this);HavenPetSignatures.Think(this);Support();}
  public override void OnGaveMeleeAttack(Mobile target){base.OnGaveMeleeAttack(target);HavenPetSignatures.OnAttack(this,target);}
  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);HavenPetSignatures.AddProperties(this,list);}
  public HavenAncientHellhound(Serial serial):base(serial){}

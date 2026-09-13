@@ -55,6 +55,7 @@ namespace Server.HavenPrototype
         public override bool CanAutoStable { get { return false; } }
         public override bool AllowNewPetFriend { get { return false; } }
         public override bool KeepsItemsOnDeath { get { return true; } }
+        public override bool OnBeforeDeath() { IsBonded = true; return base.OnBeforeDeath(); }
         protected override BaseAI ForcedAI
         {
             get {
@@ -103,7 +104,7 @@ namespace Server.HavenPrototype
         public static HavenCompanion Claim(Mobile owner)
         {
             var account = owner == null ? null : owner.Account as Account;
-            if (owner == null || owner.Deleted || !owner.Player || account == null || !owner.Alive || owner.Map == null || owner.Map == Map.Internal) return null;
+            if (owner == null || owner.Deleted || !owner.Player || account == null || owner.Map == null || owner.Map == Map.Internal) return null;
             string key = "HavenPrototype.Companion:" + owner.Serial.Value;
             int serial;
             HavenCompanion companion = null;
@@ -113,6 +114,11 @@ namespace Server.HavenPrototype
                 if (companion._owner != owner || (companion.ControlMaster != null && companion.ControlMaster != owner)) return null;
                 return companion;
             }
+            // Recover a lost account link before considering a new recruit.
+            companion = World.Mobiles.Values.OfType<HavenCompanion>().Where(c => !c.Deleted && c._owner == owner && (c.ControlMaster == null || c.ControlMaster == owner)).OrderByDescending(c => c.CompletedMissions).ThenByDescending(c => c.Skills.Total).FirstOrDefault();
+            if (companion != null) { account.SetTag(key, companion.Serial.Value.ToString()); return companion; }
+            if (account.GetTag(key) != null) { owner.SendMessage("Your saved companion could not be found. A replacement was not created; the original needs recovery."); return null; }
+            if (!owner.Alive) return null;
             companion = new HavenCompanion();
             companion._owner = owner;
             if (!companion.SetControlMaster(owner)) { companion.Delete(); return null; }
@@ -185,9 +191,10 @@ namespace Server.HavenPrototype
         }
 
         public bool IsOwner(Mobile from) { return from != null && !from.Deleted && from == _owner && !Deleted; }
+        public const int SupportRange = 24;
         public bool CanCommand(Mobile from)
         {
-            return IsOwner(from) && Controlled && ControlMaster == from && from.Alive && Alive && !IsDeadPet && !OnMission && from.Map == Map && Map != Map.Internal && from.InRange(this, 14) && from.InLOS(this);
+            return IsOwner(from) && Controlled && ControlMaster == from && from.Alive && Alive && !IsDeadPet && !OnMission && from.Map == Map && Map != Map.Internal && from.InRange(this, SupportRange) && from.InLOS(this);
         }
         internal void PrepareFollowSpeed()
         {
@@ -198,7 +205,7 @@ namespace Server.HavenPrototype
             ActiveSpeed = Math.Min(ActiveSpeed, pace);
             CurrentSpeed = ActiveSpeed;
         }
-        public bool CanOpenPack(Mobile from) { return CanCommand(from) && from.InRange(this, 12); }
+        public bool CanOpenPack(Mobile from) { return CanCommand(from) && from.InRange(this, SupportRange); }
         public override void OnSkillChange(SkillName name,double oldBase)
         {
             base.OnSkillChange(name,oldBase);
@@ -292,7 +299,7 @@ namespace Server.HavenPrototype
 
         public bool HealOwner(Mobile from) { return IsOwner(from) && SupportPatient(from); }
         internal bool SupportPatient(Mobile patient) {
-            if(Deleted||!Alive||IsDeadPet||OnMission||IsStabled||patient==null||patient.Deleted||Map==null||Map==Map.Internal||patient.Map!=Map||!InRange(patient,12)||!InLOS(patient)||DateTime.UtcNow<_nextHeal||Mana<10)return false;
+            if(Deleted||!Alive||IsDeadPet||OnMission||IsStabled||patient==null||patient.Deleted||Map==null||Map==Map.Internal||patient.Map!=Map||!InRange(patient,SupportRange)||!InLOS(patient)||DateTime.UtcNow<_nextHeal||Mana<10)return false;
             var pet=patient as BaseCreature;
             bool allowed=patient==this||patient==_owner||(pet!=null&&(pet.ControlMaster==_owner||pet.ControlMaster==this))||(_owner!=null&&patient.Player&&CompanionParty.Get(_owner)!=null&&CompanionParty.Get(_owner).Contains(patient));
             if(!allowed)return false;
@@ -320,7 +327,7 @@ namespace Server.HavenPrototype
             {
                 if (!TryBandage(_owner)) TryBandage(this);
                 if (Role==CompanionRole.Healer ? HealMostUrgent() : (HealOwner(_owner) || SupportPatient(this))) return;
-                var patients=GetMobilesInRange(12);try{foreach(Mobile patient in patients)if(SupportPatient(patient))break;}finally{patients.Free();}
+                var patients=GetMobilesInRange(SupportRange);try{foreach(Mobile patient in patients)if(SupportPatient(patient))break;}finally{patients.Free();}
             }
         }
 
@@ -364,7 +371,7 @@ namespace Server.HavenPrototype
             if (!IsDeadPet) { _reviveAt = DateTime.MinValue; return false; }
             if (_reviveAt == DateTime.MinValue) _reviveAt = now.AddSeconds(5);
             if (_owner == null || _owner.Deleted || ControlMaster != _owner || IsStabled || OnMission ||
-                Map == null || Map == Map.Internal || _owner.Map != Map || !InRange(_owner, 18) || now < _reviveAt) return false;
+                Map == null || Map == Map.Internal || _owner.Map != Map || !InRange(_owner, SupportRange) || now < _reviveAt) return false;
             ResurrectPet();
             Hits = HitsMax; Stam = StamMax; Mana = ManaMax;
             Combatant = null; FocusMob = null; Warmode = false;
@@ -498,7 +505,7 @@ namespace Server.HavenPrototype
             if (OnMission) return "Your companion is already on a mission. Recall early to cancel it first.";
             if (!from.Alive || !Alive || IsDeadPet) return "You and your companion must be alive to start a mission.";
             if (!Controlled || ControlMaster != from) return "Your companion is not currently under your control.";
-            if (!offline&&(Map == Map.Internal || from.Map != Map || !from.InRange(this,14))) return "Move within 14 tiles of your companion before starting a mission.";
+            if (!offline&&(Map == Map.Internal || from.Map != Map || !from.InRange(this,SupportRange))) return "Move within 24 tiles of your companion before starting a mission.";
             if (!offline&&!from.InLOS(this)) return "Move into sight of your companion before starting a mission.";
             if (HavenPreview.TravelCombatSeconds(this)>0 || HavenPreview.TravelCombatSeconds(from)>0) return "Wait 15 seconds after the last combat action before sending a mission.";
             if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
@@ -559,17 +566,12 @@ namespace Server.HavenPrototype
 
         public bool Recall(Mobile from)
         {
-            // Recall deliberately has no distance, line-of-sight or same-map requirement.
+            // Owner recovery is available across maps, during combat and after death.
             if (!IsOwner(from)) return false;
-            string blocked = !from.Alive ? "You must be alive to recall your companion." :
-                !Alive || IsDeadPet ? "Your companion needs resurrection before Recall." :
-                IsStabled ? "Your companion is stabled; reclaim him before Recall." :
-                from.Map == null || from.Map == Map.Internal ? "Your current location is unavailable for Recall." :
-                HavenPreview.TravelCombatSeconds(from)>0 ? "Your combat is still active; Recall is available after it clears." :
-                HavenPreview.TravelCombatSeconds(this)>0 ? "Your companion's combat is still active; Recall is available after it clears." : null;
-            if (blocked != null) { from.SendMessage(blocked); return false; }
+            if (from.Map == null || from.Map == Map.Internal) { from.SendMessage("Your current location is unavailable for Recall."); return false; }
             if (!Controlled && !SetControlMaster(from)) return false;
             if (ControlMaster != from) return false;
+            IsBonded = true;
             if (OnMission)
             {
                 if (DateTime.UtcNow >= _missionDue) CompleteDueMission();
@@ -585,9 +587,24 @@ namespace Server.HavenPrototype
                 }
             }
             from.CloseGump(typeof(CompanionMissionTimerGump));
+            StopTamingAssist(); ClearRoleSupport();
+            if (Target != null) Target.Cancel(this, Server.Targeting.TargetCancelType.Canceled);
+            var casting = Spell as Server.Spells.Spell;
+            if (casting != null) casting.Disturb(Server.Spells.DisturbType.Kill);
+            var player = from as PlayerMobile;
+            if (player != null) { player.Stabled.Remove(this); player.AutoStabled.Remove(this); }
+            IsStabled = false; StabledBy = null;
+            Combatant = null; FocusMob = null; Warmode = false;
+            Frozen = false; Paralyzed = false;
             MoveToWorld(from.Location, from.Map);
             DeliverRewards();
-            if (!SetOrder(from, OrderType.Follow)) return false;
+            ControlTarget = from; ControlOrder = OrderType.Follow;
+            if (IsDeadPet)
+            {
+                _reviveAt = DateTime.UtcNow.AddSeconds(5);
+                Timer.DelayCall(TimeSpan.FromSeconds(5), () => { if (!Deleted) RecoverFromDeath(DateTime.UtcNow); });
+                from.SendMessage("Your companion has returned and will recover in five seconds.");
+            }
             AIObject.NextMove = Core.TickCount;
             AIObject.Activate();
             ClearMissionReturn();

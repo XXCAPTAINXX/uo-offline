@@ -46,7 +46,7 @@ namespace Server.HavenPrototype
             Action<object> add = o => { var tp=PetTrainingHelper.GetTrainingPoint(o); if(tp!=null)result.Add(tp); };
             if(category==0)foreach(PetStat stat in Enum.GetValues(typeof(PetStat)))add(stat);
             else if(category==1)foreach(ResistanceType resist in Enum.GetValues(typeof(ResistanceType)))add(resist);
-            else if(category==2 || category==3)foreach(var skill in category==2?PetTrainingHelper.MagicSkills:PetTrainingHelper.CombatSkills) { if(pet.Skills[skill].Base>0)add(skill); }
+            else if(category==2 || category==3)foreach(var skill in category==2?PetTrainingHelper.MagicSkills:PetTrainingHelper.CombatSkills) { if(PetTrainingHelper.ValidateTrainingPoint(pet,skill))add(skill); }
             else {
                 var def=PetTrainingHelper.GetTrainingDefinition(pet); if(def==null)return result;
                 if(category==4)foreach(var ability in PetTrainingHelper.MagicalAbilities)if(PetTrainingHelper.ValidateTrainingPoint(pet,ability))add(ability);

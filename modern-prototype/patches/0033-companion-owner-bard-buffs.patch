@@ -1,0 +1,33 @@
+--- a/Scripts/Spells/Skill Masteries/Core/SkillMasterySpell.cs
++++ b/Scripts/Spells/Skill Masteries/Core/SkillMasterySpell.cs
+@@ -406,6 +406,15 @@
+             {
+                 AddPartyMember(Caster);
+             }
++            var companion = Caster as Server.HavenPrototype.HavenCompanion;
++            if (Server.HavenPrototype.HavenPreview.Enabled && this is BardSpell && PartyEffects && companion != null && companion.BoundOwner != null)
++            {
++                var owner = companion.BoundOwner;
++                bool valid = companion.Role == Server.HavenPrototype.CompanionRole.Bard && !companion.OnMission && companion.Alive && !companion.IsDeadPet && companion.CanSupportRole(owner) && ValidPartyMember(owner);
++                if (valid && !PartyList.Contains(owner)) AddPartyMember(owner);
++                else if (!valid && PartyList.Contains(owner)) RemovePartyMember(owner);
++                else if (valid) UpdatePets(owner);
++            }
+         }
+ 
+         public virtual bool CheckPartyEffects(Mobile m, bool beneficial = false)
+@@ -674,6 +683,14 @@
+                 }
+             }
+ 
++            if (Server.HavenPrototype.HavenPreview.Enabled)
++            {
++                foreach (var song in GetSpells(s => s.GetType() == type && s is BardSpell && s.Timer != null && s.PartyEffects && s.PartyList != null && s.PartyList.Contains(from)))
++                {
++                    var companion = song.Caster as Server.HavenPrototype.HavenCompanion;
++                    if (companion != null && companion.BoundOwner == check && companion.Role == Server.HavenPrototype.CompanionRole.Bard && companion.CanSupportRole(check)) return song;
++                }
++            }
+             return null;
+         }
+ 

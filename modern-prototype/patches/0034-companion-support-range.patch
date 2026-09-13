@@ -1,0 +1,11 @@
+--- a/Scripts/Spells/Skill Masteries/Core/SkillMasterySpell.cs
++++ b/Scripts/Spells/Skill Masteries/Core/SkillMasterySpell.cs
+@@ -33,7 +33,7 @@
+         public virtual int DamageThreshold { get { return 45; } }
+         public virtual bool DamageCanDisrupt { get { return false; } }
+         public virtual double TickTime { get { return 2; } }
+-        public virtual int PartyRange { get { return 12; } }
++        public virtual int PartyRange { get { return Server.HavenPrototype.HavenPreview.Enabled && Caster is Server.HavenPrototype.HavenCompanion && this is BardSpell ? Server.HavenPrototype.HavenCompanion.SupportRange : 12; } }
+ 
+         public virtual int UpkeepCancelMessage { get { return 1156111; } } // You do not have enough mana to keep your ability active.
+         public virtual int OutOfRangeMessage { get { return 1156098; } } // Your target is no longer in range of your ability.

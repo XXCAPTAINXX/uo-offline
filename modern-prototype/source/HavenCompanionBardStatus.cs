@@ -8,8 +8,8 @@ namespace Server.HavenPrototype {
    if(Role!=CompanionRole.Bard)return "Bard role is inactive.";
    if(Skills.Musicianship.Value<90)return "Masteries need 90 Musicianship (now "+Skills.Musicianship.Value.ToString("F1")+").";
    if(Skills.Peacemaking.Value<90&&Skills.Discordance.Value<90&&Skills.Provocation.Value<90)return "Masteries need 90 in a bard skill.";
-   if(!CanSupportRole(BoundOwner))return "Stay alive and within 12 tiles, with a clear view of your companion.";
-   if(BardParty.Get(this)==null||!BardParty.Get(this).Contains(BoundOwner))return "Join your companion's party to receive mastery buffs.";
+   if(!CanSupportRole(BoundOwner))return "Stay alive and within 24 tiles, with a clear view of your companion.";
+   
    var songs=SkillMasterySpell.GetSpells(this);
    var active=songs==null?new string[0]:songs.Where(s=>s is BardSpell&&s.Timer!=null&&s.PartyEffects&&s.PartyList!=null&&s.PartyList.Contains(BoundOwner)).Select(s=>s.GetType().Name.Replace("Spell","")).ToArray();
    if(active.Length>0)return "Shared buffs: "+String.Join(", ",active)+". Mana "+Mana+" / "+ManaMax+".";

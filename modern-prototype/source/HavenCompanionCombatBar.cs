@@ -69,7 +69,7 @@ namespace Server.HavenPrototype
                 case 8:_companion.OpenPack(owner);break;
                 default:return;
             }
-            if(!ok)owner.SendMessage("Command unavailable: check distance, health, casting or mission status. Recall requires leaving combat.");
+            if(!ok)owner.SendMessage("Command unavailable: check distance, health, casting or mission status.");
             _companion.ShowCombatBar(owner);
         }
     }

@@ -13,7 +13,9 @@ namespace Server.HavenPrototype
         public static bool IsArtifact(Item item) { return item != null && DoomGauntlet.DoomArtifact.Contains(item.GetType()); }
         public static void Award(BaseCreature victim, Mobile player)
         {
-            if (victim.Map != Map.Malas || !(victim is DemonKnight || victim is DarknightCreeper || victim is FleshRenderer || victim is Impaler || victim is ShadowKnight || victim is AbysmalHorror) || Utility.RandomDouble() >= 0.10) return;
+            if (victim.Map != Map.Malas || !(victim is DemonKnight || victim is DarknightCreeper || victim is FleshRenderer || victim is Impaler || victim is ShadowKnight || victim is AbysmalHorror)) return;
+            if (Utility.RandomDouble() < 0.04) HavenAdvancedRewards.Deliver(player, victim, Utility.RandomBool() ? (Item)new HavenGravefireScimitar() : new HavenGravefireMace());
+            if (Utility.RandomDouble() >= 0.10) return;
             HavenAdvancedRewards.Deliver(player, victim, new HavenDoomRecipe(DoomGauntlet.DoomArtifact[Utility.Random(DoomGauntlet.DoomArtifact.Length)]));
         }
     }

@@ -94,7 +94,7 @@ namespace Server.HavenPrototype
             if(id==0){_companion.Show(p,true);return;}
             if(id==1){bool ok=_tab==2?_companion.SetRole(p,(CompanionRole)_selection):_companion.StartMission(p,_minutes,(_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection)));if(ok&&_tab!=2){_companion.Show(p);return;}if(!ok&&_tab==2)p.SendMessage("Move near your companion and finish combat before changing roles.");}
             if(id==2){_companion.Show(p);return;}
-            if(id==3&&!_companion.Recall(p))p.SendMessage("Cannot recall while in combat or unable to travel.");
+            if(id==3&&!_companion.Recall(p))p.SendMessage("Cannot recall: your current location is unavailable.");
             if(id==4){_companion.OpenResourceLedger(p);return;}
             if(id==5)_companion.DeliverPetTickets();if(id==8){HavenPetExchange.Show(p);return;}
 

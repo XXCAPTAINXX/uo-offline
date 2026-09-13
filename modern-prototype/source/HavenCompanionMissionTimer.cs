@@ -48,7 +48,7 @@ namespace Server.HavenPrototype
         {
             var owner=sender.Mobile;
             if(!_companion.IsOwner(owner) || info.ButtonID==0) return;
-            if(info.ButtonID==2 && !_companion.Recall(owner)) owner.SendMessage("Cannot recall: leave combat and make sure you and your companion are alive.");
+            if(info.ButtonID==2 && !_companion.Recall(owner)) owner.SendMessage("Cannot recall: your current location is unavailable.");
             owner.SendGump(new CompanionActivityGump(_companion));
         }
     }
