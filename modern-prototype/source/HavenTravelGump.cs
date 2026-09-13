@@ -39,8 +39,16 @@ namespace Server.HavenPrototype
     }
     public class PreviewGump : HavenStoneGump
     {
-        public static readonly string[] Categories = {"Towns & gateways","Dungeons","Champions","Hunting","Island & services"};
+        public static readonly string[] Categories = {"Towns and gates","Dungeons","Champions","Hunting","Island services"};
+        private const int PageSize = 6;
         private readonly int _category, _page;
+        private static string Text(string text){return (text??"").Replace("&","and").Replace("<","").Replace(">","");}
+        private void LargeText(int x,int y,int width,int height,string text){AddHtml(x,y,width,height,"<BASEFONT COLOR=#202020><BIG>"+Text(text)+"</BIG></BASEFONT>",false,false);}
+        private void TravelButton(int x,int y,int width,int id,string text){
+            for(int offset=0;offset<width;offset+=26)base.AddButton(x+Math.Min(offset,width-26),y,0xFA5,0xFA7,id,GumpButtonType.Reply,0);
+            AddImageTiled(x,y,width,27,5058);
+            AddHtml(x+2,y+2,width-4,25,"<CENTER><BASEFONT COLOR=#202020><BIG>"+Text(text)+"</BIG></BASEFONT></CENTER>",false,false);
+        }
         private readonly HavenTravelStop[] _stops;
         public static HavenTravelStop[] Stops(int category)
         {
@@ -59,24 +67,24 @@ namespace Server.HavenPrototype
         public PreviewGump(int page=0,int category=0):base(10,20)
         {
             _category=Math.Max(0,Math.Min(Categories.Length-1,category));_stops=Stops(_category);
-            _page=Math.Max(0,Math.Min(Math.Max(0,(_stops.Length-1)/8),page));
-            AddBackground(0,0,780,570,0xA28);AddLabel(24,20,0,"TRAVEL STONE");
+            _page=Math.Max(0,Math.Min(Math.Max(0,(_stops.Length-1)/PageSize),page));
+            AddBackground(0,0,780,570,0xA28);LargeText(24,18,300,28,"TRAVEL STONE");
             AddLabel(24,50,0,"Choose a destination. Nearby followers travel with you.");
-            for(int c=0;c<Categories.Length;c++)FlatButton(24,95+c*43,190,10+c,(_category==c?"> ":"")+Categories[c]);
-            AddLabel(238,80,0,Categories[_category]+" | "+_stops.Length+" destinations");
-            for(int row=0;row<8;row++)
+            for(int c=0;c<Categories.Length;c++)TravelButton(24,95+c*43,190,10+c,(_category==c?"[" : "")+Categories[c]+(_category==c?"]":""));
+            LargeText(238,78,510,28,Categories[_category]+" | "+_stops.Length+" destinations");
+            for(int row=0;row<PageSize;row++)
             {
-                int index=_page*8+row;if(index>=_stops.Length)break;var stop=_stops[index];int y=113+row*45;
-                AddHtml(238,y,420,20,"<BASEFONT COLOR=#202020>"+System.Security.SecurityElement.Escape(stop.Name)+"</BASEFONT>",false,false);
-                AddHtml(238,y+18,420,20,"<BASEFONT COLOR=#202020>"+System.Security.SecurityElement.Escape(stop.Map.Name+(stop.Map==Map.Felucca?" | PvP":"")+(stop.Detail.Length>0?" | "+stop.Detail:""))+"</BASEFONT>",false,false);
-                FlatButton(670,y,80,100+index,"Travel");
+                int index=_page*PageSize+row;if(index>=_stops.Length)break;var stop=_stops[index];int y=115+row*57;
+                LargeText(238,y,420,27,stop.Name);
+                AddHtml(238,y+27,420,29,"<BASEFONT COLOR=#202020>"+Text(stop.Map.Name+(stop.Map==Map.Felucca?" | PvP":"")+(stop.Detail.Length>0?" | "+stop.Detail:""))+"</BASEFONT>",false,false);
+                TravelButton(670,y+4,80,100+index,"Travel");
             }
             if(_stops.Length==0)AddLabel(238,130,0,"No champion locations are installed on this world.");
-            AddLabel(238,482,0,"Page "+(_page+1)+" / "+Math.Max(1,(_stops.Length+7)/8));
-            if(_page>0)FlatButton(400,480,100,3,"Previous");
-            if((_page+1)*8<_stops.Length)FlatButton(510,480,100,4,"Next");
-            FlatButton(24,480,190,5,"Refresh locations");FlatButton(650,520,100,0,"Close");
-            AddLabel(24,525,0,"Leave combat before travel. Champion camps may have nearby enemies.");
+            AddLabel(238,482,0,"Page "+(_page+1)+" / "+Math.Max(1,(_stops.Length+PageSize-1)/PageSize));
+            if(_page>0)TravelButton(400,480,100,3,"Previous");
+            if((_page+1)*PageSize<_stops.Length)TravelButton(510,480,100,4,"Next");
+            TravelButton(24,480,190,5,"Refresh locations");TravelButton(650,520,100,0,"Close");
+            AddHtml(24,520,595,34,"<BASEFONT COLOR=#202020>Leave combat before travel.<BR>Champion camps may have nearby enemies.</BASEFONT>",false,false);
         }
         public override void OnResponse(NetState sender,RelayInfo info)
         {
