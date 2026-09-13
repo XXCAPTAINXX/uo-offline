@@ -217,7 +217,7 @@ namespace Server.HavenPrototype
     public class HavenMiniPrize : Container
     {
         private Mobile _owner;
-        public HavenMiniPrize(Mobile owner,int theme,bool islandRewards=false):base(0xE76){_owner=owner;Movable=false;Visible=false;var whirlwind=WhirlwindReward(Utility.RandomDouble(),Utility.Random(3));if(whirlwind!=null)DropItem(whirlwind);DropItem(new BankCheck(10000));if(islandRewards){DropItem(new Cannonball(25));DropItem(new PowderCharge(25));DropItem(new FuseCord(25));}DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
+        public HavenMiniPrize(Mobile owner,int theme,bool islandRewards=false):base(0xE76){_owner=owner;Movable=false;Visible=false;var whirlwind=WhirlwindReward(Utility.RandomDouble(),Utility.Random(3));if(whirlwind!=null)DropItem(whirlwind);DropItem(new BankCheck(10000));if(islandRewards){DropItem(new MaritimeCargo(Utility.RandomDouble()<0.20?CargoQuality.Legendary:CargoQuality.Exalted));}DropItem(new HavenResourceDeed(theme==0?12:theme==1?0:34,250));for(int i=0;i<5;i++)DropItem(PowerScroll.CreateRandomNoCraft(5,10));DropItem(new ScrollOfAlacrity(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist));DropItem(new ScrollOfTranscendence(theme==0?SkillName.Lumberjacking:theme==1?SkillName.Tactics:SkillName.MagicResist,Utility.RandomMinMax(5,20)/10.0));}
         public static BaseWeapon WhirlwindReward(double roll,int choice){return roll>=0&&roll<0.05?HavenAreaWeapons.Create(5+Math.Max(0,Math.Min(2,choice))):null;}
         public HavenMiniPrize(Serial serial):base(serial){}
         public bool Deliver(Mobile from){if(Deleted || from!=_owner || !HavenMarks.CanUse(from) || from.Backpack==null)return false;int count=0,weight=0;foreach(var item in Items){if(!from.Backpack.CheckHold(from,item,false,true,count,weight))return false;count+=1+item.TotalItems;weight+=item.PileWeight+item.TotalWeight;}foreach(var item in Items.ToArray())from.Backpack.DropItem(item);Delete();return true;}
@@ -243,6 +243,7 @@ namespace Server.HavenPrototype
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and wait for recent combat to expire before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13)_camp.Begin(p,info.ButtonID-10);_camp.Show(p);}
     }
 }
+
 
 
 

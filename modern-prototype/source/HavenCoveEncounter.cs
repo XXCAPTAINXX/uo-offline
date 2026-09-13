@@ -67,7 +67,7 @@ namespace Server.HavenPrototype {
    AddHtml(330,120,290,135,"Stormsail: fast blade fighters.<BR>Blackwake: a boarding crew led by Admiral Blackwake.<BR>Drowned fleet: undead sailors and their spellcasting captain.",false,false);
    AddHtml(24,282,600,55,"Challenge: three waves of 15 mixed enemies, then all three champions together. Four reward sets, 80 Marks and an Astral Shard. Weapons and boss maps remain chance drops.",false,false);
    AddLabel(24,345,0,camp.Active?(camp.Challenge?"Challenge | ":"Expedition | ")+(camp.Stage==3?"Champions":"Wave "+(camp.Stage+1)+" / 3")+" | Enemies: "+camp.Remaining:camp.Cooldown<=DateTime.UtcNow?"Ready to begin":"Ready in "+(int)Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds)+" seconds");
-   AddHtml(24,374,600,42,"Normal completion: 10,000 gold, 20 Marks, resources, scrolls and ship supplies. Abandons after two minutes without a living player within 32 tiles.",false,false);
+   AddHtml(24,374,600,42,"Normal completion: 10,000 gold, 20 Marks, resources, scrolls and maritime cargo. Abandons after two minutes without a living player within 32 tiles.",false,false);
    FlatButton(24,433,140,3,"Travel to camp");FlatButton(174,433,195,2,"Collect pending rewards");FlatButton(379,433,130,4,"Refresh status");FlatButton(519,433,100,0,"Close");
   }
   public override void OnResponse(NetState s,RelayInfo i){
@@ -79,5 +79,6 @@ namespace Server.HavenPrototype {
   }
  }
 }
+
 
 
