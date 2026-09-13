@@ -9,6 +9,7 @@ using Server.Targeting;
 
 namespace Server.HavenPrototype
 {
+    [Flipable(0xA97, 0xA99, 0xA98, 0xA9A, 0xA9B, 0xA9C)]
     public class HavenHouseMapLibrary : Item, ISecurable
     {
         public SecureLevel Level {get;set;}
