@@ -85,12 +85,12 @@ namespace Server.HavenPrototype
             _scheduledResources.Clear();
             Skill skill = _missionKind == CompanionMission.Mining ? Skills.Mining : _missionKind == CompanionMission.Lumber ? Skills.Lumberjacking : _missionKind == CompanionMission.Leather ? Skills.AnimalLore : null;
             if (skill != null && skill.Base < skill.Cap) skill.BaseFixedPoint = Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint + HavenCompanionProgression.Amount(this,skill,_missionMinutes*2));
-            return _missionKind + " run completed." + (report.Count==0 ? "" : " Resources: " + String.Join(", ",report) + ". Stored in his ledger; overflow waits for space.");
+            return _missionKind + " run completed." + (report.Count==0 ? "" : " Resources: " + String.Join(", ",report) + ". Delivered loose to the companion backpack; overflow waits for space.");
         }
         public override void OnSubItemAdded(Item item)
         {
             base.OnSubItemAdded(item);
-            if (Backpack == null || item == null || item.Parent != Backpack) return;
+            if (World.Loading || _deliveringMissionRewards || Backpack == null || item == null || item.Parent != Backpack) return;
             Timer.DelayCall(TimeSpan.Zero, () => {
                 if (Deleted || Backpack == null || item.Deleted || item.Parent != Backpack) return;
                 var ledger = EnsureResourceLedger();
@@ -101,12 +101,18 @@ namespace Server.HavenPrototype
         {
             DeliverPetTickets();
             if (_pendingResources.Count==0) return;
-            var ledger = EnsureResourceLedger(); if (ledger==null) return;
-            foreach (var pair in _pendingResources.ToArray())
-            {
-                int amount=Math.Min(pair.Value,HavenResourceLedger.MaxBalance-ledger.Balance(pair.Key));
-                if(amount<=0 || !ledger.Credit(pair.Key,amount)) continue;
-                if(amount==pair.Value) _pendingResources.Remove(pair.Key); else _pendingResources[pair.Key]=pair.Value-amount;
+            if(Backpack==null)return;
+            foreach(var pair in _pendingResources.ToArray()){
+                int remaining=pair.Value;
+                while(remaining>0){
+                    int amount=Math.Min(60000,remaining);
+                    var item=HavenResources.Create(pair.Key,amount);
+                    if(item==null)break;
+                    bool placed;while(!(placed=PlaceMissionReward(item))&&amount>1){amount=Math.Max(1,amount/2);item.Amount=amount;}
+                    if(!placed){item.Delete();break;}
+                    remaining-=amount;
+                    if(remaining==0)_pendingResources.Remove(pair.Key);else _pendingResources[pair.Key]=remaining;
+                }
             }
         }
         private void SerializeResourceMissions(GenericWriter writer)
@@ -147,7 +153,7 @@ namespace Server.HavenPrototype
             string[] titles={"Mining - highest unlocked metal", "Lumber - highest unlocked wood", "Leather - highest unlocked hide", "Malas - reagents and Doom bones", "Abyss - eleven crafting essences"};
             string[] details={"20 ingots/min; Mining " + companion.Skills.Mining.Base.ToString("F1"),"20 logs/min; Lumberjacking " + companion.Skills.Lumberjacking.Base.ToString("F1"),"10 leather/min; Animal Lore " + companion.Skills.AnimalLore.Base.ToString("F1"),"2 of each/min; needs 60 Magery or Tactics", "1 of each/min; needs 80 Magery or Tactics"};
             for(int i=0;i<titles.Length;i++) { Button(24,140+i*57,10+i,titles[i]); AddLabel(58,163+i*57,0,details[i]); }
-            AddLabel(24,435,0,"Also earns 100 gold/min. Materials go into his ledger.");
+            AddLabel(24,435,0,"Also earns 100 gold/min. Materials go into the companion backpack.");
             AddLabel(24,460,0,"Pending resource units: " + companion.PendingResources);
             Button(24,497,0,"Back"); Button(380,497,20,"Open his ledger");
         }
@@ -162,3 +168,5 @@ namespace Server.HavenPrototype
         }
     }
 }
+
+

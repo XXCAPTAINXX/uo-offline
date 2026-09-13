@@ -549,22 +549,17 @@ namespace Server.HavenPrototype
         }
         public void DeliverRewards()
         {
+            UnpackMissionSupplies();
+            HavenDoomMissionLoot.DeliverTo(this);
             DeliverResourceRewards();
             if (Backpack == null || _pendingGold <= 0) return;
-            foreach (Item item in Backpack.Items)
-            {
-                var stack = item as Gold;
-                if (stack == null || stack.Amount >= 60000) continue;
-                int amount = Math.Min(60000 - stack.Amount, _pendingGold);
-                stack.Amount += amount; _pendingGold -= amount;
-                if (_pendingGold == 0) return;
-            }
             while (_pendingGold > 0)
             {
-                var gold = new Gold(Math.Min(60000, _pendingGold));
-                if (!Backpack.CheckHold(this, gold, false, true)) { gold.Delete(); return; }
-                Backpack.DropItem(gold);
-                _pendingGold -= gold.Amount;
+                int amount=Math.Min(60000,_pendingGold);
+                var gold=new Gold(amount);
+                bool placed;while(!(placed=PlaceMissionReward(gold))&&amount>1){amount=Math.Max(1,amount/2);gold.Amount=amount;}
+                if(!placed){gold.Delete();return;}
+                _pendingGold-=amount;
             }
         }
 
@@ -810,3 +805,6 @@ namespace Server.HavenPrototype
         }
     }
 }
+
+
+
