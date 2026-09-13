@@ -11,7 +11,7 @@ namespace Server.HavenPrototype {
   public HavenTrashBag(Serial serial):base(serial){}
   public override int DefaultGumpID{get{return 0x3D;}}
   public virtual bool CanUse(Mobile p){return p!=null&&p.Alive&&p.Backpack!=null&&IsChildOf(p.Backpack)&&HavenResources.Accessible(p,this);}
-  public static bool Protected(Item item){if(item.LootType==LootType.Blessed||item.LootType==LootType.Newbied||item.Insured)return true;var c=item as Container;return c!=null&&c.FindItemsByType(typeof(Item),true).Any(Protected);}
+  public static bool Protected(Item item){var map=item as TreasureMap;bool finishedMap=map!=null&&map.Completed;if(item.Insured||item.LootType==LootType.Newbied||(item.LootType==LootType.Blessed&&!finishedMap))return true;var c=item as Container;return c!=null&&c.FindItemsByType(typeof(Item),true).Any(Protected);}
   private bool Accept(Mobile p,Item item){if(!CanUse(p))return false;if(Protected(item)){p.SendMessage("Remove blessed, insured or newbie items before discarding this.");return false;}if(TotalItems+item.TotalItems+1>=50){p.SendMessage("Trash holds up to 49 items. Wait for it to empty or remove something.");return false;}return true;}
   public override bool OnDragDrop(Mobile p,Item item){return Accept(p,item)&&base.OnDragDrop(p,item);}
   public override bool OnDragDropInto(Mobile p,Item item,Point3D point){return Accept(p,item)&&base.OnDragDropInto(p,item,point);}
