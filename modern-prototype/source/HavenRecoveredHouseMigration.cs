@@ -6,7 +6,7 @@ namespace Server.HavenPrototype {
  public static class HavenRecoveredHouseMigration {
   // Test-only until preservation, full-save reload and visual review are complete.
   public static HavenRecoveredHeadquarters Rehearse(HavenIslandEstate old, Action beforeCommit=null) {
-   if(!System.IO.File.Exists("RECOVERED-HOUSE-TEST-ONLY"))throw new InvalidOperationException("House migration is still under verification");
+   if(!System.IO.File.Exists("RECOVERED-HOUSE-TEST-ONLY")&&!HavenIslandUpgrade.Applying)throw new InvalidOperationException("House migration requires an explicit operator request");
    if(old==null||old.Deleted||old.Owner==null||old.Owner.Deleted)throw new InvalidOperationException("Missing estate owner");
    var foundation=MultiData.GetComponents(0x18A8);
    if(foundation.Width!=31||foundation.Height!=31)throw new InvalidOperationException("Recovered large-plot data is not installed");

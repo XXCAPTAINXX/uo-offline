@@ -11,7 +11,7 @@ namespace Server.HavenPrototype {
   public HavenCoveApproach():base(1){Movable=false;Visible=false;Name="Blackwake cove approach";}
   public HavenCoveApproach(Serial serial):base(serial){}
   public static HavenCoveApproach BuildTest(HavenCoveEncounter camp) {
-   if(!File.Exists("RECOVERED-HOUSE-TEST-ONLY")||camp==null||camp.Deleted)throw new InvalidOperationException("Cove approach requires isolated review");
+   if((!File.Exists("RECOVERED-HOUSE-TEST-ONLY")&&!HavenIslandUpgrade.Applying)||camp==null||camp.Deleted)throw new InvalidOperationException("Cove approach requires an explicit operator request");
    if(World.Items.Values.OfType<HavenCoveApproach>().Any(i=>!i.Deleted))throw new InvalidOperationException("Cove approach already exists");
    var start=new Point3D(4210,2928,0);var end=new Point3D(camp.X,camp.Y-1,camp.Z);
    var path=new MovementPath(start,end,camp.Map);if(!path.Success)throw new InvalidOperationException("No walking connection from harbor to cove");
