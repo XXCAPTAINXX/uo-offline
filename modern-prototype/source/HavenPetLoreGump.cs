@@ -63,6 +63,7 @@ default: return "Every creature has a history beyond its training ledger. Watch 
             { var skill = pet.Skills[name]; skills.Add($"{skill.Name}: {skill.Base:F1} / {skill.Cap:F1}"); }
             Add("Legendary skill rolls", skills.Count == 0 ? "No over-cap skills rolled." : string.Join("; ", skills));
         }
+        if(legendary!=null)Add("Innate rolled abilities",HavenLegendaryInnates.Describe(legendary.Boosted));
         var overcap = HavenOvercapBenefits.Describe(pet);
         if(overcap.Length>0)Add("Overcap benefits",overcap);
         var training = HavenLoreCompatibility.Training(pet);
@@ -145,3 +146,4 @@ public sealed class HavenPetLoreGump : HavenPetMenuGump
 }
 
 }
+
