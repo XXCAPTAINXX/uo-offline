@@ -253,6 +253,7 @@ public partial class HavenEncounterMob : BaseCreature
         PackGold(100 + tier * 50, 250 + tier * 100); PackItem(new Amber(Utility.RandomMinMax(1, 3)));
     }
     public override bool AlwaysMurderer { get { return true; } }
+    public override bool CanFlee { get { return false; } }
     public override bool CanBeHarmful(IDamageable target, bool message, bool ignoreOurBlessedness)
     {
         var mobile=target as Mobile;
@@ -263,6 +264,8 @@ public partial class HavenEncounterMob : BaseCreature
     }
     public override void OnThink()
     {
+        if (AIObject != null && AIObject.Action == ActionType.Flee)
+            AIObject.Action = Combatant != null ? ActionType.Combat : ActionType.Guard;
         if (Encounter?.Deleted == false && (Map != Encounter.Map || !InRange(Encounter.Location, 20)))
         { Combatant = null; MoveToWorld(Encounter.Location, Encounter.Map); }
         base.OnThink();
