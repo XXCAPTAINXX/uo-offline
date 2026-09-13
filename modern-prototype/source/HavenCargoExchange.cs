@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Server.Commands;
 using Server.Gumps;
 using Server.Items;
@@ -16,9 +17,36 @@ namespace Server.HavenPrototype {
    int value=Value(item);if(value==0)return false;int units=item is MaritimeCargo?1:100;if(item.Amount<units)return false;
    item.Consume(units);PointsSystem.RisingTide.AwardPoints(p,value);return true;
   }
+  public sealed class CargoOffer {
+   public Item Item;public int Units;public int Points;
+  }
+  public static List<CargoOffer> PreviewAll(PlayerMobile p){
+   var offers=new List<CargoOffer>();if(!HavenPreview.Enabled||p==null||!p.Alive||p.Backpack==null)return offers;
+   Gather(p,p.Backpack,offers);return offers;
+  }
+  static void Gather(PlayerMobile p,Container bag,List<CargoOffer> offers){
+   foreach(var item in bag.Items){
+    if(!HavenResources.Accessible(p,item))continue;
+    int value=Value(item);int batches=item is MaritimeCargo?item.Amount:item.Amount/100;
+    if(value>0&&batches>0)offers.Add(new CargoOffer{Item=item,Units=item is MaritimeCargo?batches:batches*100,Points=batches*value});
+    else if(item is Container)Gather(p,(Container)item,offers);
+   }
+  }
+  public static int ExchangeAll(PlayerMobile p,List<CargoOffer> offers){
+   if(!HavenPreview.Enabled||p==null||!p.Alive||p.Backpack==null||offers==null)return 0;
+   int total=0;var seen=new HashSet<Item>();
+   foreach(var offer in offers){var item=offer.Item;if(item==null||item.Deleted||!seen.Add(item)||!item.IsChildOf(p.Backpack)||!HavenResources.Accessible(p,item)||offer.Units<=0||item.Amount<offer.Units)return 0;int unit=item is MaritimeCargo?1:100;if(Value(item)<=0||offer.Units%unit!=0||offer.Points!=(long)offer.Units/unit*Value(item)||offer.Points>int.MaxValue-total)return 0;total+=offer.Points;}
+   foreach(var offer in offers)offer.Item.Consume(offer.Units);
+   if(total>0)PointsSystem.RisingTide.AwardPoints(p,total);return total;
+  }
+  class BulkConfirm:HavenStoneGump {
+   readonly List<CargoOffer> _offers;
+   public BulkConfirm(PlayerMobile p):base(50,50){_offers=PreviewAll(p);long total=0;foreach(var offer in _offers)total+=offer.Points;AddBackground(0,0,560,270,0xA28);AddLabel(24,24,0,"TURN IN ALL MARITIME CARGO");AddLabel(24,65,0,"Eligible cargo / supply stacks: "+_offers.Count);AddLabel(24,95,0,"Total doubloons: "+total.ToString("N0"));AddHtml(24,130,510,60,"Includes cargo and full batches of 100 cannon supplies in your backpack and accessible bags. Leftover supplies stay with you.",false,false);FlatButton(24,215,240,1,"Confirm turn in all");FlatButton(290,215,240,0,"Cancel");}
+   public override void OnResponse(NetState s,RelayInfo r){if(r.ButtonID==1){int paid=ExchangeAll(s.Mobile as PlayerMobile,_offers);s.Mobile.SendMessage(paid>0?paid.ToString("N0")+" doubloons credited.":"Nothing exchanged. If your items changed, open Turn in all again.");}s.Mobile.SendGump(new CargoGump());}
+  }
   public class CargoGump:HavenStoneGump {
-   public CargoGump():base(40,40){AddBackground(0,0,560,310,0xA28);AddLabel(24,20,0,"MARITIME CARGO EXCHANGE");AddHtml(24,58,510,130,"Turn recovered cargo into doubloons for pirate rewards.<BR>Grandmaster: 150 | Exalted: 550 | Legendary: 1,050<BR>Mythical: 12,500<BR><BR>Surplus: 100 cannonballs, powder charges OR fuse cords = 100 doubloons. Withdraw ledger supplies into your backpack first.",false,false);FlatButton(24,210,240,1,"Turn in cargo or supplies");FlatButton(280,210,250,2,"Browse pirate rewards");FlatButton(400,260,130,0,"Close");}
-   public override void OnResponse(NetState s,RelayInfo r){if(!HavenPreview.Enabled||!s.Mobile.Alive)return;if(r.ButtonID==1){s.Mobile.SendMessage("Target cargo or a stack of at least 100 surplus supplies in your backpack.");s.Mobile.Target=new CargoTarget();}else if(r.ButtonID==2&&s.Mobile is PlayerMobile)s.Mobile.SendGump(new CargoRewardsGump((PlayerMobile)s.Mobile));}
+   public CargoGump():base(40,40){AddBackground(0,0,560,360,0xA28);AddLabel(24,20,0,"MARITIME CARGO EXCHANGE");AddHtml(24,58,510,130,"Turn recovered cargo into doubloons for pirate rewards.<BR>Grandmaster: 150 | Exalted: 550 | Legendary: 1,050<BR>Mythical: 12,500<BR><BR>Surplus: 100 cannonballs, powder charges OR fuse cords = 100 doubloons. Withdraw ledger supplies into your backpack first.",false,false);FlatButton(24,210,240,1,"Turn in cargo or supplies");FlatButton(280,210,250,2,"Browse pirate rewards");FlatButton(24,260,240,3,"Turn in all");FlatButton(400,310,130,0,"Close");}
+   public override void OnResponse(NetState s,RelayInfo r){if(!HavenPreview.Enabled||!s.Mobile.Alive)return;if(r.ButtonID==1){s.Mobile.SendMessage("Target cargo or a stack of at least 100 surplus supplies in your backpack.");s.Mobile.Target=new CargoTarget();}else if(r.ButtonID==3&&s.Mobile is PlayerMobile)s.Mobile.SendGump(new BulkConfirm((PlayerMobile)s.Mobile));else if(r.ButtonID==2&&s.Mobile is PlayerMobile)s.Mobile.SendGump(new CargoRewardsGump((PlayerMobile)s.Mobile));}
   }
   public static readonly Type[] RewardTypes={typeof(MessageInABottle),typeof(SpecialFishingNet),typeof(FabledFishingNet),typeof(RuinedShipPlans),typeof(HavenHooksShield),typeof(XenrrFishingPole)};
   public static readonly string[] RewardNames={"SOS bottle","Special fishing net","Fabled fishing net","Random orc ship-plan fragment (1 of 8)","Hook's boarding shield","Xenrr's fishing pole"};
@@ -63,6 +91,7 @@ namespace Server.HavenPrototype {
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
  }
 }
+
 
 
 
