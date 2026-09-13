@@ -148,7 +148,7 @@ namespace Server.HavenPrototype
         public static double LegendaryChance(BaseCreature c, Mobile p)
         {
             double basis = c.HitsMax >= 5000 ? 0.05 : c is HavenOldWarden ? 0.02 : c.HitsMax >= 1000 ? 0.01 : c.HitsMax >= 300 ? 0.003 : 0.001;
-            return basis * (1 + Math.Max(0, Math.Min(5000, p.Luck)) / 5000.0);
+            return Math.Min(1, basis * (1 + Math.Max(0, Math.Min(5000, p.Luck)) / 5000.0) * HavenProspectorsLantern.Multiplier(p));
         }
         public static Item CreateLegendary()
         {
