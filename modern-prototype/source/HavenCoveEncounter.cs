@@ -64,7 +64,7 @@ namespace Server.HavenPrototype {
    AddLabel(24,22,0,"BLACKWAKE COVE | Choose an expedition");
    AddHtml(24,58,600,50,"Normal: three waves of five enemies, then the crew's champion. Pet and companion damage counts toward your participation.",false,false);
    for(int n=0;n<4;n++)FlatButton(24,120+n*38,290,10+n,HavenCoveEncounter.CoveThemes[n]);
-   AddHtml(330,120,290,135,"Stormsail: fast blade fighters.<BR>Blackwake: a boarding crew led by Admiral Blackwake.<BR>Drowned fleet: undead sailors and their spellcasting captain.",false,false);
+   AddHtml(330,120,290,135,"Bonus spoils per reward set:<BR>Stormsail: 25% map; 5% basher shield.<BR>Blackwake: 25% SOS/net/ship part; 5% Hook's shield.<BR>Drowned: 25% caster Alacrity; 5% evolving spellbook.",false,false);
    AddHtml(24,282,600,55,"Challenge: three waves of 15 mixed enemies, then all three champions together. Four reward sets, 80 Marks and an Astral Shard. Weapons and boss maps remain chance drops.",false,false);
    AddLabel(24,345,0,camp.Active?(camp.Challenge?"Challenge | ":"Expedition | ")+(camp.Stage==3?"Champions":"Wave "+(camp.Stage+1)+" / 3")+" | Enemies: "+camp.Remaining:camp.Cooldown<=DateTime.UtcNow?"Ready to begin":"Ready in "+(int)Math.Ceiling((camp.Cooldown-DateTime.UtcNow).TotalSeconds)+" seconds");
    AddHtml(24,374,600,42,"Normal completion: 10,000 gold, 20 Marks, resources, scrolls and maritime cargo. Abandons after two minutes without a living player within 32 tiles.",false,false);

@@ -15,6 +15,13 @@ namespace Server.HavenPrototype {
     a.RegenStam=Math.Max(a.RegenStam,2+s/6);
     if(style==1){a.AttackChance=Math.Max(a.AttackChance,10+s/4);a.BonusStam=Math.Max(a.BonusStam,10+s);}
     if(style==2){a.RegenHits=Math.Max(a.RegenHits,3+s/5);a.BonusHits=Math.Max(a.BonusHits,10+s);}
+    if(item is HavenHooksShield){
+     shield.ArmorAttributes.SoulCharge=Math.Max(shield.ArmorAttributes.SoulCharge,25+s);
+     a.DefendChance=Math.Max(a.DefendChance,15+s/4);
+     a.LowerManaCost=Math.Max(a.LowerManaCost,6+s/5);
+     a.RegenMana=Math.Max(a.RegenMana,3+s/6);
+     a.BonusStam=Math.Max(a.BonusStam,5+s/2);
+    }
    }
    var caster=item as IHavenCastingGear;if(caster==null)return;
    switch(caster.CastingStyle){
