@@ -16,7 +16,22 @@ namespace Server.HavenPrototype
         public override void Spawn()
         {
             foreach (var pet in GetSpawn().OfType<BaseCreature>().ToArray())
-                if (pet.Controlled || pet.Owners.Count > 0 || pet.Map == Map.Internal) RemoveSpawn(pet);
+            {
+                if (pet.Controlled || pet.Owners.Count > 0 || pet.Map == Map.Internal) { RemoveSpawn(pet); continue; }
+                if (!pet.Deleted && pet.Alive && (pet.Map != Map || !pet.InRange(Location, 12)) && pet.Combatant == null && !Server.SkillHandlers.AnimalTaming.IsBeingTamed(pet) && !(pet.BardPacified && pet.BardEndTime > DateTime.UtcNow))
+                {
+                    bool returned = false;
+                    for (int radius = 0; radius <= 3 && !returned; radius++)
+                        for (int dx = -radius; dx <= radius && !returned; dx++)
+                            for (int dy = -radius; dy <= radius && !returned; dy++)
+                            {
+                                var spot = new Point3D(X + dx, Y + dy, Map.GetAverageZ(X + dx, Y + dy));
+                                if (!Map.CanSpawnMobile(spot)) continue;
+                                pet.Home = Location; pet.RangeHome = HomeRange; pet.MoveToWorld(spot, Map); returned = true;
+                                Console.WriteLine("Eodon habitat: returned stray {0} to {1} ({2})", pet.Serial, spot, Serial);
+                            }
+                }
+            }
             Defrag(); var before = GetSpawn().ToArray(); base.Spawn();
             foreach (var pet in GetSpawn().Except(before).OfType<BaseCreature>())
                 HavenPetMissions.ApplyRarity(pet, HavenPetHabitats.SteedRarity(Utility.RandomDouble()));

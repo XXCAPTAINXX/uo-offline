@@ -256,6 +256,8 @@ public partial class HavenEncounterMob : BaseCreature
     public override bool CanBeHarmful(IDamageable target, bool message, bool ignoreOurBlessedness)
     {
         var mobile=target as Mobile;
+        var animal=mobile as BaseCreature;
+        if(animal!=null && animal.Tamable && !animal.Controlled && !animal.Summoned)return false;
         if(Encounter==null || Encounter.Deleted || mobile==null || mobile.Map!=Encounter.Map || !mobile.InRange(Encounter, HavenWanderingEncounter.Boundary) || mobile.Region.IsPartOf(typeof(GuardedRegion)) || BaseHouse.FindHouseAt(mobile.Location,mobile.Map,20)!=null)return false;
         return base.CanBeHarmful(target,message,ignoreOurBlessedness);
     }
@@ -295,7 +297,22 @@ public partial class HavenEncounterChest : MetalGoldenChest
     internal bool CanClaim(Mobile from) => from != null && Claimants.Contains(from);
     internal void BeginExpiry() { Expires = DateTime.UtcNow + TimeSpan.FromMinutes(20); Schedule(); }
     private void Schedule() { _timer?.Stop(); _timer = Timer.DelayCall(Expires > DateTime.UtcNow ? Expires - DateTime.UtcNow : TimeSpan.Zero, Delete); }
-    public override void OnDoubleClick(Mobile from) { if (CanClaim(from)) { base.OnDoubleClick(from); } else { from.SendMessage("These spoils belong to the encounter's participants."); } }
+    internal bool NearbyClaim(Mobile from) => !Deleted && CanClaim(from) && from.Alive && from.Map == Map && from.InRange(Location, HavenWanderingEncounter.Boundary);
+    internal int Collect(Mobile from)
+    {
+        if (!NearbyClaim(from) || from.Backpack == null) return 0;
+        int count = 0;
+        foreach (var item in Items.ToArray()) if (from.Backpack.TryDropItem(from, item, false)) count++;
+        from.SendMessage(count + " reward items collected. " + Items.Count + " remain in the chest.");
+        return count;
+    }
+    internal static void CollectNearby(Mobile from)
+    {
+        var chests = World.Items.Values.OfType<HavenEncounterChest>().Where(c => c.NearbyClaim(from)).ToArray();
+        if (chests.Length == 0) from.SendMessage("No unexpired encounter spoils nearby. Return within 28 tiles of your reward chest.");
+        foreach (var chest in chests) chest.Collect(from);
+    }
+    public override void OnDoubleClick(Mobile from) { if (NearbyClaim(from)) { from.SendGump(new HavenEncounterSpoilsGump(this)); } else { from.SendMessage("Only living participants within 28 tiles can collect these spoils."); } }
     public override bool CheckLift(Mobile from, Item item, ref LRReason reason) => item != this && CanClaim(from) && base.CheckLift(from, item, ref reason);
     public override bool CheckItemUse(Mobile from, Item item) => CanClaim(from) && base.CheckItemUse(from, item);
     public override bool CheckTarget(Mobile from, Server.Targeting.Target target, object targeted) => CanClaim(from) && base.CheckTarget(from, target, targeted);
@@ -333,7 +350,7 @@ public sealed class HavenEncounterStatusGump : HavenStoneGump
     public HavenEncounterStatusGump(HavenEncounterJournal journal, int tab = 0) : base(80, 80)
     {
         _journal = journal; _tab = Math.Max(0,Math.Min(2,tab));
-        AddBackground(0, 0, 625, 470, 9270); AddLabel(25, 22, 1152, "Wanderer's Chronicle");
+        AddBackground(0, 0, 625, 510, 9270); AddLabel(25, 22, 1152, "Wanderer's Chronicle");
         AddLabel(330, 22, 2101, $"Encounter points: {journal.Points:N0}");
         var tabs = new[] { "Overview", "Recent log", "Rewards" };
         for (var i = 0; i < 3; i++) { FlatButton(25 + i * 195,60,180,10+i,tabs[i]); }
@@ -369,11 +386,13 @@ public sealed class HavenEncounterStatusGump : HavenStoneGump
         FlatButton(25,423,240,1,journal.Enabled ? "Disable encounters" : "Enable encounters");
         FlatButton(330,423,130,2,"Refresh");
         FlatButton(505,423,95,0,"Close");
+        FlatButton(25,463,240,3,"Collect nearby spoils");
     }
     public override void OnResponse(NetState state, RelayInfo info)
     {
         if (info.ButtonID == 0 || _journal.Deleted || _journal.Owner != state.Mobile) { return; }
         if (info.ButtonID == 1) { _journal.Enabled = !_journal.Enabled; if (!_journal.Enabled) { _journal.Active?.Finish(false, false); } }
+        if (info.ButtonID == 3) HavenEncounterChest.CollectNearby(state.Mobile);
         if (info.ButtonID >= 100 && info.ButtonID < 104)
         { state.Mobile.SendGump(new HavenEncounterRewardGump(_journal, info.ButtonID - 100)); return; }
         state.Mobile.SendGump(new HavenEncounterStatusGump(_journal, info.ButtonID >= 10 && info.ButtonID <= 12 ? info.ButtonID - 10 : _tab));
