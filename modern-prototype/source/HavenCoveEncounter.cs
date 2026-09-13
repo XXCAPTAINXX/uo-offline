@@ -23,9 +23,10 @@ namespace Server.HavenPrototype {
  }
  public class HavenCoveEnemy:HavenMiniEnemy {
   private HavenCoveEncounter _cove;
+  public override bool AlwaysMurderer { get { return true; } }
   public HavenCoveEnemy(HavenCoveEncounter camp,int stage):this(camp,1,stage){}
   public HavenCoveEnemy(HavenCoveEncounter camp,int theme,int stage):base(camp,theme,stage){
-   _cove=camp;
+   _cove=camp;RangeHome=8;
    bool boss=stage==3;
    if(theme==2){
     Name=boss?"Captain of the Drowned Fleet":stage==0?"a drowned deckhand":stage==1?"a drowned boarding guard":"a drowned quartermaster";
@@ -40,10 +41,21 @@ namespace Server.HavenPrototype {
    if(boss){SetHits(3600);SetStr(400);SetDamage(18,26);SetResistance(ResistanceType.Physical,55);}
   }
   public HavenCoveEnemy(Serial serial):base(serial){}
+  protected override bool OnMove(Direction direction){
+   if(_cove!=null&&!_cove.Deleted){
+    int x=X,y=Y;Server.Movement.Movement.Offset(direction,ref x,ref y);
+    if(Map!=_cove.Map||Math.Max(Math.Abs(x-_cove.X),Math.Abs(y-_cove.Y))>11)return false;
+   }
+   return base.OnMove(direction);
+  }
+  public override void OnThink(){
+   if(_cove!=null&&!_cove.Deleted&&(Map!=_cove.Map||!InRange(_cove,11))){Combatant=null;MoveToWorld(_cove.Location,_cove.Map);}
+   base.OnThink();
+  }
   public override int Damage(int amount,Mobile from,bool informMount,bool checkDisrupt){if(from!=null&&(_cove==null||_cove.Deleted||from.Map!=_cove.Map||!from.InRange(_cove,12)||BaseHouse.FindHouseAt(from.Location,from.Map,20)!=null))return 0;return base.Damage(amount,from,informMount,checkDisrupt);}
   public override bool CanBeHarmful(IDamageable target,bool message,bool ignoreOurBlessedness){var mob=target as Mobile;if(_cove==null||_cove.Deleted||mob==null||mob.Map!=_cove.Map||!mob.InRange(_cove,12)||BaseHouse.FindHouseAt(mob.Location,mob.Map,20)!=null)return false;return base.CanBeHarmful(target,message,ignoreOurBlessedness);}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(_cove);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_cove=r.ReadItem() as HavenCoveEncounter;}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();_cove=r.ReadItem() as HavenCoveEncounter;RangeHome=8;}
  }
  public class HavenCoveGump:HavenMenuGump {
   readonly HavenCoveEncounter _camp;
@@ -67,3 +79,5 @@ namespace Server.HavenPrototype {
   }
  }
 }
+
+

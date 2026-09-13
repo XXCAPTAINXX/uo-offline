@@ -43,8 +43,9 @@ namespace Server.HavenPrototype {
   public HavenCoveBoard(HavenCoveEncounter camp):base(0x1E5E){Camp=camp;Name="BLACKWAKE COVE - Pirate mini-champion expedition";Movable=false;}
   public HavenCoveBoard(Serial serial):base(serial){}
   public override void OnDoubleClick(Mobile p){if(Camp!=null&&!Camp.Deleted&&p.Alive&&p.Map==Map&&p.InRange(this,3)&&p.InLOS(this))Camp.Show(p);else p.SendMessage("Stand beside the expedition board to read it.");}
-  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Three pirate waves, then Admiral Blackwake");list.Add("Double-click to start or collect expedition rewards");}
+  public override void GetProperties(ObjectPropertyList list){base.GetProperties(list);list.Add("Three pirate crews to choose from, plus a combined challenge");list.Add("Double-click for encounter choices and reward collection");}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Camp);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Camp=r.ReadItem() as HavenCoveEncounter;}
  }
 }
+

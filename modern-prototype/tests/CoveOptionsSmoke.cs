@@ -16,10 +16,15 @@ public static class CoveOptionsSmoke {
     var foes=((System.Collections.Generic.List<Mobile>)typeof(HavenMiniChamp).GetField("_foes",flags).GetValue(camp)).ToArray();
     int expected=stage==3?(theme==3?3:1):(theme==3?15:5);
     if(!camp.Active||foes.Length!=expected)throw new Exception("Wrong wave count "+theme+"/"+stage+": "+foes.Length);
-    foreach(var foe in foes){if(!(foe is HavenCoveEnemy)||foe.Map!=site.Map||!foe.InRange(site,7))throw new Exception("Wrong cove spawn");}
+    foreach(var foe in foes){if(Notoriety.Compute(World.FindMobile((Serial)37901),foe)!=Notoriety.Murderer)throw new Exception("Cove enemy is not red: "+foe.Name);if(!(foe is HavenCoveEnemy)||foe.Map!=site.Map||!foe.InRange(site,7))throw new Exception("Wrong cove spawn");}
     if(theme==3&&foes.Select(f=>(int)typeof(HavenMiniEnemy).GetField("_lootTheme",flags).GetValue(f)).Distinct().Count()!=3)throw new Exception("Challenge missing loot variants");
     if(stage==3&&theme==3&&foes.Select(f=>f.Name).Distinct().Count()!=3)throw new Exception("Challenge duplicated bosses");
     log("PASS "+HavenCoveEncounter.CoveThemes[theme]+" stage "+stage+": "+foes.Length+" enemies; "+string.Join(", ",foes.Select(f=>f.Name).Distinct()));
+    var boundary=foes[0];boundary.MoveToWorld(new Point3D(camp.X+11,camp.Y,camp.Z),camp.Map);
+    bool outward=(bool)typeof(HavenCoveEnemy).GetMethod("OnMove",flags).Invoke(boundary,new object[]{Direction.East});
+    if(outward)throw new Exception("Cove enemy can leave damage boundary");
+    boundary.MoveToWorld(new Point3D(camp.X+16,camp.Y,camp.Z),camp.Map);((HavenCoveEnemy)boundary).OnThink();
+    if(!boundary.InRange(camp,11))throw new Exception("Old out-of-bounds enemy not recovered");
     if(theme==3&&stage==3){
      var owner=World.FindMobile((Serial)37901);
      var before=new System.Collections.Generic.HashSet<Serial>(World.Items.Keys);
@@ -35,5 +40,7 @@ public static class CoveOptionsSmoke {
   }
  }
 }
+
+
 
 
