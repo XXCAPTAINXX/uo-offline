@@ -27,7 +27,7 @@ public static class DoomMissionSmoke {
    foreach(int minutes in new[]{5,15,30,60}){
     Check((bool)typeof(HavenCompanion).GetMethod("PrepareResourceMission",Flags).Invoke(c,new object[]{CompanionMission.DoomRecon,minutes}),"Prepare failed");
     int pending=HavenDoomMissionLoot.Pending(owner);Set(c,"_missionMinutes",minutes);Set(c,"_missionDue",DateTime.UtcNow.AddSeconds(-1));Complete(c);
-    expected+=minutes*500;if(HavenDoomMissionLoot.Pending(owner)==pending+1)expected=0;Check(PointsSystem.DoomGauntlet.GetPoints(owner)==expected,"Doom points not additive/reset on artifact");
+    expected+=minutes*600;if(HavenDoomMissionLoot.Pending(owner)==pending+1)expected=0;Check(PointsSystem.DoomGauntlet.GetPoints(owner)==expected,"Doom points not additive/reset on artifact");
     Complete(c);c.DeliverRewards();Check(PointsSystem.DoomGauntlet.GetPoints(owner)==expected,"Duplicate completion awarded points");
    }
    typeof(HavenCompanion).GetMethod("PrepareResourceMission",Flags).Invoke(c,new object[]{CompanionMission.DoomRecon,60});Set(c,"_missionMinutes",60);Set(c,"_missionDue",DateTime.UtcNow.AddHours(1));
@@ -57,3 +57,4 @@ public static class DoomMissionSmoke {
   }finally{PointsSystem.DoomGauntlet.SetPoints(owner,0);c.Delete();owner.Delete();}
  }
 }
+

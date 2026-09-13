@@ -3,7 +3,7 @@ using Server.Mobiles;
 using Server.Items;
 namespace Server.HavenPrototype {
  public static class HavenDoomMission {
-  public static int Points(int minutes){return minutes==5||minutes==15||minutes==30||minutes==60?minutes*500:0;}
+  public static int Points(int minutes){return minutes==5||minutes==15||minutes==30||minutes==60?minutes*600:0;}
   public static string Preview(Mobile owner,int minutes){
    double points=owner==null?0:PointsSystem.DoomGauntlet.GetPoints(owner);
    return "Drop: "+(HavenDoomStatus.Chance(points)*100).ToString("0.00")+"% -> "+(HavenDoomStatus.Chance(points+Points(minutes))*100).ToString("0.00")+"% projected";
@@ -29,3 +29,4 @@ namespace Server.HavenPrototype {
   }
  }
 }
+
