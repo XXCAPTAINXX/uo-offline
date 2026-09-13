@@ -29,6 +29,7 @@ namespace Server.HavenPrototype
                 var pants = new LongPants(0x455) { MaxHitPoints = 0, HitPoints = 0, LootType = LootType.Blessed };
                 AddItem(pants);
             }
+            HavenCompanionClothing.Ensure(this);
         }
         public void OpenPaperdoll(Mobile from)
         {
