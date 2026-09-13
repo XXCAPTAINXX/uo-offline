@@ -510,7 +510,7 @@ namespace Server.HavenPrototype
             if (HavenPreview.TravelCombatSeconds(this)>0 || HavenPreview.TravelCombatSeconds(from)>0) return "Wait 15 seconds after the last combat action before sending a mission.";
             if (Spell != null) return "Your companion is casting. Try again when the spell finishes.";
             if (minutes != 5 && minutes != 15 && minutes != 30 && minutes != 60) return "Choose a 5, 15, 30 or 60 minute mission.";
-            if (kind < CompanionMission.Supply || kind > CompanionMission.DragonSalvage) return "That mission is unavailable.";
+            if (kind < CompanionMission.Supply || kind > CompanionMission.DoomRecon) return "That mission is unavailable.";
             if(HavenRegionalMissions.Valid(kind)&&!HavenRegionalMissions.CanStart(this,kind))return "This route needs "+HavenRegionalMissions.Requirement(kind)+" Magic Resistance AND a combat skill (Tactics, Magery or Archery).";
             if (_pendingGold > Int32.MaxValue - minutes * 100) return "Collect your companion's pending gold before starting another mission.";
             if ((kind == CompanionMission.Malas || kind == CompanionMission.Abyss) && Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < (kind == CompanionMission.Malas ? 60 : 80)) return "Your companion needs " + (kind == CompanionMission.Malas ? "60" : "80") + " trained Magery or Tactics for this route.";
@@ -537,6 +537,7 @@ namespace Server.HavenPrototype
             _completedMissions++;
             _pendingGold += gold;
             _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
+            _lastReport += HavenDoomMission.Complete(_owner,_missionKind,_missionMinutes);
             _lastReport += " " + HavenMarks.Award(_owner,_missionMinutes*2) + " Haven Marks earned.";
             DeliverRewards();
             _missionReturnPending = true;

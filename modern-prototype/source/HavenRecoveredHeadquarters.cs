@@ -49,7 +49,7 @@ namespace Server.HavenPrototype
             if(Vault!=null || Stations.Count!=0)throw new InvalidOperationException("Stores already installed");
             Vault=existing ?? new HavenHomeChest {Name="Island private stores",MaxItems=3000};
             Vault.Internalize();
-            var sites=new[]{new Point3D(1,6,7),new Point3D(12,-10,7),new Point3D(-12,-11,27)};
+            var sites=new[]{new Point3D(4,8,7),new Point3D(12,-10,7),new Point3D(-12,-11,27)};
             var names=new[]{"Receiving chest","Workshop stores","Armory stores"};
             for(int i=0;i<sites.Length;i++){
                 var station=new HavenEstateStorage(this){Name=names[i]};Stations.Add(station);

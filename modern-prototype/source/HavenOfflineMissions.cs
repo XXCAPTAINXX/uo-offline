@@ -13,18 +13,18 @@ namespace Server.HavenPrototype {
   public HavenOfflineMissionPlan(Serial s):base(s){}
   public static HavenOfflineMissionPlan Find(HavenCompanion c){return c?.Backpack?.FindItemByType(typeof(HavenOfflineMissionPlan),true) as HavenOfflineMissionPlan;}
   public static HavenOfflineMissionPlan Ensure(HavenCompanion c){var p=Find(c);if(p!=null)return p;p=new HavenOfflineMissionPlan{Companion=c};c.Backpack.DropItem(p);return p;}
-  public bool Configure(Mobile owner,CompanionMission kind,int minutes){if(Companion==null||!Companion.IsOwner(owner)||!Companion.CanOpenPack(owner)||kind<CompanionMission.Supply||kind>CompanionMission.DragonSalvage||(minutes!=5&&minutes!=15&&minutes!=30&&minutes!=60))return false;Focus=kind;Minutes=minutes;Status="Default saved. Enable offline missions to repeat after logout or while AFK.";return true;}
+  public bool Configure(Mobile owner,CompanionMission kind,int minutes){if(Companion==null||!Companion.IsOwner(owner)||!Companion.CanOpenPack(owner)||kind<CompanionMission.Supply||kind>CompanionMission.DoomRecon||(minutes!=5&&minutes!=15&&minutes!=30&&minutes!=60))return false;Focus=kind;Minutes=minutes;Status="Default saved. Enable offline missions to repeat after logout or while AFK.";return true;}
   void Schedule(){_timer?.Stop();_timer=Timer.DelayCall(TimeSpan.FromSeconds(5),TimeSpan.FromSeconds(5),Tick);}
   public void Tick(){var c=Companion;var owner=c?.BoundOwner;if(c==null||c.Deleted||owner==null||owner.Deleted){Delete();return;}if(Parent!=c.Backpack){Enabled=false;Status="Plan must remain in companion pack.";return;}
    if(owner.NetState!=null&&!HavenAfkMissions.IsAway(owner,AutoAfk)){if(ActiveTrip&&c.OnMission&&RecallOnLogin){if(c.Recall(owner)){ActiveTrip=false;Status="Recalled on return; early trip gives no completion rewards.";}else Status="Waiting to recall safely after returning.";}else{if(!c.OnMission)ActiveTrip=false;Status=c.OnMission?"Current trip will finish; no new trips while active.":Enabled?"Armed for logout or AFK.":"Disabled.";}return;}
    if(c.OnMission){Status=ActiveTrip?"Offline / AFK trip running.":"Waiting for your manually started mission to finish.";return;}
    ActiveTrip=false;if(!Enabled){Status="Disabled.";return;}
-   int count=(int)CompanionMission.DragonSalvage+1;string reason=null;
+   int count=(int)CompanionMission.DoomRecon+1;string reason=null;
    for(int i=0;i<(Rotate?count:1);i++){var kind=Rotate?(CompanionMission)((Cursor+i)%count):Focus;reason=c.MissionStartError(owner,Minutes,kind,true);if(reason!=null)continue;if(c.StartOfflineMission(Minutes,kind)){ActiveTrip=true;if(Rotate)Cursor=((int)kind+1)%count;Status="Running "+CompanionActivityGump.MissionName(kind)+" for "+Minutes+" minutes.";return;}reason="Reward storage is full; collect pending rewards.";}
    Status=reason??"No eligible mission.";
   }
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(Companion);w.Write(Enabled);w.Write(Rotate);w.Write(RecallOnLogin);w.Write(Minutes);w.Write(Cursor);w.Write((int)Focus);w.Write(ActiveTrip);w.Write(AutoAfk);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Companion=r.ReadMobile() as HavenCompanion;Enabled=r.ReadBool();Rotate=r.ReadBool();RecallOnLogin=r.ReadBool();Minutes=r.ReadInt();Cursor=r.ReadInt();Focus=(CompanionMission)r.ReadInt();ActiveTrip=r.ReadBool();AutoAfk=version<1||r.ReadBool();if(Minutes!=5&&Minutes!=15&&Minutes!=30&&Minutes!=60){Minutes=5;Enabled=false;}if(Focus<0||Focus>CompanionMission.DragonSalvage){Focus=0;Enabled=false;}Cursor=Math.Max(0,Cursor)%((int)CompanionMission.DragonSalvage+1);Schedule();}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Companion=r.ReadMobile() as HavenCompanion;Enabled=r.ReadBool();Rotate=r.ReadBool();RecallOnLogin=r.ReadBool();Minutes=r.ReadInt();Cursor=r.ReadInt();Focus=(CompanionMission)r.ReadInt();ActiveTrip=r.ReadBool();AutoAfk=version<1||r.ReadBool();if(Minutes!=5&&Minutes!=15&&Minutes!=30&&Minutes!=60){Minutes=5;Enabled=false;}if(Focus<0||Focus>CompanionMission.DoomRecon){Focus=0;Enabled=false;}Cursor=Math.Max(0,Cursor)%((int)CompanionMission.DoomRecon+1);Schedule();}
   public override void OnDelete(){_timer?.Stop();_timer=null;base.OnDelete();}
  }
  public class HavenOfflineMissionGump:HavenMenuGump {
@@ -37,13 +37,13 @@ namespace Server.HavenPrototype {
  public class HavenOfflineRoutePicker:HavenMenuGump {
   readonly HavenOfflineMissionPlan _plan;readonly CompanionMission _selected;readonly int _minutes,_page;
   public HavenOfflineRoutePicker(HavenOfflineMissionPlan plan,CompanionMission selected,int minutes,int page=0):base(80,80){
-   _plan=plan;_selected=selected;_minutes=minutes;_page=Math.Max(0,Math.Min((int)CompanionMission.DragonSalvage/8,page));
+   _plan=plan;_selected=selected;_minutes=minutes;_page=Math.Max(0,Math.Min((int)CompanionMission.DoomRecon/8,page));
    AddBackground(0,0,560,450,3000);AddLabel(24,20,0,"Choose an offline mission");
-   for(int row=0;row<8;row++){int index=_page*8+row;if(index>(int)CompanionMission.DragonSalvage)break;var kind=(CompanionMission)index;Button(24,62+row*39,100+index,CompanionActivityGump.MissionName(kind)+(kind==selected?" [selected]":""));}
-   if(_page>0)Button(24,404,1,"Previous");AddLabel(194,404,0,"Page "+(_page+1)+" / "+((int)CompanionMission.DragonSalvage/8+1));if(_page<(int)CompanionMission.DragonSalvage/8)Button(304,404,2,"Next");Button(420,404,0,"Back");
+   for(int row=0;row<8;row++){int index=_page*8+row;if(index>(int)CompanionMission.DoomRecon)break;var kind=(CompanionMission)index;Button(24,62+row*39,100+index,CompanionActivityGump.MissionName(kind)+(kind==selected?" [selected]":""));}
+   if(_page>0)Button(24,404,1,"Previous");AddLabel(194,404,0,"Page "+(_page+1)+" / "+((int)CompanionMission.DoomRecon/8+1));if(_page<(int)CompanionMission.DoomRecon/8)Button(304,404,2,"Next");Button(420,404,0,"Back");
   }
   void Button(int x,int y,int id,string label){FlatButton(x,y,id>=100?490:95,id,label);}
-  public override void OnResponse(NetState state,RelayInfo info){if(_plan.Deleted||_plan.Companion==null||!_plan.Companion.IsOwner(state.Mobile))return;int id=info.ButtonID;if(id==1||id==2){state.Mobile.SendGump(new HavenOfflineRoutePicker(_plan,_selected,_minutes,_page+(id==1?-1:1)));return;}if(id==0||(id>=100&&id<=100+(int)CompanionMission.DragonSalvage))state.Mobile.SendGump(new HavenOfflineMissionGump(_plan,id==0?_selected:(CompanionMission)(id-100),_minutes));}
+  public override void OnResponse(NetState state,RelayInfo info){if(_plan.Deleted||_plan.Companion==null||!_plan.Companion.IsOwner(state.Mobile))return;int id=info.ButtonID;if(id==1||id==2){state.Mobile.SendGump(new HavenOfflineRoutePicker(_plan,_selected,_minutes,_page+(id==1?-1:1)));return;}if(id==0||(id>=100&&id<=100+(int)CompanionMission.DoomRecon))state.Mobile.SendGump(new HavenOfflineMissionGump(_plan,id==0?_selected:(CompanionMission)(id-100),_minutes));}
  }
 
 }

@@ -11,7 +11,7 @@ namespace Server.HavenPrototype {
             Decorate(0x9D7,"Fresh provisions for the watch",7,8,13);
             Decorate(0xB2D,"A chair in the sea breeze",6,9); Decorate(0xB2D,"A chair in the sea breeze",8,9);
             Decorate(0xE77,"A barrel of grog",4,11); Decorate(0x14F8,"Spare rigging for the next voyage",4,12);
-            Decorate(0xE3F,"Export cargo awaiting shipment",2,5); Decorate(0x14F8,"Coiled dock rope",3,5);
+            Decorate(0xE3F,"Export cargo awaiting shipment",4,9); Decorate(0x14F8,"Coiled dock rope",4,10);
             Decorate(0xDCA,"Nets hung beside the sail loft",13,1,16);
             Decorate(0x1BDD,"Shipwright's seasoned timber",8,-11); Decorate(0x1036,"Sailmaker's spare wheel",8,-9);
             Decorate(0xF36,"Fresh straw in the barn",-11,6); Decorate(0xF36,"Fresh straw in the barn",-11,8);

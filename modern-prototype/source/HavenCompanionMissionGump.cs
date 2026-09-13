@@ -55,7 +55,7 @@ namespace Server.HavenPrototype
                 for(int i=0;i<4;i++)Button(322+i*91,204,20+i,(_minutes==durations[i]?"[":"")+durations[i]+"m"+(_minutes==durations[i]?"]":""),53);
                 Text(322,242,365,24,"Requirements");
                 Text(322,268,365,62,Requirement(companion,_tab,_selection));
-                Text(322,334,365,24,"Rewards on completion");
+                Text(322,334,365,24,_tab==0&&GatheringKind(_selection)==CompanionMission.DoomRecon?HavenDoomMission.Preview(companion.BoundOwner,_minutes):"Rewards on completion");
                 Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes));
                 if(!companion.OnMission)Button(322,455,1,"Start "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" mission",320);
                 else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
@@ -100,7 +100,8 @@ namespace Server.HavenPrototype
 
             if(id==7&&_tab!=2){p.SendGump(new HavenOfflineMissionGump(HavenOfflineMissionPlan.Ensure(_companion),_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection),_minutes));return;}
             int tab=id>=10&&id<=12?id-10:_tab;
-            int selected=tab!=_tab?0:id>=100&&id<112?id-100:id==30?Math.Max(0,(_selection/6-1)*6):id==31?(_selection/6+1)*6:_selection;
+            int count=tab==0?Gathering.Length:tab==1?HavenPetMissions.Names.Length:Roles.Length;
+            int selected=tab!=_tab?0:id>=100&&id<100+count?id-100:id==30?Math.Max(0,(_selection/6-1)*6):id==31?(_selection/6+1)*6:_selection;
             int minutes=id==20?5:id==21?15:id==22?30:id==23?60:_minutes;
             p.CloseGump(typeof(CompanionActivityGump));p.SendGump(new CompanionActivityGump(_companion,tab,selected,minutes));
         }
