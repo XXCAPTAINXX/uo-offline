@@ -7,6 +7,7 @@ namespace Server.HavenPrototype
     {
         public static bool Apply(Mobile from, Item item, DecorateCommand command)
         {
+            if (HavenIslandDecorating.Apply(from,item,command)) return true;
             if (command < DecorateCommand.North || command > DecorateCommand.Release) return false;
             var house = from == null ? null : BaseHouse.FindHouseAt(from);
             if (from == null || !from.Alive || house == null || !house.IsCoOwner(from) || item == null || item.Deleted || item.Parent != null || item.Map != from.Map || !house.IsInside(item))
