@@ -11,6 +11,16 @@ namespace Server.HavenPrototype
 {
     public class HavenPetBook : Bag
     {
+        // The book is one carried item; its pet records do not use backpack capacity.
+        public override int GetTotal(TotalType type){return type==TotalType.Items||type==TotalType.Weight?0:base.GetTotal(type);}
+        public override void UpdateTotal(Item sender,TotalType type,int delta){if(type!=TotalType.Items&&type!=TotalType.Weight)base.UpdateTotal(sender,type,delta);}
+        public override bool CheckHold(Mobile p,Item item,bool message,bool checkItems,int plusItems,int plusWeight){
+            var ticket=item as HavenPetTicket;
+            var pet=ticket==null?null:ticket.Pet;
+            var handler=pet==null?null:pet.ControlMaster as HavenCompanion;
+            bool storingOwnedPet=pet!=null&&(pet.ControlMaster==Owner||(handler!=null&&handler.BoundOwner==Owner));
+            return CanUse(p)&&ticket!=null&&!ticket.Deleted&&ticket.Owner==Owner&&ticket.Pet!=null&&!ticket.Pet.Deleted&&((!ticket.Pet.Controlled&&ticket.Pet.Map==Map.Internal)||storingOwnedPet)&&(MaxItems<=0||Items.Count+plusItems+(ticket.Parent==this?0:1)<=MaxItems);
+        }
         public Mobile Owner;
         public static void Initialize(){CommandSystem.Register("petbook",AccessLevel.Player,e=>{var book=Ensure(e.Mobile);if(book!=null)book.OnDoubleClick(e.Mobile);});}
         public HavenPetBook(Mobile owner){Owner=owner;ItemID=0xFF4;Hue=0x59D;Name="Pet sanctuary book";LootType=LootType.Blessed;Weight=1;MaxItems=500;}
@@ -113,3 +123,5 @@ namespace Server.HavenPrototype
         }
     }
 }
+
+
