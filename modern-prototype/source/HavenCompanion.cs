@@ -500,7 +500,7 @@ namespace Server.HavenPrototype
         internal string MissionStartError(Mobile from,int minutes,CompanionMission kind,bool offline)
         {
             if (!IsOwner(from)) return "This is not your companion.";
-            if(offline&&(from.NetState!=null||HavenOfflineMissionPlan.Find(this)?.Enabled!=true))return "Offline missions must be enabled and the owner logged out.";
+            if(offline&&HavenOfflineMissionPlan.Find(this)?.CanRun(from)!=true)return "Enable offline missions and log out or enter AFK mode first.";
             if(IsStabled)return "Recall your companion from the stables first.";
             if (OnMission) return "Your companion is already on a mission. Recall early to cancel it first.";
             if (!from.Alive || !Alive || IsDeadPet) return "You and your companion must be alive to start a mission.";
