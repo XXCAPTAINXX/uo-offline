@@ -83,7 +83,7 @@ namespace Server.HavenPrototype
             if(theme<0||theme>=Themes.Length)return "Choose one of the listed expeditions.";
             if(Active)return "An expedition is already active: wave "+(_stage+1)+", "+Remaining+" enemies remaining.";
             if(DateTime.UtcNow<_cooldown)return "Camp cooldown: "+Math.Ceiling((_cooldown-DateTime.UtcNow).TotalSeconds)+" seconds remaining.";
-            if(from.Map!=Map||(!from.InRange(this,8)&&!HavenExpeditionMarker.Nearby(this,from)))return "Move beside the camp sign or supplies, or use Travel to camp. You are "+(from.Map==Map?Math.Max(Math.Abs(from.X-X),Math.Abs(from.Y-Y)).ToString()+" tiles from the clearing.":"on another facet.");
+            if(from.Map!=Map||(!from.InRange(this,8)&&!HavenExpeditionMarker.Nearby(this,from)&&!HavenCoveBoard.Nearby(this,from)))return "Move beside the camp sign or supplies, or use Travel to camp. You are "+(from.Map==Map?Math.Max(Math.Abs(from.X-X),Math.Abs(from.Y-Y)).ToString()+" tiles from the clearing.":"on another facet.");
             int combatSeconds=HavenPreview.TravelCombatSeconds(from);
             if(combatSeconds>0)return "Recent combat: wait "+combatSeconds+" seconds after the last attack.";
             return null;
@@ -243,6 +243,7 @@ namespace Server.HavenPrototype
         public override void OnResponse(NetState sender,RelayInfo info){var p=sender.Mobile;if(info.ButtonID==0 || _camp.Deleted || !HavenMarks.CanUse(p))return;if(info.ButtonID==1 && !_camp.Travel(p))p.SendMessage("Leave combat and wait for recent combat to expire before travelling.");else if(info.ButtonID==2)HavenMiniPrize.Collect(p);else if(info.ButtonID>=10 && info.ButtonID<=13)_camp.Begin(p,info.ButtonID-10);_camp.Show(p);}
     }
 }
+
 
 
 

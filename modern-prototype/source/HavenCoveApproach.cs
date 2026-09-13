@@ -40,6 +40,12 @@ namespace Server.HavenPrototype {
  }
  public class HavenCoveBoard:Item {
   public HavenCoveEncounter Camp;
+  public static bool Nearby(HavenMiniChamp camp,Mobile player){
+   if(player==null||camp==null||player.Map!=camp.Map)return false;
+   var items=player.Map.GetItemsInRange(player.Location,3);
+   try{foreach(Item item in items){var board=item as HavenCoveBoard;if(board!=null&&!board.Deleted&&board.Camp==camp&&Math.Abs(board.Z-player.Z)<=8&&player.InLOS(board))return true;}}finally{items.Free();}
+   return false;
+  }
   public HavenCoveBoard(HavenCoveEncounter camp):base(0x1E5E){Camp=camp;Name="BLACKWAKE COVE - Pirate mini-champion expedition";Movable=false;}
   public HavenCoveBoard(Serial serial):base(serial){}
   public override void OnDoubleClick(Mobile p){if(Camp!=null&&!Camp.Deleted&&p.Alive&&p.Map==Map&&p.InRange(this,3)&&p.InLOS(this))Camp.Show(p);else p.SendMessage("Stand beside the expedition board to read it.");}
