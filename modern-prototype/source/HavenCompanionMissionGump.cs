@@ -44,7 +44,7 @@ namespace Server.HavenPrototype
             Text(322,133,365,28,""+names[_selection]+"");
             if(_tab==2)
             {
-                string detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Magery and Spellweaving, Wraith Form and automatic Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first.<BR><BR>Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them.<BR><BR>Use Tame assist in Companion pets to calm and tame wild animals.";
+                string detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Auto: Wildfire on herself, then Thunderstorm between refreshes. Wraith Form and Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first.<BR><BR>Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them.<BR><BR>Use Tame assist in Companion pets to calm and tame wild animals.";
                 Text(322,179,365,200,detail);
                 Text(322,385,365,58,"All roles can heal. Changing role preserves equipment and trained skills.");
                 Button(322,455,1,"Use "+names[_selection]+" role",320);
@@ -109,4 +109,5 @@ namespace Server.HavenPrototype
         }
     }
 }
+
 

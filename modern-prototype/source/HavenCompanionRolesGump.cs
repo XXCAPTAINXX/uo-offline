@@ -15,7 +15,7 @@ namespace Server.HavenPrototype {
   static readonly string[] Summaries={"Sword and shield","Magery and Spellweaving","Ranged weapon combat","Songs and crowd control","Healing and group support"};
   static readonly string[] Details={
    "Fights up close with a sword and shield.<BR><BR>Uses weapon skills and Parrying to attack and defend.",
-   "Attacks with Magery and Spellweaving.<BR><BR>Uses Wraith Form and automatic Arcane Focus to support spellcasting.",
+   "Auto rotation: Wildfire on herself, then Thunderstorm between field refreshes.<BR><BR>Uses native casting recovery, a 40-mana reserve, Wraith Form and Arcane Focus.",
    "Fights with a bow from range.<BR><BR>Uses Archery for weapon attacks and keeps distance from its target.",
    "Uses Peacemaking, Discordance and Provocation.<BR><BR>Mastery songs become available at 90 skill. Join the party to share them. This role also supports taming assistance.",
    "Provides stronger direct heals, cures and resurrection, prioritizing urgent patients.<BR><BR>Emergency group recovery costs 30 mana, has a 20-second cooldown, and reaches allies within six tiles."
@@ -52,3 +52,4 @@ namespace Server.HavenPrototype {
   }
  }
 }
+
