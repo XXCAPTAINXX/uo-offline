@@ -29,8 +29,8 @@ namespace Server.HavenPrototype
             _companion=companion;
             Closable=false;
             AddBackground(0,0,350,100,3000);
-            AddLabelCropped(12,8,165,20,0,companion.Name);
-            Button(176,8,7,"Menu");Button(258,8,9,"Close");
+            AddLabelCropped(12,8,76,20,0,companion.Name);
+            Button(94,8,11,"Puzzle");Button(176,8,7,"Menu");Button(258,8,9,"Close");
             Button(12,39,1,"Follow");Button(94,39,2,"Guard");
             Button(176,39,4,"Stay");Button(258,39,3,"Attack");
             Button(12,69,5,"Heal");Button(94,69,10,companion.TamingAssistActive?"Cancel":"Tame");
@@ -67,6 +67,7 @@ namespace Server.HavenPrototype
                     }
                     _companion.RequestTamingAssist(owner);break;
                 case 8:_companion.OpenPack(owner);break;
+                case 11:if(_companion.CanCommand(owner))HavenOrchardHelp.Help(owner,_companion);else ok=false;break;
                 default:return;
             }
             if(!ok)owner.SendMessage("Command unavailable: check distance, health, casting or mission status.");

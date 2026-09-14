@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Server.Items;
 using Server.Mobiles;
 using Server.Engines.Shadowguard;
@@ -9,6 +10,48 @@ namespace Server.HavenPrototype
 {
  public static class HavenOrchardHelp
  {
+  public const int MatchHue = 53;
+  private sealed class TreeHighlight
+  {
+   public ShadowguardApple Apple;
+   public int TrunkHue;
+   public int FoliageHue;
+  }
+  private static readonly Dictionary<ShadowguardCypress,TreeHighlight> Highlights = new Dictionary<ShadowguardCypress,TreeHighlight>();
+  public static void Initialize()
+  {
+   EventSink.ServerStarted += () =>
+   {
+    // Native Orchard trees are uncolored. Clear saved temporary highlights after a restart.
+    foreach(var tree in World.Items.Values.OfType<ShadowguardCypress>())
+    {
+     if(tree.Hue==MatchHue)tree.Hue=0;
+     if(tree.Foilage!=null&&tree.Foilage.Hue==MatchHue)tree.Foilage.Hue=0;
+    }
+    Timer.DelayCall(TimeSpan.FromSeconds(1),TimeSpan.FromSeconds(1),UpdateHighlights);
+   };
+  }
+  private static void UpdateHighlights()
+  {
+   foreach(var entry in Highlights.ToArray())
+   {
+    var tree=entry.Key;var mark=entry.Value;
+    if(!tree.Deleted&&!mark.Apple.Deleted&&tree.Encounter!=null&&tree.Encounter.Apple==mark.Apple)continue;
+    if(!tree.Deleted)
+    {
+     tree.Hue=mark.TrunkHue;
+     if(tree.Foilage!=null&&!tree.Foilage.Deleted)tree.Foilage.Hue=mark.FoliageHue;
+    }
+    Highlights.Remove(tree);
+   }
+  }
+  internal static void Highlight(ShadowguardCypress tree,ShadowguardApple apple)
+  {
+   UpdateHighlights();
+   if(!Highlights.ContainsKey(tree))Highlights[tree]=new TreeHighlight{Apple=apple,TrunkHue=tree.Hue,FoliageHue=tree.Foilage==null?0:tree.Foilage.Hue};
+   tree.Hue=MatchHue;
+   if(tree.Foilage!=null&&!tree.Foilage.Deleted)tree.Foilage.Hue=MatchHue;
+  }
   public static string Label(VirtueType virtue){return virtue==VirtueType.Sacrafice?"Sacrifice":virtue.ToString();}
   public static VirtueType Opposite(VirtueType virtue){return (VirtueType)(((int)virtue+8)%16);}
   public static void TreeProperties(ShadowguardCypress tree,ObjectPropertyList list){if(!HavenPreview.Enabled||tree==null)return;list.Add(Label(tree.VirtueType)+" tree");list.Add("Pair "+((int)tree.VirtueType%8+1)+": "+Label(tree.VirtueType)+" / "+Label(Opposite(tree.VirtueType)));}
@@ -26,7 +69,8 @@ namespace Server.HavenPrototype
    if(apple._Thrown){owner.SendMessage("That apple is already being thrown.");return;}
    var match=encounter.Trees.FirstOrDefault(t=>t!=null&&!t.Deleted&&t!=apple.Tree&&t.IsOppositeVirtue(apple.Tree.VirtueType));
    if(match==null){owner.SendMessage("That apple's matching tree is no longer available.");return;}
-   match.PublicOverheadMessage(MessageType.Regular,53,false,"MATCH: "+Label(match.VirtueType));
+   Highlight(match,apple);
+   match.PublicOverheadMessage(MessageType.Regular,MatchHue,false,"MATCH: "+Label(match.VirtueType));
    if(!owner.InRange(match,10)||!owner.InLOS(match)){companion.SayTo(owner,"Your apple matches "+Label(match.VirtueType)+". Move closer to the marked tree and ask me again.");owner.SendMessage("Matching tree: "+match.X+", "+match.Y+" ("+(int)Math.Ceiling(owner.GetDistanceToSqrt(match.Location))+" tiles away).");return;}
    companion.SayTo(owner,"That's the matching tree. Let's use your apple!");var previousTarget=owner.Target;apple.OnDoubleClick(owner);if(owner.Target!=null&&owner.Target!=previousTarget)owner.Target.Invoke(owner,match);
   }

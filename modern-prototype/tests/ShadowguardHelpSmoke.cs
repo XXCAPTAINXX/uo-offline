@@ -47,6 +47,8 @@ public static class ShadowguardHelpSmoke
   var source=orchard.Trees.First();var target=orchard.Trees.First(t=>t.IsOppositeVirtue(source.VirtueType));
   owner.MoveToWorld(source.Location,Map.TerMur);companion.MoveToWorld(source.Location,Map.TerMur);HavenOrchardHelp.Help(owner,companion);
   if(orchard.Apple==null)throw new Exception("Helper did not pick apple");
+  if(target.Hue!=HavenOrchardHelp.MatchHue||target.Foilage.Hue!=HavenOrchardHelp.MatchHue||source.Hue!=0||source.Foilage.Hue!=0)throw new Exception("Whole matching tree highlight incorrect");
+  log("PASS matching trunk and foliage highlighted; source tree retains its original hue");
   owner.MoveToWorld(target.Location,Map.TerMur);companion.MoveToWorld(target.Location,Map.TerMur);HavenOrchardHelp.Help(owner,companion);
   Timer.DelayCall(TimeSpan.FromSeconds(1),()=>{try{if(!source.Deleted||!target.Deleted)throw new Exception("Helper did not finish native apple pair");log("PASS Jenna picks and throws an Orchard apple through native targeting; both matching trees are removed");}catch(Exception e){log("FAIL "+e);}done();});
  }
