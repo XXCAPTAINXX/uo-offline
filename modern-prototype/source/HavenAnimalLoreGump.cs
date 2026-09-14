@@ -56,6 +56,12 @@ public sealed class HavenAnimalLoreGump : Gump
         var rarity=HavenPetRarity.Find(pet);if(rarity!=null)AddLabel(28,76,rarity.Tier==3?53:rarity.Tier==2?1153:1152,HavenPetRarity.Label(rarity.Tier)+" | "+pet.ControlSlots+" follower slot"+(pet.ControlSlots==1?"":"s"));
         var abilities=PetTrainingHelper.GetAbilityProfile(pet);var learned=abilities==null?"":string.Join("<BR>",abilities.EnumerateAllAbilities().Select(a=>HavenMenuText.Encode(a is Type?((Type)a).Name.Replace("DragonBreath","Dragon Breath"):a.ToString())));
         if(pet is HavenSnowBear||pet is HavenAncientHellhound)learned="Innate self / owner Healing<BR>"+learned;
+        var roll=pet.Backpack==null?null:pet.Backpack.FindItemByType(typeof(HavenLegendaryPetSkills),true) as HavenLegendaryPetSkills;
+        if(roll!=null)foreach(var skill in HavenLegendaryInnates.Granted(roll.Boosted).Where(s=>HavenLegendaryInnates.Actions.Contains(s)))
+        {
+            if(skill==SkillName.Healing&&(pet is HavenSnowBear||pet is HavenAncientHellhound))continue;
+            learned="Innate "+HavenMenuText.Encode(skill==SkillName.Healing?"Healing (self / owner)":pet.Skills[skill].Name)+"<BR>"+learned;
+        }
         AddLabel(28,634,53,"Abilities / specials");
         AddHtml(28,658,285,73,"<BASEFONT COLOR=#FFFFFF>"+HavenMenuText.Encode(HavenPetLore.SignatureName(pet))+"<BR>"+learned+"</BASEFONT>",false,true);
 
