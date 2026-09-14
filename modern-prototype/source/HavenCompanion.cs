@@ -755,7 +755,7 @@ namespace Server.HavenPrototype
         public CompanionGump(HavenCompanion companion) : base(50, 50)
         {
             _companion = companion;
-            AddBackground(0, 0, 480, 500, 0xA28);
+            AddBackground(0, 0, 480, 535, 0xA28);
             AddLabel(24, 18, 0, companion.Name + " — Companion");
             Button(330,18,12,"Combat");
             AddLabel(24, 45, 0, "HP " + companion.Hits + "/" + companion.HitsMax + "    Mana " + companion.Mana + "/" + companion.ManaMax);
@@ -771,7 +771,7 @@ namespace Server.HavenPrototype
             AddHtml(24, 320, 430, 48, "<BASEFONT COLOR=#202020>" + companion.LastReport + "</BASEFONT>", false, true);
             AddLabel(24, 379, 0, "Pending gold: " + companion.PendingGold);
             Button(24, 417, 9, "Refresh / collect"); Button(220,417,14,"Pets"); Button(330, 417, 0, "Close");
-            Button(24,455,16,"Paperdoll / dress"); Button(250,455,17,"Deposit house loot");
+            Button(24,455,16,"Paperdoll / dress"); Button(250,455,17,"Deposit house loot"); Button(24,490,18,"Help with puzzle");
             if(companion.OnMission) Button(330,72,11,"Minimize");
         }
         private void Button(int x, int y, int id, string text) { FlatButton(x,y,id==12||id==11||id==0?120:id==14?90:190,id,text); }
@@ -800,6 +800,7 @@ namespace Server.HavenPrototype
                 case 14: HavenCompanionPetsGump.Show(from,_companion); return;
                 case 16: _companion.OpenPaperdoll(from); return;
                 case 17: HavenStorageTools.TargetHouse(from,_companion); return;
+                case 18: HavenOrchardHelp.Help(from,_companion); return;
             }
             if (!ok) from.SendMessage("That action is unavailable. Check distance, combat, health or mission status.");
             _companion.Show(from);
