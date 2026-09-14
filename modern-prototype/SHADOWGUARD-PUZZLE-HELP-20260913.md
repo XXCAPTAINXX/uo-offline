@@ -20,3 +20,9 @@ Stand within three tiles of the marked unfinished spigot. Collect canal pieces d
 - No live client visual inspection. Only Orchard and Fountain are supported, not every dungeon puzzle.
 
 Native patch: patches/0048-shadowguard-puzzle-help.patch. Custom sources: HavenOrchardHelp.cs, HavenFountainHelp.cs, and the companion menu entry in HavenCompanion.cs. Test fixture: tests/ShadowguardHelpSmoke.cs; run its Fountain and asynchronous Orchard entry points in separate disposable server sessions because native canal-fill timers outlive fixture cleanup.
+
+## Completion and looting time
+
+Patch 0049-shadowguard-completion-loot-time.patch gives Haven's completed puzzle rooms five minutes before their normal lobby return (formerly 60 seconds). The Roof already used five minutes. A gold completion message explains the delay and the character's Exit Shadowguard option. Participating players still present receive room credit immediately, so choosing to leave before cleanup cannot lose progress. Native time limits for unfinished encounters and cleanup after everybody leaves remain in effect.
+
+ShadowguardCompletionSmoke verifies every room's five-minute duration, immediate completion credit retained after departure, and a single delayed reset despite repeated completion calls. The timer test uses an accelerated one-second subclass; no five-minute live gameplay wait was performed.
