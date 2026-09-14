@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Server.Engines.Shadowguard;
 
 namespace Server.HavenPrototype
@@ -9,6 +10,8 @@ namespace Server.HavenPrototype
         private ArmoryEncounter _armoryRoom;
         private Item _armoryGoal;
         private PathFollower _armoryPath;
+        private Point3D _armoryStand;
+        private readonly HashSet<Point3D> _armoryBlockedStands = new HashSet<Point3D>();
         private DateTime _nextArmoryStep, _armoryProgressAt;
         private Point3D _armoryLastPosition;
         private string _armoryMessage;
@@ -102,21 +105,65 @@ namespace Server.HavenPrototype
             return true;
         }
 
+        internal bool FindArmoryStand(Item goal, int range, out Point3D stand)
+        {
+            stand = Point3D.Zero;
+            var candidates = new List<Point3D>();
+            for (int x = goal.X - range; x <= goal.X + range; x++)
+                for (int y = goal.Y - range; y <= goal.Y + range; y++)
+                    foreach (int z in new[] { Z, Map.GetAverageZ(x, y) }.Distinct())
+                    {
+                        var p = new Point3D(x, y, z);
+                        if (_armoryBlockedStands.Contains(p) || !_armoryRoom.Region.Contains(p) ||
+                            !Map.CanFit(p.X, p.Y, p.Z, 16, false, false, true) ||
+                            !Map.LineOfSight(new Point3D(x, y, z + 14), Map.GetPoint(goal, false))) continue;
+                        candidates.Add(p);
+                    }
+            foreach (var p in candidates.OrderBy(p => GetDistanceToSqrt(p)))
+            {
+                bool reachable = Location == p;
+                if (!reachable && Utility.InRange(Location, p, 1))
+                {
+                    int nextZ;
+                    reachable = Server.Movement.Movement.CheckMovement(this, Map, Location, GetDirectionTo(p), out nextZ) && nextZ == p.Z;
+                }
+                else if (!reachable) reachable = new MovementPath(this, p).Success;
+                if (reachable) { stand = p; return true; }
+            }
+            return false;
+        }
+
         private bool ApproachArmoryItem(Item goal, int range)
         {
+            if (InRange(goal, range) && InLOS(goal)) return true;
             if (_armoryGoal != goal)
             {
                 _armoryGoal = goal;
-                _armoryPath = new PathFollower(this, goal);
+                _armoryPath = null;
+                _armoryBlockedStands.Clear();
                 _armoryProgressAt = DateTime.UtcNow;
                 _armoryLastPosition = Location;
             }
-            if (InRange(goal, range) && InLOS(goal)) return true;
-            _armoryPath.Follow(true, InLOS(goal) ? range : 0);
+            if (_armoryPath != null && DateTime.UtcNow - _armoryProgressAt > TimeSpan.FromSeconds(2))
+            {
+                _armoryBlockedStands.Add(_armoryStand);
+                _armoryPath = null;
+            }
+            if (_armoryPath == null)
+            {
+                if (!FindArmoryStand(goal, range, out _armoryStand))
+                {
+                    ArmoryStatus("I can't find a clear approach to the next puzzle item. Clear the way and press Puzzle to retry.");
+                    StopArmoryHelp();
+                    return false;
+                }
+                _armoryPath = new PathFollower(this, _armoryStand);
+                _armoryProgressAt = DateTime.UtcNow;
+            }
+            // Route to a reachable floor tile with line of sight, never into the statue or brazier.
+            _armoryPath.Follow(true, 0);
             if (Location != _armoryLastPosition)
             { _armoryLastPosition = Location; _armoryProgressAt = DateTime.UtcNow; }
-            else if (DateTime.UtcNow - _armoryProgressAt > TimeSpan.FromSeconds(12))
-            { ArmoryStatus("I can't reach the next puzzle item. Clear the way and press Puzzle to retry."); StopArmoryHelp(); }
             return false;
         }
     }

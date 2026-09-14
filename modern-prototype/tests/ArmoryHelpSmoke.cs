@@ -19,6 +19,7 @@ public static class ArmoryHelpSmoke
   var drop=new Phylactery();drop.MoveToWorld(new Point3D(instance.Center.X+2,instance.Center.Y,instance.Center.Z),Map.TerMur);
   int initial=room.Armor.Count(a=>!a.Deleted);var start=c.Location;bool picked=false,purified=false,moved=false;var deadline=DateTime.UtcNow.AddSeconds(40);
   if(!c.RequestArmoryHelp(owner)||!c.ArmoryHelpActive)throw new Exception("Did not start");
+  int routes=0;foreach(var target in room.Armor.Concat(room.Items.OfType<PurifyingFlames>())){Point3D stand;if(!c.FindArmoryStand(target,3,out stand))throw new Exception("No reachable approach for "+target.GetType().Name+" at "+target.Location);if(!Map.TerMur.CanFit(stand.X,stand.Y,stand.Z,16,false,false,true)||!Map.TerMur.LineOfSight(new Point3D(stand.X,stand.Y,stand.Z+14),Map.TerMur.GetPoint(target,false)))throw new Exception("Invalid stand");routes++;}log("PASS reachable floor approaches with line of sight for all "+routes+" Armory statues and flames");
   Timer timer=null;timer=Timer.DelayCall(TimeSpan.FromMilliseconds(100),TimeSpan.FromMilliseconds(100),()=>{
    try{
     c.ThinkArmoryHelp();picked|=drop.IsChildOf(c.Backpack);purified|=drop.Purified;moved|=c.Location!=start;
