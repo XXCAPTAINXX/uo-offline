@@ -41,7 +41,7 @@ namespace Server.HavenPrototype
             // Four adjoining native hit areas make the whole labeled rectangle clickable.
             for(int offset=0;offset<76;offset+=19)AddButton(x+offset,y,210,210,id,GumpButtonType.Reply,0);
             AddImageTiled(x,y,76,19,5058);
-            bool selected=(id==1&&_companion.ControlOrder==OrderType.Follow)||(id==2&&_companion.ControlOrder==OrderType.Guard)||(id==4&&_companion.ControlOrder==OrderType.Stay)||(id==10&&_companion.TamingAssistActive);
+            bool selected=(id==1&&_companion.ControlOrder==OrderType.Follow)||(id==2&&_companion.ControlOrder==OrderType.Guard)||(id==4&&_companion.ControlOrder==OrderType.Stay)||(id==10&&_companion.TamingAssistActive)||(id==11&&_companion.ArmoryHelpActive);
             AddHtml(x,y+1,76,18,"<CENTER><BASEFONT COLOR="+(selected?"#FFE399":"#FFFFFF")+">"+label+"</BASEFONT></CENTER>",false,false);
         }
 
@@ -67,7 +67,7 @@ namespace Server.HavenPrototype
                     }
                     _companion.RequestTamingAssist(owner);break;
                 case 8:_companion.OpenPack(owner);break;
-                case 11:if(_companion.CanCommand(owner))HavenOrchardHelp.Help(owner,_companion);else ok=false;break;
+                case 11:if(_companion.ArmoryHelpActive||_companion.CanCommand(owner))HavenOrchardHelp.Help(owner,_companion);else ok=false;break;
                 default:return;
             }
             if(!ok)owner.SendMessage("Command unavailable: check distance, health, casting or mission status.");

@@ -187,7 +187,7 @@ namespace Server.HavenPrototype
                 if (_roleBow == null || _roleBow.Deleted) _roleBow = new Bow { Movable = false };
                 AddItem(_roleBow);
             }
-            StopTamingAssist();ClearRoleSupport();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
+            StopArmoryHelp();StopTamingAssist();ClearRoleSupport();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             return SetOrder(from, OrderType.Follow);
         }
@@ -240,7 +240,7 @@ namespace Server.HavenPrototype
         public bool SetOrder(Mobile from, OrderType order)
         {
             if (!CanCommand(from) || (order != OrderType.Follow && order != OrderType.Guard && order != OrderType.Stay && order != OrderType.Stop)) return false;
-            StopTamingAssist();
+            StopArmoryHelp();StopTamingAssist();
             var casting = Spell as Server.Spells.Spell;
             if (casting != null) casting.Disturb(Server.Spells.DisturbType.NewCast);
             if (Target != null) Target.Cancel(this, TargetCancelType.Canceled);
@@ -256,7 +256,7 @@ namespace Server.HavenPrototype
             if (!CanCommand(from) || target == null || target == this || target == from || target.Deleted || !target.Alive || target.Map != Map ||
                 !from.InRange(target, 12) || !InRange(target, 12) || !from.InLOS(target) || !InLOS(target) || !from.CanBeHarmful(target, false)) return false;
             _checkingPetOrder=true;try{if(!CanBeHarmful(target,false))return false;}finally{_checkingPetOrder=false;}
-            StopTamingAssist();from.DoHarmful(target);_explicitPetTarget=WildCustomPet(target)?target:null;
+            StopArmoryHelp();StopTamingAssist();from.DoHarmful(target);_explicitPetTarget=WildCustomPet(target)?target:null;
             ControlTarget = target; ControlOrder = OrderType.Attack; Combatant = target;
             return true;
         }
@@ -320,6 +320,7 @@ namespace Server.HavenPrototype
             ThinkEncouragement();
             if (_owner != null && _owner.NetState != null) RecoverFromDeath(DateTime.UtcNow);
             RecoverResources(DateTime.UtcNow);
+            if (ThinkArmoryHelp()) { base.OnThink(); return; }
             ThinkAssignedPets();
             RespectWildPets();
             ThinkTamingAssist();ThinkRoleSupport();ThinkBardCombat();
@@ -491,7 +492,7 @@ namespace Server.HavenPrototype
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddSeconds(HavenMissionLuck.Seconds(minutes,from.Luck));
             Combatant = null; ControlTarget = null; ControlOrder = OrderType.Stay;
-            StopTamingAssist();ClearRoleSupport();ParkAssignedPets();
+            StopArmoryHelp();StopTamingAssist();ClearRoleSupport();ParkAssignedPets();
             Internalize();
             EnsureProgressionCaps();
             ScheduleMission();
@@ -586,7 +587,7 @@ namespace Server.HavenPrototype
                 }
             }
             from.CloseGump(typeof(CompanionMissionTimerGump));
-            StopTamingAssist(); ClearRoleSupport();
+            StopArmoryHelp();StopTamingAssist(); ClearRoleSupport();
             if (Target != null) Target.Cancel(this, Server.Targeting.TargetCancelType.Canceled);
             var casting = Spell as Server.Spells.Spell;
             if (casting != null) casting.Disturb(Server.Spells.DisturbType.Kill);

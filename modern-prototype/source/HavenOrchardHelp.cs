@@ -58,10 +58,13 @@ namespace Server.HavenPrototype
   public static void AppleProperties(ShadowguardApple apple,ObjectPropertyList list){if(HavenPreview.Enabled&&apple.Tree!=null)list.Add("Use on: "+Label(Opposite(apple.Tree.VirtueType))+" tree (pair "+((int)apple.Tree.VirtueType%8+1)+")");}
   public static void Help(Mobile owner,HavenCompanion companion)
   {
-   if(!HavenPreview.Enabled||companion==null||!companion.CanOpenPack(owner))return;
+   if(!HavenPreview.Enabled||companion==null||!companion.IsOwner(owner))return;
+   if(companion.ArmoryHelpActive){companion.RequestArmoryHelp(owner);return;}
+   if(!companion.CanOpenPack(owner))return;
+   if(companion.RequestArmoryHelp(owner))return;
    if(HavenFountainHelp.TryHelp(owner,companion))return;
    var encounter=World.Items.Values.OfType<ShadowguardCypress>().Where(t=>!t.Deleted&&t.Map==owner.Map).Select(t=>t.Encounter).FirstOrDefault(e=>e!=null&&e.HasBegun&&!e.Completed&&e.Instance!=null&&e.Participants.Contains(owner as PlayerMobile)&&e.Region!=null&&e.Region.Contains(owner.Location));
-   if(encounter==null||encounter.Trees==null){owner.SendMessage("Puzzle help supports Shadowguard's Orchard and Fountain. Enter the room with your companion first.");return;}
+   if(encounter==null||encounter.Trees==null){owner.SendMessage("Puzzle help supports Shadowguard's Orchard, Fountain and Armory. Enter the room with your companion first.");return;}
    var apple=encounter.Apple;
    if(apple==null||apple.Deleted){var tree=encounter.Trees.Where(t=>t!=null&&!t.Deleted&&owner.InRange(t,3)&&owner.InLOS(t)).OrderBy(t=>owner.GetDistanceToSqrt(t.Location)).FirstOrDefault();if(tree==null){companion.SayTo(owner,"Stand within three tiles of a tree, then ask me again. I'll help you pick and match its apple.");return;}tree.OnDoubleClick(owner);apple=encounter.Apple;}
    if(apple==null||apple.Deleted||!apple.IsChildOf(owner.Backpack)){owner.SendMessage("An Orchard apple is already in use. Its holder needs to finish that pair first.");return;}
