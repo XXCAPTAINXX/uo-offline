@@ -53,7 +53,7 @@ public class HavenMoonfang : DireWolf
 public class HavenStormscale : Drake
 {
  public override TrainingDefinition TrainingDefinition {get{return HavenPetTrainingBridge.Definition(this);}}
- protected override BaseAI ForcedAI {get{return AI==AIType.AI_Mage?null:new HavenStormscaleAI(this);}}
+ protected override BaseAI ForcedAI {get{return AI==AIType.AI_Melee?new HavenStormscaleAI(this):null;}}
 
     [Constructable]
     public HavenStormscale()
