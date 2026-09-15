@@ -13,7 +13,7 @@ namespace Server.HavenPrototype
  }
  public partial class HavenCompanion
  {
-  public string PendingMissionSummary {get{return "Pending: "+_pendingGold.ToString("N0")+" gold, "+PendingResources.ToString("N0")+" materials, "+PendingPetTickets+" tickets, "+HavenDoomMissionLoot.Pending(BoundOwner)+" Doom items";}}
+  public string PendingMissionSummary {get{return "Pending: "+_pendingGold.ToString("N0")+" gold, "+PendingResources.ToString("N0")+" materials, "+PendingPetTickets+" tickets, "+HavenDoomMissionLoot.Pending(BoundOwner)+" Doom items, "+HavenMissionSpoils.Pending(this)+" gear";}}
   public void CollectMissionRewards(Mobile owner){if(!IsOwner(owner))return;DeliverRewards();DeliverPetTickets();owner.SendMessage(PendingMissionSummary);}
  }
 }

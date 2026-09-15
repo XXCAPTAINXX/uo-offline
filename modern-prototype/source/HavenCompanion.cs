@@ -482,6 +482,7 @@ namespace Server.HavenPrototype
             string reason = MissionStartError(from, minutes, kind,offline);
             if (reason != null) { if (from != null) from.SendMessage(reason); return false; }
             if (!PrepareResourceMission(kind, minutes)) { from.SendMessage("Cannot start: collect pending resources or pet tickets first; reward storage is full."); return false; }
+            HavenMissionSpoils.Prepare(this,kind,minutes);
             ClearMissionReturn();
             _missionMinutes = minutes;
             _missionDue = DateTime.UtcNow.AddSeconds(HavenMissionLuck.Seconds(minutes,from.Luck));
@@ -511,7 +512,8 @@ namespace Server.HavenPrototype
             if (minutes != 5 && minutes != 15 && minutes != 30 && minutes != 60) return "Choose a 5, 15, 30 or 60 minute mission.";
             if (kind < CompanionMission.Supply || kind > CompanionMission.DoomRecon) return "That mission is unavailable.";
             if(HavenRegionalMissions.Valid(kind)&&!HavenRegionalMissions.CanStart(this,kind))return kind==CompanionMission.DoomRecon?"Doom reconnaissance needs 100 Tactics, Magery or Archery; Magic Resistance is not required.":"This route needs "+HavenRegionalMissions.Requirement(kind)+" Magic Resistance AND a combat skill (Tactics, Magery or Archery).";
-            if (_pendingGold > Int32.MaxValue - minutes * 100) return "Collect your companion's pending gold before starting another mission.";
+            if(!HavenMissionSpoils.CanPrepare(this,kind,minutes))return "Collect pending supply-run equipment before starting another supply run.";
+            if (_pendingGold > Int32.MaxValue - (kind==CompanionMission.Supply?minutes*300*HavenRegionalMissions.Bonus(minutes)/100:minutes*100)) return "Collect your companion's pending gold before starting another mission.";
             if ((kind == CompanionMission.Malas || kind == CompanionMission.Abyss) && Math.Max(Skills.Magery.Base,Skills.Tactics.Base) < (kind == CompanionMission.Malas ? 60 : 80)) return "Your companion needs " + (kind == CompanionMission.Malas ? "60" : "80") + " trained Magery or Tactics for this route.";
             if (HavenPetMissions.Valid(kind) && !HavenPetMissions.CanStart(this,kind)) return "Your companion needs " + HavenPetMissions.Requirements[(int)kind-6].ToString("0.0") + " trained Animal Taming AND Animal Lore for this pet.";
             if (HavenPetMissions.Valid(kind) && PendingPetTickets >= 50) return "Collect pending pet tickets before starting another taming mission.";
@@ -535,8 +537,10 @@ namespace Server.HavenPrototype
             _missionDue = DateTime.MinValue;
             _missionTimer = null;
             _completedMissions++;
+            int gearCount;gold += HavenMissionSpoils.Complete(this,out gearCount);
             _pendingGold += gold;
             _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
+            if(gearCount>0)_lastReport += " Recovered "+gearCount+" enchanted equipment pieces; overflow is protected until collected.";
             _lastReport += HavenDoomMission.Complete(_owner,_missionKind,_missionMinutes);
             _lastReport += " " + HavenMarks.Award(_owner,_missionMinutes*2) + " Haven Marks earned.";
             _lastReport += HavenMissionTraining.Complete(this,_missionMinutes,trainingBefore);
@@ -548,6 +552,7 @@ namespace Server.HavenPrototype
         }
         public void DeliverRewards()
         {
+            HavenMissionSpoils.Deliver(this);
             UnpackMissionSupplies();
             HavenDoomMissionLoot.DeliverTo(this);
             DeliverResourceRewards();
@@ -579,7 +584,7 @@ namespace Server.HavenPrototype
                     _missionTimer = null;
                     _missionDue = DateTime.MinValue;
                     _scheduledResources.Clear();
-                    CancelPetMission();
+                    CancelPetMission();HavenMissionSpoils.Cancel(this);
                     _lastReport = _missionKind + " mission recalled early. No completion rewards or mission training were awarded.";
                     HavenMissionHistory.Record(this,_lastReport);
                     from.SendMessage(_lastReport);
@@ -612,6 +617,7 @@ namespace Server.HavenPrototype
 
         public override void OnAfterDelete()
         {
+            HavenMissionSpoils.Recover(this);
             ClearRoleSupport();
             ClearMissionReturn();
             CancelPetMission();

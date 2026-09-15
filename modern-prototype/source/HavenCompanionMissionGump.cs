@@ -55,13 +55,13 @@ namespace Server.HavenPrototype
             }
             else
             {
-                Text(322,175,365,24,"2. Duration | 10 equipped gear XP per minute");
+                Text(322,175,365,24,"2. Duration | "+(HavenMissionSpoils.Experience(_minutes))+" XP per equipped item");
                 int[] durations={5,15,30,60};
                 for(int i=0;i<4;i++)Button(322+i*91,204,20+i,(_minutes==durations[i]?"[":"")+durations[i]+"m"+(_minutes==durations[i]?"]":""),53);
                 Text(322,242,365,24,"Requirements");
                 Text(322,268,365,62,Requirement(companion,_tab,_selection));
                 Text(322,334,365,24,_tab==0&&GatheringKind(_selection)==CompanionMission.DoomRecon?HavenDoomMission.Preview(companion.BoundOwner,_minutes):"Rewards on completion");
-                Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes),true);
+                Text(322,360,365,88,(_tab==0&&GatheringKind(_selection)==CompanionMission.Supply?(_minutes*200*HavenRegionalMissions.Bonus(_minutes)/100).ToString("N0")+"-"+(_minutes*300*HavenRegionalMissions.Bonus(_minutes)/100).ToString("N0"):(_minutes*100).ToString("N0"))+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes),true);
                 if(!companion.OnMission)Button(322,455,1,"Start "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" mission",320);
                 else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
                 Text(24,496,670,22,"Luck "+(companion.BoundOwner==null?0:companion.BoundOwner.Luck)+": "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" duration, full "+_minutes+"m rewards. Early recall forfeits rewards.");
@@ -91,7 +91,7 @@ namespace Server.HavenPrototype
         {
             if(tab==1)return "One pet ticket; "+HavenTamingSupplies.SearchRolls(minutes)+" rarity / supply rolls. Bonus supplies go into the companion pack. Leash, bonding potion, 105 combat scroll or rare house post.";
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
-            switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
+            switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots loose into Jenna's backpack. Overflow is retained.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs loose into Jenna's backpack. Overflow is retained.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather loose into Jenna's backpack. Overflow is retained.";case 4:return (minutes*2)+" of each Malas resource loose into Jenna's backpack. Overflow is retained.";case 5:return minutes+" of each Abyss essence loose into Jenna's backpack. Overflow is retained.";default:return HavenMissionSpoils.GearCount(minutes)+" enchanted equipment pieces. Gold and gear go loose into the companion backpack; overflow stays protected.";}
         }
         void Text(int x,int y,int w,int h,string text,bool scroll=false){AddHtml(x,y,w,h,"<BASEFONT COLOR=#3B2A1A>"+text+"</BASEFONT>",false,scroll);}
         void Button(int x,int y,int id,string label,int width,int height=27){FlatButton(x,y,width+20,id,label);}

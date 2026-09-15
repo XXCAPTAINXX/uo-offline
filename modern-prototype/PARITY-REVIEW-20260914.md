@@ -107,3 +107,13 @@ Tests passed for remembered values after reopening, role-screen isolation, repea
 Assignment cleanup previously ignored SetControlMaster failure when the owner's follower slots were full. It now transfers normally only on success at a valid owner location; otherwise it dismounts, clears combat/control, and stores the exact pet in the owner's native stables with StabledBy set. Bonding and pet identity are retained. No duplicate stable entries are added. Hidden assignment records are virtual and no longer count against container item slots.
 
 Runtime tests verify full-follower fallback, exact bonded pet retention, repeat deletion safety, normal return after reassignment, and virtual record status. Native stabling uses existing save serialization; this batch does not reconstruct pets lost before the fix.
+
+### September 15: expanded mission gameplay and selected offline rotations
+
+Supply runs now snapshot enchanted equipment at dispatch: 1/3/6/15 pieces for 5/15/30/60 minutes. Total gold ranges are 1,000-1,500 / 3,300-4,950 / 6,900-10,350 / 15,000-22,500; existing Marks remain. Completed loot goes loose into Jenna's backpack. Full-pack overflow retains exact items in a protected serialized parcel, collected without rerolls. Early recall deletes only unearned spoils; companion deletion recovers earned equipment to the owner's bank, with persisted owner links and orphan cleanup.
+
+Duration bonuses now give equipped progression gear 50/165/345/750 XP per completed trip. Gathering training uses the same duration bonus, respects skill locks/caps, and Leather trains Wrestling and Tactics alongside Animal Lore. Preview/history and delivery descriptions reflect actual rewards.
+
+Offline rotation has a paginated route selector, Select all/Clear all, and skill eligibility descriptions. Empty selections do not dispatch; saved selections affect the next trip, without canceling the active one. Older plans default to all routes. Hidden plan records are virtual.
+
+Validation: audit regression suite and MissionBatchSmoke passed, including real dispatch, completion, duplicate prevention, overflow, cancellation, skill gains, selection serialization and deletion recovery. MissionBatchPersistence passed a real test-world save and separate-process reload, preserving exact scheduled/earned item identities, gold, owner/companion links and rotation. Audit saves were not copied to live. Independent code/runtime critic approved 8/10; in-client visual review remains outstanding. Live build completed with zero warnings/errors. No uncapped stat growth was added.

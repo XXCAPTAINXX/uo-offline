@@ -8,7 +8,7 @@ namespace Server.HavenPrototype
   public static int[] Snapshot(HavenCompanion c){return c.Skills.Select(s=>s.BaseFixedPoint).ToArray();}
   public static string Complete(HavenCompanion c,int minutes,int[] before)
   {
-   int offered=Math.Max(0,Math.Min(60,minutes))*10,items=0,total=0,levels=0;
+   int offered=HavenMissionSpoils.Experience(minutes),items=0,total=0,levels=0;
    foreach(var item in c.Items.ToArray())
    {
     var record=HavenEquipmentEvolution.Find(item);

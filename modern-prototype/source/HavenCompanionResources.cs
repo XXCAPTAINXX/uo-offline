@@ -33,7 +33,7 @@ namespace Server.HavenPrototype
         public void OpenResourceLedger(Mobile from)
         {
             if (ShowAwayTimer(from)) return;
-            if (!CanOpenPack(from)) { from.SendMessage("Recall your companion and stand beside him to open his ledger."); return; }
+            if (!CanOpenPack(from)) { from.SendMessage("Recall your companion and stand beside her to open her ledger."); return; }
             DeliverResourceRewards();
             var ledger = EnsureResourceLedger();
             if (ledger == null) { from.SendMessage("Make one space in the companion pack for a ledger. Pending resources are retained."); return; }
@@ -83,8 +83,8 @@ namespace Server.HavenPrototype
                 report.Add(pair.Value + " " + HavenResources.Names[pair.Key]);
             }
             _scheduledResources.Clear();
-            Skill skill = _missionKind == CompanionMission.Mining ? Skills.Mining : _missionKind == CompanionMission.Lumber ? Skills.Lumberjacking : _missionKind == CompanionMission.Leather ? Skills.AnimalLore : null;
-            if (skill != null && skill.Lock == SkillLock.Up && skill.Base < skill.Cap) skill.BaseFixedPoint = Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint + HavenCompanionProgression.Amount(this,skill,_missionMinutes*2));
+            Skill[] training = _missionKind == CompanionMission.Mining ? new[]{Skills.Mining} : _missionKind == CompanionMission.Lumber ? new[]{Skills.Lumberjacking} : _missionKind == CompanionMission.Leather ? new[]{Skills.AnimalLore,Skills.Wrestling,Skills.Tactics} : new Skill[0];
+            foreach(var skill in training) if(skill.Lock==SkillLock.Up && skill.Base<skill.Cap) skill.BaseFixedPoint=Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint+HavenCompanionProgression.Amount(this,skill,_missionMinutes*2*HavenRegionalMissions.Bonus(_missionMinutes)/100));
             return _missionKind + " run completed." + (report.Count==0 ? "" : " Resources: " + String.Join(", ",report) + ". Delivered loose to the companion backpack; overflow waits for space.");
         }
         public override void OnSubItemAdded(Item item)
