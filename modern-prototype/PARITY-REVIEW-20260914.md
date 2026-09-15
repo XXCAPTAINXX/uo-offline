@@ -41,3 +41,9 @@ HavenAdvancedGear now recognizes those exact native types with a separate boss-a
 Existing items are recognized on startup. Newly obtained items attach through the existing equipped kill-XP path. No reward probabilities, native encounter mechanics, gold payouts or soul-forge functionality were changed. The original Scalis/Corgul custom reward rates and Covetous acquisition differences still need separate review; this is growth parity, not a claim that every old boss encounter has been ported.
 
 BossArtifactGrowthSmoke passed for all 16 types through level20, including repeated application/capped XP and retaining an existing Legendary record. Existing record serialization format is unchanged. Audit/live builds passed; no new save/reload fixture or client visual inspection was performed for this batch.
+
+### September 15: shared sea-boss artifact delivery
+
+Fixed BaseSeaChampion's weighted recipient draw to use eligible entries and include the upper boundary. Previously a remote participant could win, or the final boundary could discard an earned artifact. Eligibility now requires the same map. In Haven, full backpacks receive the exact artifact in the bank, and recognized equipment receives its growth record on delivery.
+
+Verification: clean audit build; twenty one-damage draws with an ineligible high-damage attacker; full-pack bank delivery; native pet damage credited to its owner; no eligible recipient receives nothing. Clean live build and login probe are deployment checks. Drop probabilities are unchanged. Corgul's separate guaranteed unique-item recipient selection still needs review; this batch fixes the shared sea-champion draw and delivery only.
