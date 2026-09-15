@@ -31,3 +31,13 @@ GearRepairParitySmoke passed: all four gear families including nested equipment;
 CompanionSkinningSmoke passed: native earned animal corpse carving, hides converted to leather in Jenna's backpack, no duplicate harvest, no harvesting while injured/in combat, rejection of an unearned corpse. The automatic scan is intentionally limited to two tiles; no claim of full original hunting movement parity is made.
 
 Audit and live build results and deployment are reported in the task. This is the first parity batch; the overall comparison remains unfinished.
+
+## Boss artifact growth batch — 2026-09-15
+
+Native equivalents exist for all 16 equipment pieces in the original HavenScalisLoot.Artifact catalog: Enchanted Coral Bracelet, Leviathan Hide Bracers, Wand of Thundering Glory, Smiling Moon Blade, Corgul's sash and two handbooks, Ring of the Soulbinder, Helm of Vengeance (native class spelling HelmOfVengence), Rune Engraved Pegleg, Culling Blade, Blight of the Tundra, Bracelet of Protection, Brightblade, Hephaestus and Prismatic Lenses.
+
+HavenAdvancedGear now recognizes those exact native types with a separate boss-artifact growth kind. Levels 1–20 grant the original artifact-specific +1 weapon damage and spell damage per gained level, +1 hit/mana regeneration per five-level milestone, and weapon +2 swing speed / +3 mana leech per milestone. The current shared mana-leech floor (100 at level20), shared Luck/stat growth and supported-gear durability behavior remain. Native base properties and acquisition systems are retained. Named artifacts use readable display names. Existing Legendary/Reforged/other progression records are retained rather than replaced.
+
+Existing items are recognized on startup. Newly obtained items attach through the existing equipped kill-XP path. No reward probabilities, native encounter mechanics, gold payouts or soul-forge functionality were changed. The original Scalis/Corgul custom reward rates and Covetous acquisition differences still need separate review; this is growth parity, not a claim that every old boss encounter has been ported.
+
+BossArtifactGrowthSmoke passed for all 16 types through level20, including repeated application/capped XP and retaining an existing Legendary record. Existing record serialization format is unchanged. Audit/live builds passed; no new save/reload fixture or client visual inspection was performed for this batch.

@@ -25,8 +25,12 @@ namespace Server.HavenPrototype
             return null;
         }
         static readonly HashSet<string> QuestNames = new HashSet<string>(new[] { "ArmsOfArmstrong", "BulwarkLeggings", "BraceletOfResilience", "EscutcheonDeAriadne", "EmberStaff", "ClaspOfConcentration", "ChurchillsWarMace", "Heartseeker", "HealersTouch", "HallowedSpellbook", "GlovesOfSafeguarding", "TheDragonsTail", "JocklesQuicksword", "JacobsPickaxe", "PhilosophersHat", "RecarosRiposte", "TunicOfGuarding", "SilverSerpentBlade", "RingOfTheSavant", "TwilightJacket", "WalkersLeggings", "HavenQuestNecromancerBook" });
+        internal static readonly Type[] BossArtifacts = { typeof(EnchantedCoralBracelet), typeof(LeviathanHideBracers), typeof(WandOfThunderingGlory), typeof(SmilingMoonBlade), typeof(CorgulsEnchantedSash), typeof(CorgulsHandbookOnMysticism), typeof(CorgulsHandbookOnTheUndead), typeof(RingOfTheSoulbinder), typeof(HelmOfVengence), typeof(RuneEngravedPegLeg), typeof(CullingBlade), typeof(BlightOfTheTundra), typeof(BraceletOfProtection), typeof(Brightblade), typeof(Hephaestus), typeof(PrismaticLenses) };
+        private static readonly string[] BossArtifactNames = { "Enchanted Coral Bracelet", "Leviathan Hide Bracers", "Illustrious Wand of Thundering Glory", "Smiling Moon Blade", "Corgul\u0027s Enchanted Sash", "Corgul\u0027s Handbook on Mysticism", "Corgul\u0027s Handbook on the Undead", "Ring of the Soulbinder", "Helm of Vengeance", "Rune Engraved Pegleg", "The Culling Blade", "Blight of the Tundra", "Bracelet of Protection", "Brightblade", "Hephaestus", "Prismatic Lenses" };
+        private static string EquipmentName(Item item, int kind) { int index=Array.IndexOf(BossArtifacts,item.GetType());return item.Name ?? (kind==7&&index>=0?BossArtifactNames[index]:item.GetType().Name); }
         public static int AutoKind(Item item)
         {
+            if (item != null && BossArtifacts.Contains(item.GetType())) return 7;
             if (item is IHavenCombatShield || item is IHavenCastingGear) return 5;
             if (item is IHavenAreaWeapon || item is IHavenWhirlwindWeapon) return 6;
             if (item is AstralWeaversRing || item is AstralGuardianMantle || item is AstralFortuneEarrings) return 1;
@@ -37,13 +41,13 @@ namespace Server.HavenPrototype
         public static HavenAdvancedGear Find(Item item) { HavenAdvancedGear record; return item != null && Records.TryGetValue(item.Serial.Value, out record) && !record.Deleted ? record : null; }
         public static HavenAdvancedGear Attach(Item item, int kind)
         {
-            if (item == null || item.Deleted || Attributes(item) == null || kind < 1 || kind > 6) return null;
+            if (item == null || item.Deleted || Attributes(item) == null || kind < 1 || kind > 7) return null;
             HavenGearDurability.Apply(item);
             return Find(item) ?? new HavenAdvancedGear(item, kind);
         }
         public HavenAdvancedGear(Item item, int kind) : base(1)
         {
-            Equipment = item; Kind = kind; OriginalName = item.Name ?? item.GetType().Name;
+            Equipment = item; Kind = kind; OriginalName = EquipmentName(item, kind);
             Visible = false; Movable = false; Internalize(); Records[item.Serial.Value] = this; Apply();
         }
         public HavenAdvancedGear(Serial serial) : base(serial) { }
@@ -55,8 +59,8 @@ namespace Server.HavenPrototype
             int levels = Math.Max(0, Level - AppliedLevel), milestones = Math.Max(0, Level / 5 - AppliedLevel / 5), steps = Level - 1;
             a.Luck += levels * 5; a.BonusStr += milestones; a.BonusDex += milestones; a.BonusInt += milestones;
             var weapon = Equipment as BaseWeapon;
-            if (Kind == 2 || Kind == 3 || Kind == 4 || Kind == 6) {
-                if (weapon != null && Kind != 3) {
+            if (Kind == 2 || Kind == 3 || Kind == 4 || Kind == 6 || Kind == 7) {
+                if (weapon != null && Kind != 3 && Kind != 7) {
                     a.WeaponDamage += levels * 2; a.WeaponSpeed += milestones * 5;
                     if (Kind == 2 || Kind == 6) { weapon.WeaponAttributes.HitLeechMana += milestones * 5; weapon.WeaponAttributes.HitLeechHits += milestones * 5; }
                 } else {
