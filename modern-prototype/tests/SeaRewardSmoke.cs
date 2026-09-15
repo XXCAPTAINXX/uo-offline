@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using Server;
 using Server.Items;
@@ -28,16 +29,24 @@ public static class SeaRewardSmoke
    corgul.Delete();
   }
   log("PASS twelve Corgul unique awards reach eligible pet owner bank, excluding distant contributor");
+  new Server.Accounting.Account("sea-rewards-"+Guid.NewGuid().ToString("N"),Guid.NewGuid().ToString("N"))[0]=owner;
   foreach(var extraBoss in new BaseCreature[]{new CorgulTheSoulBinder(),new CoraTheSorceress(),new Osiredon()})
   {
    extraBoss.MoveToWorld(owner.Location,owner.Map);
    ((Mobile)extraBoss).RegisterDamage(10000,pet);((Mobile)extraBoss).RegisterDamage(10000,remote);
    int before=owner.BankBox.Items.Count;
+   int goldBefore=(((Server.Accounting.Account)owner.Account).TotalGold+owner.BankBox.Items.Concat(owner.Backpack.Items).OfType<BankCheck>().Sum(x=>x.Worth));
+   int shardsBefore=owner.BankBox.Items.Concat(owner.Backpack.Items).OfType<Server.HavenPrototype.AstralShard>().Sum(x=>x.Amount);
+   int marksBefore=Server.HavenPrototype.HavenMarks.Balance(owner);
    Server.HavenPrototype.HavenBossExtras.Award(extraBoss);
-   int expected=extraBoss is CorgulTheSoulBinder?2:extraBoss is CoraTheSorceress?1:3;
-   if(owner.BankBox.Items.Count!=before+expected||remote.Backpack.Items.Count!=0)throw new Exception("Boss extras delivery "+extraBoss.GetType().Name);
+   int expected=(extraBoss is CorgulTheSoulBinder?2:extraBoss is CoraTheSorceress?1:3)+1;
+
+   if(Server.HavenPrototype.HavenMarks.Balance(owner)!=marksBefore+20)throw new Exception("Missing Marks");
+   if(remote.Backpack.Items.Count!=0)throw new Exception("Boss extras delivery "+extraBoss.GetType().Name);
    Server.HavenPrototype.HavenBossExtras.Award(extraBoss);
-   if(owner.BankBox.Items.Count!=before+expected)throw new Exception("Duplicate extras");
+   if(Server.HavenPrototype.HavenMarks.Balance(owner)!=marksBefore+20)throw new Exception("Duplicate extras");
+   int goldExpected=extraBoss is CorgulTheSoulBinder?50000:extraBoss is CoraTheSorceress?30000:40000;
+   if((((Server.Accounting.Account)owner.Account).TotalGold+owner.BankBox.Items.Concat(owner.Backpack.Items).OfType<BankCheck>().Sum(x=>x.Worth))!=goldBefore+goldExpected||owner.BankBox.Items.Concat(owner.Backpack.Items).OfType<Server.HavenPrototype.AstralShard>().Sum(x=>x.Amount)!=shardsBefore+10)throw new Exception("Currency amount or duplicate mismatch");
    extraBoss.Delete();
   }
   log("PASS all three boss extra bundles bank safely, credit pets, exclude remote owners and cannot duplicate");

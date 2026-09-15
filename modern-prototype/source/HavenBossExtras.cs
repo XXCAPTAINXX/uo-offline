@@ -21,6 +21,10 @@ namespace Server.HavenPrototype
                 var owner = right.m_Mobile as PlayerMobile;
                 if (!right.m_HasRight || right.m_Damage < 600 || owner == null || owner.Deleted || !owner.Alive ||
                     owner.Map != boss.Map || !owner.InRange(boss, 32) || !Paid.GetOrCreateValue(boss).Add(owner)) continue;
+                int gold = boss is CorgulTheSoulBinder ? 50000 : boss is CoraTheSorceress ? 30000 : 40000;
+                Deliver(owner, new BankCheck(gold));
+                Deliver(owner, new AstralShard(10));
+                int marks = HavenMarks.Award(owner, 20);
                 if (boss is CorgulTheSoulBinder)
                 {
                     Deliver(owner, new TreasureMap(6, boss.Map));
@@ -33,7 +37,7 @@ namespace Server.HavenPrototype
                     Deliver(owner, new SpecialFishingNet());
                     Deliver(owner, new FishingPole());
                 }
-                owner.SendMessage(0x482, "Your boss bonus supplies have arrived. Items that did not fit in your backpack are in your bank.");
+                owner.SendMessage(0x482, "Boss rewards: " + gold.ToString("N0") + " gold, " + marks + " Marks, 10 Astral Shards and bonus supplies. Overflow items are in your bank.");
             }
         }
         private static void Deliver(PlayerMobile owner, Item item)

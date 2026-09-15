@@ -59,3 +59,9 @@ Verification: twelve native Corgul OnBeforeDeath calls with equal pet/remote-pla
 HavenBossExtras restores old physical extra bundles on native boss death: Corgul level-6 treasure map and Tactics transcendence scroll (1.0 Felucca / 0.5 elsewhere); Cora level-5 map; Scalis message in a bottle, special fishing net and fishing pole. Requires native looting rights, at least 600 credited damage, alive and within 32 tiles on the same map. Native looting rights consolidate pet damage. Each boss/player pair pays once; full packs bank items directly. Current native artifact rolls and Sovereign hooks stay intact.
 
 Server fixture checks passed for all three bundles, pet-owner credit, remote-player exclusion, full-pack bank fallback and duplicate-call prevention. Audit/live builds and login probe are deployment checks. Remaining differences include old gold/Marks/shard bundles and Scalis soul-forge integration; those are not restored in this batch, nor is an extra artifact roll layered on native rewards.
+
+### September 15: boss currency bundles restored
+
+Added old supplemental currency payouts to the same deduplicated boss extra award: Corgul 50,000 gold, Cora 30,000, Scalis 40,000; each also pays 20 Marks through the existing capped balance and 10 Astral Shards. Gold is delivered as a bank check (native account banking automatically redeems banked checks). Existing corpse gold, artifacts and Sovereigns are unchanged. Notification reports actual Marks credited.
+
+Tests verify exact total gold including account conversion, exact shard amounts and +20 Marks for each boss, with repeated award calls producing no additional currency. Pet credit and remote exclusion remain covered. Native SmallSoulForge exists but lacks the old custom Haven Abyss artifice menu: rare forge reward remains pending rather than claiming full feature parity.
