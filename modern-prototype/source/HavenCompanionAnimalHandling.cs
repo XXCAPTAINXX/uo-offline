@@ -11,6 +11,7 @@ public partial class HavenCompanionAssignedPet : Item
     public BaseCreature Pet;
     public bool AutoMount=true;
     public bool Parked;
+    public override bool IsVirtualItem { get { return true; } }
 
     [Constructable] public HavenCompanionAssignedPet() : base(1) { Visible=false;Movable=false;Weight=0;Name="Companion pet assignment"; }
     public HavenCompanionAssignedPet(Serial serial):base(serial){}
@@ -61,8 +62,18 @@ public partial class HavenCompanionAssignedPet : Item
         if(pet?.Deleted==false && pet.ControlMaster==companion && owner?.Deleted==false)
         {
             if(pet is BaseMount mount && mount.Rider==companion) { mount.Rider=null; }
-            pet.SetControlMaster(owner);pet.ControlTarget=owner;pet.ControlOrder=OrderType.Follow;
-            if(owner.Map!=null && owner.Map!=Map.Internal) { pet.MoveToWorld(owner.Location,owner.Map); }
+            if(owner.Map!=null && owner.Map!=Map.Internal && pet.SetControlMaster(owner))
+            {
+                pet.ControlTarget=owner;pet.ControlOrder=OrderType.Follow;
+                pet.MoveToWorld(owner.Location,owner.Map);
+            }
+            else
+            {
+                pet.SetControlMaster(null);pet.Combatant=null;pet.Internalize();
+                pet.IsStabled=true;pet.StabledBy=owner;pet.Loyalty=BaseCreature.MaxLoyalty;
+                if(!owner.Stabled.Contains(pet))owner.Stabled.Add(pet);
+                owner.SendMessage("Your companion's assigned pet is safe in your stables. Claim it when you have follower space.");
+            }
         }
         base.OnDelete();
     }

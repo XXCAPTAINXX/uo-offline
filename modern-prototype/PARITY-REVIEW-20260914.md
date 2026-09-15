@@ -101,3 +101,9 @@ Mission UI remembers its last gathering/taming selection and nominal duration in
 Gathering and taming completion training now respects Up/Locked/Down skill settings; capped skills retain existing cap behavior. Existing rates and completion rewards are otherwise unchanged.
 
 Tests passed for remembered values after reopening, role-screen isolation, repeat route preservation, active-trip rejection, locked gathering, locked/down taming, and duplicate-free collect-all gold. Prior mission XP/history, party/bar, merchant, forge and boss regression checks also passed. UI layout inspected in source; client visual check not performed.
+
+### September 15: assigned pet recovery safety
+
+Assignment cleanup previously ignored SetControlMaster failure when the owner's follower slots were full. It now transfers normally only on success at a valid owner location; otherwise it dismounts, clears combat/control, and stores the exact pet in the owner's native stables with StabledBy set. Bonding and pet identity are retained. No duplicate stable entries are added. Hidden assignment records are virtual and no longer count against container item slots.
+
+Runtime tests verify full-follower fallback, exact bonded pet retention, repeat deletion safety, normal return after reassignment, and virtual record status. Native stabling uses existing save serialization; this batch does not reconstruct pets lost before the fix.
