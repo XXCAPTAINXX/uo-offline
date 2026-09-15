@@ -490,6 +490,7 @@ namespace Server.HavenPrototype
             Internalize();
             EnsureProgressionCaps();
             ScheduleMission();
+            HavenMissionPreferences.Started(this,kind,minutes);
             return true;
         }
 

@@ -93,3 +93,11 @@ The combat bar no longer disappears into the mission timer while away. Its Close
 Completed trips now offer original-style 10 XP per nominal mission minute to each equipped item with current HavenEquipmentEvolution or HavenAdvancedGear progression, retaining existing level caps. Recognized advanced gear attaches its existing progression automatically; ordinary gear and backpack contents receive none. Equipment with both record types uses the equipment-evolution path once. Duration preview states the XP rate.
 
 Completion snapshots skills before existing route training and appends actual positive skill deltas, total equipment XP, item count and gained levels to the normal report/history. Core completion guard prevents replay; early recalls skip training. Test: five-minute Mining mission awards exactly 50 XP to equipped evolving gear, reports Mining gain, repeated completion does not duplicate, early recall adds no XP. Existing history serialization and party/bar tests pass. Old uncapped stat growth/TrainingMinutes systems remain a separate parity decision and were not added here.
+
+### September 15: mission workflow batch
+
+Mission UI remembers its last gathering/taming selection and nominal duration in per-companion account tags; role screens do not overwrite that choice. Repeat last uses the last successfully dispatched route/duration and the standard dispatch checks, including active-trip rejection. Manual and offline trips update the saved repeat route. Collect all retries normal resource, gold, Doom item and pet-ticket delivery, with pending totals visible below the existing footer. Enlarged panel and scrollable reward details retain plain rectangular controls.
+
+Gathering and taming completion training now respects Up/Locked/Down skill settings; capped skills retain existing cap behavior. Existing rates and completion rewards are otherwise unchanged.
+
+Tests passed for remembered values after reopening, role-screen isolation, repeat route preservation, active-trip rejection, locked gathering, locked/down taming, and duplicate-free collect-all gold. Prior mission XP/history, party/bar, merchant, forge and boss regression checks also passed. UI layout inspected in source; client visual check not performed.

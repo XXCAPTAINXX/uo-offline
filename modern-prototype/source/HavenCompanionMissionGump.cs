@@ -15,14 +15,17 @@ namespace Server.HavenPrototype
         static CompanionMission GatheringKind(int i){return i<6?(CompanionMission)i:HavenRegionalMissions.Kinds[i-6];}
         static readonly string[] Roles={"Warrior","Caster","Archer","Bard","Healer"};
         public static string MissionName(CompanionMission kind){int i=(int)kind;if(HavenRegionalMissions.Valid(kind))return HavenRegionalMissions.Names[Array.IndexOf(HavenRegionalMissions.Kinds,kind)];return i>=6&&i<18?HavenPetMissions.Names[i-6]:i>=0&&i<Gathering.Length?Gathering[i]:"Mission";}
-        public CompanionActivityGump(HavenCompanion companion,int tab=0,int selection=0,int minutes=5):base(50,50)
+        public CompanionActivityGump(HavenCompanion companion,int tab=-1,int selection=-1,int minutes=0):base(50,50)
         {
+            if(tab<0)tab=HavenMissionPreferences.Get(companion,"Tab",0);if(selection<0)selection=HavenMissionPreferences.Get(companion,"Selection",0);if(minutes==0)minutes=HavenMissionPreferences.Get(companion,"Minutes",5);
             _companion=companion;_tab=Math.Max(0,Math.Min(2,tab));_minutes=minutes==15||minutes==30||minutes==60?minutes:5;
             var names=_tab==0?Gathering:_tab==1?HavenPetMissions.Names:Roles;
             _selection=Math.Max(0,Math.Min(names.Length-1,selection));int page=_selection/6;
-            AddBackground(0,0,720,560,0xA28);
+            HavenMissionPreferences.Remember(companion,_tab,_selection,_minutes);
+            AddBackground(0,0,720,610,0xA28);
             Button(560,20,6,"History",110);
-            Text(24,20,515,28,""+companion.Name+" - "+(_tab==2?"combat role":"missions")+"");
+            Button(405,20,13,"Repeat last",115);
+            Text(24,20,365,28,""+companion.Name+" - "+(_tab==2?"combat role":"missions")+"");
             Text(24,52,664,25,companion.OnMission?"Away: "+MissionName(companion.MissionKind)+" | "+CompanionMissionTimerGump.Remaining(companion):"Ready | Combat role: "+companion.Role);
             Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
             Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
@@ -58,11 +61,13 @@ namespace Server.HavenPrototype
                 Text(322,242,365,24,"Requirements");
                 Text(322,268,365,62,Requirement(companion,_tab,_selection));
                 Text(322,334,365,24,_tab==0&&GatheringKind(_selection)==CompanionMission.DoomRecon?HavenDoomMission.Preview(companion.BoundOwner,_minutes):"Rewards on completion");
-                Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes));
+                Text(322,360,365,88,(_minutes*100).ToString("N0")+" gold + "+(_minutes*2)+" Haven Marks.<BR>"+Reward(_tab,_selection,_minutes),true);
                 if(!companion.OnMission)Button(322,455,1,"Start "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" mission",320);
                 else {Button(322,455,2,"Show timer",145);Button(515,455,3,"Recall early",145);}
                 Text(24,496,670,22,"Luck "+(companion.BoundOwner==null?0:companion.BoundOwner.Luck)+": "+HavenMissionLuck.Duration(_minutes,companion.BoundOwner==null?0:companion.BoundOwner.Luck)+" duration, full "+_minutes+"m rewards. Early recall forfeits rewards.");
             }
+            Button(24,570,14,"Collect all rewards",160);
+            Text(215,560,485,42,companion.PendingMissionSummary);
             Button(24,520,0,"Back",65);
             if(_tab!=2)
             {
@@ -88,13 +93,15 @@ namespace Server.HavenPrototype
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
             switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots into the resource ledger.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs into the resource ledger.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather into the resource ledger.";case 4:return (minutes*2)+" of each Malas resource into the ledger.";case 5:return minutes+" of each Abyss essence into the ledger.";default:return "Gold is delivered to the companion's pack.";}
         }
-        void Text(int x,int y,int w,int h,string text){AddHtml(x,y,w,h,"<BASEFONT COLOR=#3B2A1A>"+text+"</BASEFONT>",false,false);}
+        void Text(int x,int y,int w,int h,string text,bool scroll=false){AddHtml(x,y,w,h,"<BASEFONT COLOR=#3B2A1A>"+text+"</BASEFONT>",false,scroll);}
         void Button(int x,int y,int id,string label,int width,int height=27){FlatButton(x,y,width+20,id,label);}
         public override void OnResponse(NetState state,RelayInfo info)
         {
             var p=state.Mobile;int id=info.ButtonID;if(!_companion.IsOwner(p))return;_companion.ShowAwayTimer(p);
             if(id==0){_companion.Show(p,true);return;}
             if(id==1){bool ok=_tab==2?_companion.SetRole(p,(CompanionRole)_selection):_companion.StartMission(p,_minutes,(_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection)));if(ok&&_tab!=2){_companion.Show(p);return;}if(!ok&&_tab==2)p.SendMessage("Move near your companion and finish combat before changing roles.");}
+            if(id==13){HavenMissionPreferences.Repeat(_companion,p);p.SendGump(new CompanionActivityGump(_companion));return;}
+            if(id==14)_companion.CollectMissionRewards(p);
             if(id==9)_companion.DeliverRewards();
             if(id==2){_companion.Show(p);return;}
             if(id==3){HavenMissionRecallGump.Show(_companion,p);return;}
