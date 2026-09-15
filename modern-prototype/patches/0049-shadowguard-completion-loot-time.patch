@@ -1,0 +1,28 @@
+diff --git "a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/ShadowguardEncounter.cs" "b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/ShadowguardEncounter.cs"
+index 470ab2a..77f2acb 100644
+--- "a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/ShadowguardEncounter.cs"
++++ "b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/ShadowguardEncounter.cs"
+@@ -76,7 +76,7 @@ namespace Server.Engines.Shadowguard
+         public EncounterDef Def { get { return Defs[Encounter]; } }
+ 
+         public virtual TimeSpan EncounterDuration { get { return TimeSpan.FromMinutes(30); } }
+-        public virtual TimeSpan ResetDuration { get { return TimeSpan.FromSeconds(60); } }
++        public virtual TimeSpan ResetDuration { get { return Server.HavenPrototype.HavenPreview.Enabled ? TimeSpan.FromMinutes(5) : TimeSpan.FromSeconds(60); } }
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+         public bool Active { get { return Controller != null && Controller.Encounters.Contains(this); } }
+@@ -279,7 +279,13 @@ namespace Server.Engines.Shadowguard
+                     Reset();
+                 });
+ 
+-            if (this is RoofEncounter)
++            if (Server.HavenPrototype.HavenPreview.Enabled)
++            {
++                foreach (var player in Region.GetEnumeratedMobiles().OfType<PlayerMobile>())
++                    if (Participants.Contains(player)) Controller.AddToTable(player, Encounter);
++                SendPartyMessage("Room complete! Your progress is saved. You have five minutes to collect loot before returning to the lobby. Use Exit Shadowguard on your character to leave sooner.", 53);
++            }
++            else if (this is RoofEncounter)
+                 SendPartyMessage(1156250); // Congratulations! You have bested Shadowguard and prevented Minax from exploiting the Time Gate! You will be teleported out in a few minutes.
+             else
+                 SendPartyMessage(1156244); //You have bested this tower of Shadowguard! You will be teleported out of the tower in 60 seconds!

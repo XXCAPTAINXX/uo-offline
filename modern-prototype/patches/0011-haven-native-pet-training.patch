@@ -1,0 +1,20 @@
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -1978,6 +1978,7 @@
+ 
+         public override void OnDamage(int amount, Mobile from, bool willKill)
+         {
++            Server.HavenPrototype.HavenPetTrainingBridge.Award(this, from, amount);
+             if (BardPacified && (HitsMax - Hits) * 0.001 > Utility.RandomDouble())
+             {
+                 Unpacify();
+--- a/Scripts/Services/Pet Training/TrainingProfile.cs
++++ b/Scripts/Services/Pet Training/TrainingProfile.cs
+@@ -269,6 +269,7 @@
+ 
+         public void CheckProgress(BaseCreature bc)
+         {
++            if (Server.HavenPrototype.HavenPetSignatures.Kind(Creature) != 0) return; // Uses actual damage and original Haven pacing.
+             if (ControlSlots >= ControlSlotsMax || !HasBegunTraining || TrainingProgress >= TrainingProgressMax || Creature.ControlMaster == null)
+                 return;
+ 

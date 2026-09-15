@@ -1,0 +1,13 @@
+diff --git a/Projects/UOContent/Engines/ML Quests/Definitions/NewHavenSkillTraining.cs b/Projects/UOContent/Engines/ML Quests/Definitions/NewHavenSkillTraining.cs
+index e0a051e0c..3f6d1ae69 100644
+--- a/Projects/UOContent/Engines/ML Quests/Definitions/NewHavenSkillTraining.cs
++++ b/Projects/UOContent/Engines/ML Quests/Definitions/NewHavenSkillTraining.cs
+@@ -552,7 +552,7 @@ public TheAllureOfDarkMagic()
+     private class InternalReward : ItemReward
+     {
+         public InternalReward()
+-            : base(1078052, typeof(NecromancerSpellbook)) // Complete Necromancer Spellbook
++            : base(1078052, typeof(Server.UOOffline.HavenQuestNecromancerBook)) // Complete Necromancer Spellbook
+         {
+         }
+ 

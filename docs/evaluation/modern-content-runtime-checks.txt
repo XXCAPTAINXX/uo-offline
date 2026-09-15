@@ -1,0 +1,42 @@
+PHASE fresh 2026-09-10T22:05:30.8841119Z
+PASS modern expansion flags
+PASS map data Felucca
+PASS map data Trammel
+PASS map data Ilshenar
+PASS map data Malas
+PASS map data Tokuno
+PASS map data TerMur
+PASS complete kitchen set and storage
+PASS stove addon South
+PASS wash basin water behavior South
+PASS stove addon East
+PASS wash basin water behavior East
+PASS Imbuing registered and weapon intensity
+PASS Shadowguard instance allocation
+PASS Shadowguard setup and tick Bar
+PASS Shadowguard setup and tick Orchard
+PASS Shadowguard setup and tick Armory
+PASS Shadowguard setup and tick Fountain
+PASS Shadowguard setup and tick Belfry
+PASS Shadowguard setup and tick Roof
+PASS Blackthorn invasion starts with beacon and mobs
+PASS Britannian ship moves over modern ocean map
+PASS custom house foundation constructs with components
+PASS construct BritannianShip
+PASS construct OrcishGalleon
+PASS construct Osiredon
+PASS construct CorgulTheSoulbinder
+PASS construct Charydbis
+PASS save isolated world
+COMPLETE failures=0
+PHASE reload 2026-09-10T22:06:04.9762992Z
+PASS modern expansion flags
+PASS map data Felucca
+PASS map data Trammel
+PASS map data Ilshenar
+PASS map data Malas
+PASS map data Tokuno
+PASS map data TerMur
+PASS saved kitchen and contents reload
+PASS Shadowguard controller reload
+COMPLETE failures=0

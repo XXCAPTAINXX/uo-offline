@@ -1,0 +1,83 @@
+--- a/Projects/UOContent/Items/Weapons/Abilities/BleedAttack.cs
++++ b/Projects/UOContent/Items/Weapons/Abilities/BleedAttack.cs
+@@ -109,18 +109,20 @@
+         {
+             private readonly Mobile m_From;
+             private readonly Mobile m_Mobile;
++            private readonly int _ticks;
+ 
+-            public InternalTimer(Mobile from, Mobile m) : base(TimeSpan.FromSeconds(2.0), TimeSpan.FromSeconds(2.0), 5)
++            public InternalTimer(Mobile from, Mobile m) : base(TimeSpan.FromSeconds(2.0), TimeSpan.FromSeconds(2.0), Server.UOOffline.HavenMasteryDefense.BleedTicks(m))
+             {
+                 m_From = from;
+                 m_Mobile = m;
++                _ticks = Server.UOOffline.HavenMasteryDefense.BleedTicks(m);
+             }
+ 
+             protected override void OnTick()
+             {
+                 DoBleed(m_Mobile, m_From, 5 - Index);
+ 
+-                if (Index == 4)
++                if (Index == _ticks - 1)
+                 {
+                     EndBleed(m_Mobile, true);
+                 }
+--- a/Projects/UOContent/Items/Weapons/Abilities/Disarm.cs
++++ b/Projects/UOContent/Items/Weapons/Abilities/Disarm.cs
+@@ -63,6 +63,12 @@
+             }
+             else
+             {
++                if (Server.UOOffline.HavenMasteryDefense.BlocksDisarm(defender))
++                {
++                    defender.SendMessage("Saving Throw protects you from being disarmed.");
++                    attacker.SendMessage("Your opponent resists the disarm.");
++                    return;
++                }
+                 attacker.SendLocalizedMessage(1060092); // You disarm their weapon!
+                 defender.SendLocalizedMessage(1060093); // Your weapon has been disarmed!
+ 
+--- a/Projects/UOContent/Items/Weapons/Abilities/MortalStrike.cs
++++ b/Projects/UOContent/Items/Weapons/Abilities/MortalStrike.cs
+@@ -54,6 +54,7 @@
+ 
+         public static void BeginWound(Mobile m, TimeSpan duration)
+         {
++            duration = Server.UOOffline.HavenMasteryDefense.ResilientDuration(m, duration);
+             StopTimer(m);
+             Timer.StartTimer(duration, () => EndWound(m), out var timerToken);
+             _table[m] = timerToken;
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -1598,7 +1598,7 @@
+                 poison = PoisonImpl.IncreaseLevel(poison);
+             }
+ 
+-            if (poison != null && Server.Spells.SkillMasteries.ToleranceSpell.OnPoisonApplied(this)) { return ApplyPoisonResult.Immune; }
++            if (poison != null && (Server.UOOffline.HavenMasteryDefense.ResistsPoison(this) || Server.Spells.SkillMasteries.ToleranceSpell.OnPoisonApplied(this))) { return ApplyPoisonResult.Immune; }
+             var result = base.ApplyPoison(from, poison);
+ 
+             if (from != null && result == ApplyPoisonResult.Poisoned && PoisonTimer is PoisonImpl.PoisonTimer timer)
+--- a/Projects/UOContent/Mobiles/PlayerMobile.cs
++++ b/Projects/UOContent/Mobiles/PlayerMobile.cs
+@@ -3750,7 +3750,7 @@
+                 poison = Poison.IncreaseLevel(poison);
+             }
+ 
+-            if (poison != null && Server.Spells.SkillMasteries.ToleranceSpell.OnPoisonApplied(this)) { return ApplyPoisonResult.Immune; }
++            if (poison != null && (Server.UOOffline.HavenMasteryDefense.ResistsPoison(this) || Server.Spells.SkillMasteries.ToleranceSpell.OnPoisonApplied(this))) { return ApplyPoisonResult.Immune; }
+             var result = base.ApplyPoison(from, poison);
+ 
+             if (from != null && result == ApplyPoisonResult.Poisoned && PoisonTimer is PoisonImpl.PoisonTimer timer)
+--- a/Projects/UOContent/Spells/Fourth/Curse.cs
++++ b/Projects/UOContent/Spells/Fourth/Curse.cs
+@@ -28,7 +28,7 @@
+ 
+         public static bool DoCurse(Mobile caster, Mobile m)
+         {
+-            var duration = SpellHelper.GetDuration(caster, m);
++            var duration = Server.UOOffline.HavenMasteryDefense.ResilientDuration(m, SpellHelper.GetDuration(caster, m));
+ 
+             if (duration == TimeSpan.Zero)
+             {

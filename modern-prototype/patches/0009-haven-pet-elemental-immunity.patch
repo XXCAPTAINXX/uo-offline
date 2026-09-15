@@ -1,0 +1,13 @@
+--- a/Scripts/Misc/AOS.cs
++++ b/Scripts/Misc/AOS.cs
+@@ -113,6 +113,10 @@
+ 
+                 return damage;
+             }
++
++            // Preserve original Haven elemental immunity; direct and armor-ignore bypass it.
++            if (!ignoreArmor && chaos == 0 && Server.HavenPrototype.HavenPetDefenses.FullyImmune(m, phys, fire, cold, pois, nrgy, direct))
++                return 0;
+ 
+             #region Mondain's Legacy
+             if (m != null)

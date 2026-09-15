@@ -1,0 +1,20 @@
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -1582,7 +1582,7 @@
+                 chance = 990;
+             }
+ 
+-            chance -= (MaxLoyalty - m_Loyalty) * 10;
++            chance -= (MaxLoyalty - Loyalty) * 10;
+ 
+             return ((double)chance / 1000);
+         }
+@@ -1724,7 +1724,7 @@
+         }
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+-        public int Loyalty { get { return m_Loyalty; } set { m_Loyalty = Math.Min(Math.Max(value, 0), MaxLoyalty); } }
++        public int Loyalty { get { return Server.HavenPrototype.HavenPreview.Enabled && IsBonded ? MaxLoyalty : m_Loyalty; } set { m_Loyalty = Server.HavenPrototype.HavenPreview.Enabled && IsBonded ? MaxLoyalty : Math.Min(Math.Max(value, 0), MaxLoyalty); } }
+ 
+         [CommandProperty(AccessLevel.GameMaster)]
+         public WayPoint CurrentWayPoint { get { return m_CurrentWayPoint; } set { m_CurrentWayPoint = value; } }

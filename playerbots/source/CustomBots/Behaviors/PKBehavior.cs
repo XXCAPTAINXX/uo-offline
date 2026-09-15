@@ -189,6 +189,11 @@ namespace Server.CustomBots
 
         public override void Tick(PlayerBot bot)
         {
+            if (!BotPopulation.PKEnabled)
+            {
+                bot.Delete();
+                return;
+            }
             if (bot.Map == null || bot.Map == Map.Internal) return;
             if (!bot.Alive) return;
 

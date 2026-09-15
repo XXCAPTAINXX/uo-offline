@@ -1162,7 +1162,7 @@ namespace Server.CustomBots
             // the answer to a monster in your face is to walk out of its
             // face, and the minGap column above keeps the big spells honest
             // until that has happened.
-            if (pointBlank && !foe.Paralyzed && !foe.Frozen)
+            if (!Core.AOS && pointBlank && !foe.Paralyzed && !foe.Frozen)
             {
                 if (TryBeginFoeCast(bot, foe,
                         "Server.Spells.First.MagicArrowSpell", 1.75, pointBlank))
@@ -1191,6 +1191,7 @@ namespace Server.CustomBots
             // Utility: an unpoisoned foe occasionally gets a Poison instead
             // of another damage spell — variety AND damage-over-time.
             if (magery >= 40.0 && bot.Mana >= 9 && !foe.Poisoned &&
+                (foe is not BaseCreature creature || creature.PoisonImmune == null) &&
                 Utility.RandomDouble() < 0.15 &&
                 TryBeginFoeCast(bot, foe, "Server.Spells.Third.PoisonSpell", 2.25, pointBlank))
             {
@@ -1245,14 +1246,14 @@ namespace Server.CustomBots
             int totalWeight = 0;
             for (int i = start; i < count; i++)
             {
-                totalWeight += AttackSpellBook[eligible[i]].weight;
+                totalWeight += HavenBotEquipment.SpellWeight(foe, AttackSpellBook[eligible[i]].type, AttackSpellBook[eligible[i]].weight);
             }
 
             int roll = Utility.Random(totalWeight);
             int picked = eligible[count - 1];
             for (int i = start; i < count; i++)
             {
-                roll -= AttackSpellBook[eligible[i]].weight;
+                roll -= HavenBotEquipment.SpellWeight(foe, AttackSpellBook[eligible[i]].type, AttackSpellBook[eligible[i]].weight);
                 if (roll < 0)
                 {
                     picked = eligible[i];
@@ -1402,7 +1403,7 @@ namespace Server.CustomBots
                     BaseCreature b = null;
                     foreach (var m in a.GetMobilesInRange(8))
                     {
-                        if (m is BaseCreature bc && bc != a && ProvokeTarget(bc))
+                        if (m is BaseCreature bc && bc != a && ProvokeTarget(bc) && (WantsFreshFights || IsPartyFriend(bot, bc.Combatant as Mobile)))
                         {
                             b = bc;
                             break;
@@ -2530,7 +2531,7 @@ namespace Server.CustomBots
             _stepTimer = Timer.DelayCall(interval, interval, () => StepOnce(bot));
         }
 
-        private void StopStepTimer()
+        protected void StopStepTimer()
         {
             if (_stepTimer != null)
             {

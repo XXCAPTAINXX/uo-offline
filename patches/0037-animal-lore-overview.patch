@@ -1,0 +1,13 @@
+diff --git a/Projects/UOContent/Skills/AnimalLore.cs b/Projects/UOContent/Skills/AnimalLore.cs
+index 4a6150b80..72092ee82 100644
+--- a/Projects/UOContent/Skills/AnimalLore.cs
++++ b/Projects/UOContent/Skills/AnimalLore.cs
+@@ -94,7 +94,7 @@ public static void DisplayTo(Mobile from, BaseCreature c)
+                 return;
+             }
+ 
+-            from.SendGump(new AnimalLoreGump(c));
++            Server.UOOffline.HavenAnimalLoreGump.DisplayTo(from, c);
+         }
+ 
+         protected override void BuildLayout(ref DynamicGumpBuilder builder)

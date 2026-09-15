@@ -53,6 +53,7 @@ namespace Server.CustomBots
                 return;
             }
 
+            if (!Server.UOOffline.HavenGuildCrew.CanParty(inviter, bot)) { Decline(bot, inviter, false); return; }
             if (!WouldJoin(bot, out var declineLine))
             {
                 Timer.DelayCall(TimeSpan.FromSeconds(Utility.RandomMinMax(1, 2)), () =>
@@ -83,6 +84,7 @@ namespace Server.CustomBots
                         return;
                     }
 
+                    if (!Server.UOOffline.HavenGuildCrew.CanParty(inviter, bot)) { Decline(bot, inviter, false); return; }
                     p.OnAccept(bot);
 
                     var line = ChatLibrary.PickRandom("party_join");
@@ -204,6 +206,7 @@ namespace Server.CustomBots
             }
 
             // The permanent fixtures (bank crowd, station crafters) hold
+            if (Server.UOOffline.HavenGuildCrew.Retained(bot) && bot.Combatant == null && !BotPlayerParty.InPlayerParty(bot)) { return true; }
             // their post — that's the whole point of them.
             if (bot.LifecycleExempt)
             {
@@ -212,6 +215,7 @@ namespace Server.CustomBots
             }
 
             // Working classes are working.
+            if (bot.Behavior is DungeonCrawlerBehavior && !Server.UOOffline.HavenGuildCrew.Retained(bot)) { return true; }
             if (BotClassHelper.IsArtisan(bot.Class) ||
                 BotClassHelper.IsGatherer(bot.Class) ||
                 bot.Class == BotClass.Crafter)

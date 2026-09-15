@@ -1,0 +1,60 @@
+--- a/Scripts/Items/Equipment/Weapons/BaseWeapon.cs
++++ b/Scripts/Items/Equipment/Weapons/BaseWeapon.cs
+@@ -5515,6 +5515,7 @@
+ 
+         public override void AddNameProperties(ObjectPropertyList list)
+         {
++            Server.HavenPrototype.HavenLevelProperties.Add(this,list);
+             base.AddNameProperties(list);
+ 
+             #region Factions
+--- a/Scripts/Items/Equipment/Armor/BaseArmor.cs
++++ b/Scripts/Items/Equipment/Armor/BaseArmor.cs
+@@ -2792,6 +2792,7 @@
+ 
+         public override void AddNameProperties(ObjectPropertyList list)
+         {
++            Server.HavenPrototype.HavenLevelProperties.Add(this,list);
+             base.AddNameProperties(list);
+ 
+             #region Factions
+--- a/Scripts/Items/Equipment/Clothing/BaseClothing.cs
++++ b/Scripts/Items/Equipment/Clothing/BaseClothing.cs
+@@ -1070,6 +1070,7 @@
+ 
+         public override void AddNameProperties(ObjectPropertyList list)
+         {
++            Server.HavenPrototype.HavenLevelProperties.Add(this,list);
+             base.AddNameProperties(list);
+ 
+             #region Factions
+--- a/Scripts/Items/Equipment/Jewelry/BaseJewel.cs
++++ b/Scripts/Items/Equipment/Jewelry/BaseJewel.cs
+@@ -822,6 +822,7 @@
+ 
+         public override void AddNameProperties(ObjectPropertyList list)
+         {
++            Server.HavenPrototype.HavenLevelProperties.Add(this,list);
+             base.AddNameProperties(list);           
+ 
+             #region Factions
+--- a/Scripts/Items/Equipment/Spellbooks/Spellbook.cs
++++ b/Scripts/Items/Equipment/Spellbooks/Spellbook.cs
+@@ -836,6 +836,7 @@
+ 
+         public override void AddNameProperties(ObjectPropertyList list)
+         {
++            Server.HavenPrototype.HavenLevelProperties.Add(this,list);
+             base.AddNameProperties(list);
+ 
+ 			if (m_Quality == BookQuality.Exceptional)
+--- a/Scripts/Items/Equipment/Talismans/BaseTalisman.cs
++++ b/Scripts/Items/Equipment/Talismans/BaseTalisman.cs
+@@ -764,6 +764,7 @@
+ 
+         public override void GetProperties(ObjectPropertyList list)
+         {
++            Server.HavenPrototype.HavenLevelProperties.Add(this,list);
+             base.GetProperties(list);
+ 
+             #region Factions

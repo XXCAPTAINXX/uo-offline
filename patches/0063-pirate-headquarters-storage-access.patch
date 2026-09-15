@@ -1,0 +1,14 @@
+diff --git a/Projects/UOContent/Multis/Houses/BaseHouse.cs b/Projects/UOContent/Multis/Houses/BaseHouse.cs
+--- a/Projects/UOContent/Multis/Houses/BaseHouse.cs
++++ b/Projects/UOContent/Multis/Houses/BaseHouse.cs
+@@ -2501,7 +2501,9 @@
+                 SecureLevel.CoOwners => IsCoOwner(m),
+                 SecureLevel.Friends  => IsFriend(m),
+                 SecureLevel.Anyone   => true,
+-                SecureLevel.Guild    => IsGuildMember(m) || this is Server.UOOffline.HavenGuildCastle company && company.CompanyAccess(m),
++                SecureLevel.Guild    => IsGuildMember(m) ||
++                    this is Server.UOOffline.HavenGuildCastle company && company.CompanyAccess(m) ||
++                    this is Server.UOOffline.HavenPirateHeadquarters headquarters && headquarters.CompanyAccess(m),
+                 _                    => false
+             };
+         }

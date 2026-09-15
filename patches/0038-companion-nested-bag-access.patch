@@ -1,0 +1,16 @@
+diff --git a/Projects/UOContent/Skills/Snooping.cs b/Projects/UOContent/Skills/Snooping.cs
+index ddf2323b4..55fefa3d7 100644
+--- a/Projects/UOContent/Skills/Snooping.cs
++++ b/Projects/UOContent/Skills/Snooping.cs
+@@ -38,6 +38,11 @@ public static bool CheckSnoopAllowed(Mobile from, Mobile to)
+ 
+     public static void Container_Snoop(Container cont, Mobile from)
+     {
++        if (cont.RootParent is Server.UOOffline.HavenCompanion)
++        {
++            Server.UOOffline.HavenCompanionInventory.Open(cont, from);
++            return;
++        }
+         if (from.AccessLevel <= AccessLevel.Player && !from.InRange(cont.GetWorldLocation(), 1))
+         {
+             from.SendLocalizedMessage(500446); // That is too far away.

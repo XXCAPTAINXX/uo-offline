@@ -1,0 +1,21 @@
+diff --git a/Scripts/Mobiles/Bosses/Barracoon.cs b/Scripts/Mobiles/Bosses/Barracoon.cs
+index 3a40049..1bd8701 100644
+--- a/Scripts/Mobiles/Bosses/Barracoon.cs
++++ b/Scripts/Mobiles/Bosses/Barracoon.cs
+@@ -61,6 +61,16 @@ namespace Server.Mobiles
+         {
+         }
+ 
++        // Champion fights should not turn into low-health chases.
++        public override bool CanFlee { get { return false; } }
++
++        public override void OnThink()
++        {
++            if (AIObject != null && AIObject.Action == ActionType.Flee)
++                AIObject.Action = Combatant != null ? ActionType.Combat : ActionType.Guard;
++            base.OnThink();
++        }
++
+         public override ChampionSkullType SkullType
+         {
+             get

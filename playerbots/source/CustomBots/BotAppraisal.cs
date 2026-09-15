@@ -296,7 +296,7 @@ namespace Server.CustomBots
             int amount = Math.Max(1, item.Amount);
             var row = PickRow(item);
 
-            return row != null ? BandValue(row, item, amount) : GenericValue(item, amount);
+            return Math.Max(row != null ? BandValue(row, item, amount) : GenericValue(item, amount), HavenBotEquipment.PropertyValue(item));
         }
 
         // What a bot will pay at the very top of its nerve.
@@ -319,6 +319,7 @@ namespace Server.CustomBots
 
             string prefix = item switch
             {
+                _ when Core.AOS && HavenBotEquipment.PropertyValue(item) > 0 => "enchanted ",
                 BaseWeapon w when w.DamageLevel != WeaponDamageLevel.Regular =>
                     DamageWord(w.DamageLevel) + " ",
                 BaseWeapon { Quality: WeaponQuality.Exceptional } => "GM ",

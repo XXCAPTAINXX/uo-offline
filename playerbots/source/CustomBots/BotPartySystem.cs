@@ -122,9 +122,9 @@ namespace Server.CustomBots
         // Caps scale with the population. At sixteen hundred bots a flat
         // three hunts shard-wide meant a party was something you read
         // about; an eight-minute soak formed two, both of two people.
-        public static int MaxParties  => Math.Max(3, BotPopulation.TargetCount / 120);
-        public static int MaxConvoys  => Math.Max(3, BotPopulation.TargetCount / 200);
-        public static int MaxWarbands => Math.Max(2, BotPopulation.TargetCount / 400);
+        public static int MaxParties  => Math.Max(3, BotPopulation.EffectiveTargetCount / 120);
+        public static int MaxConvoys  => Math.Max(3, BotPopulation.EffectiveTargetCount / 200);
+        public static int MaxWarbands => Math.Max(2, BotPopulation.EffectiveTargetCount / 400);
         // Formation attempts happen this often (each attempt may fail —
         // no eligible leader, nobody answered the LFG).
         private static readonly TimeSpan FormAttemptMin = TimeSpan.FromSeconds(60);
@@ -674,6 +674,7 @@ namespace Server.CustomBots
         // the people on his leader were the people it would normally
         // hunt. Reds have their own gangs.
         private static bool IsEligible(PlayerBot bot) =>
+            !Server.UOOffline.HavenGuildCrew.Retained(bot) &&
             bot != null && !bot.Deleted && bot.Alive &&
             !bot.LifecycleExempt && !bot.LoggingOut &&
             bot.Combatant == null &&

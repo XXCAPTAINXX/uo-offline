@@ -77,7 +77,7 @@ namespace Server.CustomBots
 
             sb.Append($"<p><b class='grn'>{bots.Count}</b> online — curve target " +
                       $"{BotSessionManager.TargetNow} ({BotSessionManager.CurveNow:P0} " +
-                      $"of {BotPopulation.TargetCount} at {DateTime.Now.Hour:00}:00). " +
+                      $"of {BotPopulation.EffectiveTargetCount} at {DateTime.Now.Hour:00}:00). " +
                       $"Hunting parties: {BotPartyManager.CountKind(BotPartyKind.Hunt)}, " +
                       $"guild convoys: {BotPartyManager.CountKind(BotPartyKind.Convoy)}, " +
                       $"war bands: {BotPartyManager.CountKind(BotPartyKind.Warband)}.</p>");

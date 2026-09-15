@@ -1,0 +1,44 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -2415,6 +2415,7 @@ namespace Server.Mobiles
+         public virtual void OnGaveMeleeAttack(Mobile defender, int damage)
+         {
+             Server.UOOffline.HavenPetRarity.OnAttack(this, defender);
++            Server.UOOffline.HavenPetAbilities.OnAttack(this, defender);
+             var p = m_Paragon ? PoisonImpl.IncreaseLevel(HitPoison) : HitPoison;
+ 
+             if (p != null && HitPoisonChance >= Utility.RandomDouble())
+@@ -2945,6 +2946,7 @@ namespace Server.Mobiles
+         {
+             base.AddNameProperties(list);
+             Server.UOOffline.HavenPetTraining.AddProperties(this, list);
++            Server.UOOffline.HavenPetAbilities.AddProperties(this, list);
+             Server.UOOffline.HavenPetRarity.AddProperties(this, list);
+ 
+             if (MLQuestSystem.Enabled && CanGiveMLQuest)
+@@ -3660,6 +3662,7 @@ namespace Server.Mobiles
+ 
+         public virtual void OnThink()
+         {
++            Server.UOOffline.HavenPetAbilities.Think(this);
+             var tc = Core.TickCount;
+ 
+             if (EnableRummaging && CanRummageCorpses && !Summoned && !Controlled && tc - m_NextRummageTime >= 0)
+@@ -5836,4 +5839,3 @@ namespace Server.Mobiles
+         }
+     }
+ }
+-
+diff --git a/Projects/UOContent/Items/Weapons/BaseWeapon.cs b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+--- a/Projects/UOContent/Items/Weapons/BaseWeapon.cs
++++ b/Projects/UOContent/Items/Weapons/BaseWeapon.cs
+@@ -870,7 +870,7 @@ public abstract partial class BaseWeapon
+ 
+                 // Only change direction if they are not a player.
+                 attacker.Direction = attacker.GetDirectionTo(defender);
+-                var ab = bc.GetWeaponAbility();
++                var ab = Server.UOOffline.HavenPetAbilities.SelectMove(bc) ?? bc.GetWeaponAbility();
+ 
+                 if (ab != null)
+                 {

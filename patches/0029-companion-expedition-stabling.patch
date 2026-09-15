@@ -1,0 +1,13 @@
+diff --git a/Projects/UOContent/Mobiles/PlayerMobile.cs b/Projects/UOContent/Mobiles/PlayerMobile.cs
+index e37de64..8c5cb75 100644
+--- a/Projects/UOContent/Mobiles/PlayerMobile.cs
++++ b/Projects/UOContent/Mobiles/PlayerMobile.cs
+@@ -3524,6 +3524,8 @@ namespace Server.Mobiles
+                     continue;
+                 }
+ 
++                if (pet is Server.UOOffline.HavenCompanion { Expedition: not null }) { continue; }
++
+                 if (pet.Summoned)
+                 {
+                     if (pet.Map != Map)

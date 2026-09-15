@@ -1,0 +1,32 @@
+diff --git a/Projects/UOContent/Items/Skill Items/Fishing/Misc/SpecialFishingNet.cs b/Projects/UOContent/Items/Skill Items/Fishing/Misc/SpecialFishingNet.cs
+--- a/Projects/UOContent/Items/Skill Items/Fishing/Misc/SpecialFishingNet.cs
++++ b/Projects/UOContent/Items/Skill Items/Fishing/Misc/SpecialFishingNet.cs
+@@ -93,7 +93,7 @@
+ 
+     public void OnTarget(Mobile from, object obj)
+     {
+-        if (Deleted || _inUse)
++        if (Deleted || _inUse || from?.Deleted != false || !from.Alive || from.Backpack == null || !IsChildOf(from.Backpack))
+         {
+             return;
+         }
+@@ -401,6 +401,11 @@
+     [Constructible]
+     public FabledFishingNet() => Hue = 0x481;
+ 
++    public override void OnDoubleClick(Mobile from)
++    {
++        if (Server.UOOffline.HavenScalisHunt.CheckNet(from)) { base.OnDoubleClick(from); }
++    }
++
+     public override int LabelNumber => 1063451; // a fabled fishing net
+ 
+     protected override void AddNetProperties(IPropertyList list)
+@@ -411,6 +416,7 @@
+ 
+     protected override void FinishEffect(Point3D p, Map map, Mobile from)
+     {
++        if (Server.UOOffline.HavenScalisHunt.NetResult(this, p, map, from, Utility.RandomDouble())) { return; }
+         Spawn(p, map, new Leviathan(from));
+ 
+         base.FinishEffect(p, map, from);

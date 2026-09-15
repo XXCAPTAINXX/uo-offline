@@ -1,0 +1,11 @@
+--- a/Scripts/Skills/Peacemaking.cs
++++ b/Scripts/Skills/Peacemaking.cs
+@@ -184,7 +184,7 @@
+                             if (masteryBonus > 0)
+                                 diff -= (diff * ((double)masteryBonus / 100));
+ 
+-							if (!from.CheckTargetSkill(SkillName.Peacemaking, targ, diff - 25.0, diff + 25.0))
++							if (!Server.HavenPrototype.HavenCompanionProgression.CheckPeaceAttempt(from, targ, diff - 25.0, diff + 25.0))
+ 							{
+ 								from.SendLocalizedMessage(1049531); // You attempt to calm your target, but fail.
+ 								m_Instrument.PlayInstrumentBadly(from);

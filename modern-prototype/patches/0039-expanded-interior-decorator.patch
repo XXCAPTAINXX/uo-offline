@@ -1,0 +1,89 @@
+diff --git a/Scripts/Items/Tools/InteriorDecorator.cs b/Scripts/Items/Tools/InteriorDecorator.cs
+index 3d24dfd..7a34622 100644
+--- a/Scripts/Items/Tools/InteriorDecorator.cs
++++ b/Scripts/Items/Tools/InteriorDecorator.cs
+@@ -13,7 +13,7 @@ namespace Server.Items
+         Turn,
+         Up,
+         Down,
+-        GetHue
++        GetHue, North, South, East, West, LockDown, Secure, Release
+     }
+ 
+     public class InteriorDecorator : Item
+@@ -70,14 +70,14 @@ namespace Server.Items
+             if (!InHouse(from))
+                 Command = DecorateCommand.GetHue;
+ 
+-            if (from.FindGump(typeof(InternalGump)) == null)
+-                from.SendGump(new InternalGump(from, this));
++            from.CloseGump(typeof(InternalGump));
++            from.SendGump(new InternalGump(from, this));
+ 
+             if (Command != DecorateCommand.None)
+                 from.Target = new InternalTarget(this);
+         }
+ 
+-        private class InternalGump : Gump
++        private class InternalGump : Server.HavenPrototype.HavenMenuGump
+         {
+             private readonly InteriorDecorator m_Decorator;
+ 
+@@ -86,31 +86,16 @@ namespace Server.Items
+             {
+                 m_Decorator = decorator;
+ 
+-                AddBackground(0, 0, 170, 260, 2600);
+-
+-                AddPage(0);
+-
+-                if (!InHouse(from))
+-                {
+-                    AddButton(40, 36, (decorator.Command == DecorateCommand.GetHue ? 2154 : 2152), 2154, 4, GumpButtonType.Reply, 0);
+-                    AddHtmlLocalized(80, 41, 100, 20, 1158863, false, false); // Get Hue   
+-                }
+-                else
+-                {
+-                    AddButton(40, 36, (decorator.Command == DecorateCommand.Turn ? 2154 : 2152), 2154, 1, GumpButtonType.Reply, 0);
+-                    AddHtmlLocalized(80, 41, 100, 20, 1018323, false, false); // Turn
+-
+-                    AddButton(40, 86, (decorator.Command == DecorateCommand.Up ? 2154 : 2152), 2154, 2, GumpButtonType.Reply, 0);
+-                    AddHtmlLocalized(80, 91, 100, 20, 1018324, false, false); // Up
+-
+-                    AddButton(40, 136, (decorator.Command == DecorateCommand.Down ? 2154 : 2152), 2154, 3, GumpButtonType.Reply, 0);
+-                    AddHtmlLocalized(80, 141, 100, 20, 1018325, false, false); // Down
+-
+-                    AddButton(40, 186, (decorator.Command == DecorateCommand.GetHue ? 2154 : 2152), 2154, 4, GumpButtonType.Reply, 0);
+-                    AddHtmlLocalized(80, 191, 100, 20, 1158863, false, false); // Get Hue                    
+-                }
+-
+-                AddHtmlLocalized(0, 0, 0, 0, 4, false, false);
++                AddBackground(0, 0, 380, 380, 3000);
++                AddLabel(20, 18, 0, "Interior Decorator");
++                FlatButton(20,55,160,1,"Turn"); FlatButton(200,55,160,4,"Get color");
++                FlatButton(20,95,160,2,"Up +1"); FlatButton(200,95,160,3,"Down -1");
++                FlatButton(110,140,160,5,"North");
++                FlatButton(20,180,160,8,"West"); FlatButton(200,180,160,7,"East");
++                FlatButton(110,220,160,6,"South");
++                FlatButton(20,265,105,9,"Lock down"); FlatButton(137,265,105,10,"Secure"); FlatButton(254,265,105,11,"Release");
++                AddLabel(20,305,0,"Selected: " + decorator.Command);
++                FlatButton(130,340,120,0,"Close");
+             }
+ 
+             public override void OnResponse(NetState sender, RelayInfo info)
+@@ -140,6 +125,7 @@ namespace Server.Items
+                         break;
+                 }
+ 
++                if (info.ButtonID >= 5 && info.ButtonID <= 11) command = (DecorateCommand)info.ButtonID;
+                 if (command != DecorateCommand.None)
+                 {
+                     m_Decorator.Command = command;
+@@ -187,6 +173,7 @@ namespace Server.Items
+ 
+             protected override void OnTarget(Mobile from, object targeted)
+             {
++                if (Server.HavenPrototype.HavenDecoratorActions.Apply(from, targeted as Item, m_Decorator.Command)) { from.Target = new InternalTarget(m_Decorator); return; }
+                 if (m_Decorator.Command == DecorateCommand.GetHue)
+                 {
+                     int hue = 0;

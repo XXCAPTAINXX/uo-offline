@@ -1,0 +1,35 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -2606,9 +2606,16 @@ namespace Server.Mobiles
+         {
+         }
+ 
++        public override bool CheckNonlocalLift(Mobile from, Item item) =>
++            Server.UOOffline.HavenCustomPetPack.CanOpen(from, this) && item?.IsVirtualItem == false && item.IsChildOf(Backpack) || base.CheckNonlocalLift(from, item);
++
++        public override bool CheckNonlocalDrop(Mobile from, Item item, Item target) =>
++            Server.UOOffline.HavenCustomPetPack.CanOpen(from, this) && target != null && (target == Backpack || target.IsChildOf(Backpack)) || base.CheckNonlocalDrop(from, item, target);
++
+         public override void GetContextMenuEntries(Mobile from, ref PooledRefList<ContextMenuEntry> list)
+         {
+             base.GetContextMenuEntries(from, ref list);
++            if (Server.UOOffline.HavenCustomPetPack.CanOpen(from, this)) { list.Add(new Server.UOOffline.HavenCustomPetPack.Entry()); }
+ 
+             if (Commandable)
+             {
+diff --git a/Projects/UOContent/Skills/Snooping.cs b/Projects/UOContent/Skills/Snooping.cs
+--- a/Projects/UOContent/Skills/Snooping.cs
++++ b/Projects/UOContent/Skills/Snooping.cs
+@@ -38,6 +38,11 @@ public static class Snooping
+ 
+     public static void Container_Snoop(Container cont, Mobile from)
+     {
++        if (cont.RootParent is BaseCreature pet && Server.UOOffline.HavenTamingMissions.IsCustomPet(pet))
++        {
++            Server.UOOffline.HavenCustomPetPack.Open(cont, from);
++            return;
++        }
+         if (cont.RootParent is Server.UOOffline.HavenCompanion)
+         {
+             Server.UOOffline.HavenCompanionInventory.Open(cont, from);

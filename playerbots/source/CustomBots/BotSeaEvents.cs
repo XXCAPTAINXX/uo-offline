@@ -25,7 +25,7 @@ namespace Server.CustomBots
 {
     public static class BotSeaEvents
     {
-        public static bool Enabled { get; set; } = true;
+        public static bool Enabled { get; set; } = false; // Replaced by real Haven fishing voyages.
 
         private static readonly TimeSpan AttemptMin   = TimeSpan.FromMinutes(15);
         private static readonly TimeSpan AttemptMax   = TimeSpan.FromMinutes(35);

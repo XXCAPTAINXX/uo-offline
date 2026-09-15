@@ -1,0 +1,18 @@
+diff --git a/Projects/UOContent/Misc/AOS.cs b/Projects/UOContent/Misc/AOS.cs
+--- a/Projects/UOContent/Misc/AOS.cs
++++ b/Projects/UOContent/Misc/AOS.cs
+@@ -68,4 +68,5 @@
+             Server.Spells.SkillMasteries.MasteryDamage.Apply(m, from, archer ? Server.Spells.SkillMasteries.DamageType.Ranged : masteryType, ref damage);
++            if (damage <= 0) { return 0; }
+             Fix(ref phys);
+             Fix(ref fire);
+             Fix(ref cold);
+diff --git a/Projects/UOContent/Mobiles/Monsters/AOS/DemonKnight.cs b/Projects/UOContent/Mobiles/Monsters/AOS/DemonKnight.cs
+--- a/Projects/UOContent/Mobiles/Monsters/AOS/DemonKnight.cs
++++ b/Projects/UOContent/Mobiles/Monsters/AOS/DemonKnight.cs
+@@ -181,4 +181,5 @@
+             ); // For your valor in combating the fallen beast, a special artifact has been bestowed on you.
++            Server.UOOffline.HavenMarketProduction.Consign(to, artifact);
+         }
+ 
+         public static int GetArtifactChance(Mobile boss)

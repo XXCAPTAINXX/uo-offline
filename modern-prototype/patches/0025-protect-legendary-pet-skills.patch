@@ -1,0 +1,10 @@
+--- a/Scripts/Skills/AnimalTaming.cs
++++ b/Scripts/Skills/AnimalTaming.cs
+@@ -103,6 +103,7 @@
+ 		{
+ 			for (int i = 0; i < bc.Skills.Length; ++i)
+ 			{
++                if (Server.HavenPrototype.HavenLegendaryPetSkills.Protects(bc, (SkillName)i)) continue;
+                 if (!Core.TOL || firstTame)
+                 {
+                     bc.Skills[i].Cap = Math.Max(100.0, bc.Skills[i].Base * capScalar);

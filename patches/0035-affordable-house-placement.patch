@@ -1,0 +1,14 @@
+diff --git a/Projects/UOContent/Multis/Houses/HousePlacementTool.cs b/Projects/UOContent/Multis/Houses/HousePlacementTool.cs
+index 4ccf68593..76963f513 100644
+--- a/Projects/UOContent/Multis/Houses/HousePlacementTool.cs
++++ b/Projects/UOContent/Multis/Houses/HousePlacementTool.cs
+@@ -309,7 +309,8 @@ public HousePlacementEntry(
+         _newStorage = newStorage;
+         _newLockdowns = newLockdowns;
+         Vendors = vendors;
+-        Cost = cost;
++        // Haven solo pricing: charge 10% and retain that amount as the resale value.
++        Cost = cost / 10;
+ 
+         Offset = new Point3D(xOffset, yOffset, zOffset);
+ 

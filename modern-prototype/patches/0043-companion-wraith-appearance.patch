@@ -1,0 +1,21 @@
+diff --git a/Scripts/Spells/Necromancy/WraithForm.cs b/Scripts/Spells/Necromancy/WraithForm.cs
+index b6d9e3e..897d3de 100644
+--- a/Scripts/Spells/Necromancy/WraithForm.cs
++++ b/Scripts/Spells/Necromancy/WraithForm.cs
+@@ -42,14 +42,14 @@ namespace Server.Spells.Necromancy
+         {
+             get
+             {
+-                return this.Caster.Female ? 747 : 748;
++                return this.Caster is Server.HavenPrototype.HavenCompanion ? (this.Caster.Female ? 0x191 : 0x190) : (this.Caster.Female ? 747 : 748);
+             }
+         }
+         public override int Hue
+         {
+             get
+             {
+-                return this.Caster.Female ? 0 : 0x4001;
++                return this.Caster is Server.HavenPrototype.HavenCompanion ? this.Caster.Hue : (this.Caster.Female ? 0 : 0x4001);
+             }
+         }
+         public override int PhysResistOffset

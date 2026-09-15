@@ -2,6 +2,42 @@
 
 This is the implementation checklist for the September 8, 2026 starter/QOL redesign.
 
+## Starter-kit verification (September 8 follow-up)
+
+The current kit contains a character-bound blessed robe, a full evolving Magery
+grimoire, a bound weapon selected from combat skills, a wallet, cleanup bag,
+small brick house deed, and 50 bandages. Archer kits also include 100 arrows.
+Owner/GM characters now receive the kit at creation. All players who missed it
+can use `[StarterKit` or **Claim starter bundle** on a supply stone. This grants
+missing items in a named bag, checking equipped gear, nested backpack contents
+and bank contents first. A per-character account tag records successful delivery;
+full backpacks do not consume the claim. New characters are recorded at initial
+provisioning. This is a one-time catch-up, not unlimited lost-item replacement.
+
+Starter Fortune Earrings provide 100% Lower Reagent Cost and +200 Luck. They
+are included in new and catch-up bundles; replacements cost 2,500 gold at the
+supply stone. These values and the replacement price match the earlier
+modern-evolution implementation.
+
+Supply/reward listings show item icons. Selecting an item opens its stats and
+price with separate Buy and Back buttons. Stats and art come from the same
+factory as the purchased item; temporary preview items are deleted immediately.
+Robe upgrades show current and next-tier attributes before confirmation.
+Gold purchases use the adventurer's wallet first, then backpack gold, then the
+bank for any remainder. Insufficient total funds leave wallet and backpack gold
+untouched. Haven-mark reward/upgrade payment retains its existing priority.
+The Blessed Travel Book is available for 250 gold, using the earlier branch's
+portable moongate behavior, enabled-facet selector and normal travel checks.
+
+Successful spell checks advance one owned grimoire, including books in the
+backpack. Foreign-owned books gain no experience. Tests cover kit contents,
+combat-skill weapon selection, repeated provisioning, robe upgrade limits,
+and backpack spellbook progression.
+
+The checklist below also contains broader design work: milestone choices,
+specialization paths, permanent lost-item recovery and comprehensive anti-farming
+protections are not completed by this starter-kit fix.
+
 ## Completed
 
 - [x] Five veteran years of starting credit (`patches/0008-veteran-rewards-five-year-headstart.patch`)

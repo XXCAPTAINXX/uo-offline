@@ -1,0 +1,13 @@
+diff --git a/Scripts/Services/Pet Training/PetTrainingHelper.cs b/Scripts/Services/Pet Training/PetTrainingHelper.cs
+index 2dc5f02..7d5d988 100644
+--- a/Scripts/Services/Pet Training/PetTrainingHelper.cs
++++ b/Scripts/Services/Pet Training/PetTrainingHelper.cs	
+@@ -1367,7 +1367,7 @@ namespace Server.Mobiles
+ 
+         public static bool ValidateTrainingPoint(BaseCreature bc, SkillName skill)
+         {
+-            return bc.Skills[skill].Base > 0 || (Server.HavenPrototype.HavenPreview.Enabled && bc is Server.HavenPrototype.HavenSnowBear && (MagicSkills.Contains(skill) || CombatSkills.Contains(skill)));
++            return bc.Skills[skill].Base > 0 || (Server.HavenPrototype.HavenPreview.Enabled && (bc is Server.HavenPrototype.HavenSnowBear || bc is Server.HavenPrototype.HavenStormscale) && (MagicSkills.Contains(skill) || CombatSkills.Contains(skill)));
+         }
+ 
+         public static bool CheckSecondarySkill(BaseCreature bc, SkillName skill)

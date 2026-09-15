@@ -38,7 +38,13 @@ public static class StarterWeaponProgression
             return;
         }
 
-        progression.Experience++;
+        GainSharedExperience(progression, weapon, attacker, 1);
+    }
+
+    internal static void GainSharedExperience(IEvolvingStarterWeapon progression, BaseWeapon weapon, Mobile attacker, int amount)
+    {
+        if (progression.BoundTo != attacker || progression.Level >= MaxLevel || amount <= 0) { return; }
+        progression.Experience += amount;
 
         var needed = 20 + progression.Level * 10;
         if (progression.Experience < needed)
@@ -57,6 +63,7 @@ public static class StarterWeaponProgression
     public static void ApplyBonuses(IEvolvingStarterWeapon progression, BaseWeapon weapon)
     {
         var level = Math.Clamp(progression.Level, 1, MaxLevel);
+        HavenWeaponManaSustain.Apply(weapon, level);
 
         weapon.Attributes.WeaponDamage = Math.Min(20, level);
         weapon.Attributes.AttackChance = Math.Min(10, level / 2);
@@ -112,6 +119,8 @@ public partial class ApprenticeBlade : Longsword, IEvolvingStarterWeapon
         StarterWeaponProgression.Initialize(this, this);
     }
 
+    [AfterDeserialization] private void UpdateManaLeech() => HavenWeaponManaSustain.Apply(this, Level);
+
     public void BindTo(Mobile mobile) => BoundTo = mobile;
 
     public override bool CanEquip(Mobile from) =>
@@ -152,6 +161,8 @@ public partial class ApprenticeFencer : Kryss, IEvolvingStarterWeapon
         LootType = LootType.Blessed;
         StarterWeaponProgression.Initialize(this, this);
     }
+
+    [AfterDeserialization] private void UpdateManaLeech() => HavenWeaponManaSustain.Apply(this, Level);
 
     public void BindTo(Mobile mobile) => BoundTo = mobile;
 
@@ -194,6 +205,8 @@ public partial class ApprenticeMace : WarMace, IEvolvingStarterWeapon
         StarterWeaponProgression.Initialize(this, this);
     }
 
+    [AfterDeserialization] private void UpdateManaLeech() => HavenWeaponManaSustain.Apply(this, Level);
+
     public void BindTo(Mobile mobile) => BoundTo = mobile;
 
     public override bool CanEquip(Mobile from) =>
@@ -234,6 +247,8 @@ public partial class ApprenticeBow : Bow, IEvolvingStarterWeapon
         LootType = LootType.Blessed;
         StarterWeaponProgression.Initialize(this, this);
     }
+
+    [AfterDeserialization] private void UpdateManaLeech() => HavenWeaponManaSustain.Apply(this, Level);
 
     public void BindTo(Mobile mobile) => BoundTo = mobile;
 

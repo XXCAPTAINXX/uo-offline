@@ -66,6 +66,12 @@ namespace Server.CustomBots
                 return;
             }
 
+            if (!BotPopulation.PKEnabled)
+            {
+                from.SendMessage("PK bots are disabled for this shard. Existing PK spawners were cleared.");
+                return;
+            }
+
             var (placed, totalPKs) = PlaceDefault();
 
             from.SendMessage(0x35,
@@ -145,6 +151,7 @@ namespace Server.CustomBots
 
         private static void EnsureAll()
         {
+            if (!BotPopulation.PKEnabled) { return; }
             var defs = PKSpawnData.Load();
             if (defs.Count == 0)
             {
@@ -186,6 +193,7 @@ namespace Server.CustomBots
 
         public static (int placed, int totalPKs) PlaceDefault()
         {
+            if (!BotPopulation.PKEnabled) { return (0, 0); }
             var defs = PKSpawnData.Load();
 
             // Nothing drawn in the editor — synthesize the classic set

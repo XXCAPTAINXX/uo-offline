@@ -1,0 +1,24 @@
+diff --git a/Projects/UOContent/Multis/Houses/HousePlacement.cs b/Projects/UOContent/Multis/Houses/HousePlacement.cs
+index 86a364048..e2952750d 100644
+--- a/Projects/UOContent/Multis/Houses/HousePlacement.cs
++++ b/Projects/UOContent/Multis/Houses/HousePlacement.cs
+@@ -73,7 +73,8 @@ public static HousePlacementResult Check(
+                 return HousePlacementResult.InvalidCastleKeep;
+             }
+ 
+-            if (Region.Find(center, map).IsPartOf<NoHousingRegion, NoHousingGuardedRegion>())
++            if (Region.Find(center, map).IsPartOf<NoHousingRegion, NoHousingGuardedRegion>() &&
++                !Server.UOOffline.HavenHousing.IsResidentialRegion(Region.Find(center, map), map, center))
+             {
+                 return HousePlacementResult.BadRegion;
+             }
+@@ -123,7 +124,8 @@ public static HousePlacementResult Check(
+ 
+                     var reg = Region.Find(testPoint, map);
+ 
+-                    if (!reg.AllowHousing(from, testPoint)) // Cannot place houses in dungeons, towns, treasure map areas etc
++                    if (Server.UOOffline.HavenHousing.BlocksFootprint(reg, map, testPoint) ||
++                        !reg.AllowHousing(from, testPoint) && !Server.UOOffline.HavenHousing.IsResidentialRegion(reg, map, testPoint))
+                     {
+                         if (reg.IsPartOf<TempNoHousingRegion>())
+                         {

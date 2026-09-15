@@ -1,0 +1,11 @@
+--- a/Scripts/Spells/Spellweaving/GiftOfLife.cs
++++ b/Scripts/Spells/Spellweaving/GiftOfLife.cs
+@@ -106,7 +106,7 @@
+             {
+                 // As per Osi: Nothing happens.
+             }
+-            else if (m != Caster && (bc == null || !bc.IsBonded || bc.ControlMaster != Caster))
++            else if (m != Caster && (bc == null || !bc.IsBonded || bc.ControlMaster != Caster) && !(Caster is Server.HavenPrototype.HavenCompanion && ((Server.HavenPrototype.HavenCompanion)Caster).Role == Server.HavenPrototype.CompanionRole.Caster && ((Server.HavenPrototype.HavenCompanion)Caster).BoundOwner == m && ((Server.HavenPrototype.HavenCompanion)Caster).CanSupportRole(m)))
+             {
+                 Caster.SendLocalizedMessage(1072077); // You may only cast this spell on yourself or a bonded pet.
+             }

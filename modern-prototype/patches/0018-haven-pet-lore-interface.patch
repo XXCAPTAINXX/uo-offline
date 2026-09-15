@@ -1,0 +1,11 @@
+--- a/Scripts/Skills/AnimalLore.cs
++++ b/Scripts/Skills/AnimalLore.cs
+@@ -32,6 +32,8 @@
+ 			private static void SendGump(Mobile from, BaseCreature c)
+ 			{
+                 from.CheckTargetSkill(SkillName.AnimalLore, c, 0.0, 120.0);
++
++                if (Server.HavenPrototype.HavenPreview.Enabled) { from.CloseGump(typeof(Server.HavenPrototype.HavenPetLoreGump)); from.SendGump(new Server.HavenPrototype.HavenPetLoreGump(c)); return; }
+ 
+                 if (PetTrainingHelper.Enabled && from is PlayerMobile)
+                 {

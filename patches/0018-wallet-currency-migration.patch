@@ -1,0 +1,47 @@
+diff --git a/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v0.json b/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v0.json
+new file mode 100644
+--- /dev/null
++++ b/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v0.json
+@@ -0,0 +1,14 @@
++{
++  "properties": [
++    {
++      "name": "Balance",
++      "rule": "PrimitiveTypeMigrationRule",
++      "type": "long",
++      "ruleArguments": [
++        ""
++      ]
++    }
++  ],
++  "type": "Server.UOOffline.AdventurersWallet",
++  "version": 0
++}
+diff --git a/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v1.json b/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v1.json
+new file mode 100644
+--- /dev/null
++++ b/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v1.json
+@@ -0,0 +1,22 @@
++{
++  "version": 1,
++  "type": "Server.UOOffline.AdventurersWallet",
++  "properties": [
++    {
++      "name": "Balance",
++      "type": "long",
++      "rule": "PrimitiveTypeMigrationRule",
++      "ruleArguments": [
++        ""
++      ]
++    },
++    {
++      "name": "AstralShards",
++      "type": "long",
++      "rule": "PrimitiveTypeMigrationRule",
++      "ruleArguments": [
++        ""
++      ]
++    }
++  ]
++}
+\ No newline at end of file

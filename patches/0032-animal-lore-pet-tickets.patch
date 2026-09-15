@@ -1,0 +1,29 @@
+diff --git a/Projects/UOContent/Skills/AnimalLore.cs b/Projects/UOContent/Skills/AnimalLore.cs
+index a02bec8a4..a55ba11f5 100644
+--- a/Projects/UOContent/Skills/AnimalLore.cs
++++ b/Projects/UOContent/Skills/AnimalLore.cs
+@@ -34,6 +34,10 @@ protected override void OnTarget(Mobile from, object targeted)
+                 {
+                     from.SendLocalizedMessage(500331); // The spirits of the dead are not the province of animal lore.
+                 }
++                else if (targeted is Server.UOOffline.HavenExpeditionPetClaim claim)
++                {
++                    claim.InspectWithAnimalLore(from);
++                }
+                 else if (targeted is not BaseCreature c)
+                 {
+                     from.SendLocalizedMessage(500329); // That's not an animal!
+diff --git a/Projects/UOContent/Migrations/Server.UOOffline.HavenExpeditionPetClaim.v1.json b/Projects/UOContent/Migrations/Server.UOOffline.HavenExpeditionPetClaim.v1.json
+new file mode 100644
+--- /dev/null
++++ b/Projects/UOContent/Migrations/Server.UOOffline.HavenExpeditionPetClaim.v1.json
+@@ -0,0 +1,9 @@
++{
++  "version": 1,
++  "type": "Server.UOOffline.HavenExpeditionPetClaim",
++  "properties": [
++    { "name": "Owner", "type": "Server.Mobile", "rule": "SerializableInterfaceMigrationRule" },
++    { "name": "Kind", "type": "Server.UOOffline.HavenExpeditionKind", "rule": "EnumMigrationRule" },
++    { "name": "Rarity", "type": "int", "rule": "PrimitiveTypeMigrationRule", "ruleArguments": ["EncodedInt"] }
++  ]
++}
