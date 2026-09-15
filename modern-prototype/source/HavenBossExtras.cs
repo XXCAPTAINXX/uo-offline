@@ -36,10 +36,13 @@ namespace Server.HavenPrototype
                     Deliver(owner, new MessageInABottle(boss.Map));
                     Deliver(owner, new SpecialFishingNet());
                     Deliver(owner, new FishingPole());
+                    var forge = ForgeReward(Utility.RandomDouble());
+                    if (forge != null) Deliver(owner, forge);
                 }
                 owner.SendMessage(0x482, "Boss rewards: " + gold.ToString("N0") + " gold, " + marks + " Marks, 10 Astral Shards and bonus supplies. Overflow items are in your bank.");
             }
         }
+        public static Item ForgeReward(double roll) { return roll >= 0 && roll < 0.05 ? new HavenSmallSoulForgeDeed() : null; }
         private static void Deliver(PlayerMobile owner, Item item)
         {
             if (owner.Backpack == null || !owner.Backpack.TryDropItem(owner, item, false)) owner.BankBox.DropItem(item);

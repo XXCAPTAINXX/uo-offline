@@ -1,0 +1,28 @@
+diff --git a/Scripts/Mobiles/NPCs/BaseVendor.cs b/Scripts/Mobiles/NPCs/BaseVendor.cs
+index c8a9664..d6b7dfd 100644
+--- a/Scripts/Mobiles/NPCs/BaseVendor.cs
++++ b/Scripts/Mobiles/NPCs/BaseVendor.cs
+@@ -922,6 +922,7 @@ namespace Server.Mobiles
+ 				Restock();
+ 			}
+ 
++			Server.HavenPrototype.HavenMerchantStock.Refresh(this);
+ 			UpdateBuyInfo();
+ 
+ 			int count = 0;
+@@ -1616,6 +1617,7 @@ namespace Server.Mobiles
+ 				return false;
+ 			}
+ 
++			Server.HavenPrototype.HavenMerchantStock.Refresh(this);
+ 			UpdateBuyInfo();
+ 
+ 			//var buyInfo = GetBuyInfo();
+@@ -1951,6 +1953,7 @@ namespace Server.Mobiles
+ 				}
+ 			}
+ 
++			Server.HavenPrototype.HavenMerchantStock.Refresh(this);
+ 			return true;
+ 		}
+ 
