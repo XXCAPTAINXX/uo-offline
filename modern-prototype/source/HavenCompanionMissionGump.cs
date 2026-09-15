@@ -21,7 +21,8 @@ namespace Server.HavenPrototype
             var names=_tab==0?Gathering:_tab==1?HavenPetMissions.Names:Roles;
             _selection=Math.Max(0,Math.Min(names.Length-1,selection));int page=_selection/6;
             AddBackground(0,0,720,560,0xA28);
-            Text(24,20,660,28,""+companion.Name+" - "+(_tab==2?"combat role":"missions")+"");
+            Button(560,20,6,"History",110);
+            Text(24,20,515,28,""+companion.Name+" - "+(_tab==2?"combat role":"missions")+"");
             Text(24,52,664,25,companion.OnMission?"Away: "+MissionName(companion.MissionKind)+" | "+CompanionMissionTimerGump.Remaining(companion):"Ready | Combat role: "+companion.Role);
             Button(24,87,10,_tab==0?"[Gathering]":"Gathering",145);
             Button(215,87,11,_tab==1?"[Taming]":"Taming",140);
@@ -96,7 +97,8 @@ namespace Server.HavenPrototype
             if(id==1){bool ok=_tab==2?_companion.SetRole(p,(CompanionRole)_selection):_companion.StartMission(p,_minutes,(_tab==1?(CompanionMission)(_selection+6):GatheringKind(_selection)));if(ok&&_tab!=2){_companion.Show(p);return;}if(!ok&&_tab==2)p.SendMessage("Move near your companion and finish combat before changing roles.");}
             if(id==9)_companion.DeliverRewards();
             if(id==2){_companion.Show(p);return;}
-            if(id==3&&!_companion.Recall(p))p.SendMessage("Cannot recall: your current location is unavailable.");
+            if(id==3){HavenMissionRecallGump.Show(_companion,p);return;}
+            if(id==6){HavenMissionHistory.Show(_companion,p);return;}
             if(id==4){_companion.OpenResourceLedger(p);return;}
             if(id==5)_companion.DeliverPetTickets();if(id==8){HavenPetExchange.Show(p);return;}
 

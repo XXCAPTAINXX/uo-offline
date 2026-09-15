@@ -48,7 +48,7 @@ namespace Server.HavenPrototype
         {
             var owner=sender.Mobile;
             if(!_companion.IsOwner(owner) || info.ButtonID==0) return;
-            if(info.ButtonID==2 && !_companion.Recall(owner)) owner.SendMessage("Cannot recall: your current location is unavailable.");
+            if(info.ButtonID==2){HavenMissionRecallGump.Show(_companion,owner);return;}
             owner.SendGump(new CompanionActivityGump(_companion));
         }
     }

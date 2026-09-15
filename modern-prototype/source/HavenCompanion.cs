@@ -544,6 +544,7 @@ namespace Server.HavenPrototype
             _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
             _lastReport += HavenDoomMission.Complete(_owner,_missionKind,_missionMinutes);
             _lastReport += " " + HavenMarks.Award(_owner,_missionMinutes*2) + " Haven Marks earned.";
+            HavenMissionHistory.Record(this,_lastReport);
             DeliverRewards();
             _missionReturnPending = true;
             if (_owner != null && _owner.NetState != null) _owner.SendMessage(_lastReport);
@@ -584,6 +585,7 @@ namespace Server.HavenPrototype
                     _scheduledResources.Clear();
                     CancelPetMission();
                     _lastReport = _missionKind + " mission recalled early. No completion rewards or mission training were awarded.";
+                    HavenMissionHistory.Record(this,_lastReport);
                     from.SendMessage(_lastReport);
                 }
             }

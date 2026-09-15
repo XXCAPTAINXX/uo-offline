@@ -73,3 +73,11 @@ Scalis now independently rolls 5% per qualifying recipient for a blessed HavenSm
 Merchant normal catalog stock refreshes on opening/buying and after successful purchases: minimum 1,000 stackable supplies, 100 nonstackable items, 10 animals. Native economy stock floor raised to 1,000; larger configured stock preserved. Resale objects and player-vendor inventory are not manufactured by this helper. Native purchase prices and payment path unchanged.
 
 Tests: all 11 recipes succeed with exact costs, missing ingredients consume nothing, repeated attunement blocked, marker virtual, evolving artifact excluded, forge range and crafting threshold checks, 5% boundary. Actual native Alchemist purchase returns replenished stock, larger economy quantity preserved. Previous sea-boss reward tests still pass. Audit/live builds and login check complete deployment verification.
+
+### September 15: mission usability batch
+
+Added owner-only History access to mission screen. A separate internal serialized record stores the latest 20 completed/early-recalled trips, newest first, including existing reward reports and UTC timestamps. Existing companion save layout is unchanged. History starts with new trips; no fabricated historical backfill. Deleted companion records are cleaned up.
+
+Mission menu and timer early-recall buttons now ask for confirmation. Confirmation snapshots the trip due time and verifies ownership/current trip; stale windows cannot cancel a later mission. Core Recall remains immediate for emergency recovery and existing commands. Forge recipes now show owned/required quantities for all three ingredients.
+
+Tests: real offline dispatch/completion writes one history entry even on repeat completion; early recall writes its report; stale/foreign confirmation rejected; history retains newest 20 in order and round-trips serialization. All existing forge and merchant runtime checks pass. UI compiled and layout reviewed from code; client visual inspection remains outstanding.

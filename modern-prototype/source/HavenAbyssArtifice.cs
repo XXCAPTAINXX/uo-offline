@@ -80,17 +80,18 @@ namespace Server.HavenPrototype
   {
    readonly Item Forge,Gear;readonly int Page,Selected;
    static string Words(Type t){return System.Text.RegularExpressions.Regex.Replace(t.Name,"([a-z])([A-Z])","$1 $2");}
+   public static string Material(Item gear,Type type,int need){var owner=gear.RootParent as Mobile;int have=owner==null||owner.Backpack==null?0:owner.Backpack.GetAmount(type);return Words(type)+" "+have+"/"+need;}
    public Menu(Item forge,Item gear,int page=0,int selected=-1):base(45,45)
    {
     Forge=forge;Gear=gear;Page=Math.Max(0,Math.Min(1,page));Selected=selected;
     AddBackground(0,0,760,560,0xA28);AddLabel(24,18,0,"ABYSS ARTIFICE | One permanent attunement");
     AddLabel(24,48,0,"Requires 80 Blacksmithing, Tailoring, Tinkering or Inscription.");
-    AddLabel(24,73,0,"Choose a recipe, then confirm. Evolving equipment is excluded.");
+    AddLabel(24,73,0,"Materials show owned / needed. Choose a recipe, then confirm to spend.");
     for(int row=0;row<6&&Page*6+row<Recipes.Length;row++)
     {
      int i=Page*6+row,y=110+row*52;var r=Recipes[i];FlatButton(24,y,410,100+i,(Selected==i?"Selected: ":"")+r.Name);
      AddLabel(455,y,0,"Current "+HavenAdvancedGear.Attributes(gear)[r.Attribute]+" / cap "+r.Cap);
-     AddLabel(24,y+24,0,"8 "+Words(r.Essence)+", 2 "+Words(r.First)+", 2 "+Words(r.Second));
+     AddLabel(24,y+24,0,Material(gear,r.Essence,8)+" | "+Material(gear,r.First,2)+" | "+Material(gear,r.Second,2));
     }
     if(Selected>=0){AddLabel(24,438,0,"Confirm: "+Recipes[Selected].Name);FlatButton(24,475,340,2,"Confirm attunement and spend materials");}
     FlatButton(390,475,155,1,Page==0?"Next page":"Previous page");FlatButton(570,475,150,0,"Close");
