@@ -72,14 +72,19 @@ namespace Server.HavenPrototype
         }
         public static int Repair(Mobile from)
         {
+            if(from==null||from.Deleted||!from.Alive)return 0;
             int count=0;
             var items=new List<Item>(from.Items);
             if(from.Backpack!=null) items.AddRange(from.Backpack.FindItemsByType(typeof(Item),true));
             foreach(var item in items.Distinct())
             {
+                if(item.Deleted)continue;
                 var weapon=item as BaseWeapon; var armor=item as BaseArmor;
+                var clothing=item as BaseClothing; var jewel=item as BaseJewel;
                 if(weapon!=null && weapon.HitPoints<weapon.MaxHitPoints) { weapon.HitPoints=weapon.MaxHitPoints; count++; }
                 else if(armor!=null && armor.HitPoints<armor.MaxHitPoints) { armor.HitPoints=armor.MaxHitPoints; count++; }
+                else if(clothing!=null && clothing.MaxHitPoints>0 && clothing.HitPoints<clothing.MaxHitPoints) { clothing.HitPoints=clothing.MaxHitPoints; count++; }
+                else if(jewel!=null && jewel.MaxHitPoints>0 && jewel.HitPoints<jewel.MaxHitPoints) { jewel.HitPoints=jewel.MaxHitPoints; count++; }
             }
             return count;
         }
@@ -120,12 +125,13 @@ namespace Server.HavenPrototype
             FlatButton(256,310,100,0,"Close");
         }
         public static int[] Services(int group){return group==0?new[]{0,1,8,9,10,4}:group==3?new[]{3}:new[]{2,6,7};}
-        public override void OnResponse(NetState sender,RelayInfo info){int service=info.ButtonID-1;if(!HavenStarterHub.CanUse(sender.Mobile,_board)||!Services(_board.Service).Contains(service))return;if(service==1||service==9||service==10){HavenSupplyShops.Show(sender.Mobile,service==1?0:service==9?1:2);return;}if(service==7)sender.Mobile.SendGump(new HavenRecoveryGump());else if(service==8)sender.Mobile.SendGump(new HavenStarterGearGump(sender.Mobile));else sender.Mobile.SendGump(new HavenHubGump(_board,service));}
+        public override void OnResponse(NetState sender,RelayInfo info){int service=info.ButtonID-1;if(!HavenStarterHub.CanUse(sender.Mobile,_board)||!Services(_board.Service).Contains(service))return;if(service==1||service==9||service==10){HavenSupplyShops.Show(sender.Mobile,service==1?0:service==9?1:2);return;}if(service==7)sender.Mobile.SendGump(new HavenRecoveryGump());else if(service==8)sender.Mobile.SendGump(new HavenStarterGearGump(sender.Mobile));else sender.Mobile.SendGump(new HavenHubGump(_board,service,sender.Mobile));}
     }
     public class HavenHubGump : HavenStoneGump
     {
         private readonly HavenServiceStone _stone; private readonly int _service;
-        public HavenHubGump(HavenServiceStone stone,int service):base(50,50)
+        private readonly int _restoreQuote;
+        public HavenHubGump(HavenServiceStone stone,int service,Mobile owner=null):base(50,50)
         {
             _stone=stone; _service=service;
             AddBackground(0,0,570,420,0xA28); AddLabel(24,20,0,HavenStarterHub.Names[service]);
@@ -134,11 +140,12 @@ namespace Server.HavenPrototype
                 "One arcane kit per character: full Magery, Necromancy, Spellweaving and Chivalry books, a Book of Masteries and a reagent-saving robe. Normal skill, mastery learning and quest requirements still apply.",
                 "Recruit your permanent companion or open his orders. Try Warrior, Caster or Archer. His missions and Resource Ledger are available through his menu.",
                 "Open travel to New Haven, Luna, Royal City, Underworld, Doom, Blackthorn, Shadowguard and the Abyss. Travel unlocks 15 seconds after your last attack.",
-                "Free preview repair: restores current durability on weapons and armor you wear or carry. Does not increase maximum durability or add properties.",
+                "Free repair: restores current durability on weapons, shields, armor, clothing and jewelry you wear or carry, including equipment inside your bags. Does not increase maximum durability or add properties.",
                 "OPTIONAL TEST BOOST: the next screen offers a one-time test kit that sets all skills to 120 and stats to 100 each. Skip this stone if you want to train a new character normally. Opening the menu alone changes nothing.",
                 "The plaza offers starter supplies, arcane supplies, companion recruitment, dungeon travel, repairs and optional test training.<BR><BR>Use [c for your companion, [home for starter housing and [havenmarks for rewards. Completed companion missions earn 2 Haven Marks per minute. Preview each reward before buying it.<BR><BR>Native vendors, bankers, healers and trainers remain available. Use [minichamp for three-wave expeditions and a boss, with rewards for every damage participant. The evolving gear stone offers starter equipment and robe upgrades. Use [wallet for gold storage and tithing; [havenluck shows the restored area bonus. Custom pets, the market and home island remain upcoming. Original-server progress is separate."};
-            AddHtml(24,58,520,240,"<BASEFONT COLOR=#202020>"+details[service]+"</BASEFONT>",false,true);
-            if(stone!=null && service!=6) { FlatButton(24,362,215,1,service<=1?"Claim supplies":service==4?"Repair carried equipment":"Open service"); }
+            AddHtml(24,58,520,service==4?175:240,"<BASEFONT COLOR=#202020>"+details[service]+"</BASEFONT>",false,true);
+            if(stone!=null && service!=6) { FlatButton(24,362,215,1,service<=1?"Claim supplies":service==4?"Repair all equipment":"Open service"); }
+            if(service==4 && owner!=null) {int count;_restoreQuote=HavenGearRepair.Quote(owner,out count);AddHtml(24,242,520,62,"<BASEFONT COLOR=#202020>Restore maximum durability: "+count+" item(s), "+_restoreQuote+" bank gold. Starter gear is free; other items cost 250 gold each.</BASEFONT>",false,false);FlatButton(24,315,320,8,"Restore maximum durability");}
             if(service==0) {FlatButton(265,280,275,7,"Free Champion's Codex");FlatButton(24,315,215,5,"Get a free trash bag");FlatButton(265,315,275,6,"Open wallet");}
             if(service==6) {FlatButton(24,315,215,4,"Healers and corpse recovery");FlatButton(24,362,215,2,"Browse Haven rewards");FlatButton(245,362,180,3,"Mini champion");}
             FlatButton(440,362,100,0,"Close");
@@ -146,6 +153,7 @@ namespace Server.HavenPrototype
         public override void OnResponse(NetState sender,RelayInfo info)
         {
             var from=sender.Mobile;
+            if(info.ButtonID==8 && _service==4 && HavenStarterHub.CanUse(from,_stone)){HavenGearRepair.Restore(from,_restoreQuote);from.SendGump(new HavenHubGump(_stone,4,from));return;}
             if(info.ButtonID==7 && _service==0 && HavenStarterHub.CanUse(from,_stone)){HavenChampionCodex.OpenCodex(from);return;}
             if(info.ButtonID==6 && _service==0 && HavenStarterHub.CanUse(from,_stone)){HavenWallet.Open(from);return;}
             if(info.ButtonID==5 && _service==0 && HavenStarterHub.CanUse(from,_stone)) {HavenTrash.Claim(from);return;}

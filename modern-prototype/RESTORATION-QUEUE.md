@@ -1,5 +1,7 @@
 # Accepted restoration order
 
+> Current comparison checkpoint: [2026-09-14 parity review](PARITY-REVIEW-20260914.md). Historical staged/not-deployed notes below are not a current deployment inventory.
+
 Restore the original server's behavior in this order: gear, pets, full companion roles and missions, island. This is an implementation queue, not a claim that these features are live.
 
 1. Gear: Concord talisman, nine matching rings and actual set bonuses, equipment progression; then Astral, quest, Legendary and Doom custom gear. Preserve original prices and requirements and validate purchases, equip/unequip, growth and reload.
@@ -47,7 +49,7 @@ Still separate work: old custom trained elemental ability pool (this release use
 Pet checkpoint deployed 2026-09-11 after the above checks, including native auto-stable/login reclaim and active training quota reload. Existing characters preserved. Remaining scope listed above is still unfinished.
 
 
-## Regional and offline mission checkpoint — staged 2026-09-11
+## Regional and offline mission checkpoint ï¿½ staged 2026-09-11
 - Added Magery reagents, Malas necromantic reagents, Doom bones, Abyss essences and Abyss rare ingredients as appended mission IDs; existing active/save IDs retain their meaning.
 - New regional pools, rates, resistance-plus-combat requirements and 15/30/60-minute material bonuses match original HavenRegionalMissions/HavenMissionDuration. Added native reagents/rare ingredients to the resource ledger without reordering existing IDs. Legacy bundled Malas/Abyss routes remain available.
 - Added 60-minute dispatch and UI selection. Material completion bonuses apply to the restored reagent/regional routes; broader original grind/gear/training/taming supply-roll parity remains unfinished.
