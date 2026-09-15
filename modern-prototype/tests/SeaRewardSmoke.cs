@@ -28,6 +28,19 @@ public static class SeaRewardSmoke
    corgul.Delete();
   }
   log("PASS twelve Corgul unique awards reach eligible pet owner bank, excluding distant contributor");
+  foreach(var extraBoss in new BaseCreature[]{new CorgulTheSoulBinder(),new CoraTheSorceress(),new Osiredon()})
+  {
+   extraBoss.MoveToWorld(owner.Location,owner.Map);
+   ((Mobile)extraBoss).RegisterDamage(10000,pet);((Mobile)extraBoss).RegisterDamage(10000,remote);
+   int before=owner.BankBox.Items.Count;
+   Server.HavenPrototype.HavenBossExtras.Award(extraBoss);
+   int expected=extraBoss is CorgulTheSoulBinder?2:extraBoss is CoraTheSorceress?1:3;
+   if(owner.BankBox.Items.Count!=before+expected||remote.Backpack.Items.Count!=0)throw new Exception("Boss extras delivery "+extraBoss.GetType().Name);
+   Server.HavenPrototype.HavenBossExtras.Award(extraBoss);
+   if(owner.BankBox.Items.Count!=before+expected)throw new Exception("Duplicate extras");
+   extraBoss.Delete();
+  }
+  log("PASS all three boss extra bundles bank safely, credit pets, exclude remote owners and cannot duplicate");
   pet.Delete();petBoss.Delete();boss.Delete();owner.Delete();remote.Delete();
  }
 }

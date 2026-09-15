@@ -53,3 +53,9 @@ Verification: clean audit build; twenty one-damage draws with an ineligible high
 Corgul's separate guaranteed unique-item draw now filters for looting rights and eligible nearby players before retaining the native top-five selection. Haven-only change; guaranteed unique reward and additional shared/decorative rates remain unchanged. The prior shared sea-boss delivery fix provides bank fallback and growth attachment.
 
 Verification: twelve native Corgul OnBeforeDeath calls with equal pet/remote-player damage delivered the guaranteed unique item to the eligible pet owner's full-pack bank every time; remote backpack stayed empty. Existing weighted-draw, no-eligible-recipient, and pet-credit checks also passed. These are server-side fixture tests, not client combat playthroughs. Old custom Corgul gold/map/transcendence extras still require a separate comparison with current reward hooks.
+
+### September 15: boss supplemental supplies restored
+
+HavenBossExtras restores old physical extra bundles on native boss death: Corgul level-6 treasure map and Tactics transcendence scroll (1.0 Felucca / 0.5 elsewhere); Cora level-5 map; Scalis message in a bottle, special fishing net and fishing pole. Requires native looting rights, at least 600 credited damage, alive and within 32 tiles on the same map. Native looting rights consolidate pet damage. Each boss/player pair pays once; full packs bank items directly. Current native artifact rolls and Sovereign hooks stay intact.
+
+Server fixture checks passed for all three bundles, pet-owner credit, remote-player exclusion, full-pack bank fallback and duplicate-call prevention. Audit/live builds and login probe are deployment checks. Remaining differences include old gold/Marks/shard bundles and Scalis soul-forge integration; those are not restored in this batch, nor is an extra artifact roll layered on native rewards.
