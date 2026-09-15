@@ -1,0 +1,15 @@
+diff --git a/Scripts/Services/Expansions/High Seas/Mobiles/Corgul/CorgulTheSoulbinder.cs b/Scripts/Services/Expansions/High Seas/Mobiles/Corgul/CorgulTheSoulbinder.cs
+index 4c6f228..efe971b 100644
+--- a/Scripts/Services/Expansions/High Seas/Mobiles/Corgul/CorgulTheSoulbinder.cs
++++ b/Scripts/Services/Expansions/High Seas/Mobiles/Corgul/CorgulTheSoulbinder.cs	
+@@ -111,6 +111,10 @@ namespace Server.Mobiles
+         {
+             List<DamageStore> rights = GetLootingRights();
+ 
++            // Preserve the native top-five draw, but only among nearby eligible contributors.
++            if (Server.HavenPrototype.HavenPreview.Enabled && rights != null)
++                rights.RemoveAll(entry => !entry.m_HasRight || !IsEligible(entry.m_Mobile, null));
++
+             Mobile winner = null;
+ 
+             if (rights != null && rights.Count > 0)

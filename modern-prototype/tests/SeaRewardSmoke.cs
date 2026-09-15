@@ -15,6 +15,19 @@ public static class SeaRewardSmoke
   var petBoss=new BaseSeaChampion(null,AIType.AI_Melee,FightMode.Closest);petBoss.MoveToWorld(boss.Location,boss.Map);var pet=new Dog();pet.SetControlMaster(owner);pet.MoveToWorld(owner.Location,owner.Map);((Mobile)petBoss).RegisterDamage(10,pet);petBoss.RegisterDamageTo(petBoss);var petReward=new GoldRing();petBoss.AwardArtifact(petReward);if(petReward.Deleted||!petReward.IsChildOf(owner.BankBox))throw new Exception("Pet owner credit");
   log("PASS native pet damage resolves to owner and preserves bank delivery");
   owner.MoveToWorld(remote.Location,remote.Map);var none=new GoldRing();boss.AwardArtifact(none);if(!none.Deleted)throw new Exception("No eligible recipient should not award");
+  owner.MoveToWorld(boss.Location,boss.Map);
+  for(int n=0;n<12;n++)
+  {
+   var corgul=new CorgulTheSoulBinder();corgul.MoveToWorld(boss.Location,boss.Map);
+   ((Mobile)corgul).RegisterDamage(10000,remote);((Mobile)corgul).RegisterDamage(10000,pet);
+   int before=owner.BankBox.Items.Count;
+   corgul.OnBeforeDeath();
+   bool unique=false;
+   for(int i=before;i<owner.BankBox.Items.Count;i++){var reward=owner.BankBox.Items[i];if(reward is CorgulsEnchantedSash||reward is CorgulsHandbookOnMysticism||reward is CorgulsHandbookOnTheUndead)unique=true;}
+   if(!unique||remote.Backpack.Items.Count!=0)throw new Exception("Corgul unique must reach eligible pet owner");
+   corgul.Delete();
+  }
+  log("PASS twelve Corgul unique awards reach eligible pet owner bank, excluding distant contributor");
   pet.Delete();petBoss.Delete();boss.Delete();owner.Delete();remote.Delete();
  }
 }

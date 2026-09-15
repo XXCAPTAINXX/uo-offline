@@ -47,3 +47,9 @@ BossArtifactGrowthSmoke passed for all 16 types through level20, including repea
 Fixed BaseSeaChampion's weighted recipient draw to use eligible entries and include the upper boundary. Previously a remote participant could win, or the final boundary could discard an earned artifact. Eligibility now requires the same map. In Haven, full backpacks receive the exact artifact in the bank, and recognized equipment receives its growth record on delivery.
 
 Verification: clean audit build; twenty one-damage draws with an ineligible high-damage attacker; full-pack bank delivery; native pet damage credited to its owner; no eligible recipient receives nothing. Clean live build and login probe are deployment checks. Drop probabilities are unchanged. Corgul's separate guaranteed unique-item recipient selection still needs review; this batch fixes the shared sea-champion draw and delivery only.
+
+### September 15: Corgul guaranteed unique recipient
+
+Corgul's separate guaranteed unique-item draw now filters for looting rights and eligible nearby players before retaining the native top-five selection. Haven-only change; guaranteed unique reward and additional shared/decorative rates remain unchanged. The prior shared sea-boss delivery fix provides bank fallback and growth attachment.
+
+Verification: twelve native Corgul OnBeforeDeath calls with equal pet/remote-player damage delivered the guaranteed unique item to the eligible pet owner's full-pack bank every time; remote backpack stayed empty. Existing weighted-draw, no-eligible-recipient, and pet-credit checks also passed. These are server-side fixture tests, not client combat playthroughs. Old custom Corgul gold/map/transcendence extras still require a separate comparison with current reward hooks.
