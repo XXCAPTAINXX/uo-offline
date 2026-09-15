@@ -52,7 +52,7 @@ namespace Server.HavenPrototype
             }
             else
             {
-                Text(322,175,365,24,"2. Duration");
+                Text(322,175,365,24,"2. Duration | 10 equipped gear XP per minute");
                 int[] durations={5,15,30,60};
                 for(int i=0;i<4;i++)Button(322+i*91,204,20+i,(_minutes==durations[i]?"[":"")+durations[i]+"m"+(_minutes==durations[i]?"]":""),53);
                 Text(322,242,365,24,"Requirements");

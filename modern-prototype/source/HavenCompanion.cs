@@ -529,6 +529,7 @@ namespace Server.HavenPrototype
         {
             if (Deleted || !OnMission) return;
             if (DateTime.UtcNow < _missionDue) { ScheduleMission(); return; }
+            int[] trainingBefore = HavenMissionTraining.Snapshot(this);
             int gold = _missionMinutes * 100;
             _missionDue = DateTime.MinValue;
             _missionTimer = null;
@@ -537,6 +538,7 @@ namespace Server.HavenPrototype
             _lastReport = FinishResourceMission() + " " + _missionMinutes + " minutes; " + gold + " gold earned. Completed runs: " + _completedMissions + ".";
             _lastReport += HavenDoomMission.Complete(_owner,_missionKind,_missionMinutes);
             _lastReport += " " + HavenMarks.Award(_owner,_missionMinutes*2) + " Haven Marks earned.";
+            _lastReport += HavenMissionTraining.Complete(this,_missionMinutes,trainingBefore);
             HavenMissionHistory.Record(this,_lastReport);
             DeliverRewards();
             _missionReturnPending = true;
