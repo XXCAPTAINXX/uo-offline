@@ -81,3 +81,9 @@ Added owner-only History access to mission screen. A separate internal serialize
 Mission menu and timer early-recall buttons now ask for confirmation. Confirmation snapshots the trip due time and verifies ownership/current trip; stale windows cannot cancel a later mission. Core Recall remains immediate for emergency recovery and existing commands. Forge recipes now show owned/required quantities for all three ingredients.
 
 Tests: real offline dispatch/completion writes one history entry even on repeat completion; early recall writes its report; stale/foreign confirmation rejected; history retains newest 20 in order and round-trips serialization. All existing forge and merchant runtime checks pass. UI compiled and layout reviewed from code; client visual inspection remains outstanding.
+
+### September 15: automatic companion party and persistent combat bar
+
+Every two seconds, online owners' existing companions reconcile party membership and restore a missing combat bar. Existing bars are left untouched to avoid redraw/position resets. Membership follows the owner's party, including when the owner is not leader, through travel/death/missions; native ten-member capacity is respected without evicting others. No replacement companion is created by maintenance. Manual Join party delegates to the same ownership check.
+
+The combat bar no longer disappears into the mission timer while away. Its Close button is replaced by Party. Server-side test with connected NetState verifies party creation/disband recovery/idempotence, missing bar restoration, unchanged existing bar instance, and visibility while on mission. All preceding batch regression tests passed. Native party membership is reconstructed on reconnect rather than changing native party serialization.

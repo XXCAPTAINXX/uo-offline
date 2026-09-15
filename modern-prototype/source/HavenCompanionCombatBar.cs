@@ -10,7 +10,7 @@ namespace Server.HavenPrototype
         public void ShowCombatBar(Mobile owner)
         {
             if(!IsOwner(owner))return;
-            if(ShowAwayTimer(owner))return;
+            JoinOwnerParty(owner);
             owner.CloseGump(typeof(CompanionGump));
             owner.CloseGump(typeof(CompanionActivityGump));
             owner.CloseGump(typeof(CompanionResourceMissionGump));
@@ -30,7 +30,7 @@ namespace Server.HavenPrototype
             Closable=false;
             AddBackground(0,0,350,100,3000);
             AddLabelCropped(12,8,76,20,0,companion.Name);
-            Button(94,8,11,"Puzzle");Button(176,8,7,"Menu");Button(258,8,9,"Close");
+            Button(94,8,11,"Puzzle");Button(176,8,7,"Menu");Button(258,8,9,"Party");
             Button(12,39,1,"Follow");Button(94,39,2,"Guard");
             Button(176,39,4,"Stay");Button(258,39,3,"Attack");
             Button(12,69,5,"Heal");Button(94,69,10,companion.TamingAssistActive?"Cancel":"Tame");
@@ -57,7 +57,7 @@ namespace Server.HavenPrototype
                 case 5:ok=_companion.HealOwner(owner);break;
                 case 6:ok=_companion.Recall(owner);break;
                 case 7:_companion.ShowCombatBar(owner);_companion.Show(owner,true);return;
-                case 9:return;
+                case 9:ok=_companion.JoinOwnerParty(owner);break;
                 case 10:
                     if(!_companion.CanCommand(owner)){ok=false;break;}
                     if(!_companion.TamingAssistActive&&_companion.Role!=CompanionRole.Bard)

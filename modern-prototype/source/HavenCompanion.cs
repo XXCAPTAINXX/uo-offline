@@ -278,14 +278,7 @@ namespace Server.HavenPrototype
 
         public bool JoinOwnerParty(Mobile from)
         {
-            if (!CanCommand(from)) return false;
-            var party = CompanionParty.Get(from);
-            var current = CompanionParty.Get(this);
-            if (current != null) return current == party;
-            if (party != null && (party.Leader != from || party.Count >= CompanionParty.Capacity)) return false;
-            if (party == null) { party = new CompanionParty(from); from.Party = party; }
-            party.Add(this);
-            return CompanionParty.Get(this) == party;
+            return HavenCompanionPresence.EnsureParty(this,from);
         }
 
         internal Mobile ClosestHostile()
