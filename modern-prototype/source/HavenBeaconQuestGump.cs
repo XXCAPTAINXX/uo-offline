@@ -22,6 +22,7 @@ namespace Server.HavenPrototype
    };
    AddHtml(24,91,670,280,"<BASEFONT COLOR=#3B2A1A>"+text[System.Math.Max(0,System.Math.Min(5,phase))]+"</BASEFONT>",false,true);
    if(phase==0)FlatButton(24,387,220,1,"Begin with Jenna");
+   if(phase!=4)FlatButton(474,387,220,7,"Jenna's field guide");
    if(phase==4){FlatButton(24,387,200,10,"Tide");FlatButton(248,387,200,11,"Anchor");FlatButton(472,387,220,12,"Star");}
    if(phase>=1||HavenArrivalStory.Stage(p)>=2){FlatButton(24,528,205,20,HavenStoryGifts.Claimed(p,"cape")?"Replay cape explanation":"Jenna's leveling cape");FlatButton(249,528,205,21,HavenStoryGifts.Claimed(p,"mount")?"Replay horse explanation":"Horse and bonding apple");}
    if(phase==5)FlatButton(474,528,220,22,HavenStoryGifts.Claimed(p,"fountain")?"Replay fountain explanation":"Claim fountain deed");
@@ -38,6 +39,7 @@ namespace Server.HavenPrototype
    else if(info.ButtonID==4)HavenBeaconQuest.Speak(_owner,HavenBeaconQuest.CurrentVoice(_owner),true);
    else if(info.ButtonID==5)HavenBeaconQuest.ToggleVoice(_owner);
    else if(info.ButtonID==6){HavenArrivalStory.Show(_owner);return;}
+   else if(info.ButtonID==7){_owner.SendGump(new HavenJennaFieldBriefing(_owner));return;}
    else if(info.ButtonID>=10&&info.ButtonID<=12)HavenBeaconQuest.ChooseGlyph(_owner,info.ButtonID-10);
    HavenBeaconQuest.Show(_owner);
   }

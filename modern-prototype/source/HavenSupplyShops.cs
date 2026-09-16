@@ -65,10 +65,8 @@ namespace Server.HavenPrototype {
  public class HavenSupplyShopGump:HavenStoneGump {
   public new void FlatButton(int x,int y,int width,int id,string text){StoneButton(x,y,width,id,text,null);}
   void StoneButton(int x,int y,int width,int id,string text,Item item){
-   int art=width>=166?2446:2445,actualWidth=width>=166?180:108;
-   ((Gump)this).AddButton(x,y,art,art,id,GumpButtonType.Reply,0);
+   base.FlatButton(x,y,width,id,text);
    if(item!=null)AddItemProperty(item.Serial);
-   base.AddLabel(x+Math.Max(4,(actualWidth-text.Length*6)/2),y+3,0,text);
   }
   public new void ItemButton(Mobile viewer,Item item,int x,int y,int width,int id,string label){item.SendPropertiesTo(viewer);StoneButton(x,y,width,id,label,item);}
   static readonly string[] Groups={"Weapons","Armor and clothing","Jewelry","Travel and storage","Special tools"};
@@ -83,7 +81,7 @@ namespace Server.HavenPrototype {
    _holder=new HavenShopPreviewHolder();if(holder!=null)holder.Delete();
    AddBackground(0,0,700,590,0xA28);Text(24,22,650,25,"<B>"+HavenSupplyShops.Names[kind]+"</B>");Text(24,54,650,25,"Bank gold: "+Server.Mobiles.Banker.GetBalance(p).ToString("N0")+" | Marks: "+HavenMarks.Balance(p));
    if(kind==2)for(int g=-1;g<5;g++){int col=(g+1)%3,row=(g+1)/3;FlatButton(24+col*220,88+row*28,210,20+g+1,(_group==g?"[":"")+(g<0?"All rewards":Groups[g])+(_group==g?"]":""));}
-   if(kind==2&&_group==0){string[] families={"All weapons","Blades","Axes","Maces and staves","Bows"};for(int f=-1;f<4;f++)FlatButton(24+(f+1)*130,148,124,31+f,(_weaponFamily==f?"[":"")+families[f+1]+(_weaponFamily==f?"]":""));}
+   if(kind==2&&_group==0){string[] families={"All weapons","Blades","Axes","Maces/staves","Bows"};for(int f=-1;f<4;f++)FlatButton(24+(f+1)*130,148,124,31+f,(_weaponFamily==f?"[":"")+families[f+1]+(_weaponFamily==f?"]":""));}
    int top=kind==2?(_group==0?188:158):94;
    for(int row=0;row<PageSize;row++){int offset=_page*PageSize+row;if(offset>=_visible.Count)break;int index=_visible[offset];var item=entries[index].Create();if(HavenGearDurability.Supported(item))HavenGearDurability.Apply(item);_holder.DropItem(item);ItemButton(p,item,24,top+row*33,300,100+index,entries[index].Name);if(index==_selected)_preview=item;}
    if(_selected>=0){var entry=entries[_selected];Text(345,top,325,40,"<B>"+HavenMenuText.Encode(entry.Name)+"</B>");Text(345,top+44,325,40,entry.FreeClaim!=null?"Free first claim; 250 gold replacements":entry.Shards>0?entry.Shards+" Astral shards":entry.Marks>0?entry.Marks+" Marks"+(entry.Gold>0?" or "+entry.Gold.ToString("N0")+" gold":""):entry.Gold.ToString("N0")+" gold");
