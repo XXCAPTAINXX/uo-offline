@@ -20,6 +20,16 @@ namespace Server.HavenPrototype {
    int remainder=Math.Max(0,budget-(fast+4)/5);
    return fast+Scaled(trained+fast,remainder,roll);
   }
+  public static void TamingBardPractice(HavenCompanion c,int minutes) {
+   // A little supporting practice per completed trip; Peacemaking keeps its 3x rate.
+   int units=Math.Max(0,minutes)/5;
+   foreach(var name in new[]{SkillName.Peacemaking,SkillName.Musicianship}) {
+    var skill=c.Skills[name];
+    if(skill.Lock!=SkillLock.Up||skill.BaseFixedPoint>=skill.CapFixedPoint)continue;
+    int gain=Scaled(skill.BaseFixedPoint,units*(name==SkillName.Peacemaking?3:1),Utility.RandomDouble());
+    skill.BaseFixedPoint=Math.Min(skill.CapFixedPoint,skill.BaseFixedPoint+gain);
+   }
+  }
   public static int Scaled(int trained,int amount,double roll) {
    if(amount<=0)return 0;
    int ordinary=Math.Min(amount,Math.Max(0,1200-trained));

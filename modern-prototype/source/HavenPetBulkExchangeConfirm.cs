@@ -9,7 +9,7 @@ namespace Server.HavenPrototype {
   public HavenPetBulkExchangeConfirm(HavenPetBook book):base(70,70){
    _book=book;_tickets=book.Items.OfType<HavenPetTicket>().Where(t=>Eligible(book.Owner,t,book)).ToArray();
    AddBackground(0,0,570,300,3000);AddLabel(24,22,53,"Turn in Rare and below");
-   AddHtml(24,65,522,150,"Exchange "+_tickets.Length+" pets for "+_tickets.Sum(HavenPetExchange.Value)+" credits.<BR><BR>Includes eligible Normal and Rare pets across the entire book, regardless of search or page.<BR>Favorites, bonded pets, Epic and Legendary pets are kept.<BR><BR>Confirming permanently removes these pets and their training.",false,false);
+   AddHtml(24,65,522,150,"Exchange "+_tickets.Length+" pets for "+_tickets.Sum(HavenPetExchange.Value)+" credits.<BR><BR>Includes eligible Normal and Rare pets across the entire book, regardless of search or page.<BR>Starter horses, favorites, bonded pets, Epic and Legendary pets are kept.<BR><BR>Confirming permanently removes these pets and their training.",false,false);
    if(_tickets.Length>0)FlatButton(24,249,310,1,"Confirm turn-in: "+_tickets.Length+" pets");FlatButton(350,249,190,0,"Keep my pets");
   }
   public override void OnResponse(NetState sender,RelayInfo info){

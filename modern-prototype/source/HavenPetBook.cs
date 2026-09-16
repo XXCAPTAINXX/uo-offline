@@ -44,7 +44,7 @@ namespace Server.HavenPrototype
         public void BeginAdd(Mobile p)
         {
             if(!CanUse(p))return;
-            p.SendMessage("Target one of your pet tickets in your backpack. Stored tickets are protected from exchange.");
+            p.SendMessage("Target one of your pet tickets in your backpack. Favorites, bonded pets, Legendary pets and starter horses cannot be exchanged.");
             p.Target=new AddTicketTarget(this);
         }
         private sealed class AddTicketTarget:Target
@@ -91,7 +91,7 @@ namespace Server.HavenPrototype
             AddLabel(510,20,0,"Pet credits: "+HavenPetExchange.Balance(book.Owner));
             FlatButton(24,57,210,3,"Add pet ticket...");FlatButton(248,57,230,4,"Sort: "+Sorts[_sort]);FlatButton(492,57,240,5,"Show: "+Filters[_filter]);
             AddBackground(24,92,365,28,9350);AddTextEntry(30,96,350,22,0,1,_search);FlatButton(404,94,100,7,"Search");FlatButton(514,94,90,8,"Clear");
-            AddLabel(24,129,0,"Favorites, bonded and Legendary pets are protected. Exchanges require confirmation.");
+            AddLabel(24,129,0,"Starter horses, favorites, bonded and Legendary pets are protected.");
             for(int i=0;i<_tickets.Length;i++){
                 var t=_tickets[i];var pet=t.Pet;int y=169+i*52;int tier=Math.Max(t.Rarity,HavenPetDefenses.Tier(pet));
                 string name=pet.Name??"Unnamed pet";if(name.Length>42)name=name.Substring(0,39)+"...";
@@ -100,7 +100,7 @@ namespace Server.HavenPrototype
                 FlatButton(420,y+6,84,100+i*3,"Lore");FlatButton(514,y+6,90,101+i*3,"Claim");
                 FlatButton(742,y+6,84,300+i,t.Favorite?"Unfavorite":"Favorite");
                 if(HavenPetExchange.Eligible(book.Owner,t,book))FlatButton(614,y+6,118,102+i*3,"Exchange +"+HavenPetExchange.Value(t));
-                else AddLabel(626,y+8,0,"Protected");
+                else AddLabel(626,y+8,0,pet is HavenStoryHorse?"Starter horse":t.Favorite?"Favorite":pet.IsBonded?"Bonded":tier>=3?"Legendary":"Unavailable");
                 AddLabel(24,y+34,0,t.AcquiredAt==DateTime.MinValue?"Added: unknown (older ticket)":"Added: "+t.AcquiredAt.ToString("yyyy-MM-dd HH:mm")+" UTC");
             }
             if(_tickets.Length==0)AddLabel(24,182,0,"No pets in this view. Add a ticket or change the filter.");

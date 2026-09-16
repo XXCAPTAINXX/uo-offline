@@ -48,7 +48,7 @@ namespace Server.HavenPrototype
             Text(322,133,365,28,""+names[_selection]+"");
             if(_tab==2)
             {
-                string detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Auto: Wildfire on herself, then Thunderstorm between refreshes. Wraith Form and Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first.<BR><BR>Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Peacemaking, provocation and discordance. Native mastery songs at 90 skill; join the party to share them.<BR><BR>Use Tame assist in Companion pets to calm and tame wild animals.";
+                string detail=_selection==0?"Sword and shield. Fights up close.":_selection==1?"Auto: Wildfire on herself, then Thunderstorm between refreshes. Wraith Form and Arcane Focus.":_selection==2?"Bow combat from range.":_selection==4?"Stronger direct heals, cures and resurrection. Treats the most urgent patient first.<BR><BR>Emergency group recovery: 30 mana, 20-second cooldown, six-tile range. Stays with the group.":"Evolving sword and shield for melee. Peacemaking, provocation and discordance support the fight. Native mastery songs at 90 skill; party members share their effects.<BR><BR>Use Tame assist in Companion pets to calm and tame wild animals.";
                 Text(322,179,365,200,detail);
                 Text(322,385,365,58,"All roles can heal. Changing role preserves equipment and trained skills.");
                 Button(322,455,1,"Use "+names[_selection]+" role",320);
@@ -89,7 +89,7 @@ namespace Server.HavenPrototype
         }
         public static string Reward(int tab,int selection,int minutes)
         {
-            if(tab==1)return "One pet ticket; "+HavenTamingSupplies.SearchRolls(minutes)+" rarity / supply rolls. Bonus supplies go into the companion pack. Leash, bonding potion, 105 combat scroll or rare house post.";
+            if(tab==1)return "One pet ticket; "+HavenTamingSupplies.SearchRolls(minutes)+" rarity / supply rolls. Bonus supplies (such as leashes, bonding potions and scrolls) go into the companion pack.<BR>Peacemaking / Musicianship: up to +0.3 / +0.1 per 5m, respecting locks and caps; slower above 120. Early recall gives no training.";
             if(selection>=6)return HavenRegionalMissions.Description(GatheringKind(selection),minutes);
             switch(selection){case 1:return HavenGatheringMissions.Amount(CompanionMission.Mining,minutes)+" ingots loose into Jenna's backpack. Overflow is retained.";case 2:return HavenGatheringMissions.Amount(CompanionMission.Lumber,minutes)+" logs loose into Jenna's backpack. Overflow is retained.";case 3:return HavenGatheringMissions.Amount(CompanionMission.Leather,minutes)+" leather loose into Jenna's backpack. Overflow is retained.";case 4:return (minutes*2)+" of each Malas resource loose into Jenna's backpack. Overflow is retained.";case 5:return minutes+" of each Abyss essence loose into Jenna's backpack. Overflow is retained.";default:return HavenMissionSpoils.GearCount(minutes)+" enchanted equipment pieces. Gold and gear go loose into the companion backpack; overflow stays protected.";}
         }
