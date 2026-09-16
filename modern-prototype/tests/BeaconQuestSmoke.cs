@@ -59,6 +59,8 @@ public static class BeaconQuestSmoke
    Check(HavenRefugeQuest.Stage(p)==4&&HavenMarks.Balance(p)==originalMarks,"Chapter completion duplicates expedition currency");
    for(int step=0;step<5;step++){a.SetTag("Haven.RefugeQuest:"+p.Serial.Value,step.ToString());Check(new HavenRefugeQuestGump(p).Entries.Count>0,"Refuge page");}
    log("PASS chapter two physical visits, no purchase required, premature win rejected, victory required, duplicate completion safe, all pages");
+   p.Aggressors.Clear();p.Aggressed.Clear();c.Aggressors.Clear();c.Aggressed.Clear();p.Combatant=null;c.Combatant=null;c.MoveToWorld(p.Location,p.Map);
+   Check(c.SetRole(p,CompanionRole.Bard),"Bard switch");Check(c.Weapon is Longsword&&c.FindItemOnLayer(Layer.TwoHanded) is MetalShield&&c.RangeFight==1,"Bard armament or melee range");var bardWeapon=c.Weapon;c.EnsureEvolvingEquipment();Check(c.Weapon==bardWeapon&&HavenEquipmentEvolution.Find((Item)bardWeapon)!=null,"Bard evolving gear duplicated or missing");Check(c.SetRole(p,CompanionRole.Caster)&&c.SetRole(p,CompanionRole.Bard)&&c.Weapon==bardWeapon,"Bard switching lost weapon");log("PASS bard sword/shield, melee range, evolving equipment, reuse across role switches");
    PersonalCampSmoke.Run(log);
    log("PASS clues and glyph order; one-time Marks and fountain deed;60234 bandages instantly enhanced preserving existing7; repeated conversion idempotent; all journal pages and mute");
   }finally{if(p.QuestArrow!=null)p.QuestArrow.Stop();if(fountain!=null)fountain.Delete();if(other!=null)other.Delete();if(horse!=null)horse.Delete();if(c!=null)c.Delete();p.Delete();}

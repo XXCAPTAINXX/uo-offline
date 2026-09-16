@@ -176,7 +176,7 @@ namespace Server.HavenPrototype
                 count += item.TotalItems + 1; weight += item.TotalWeight + item.PileWeight;
             }
             foreach (var item in hands) Backpack.DropItem(item);
-            if (role == CompanionRole.Warrior)
+            if (role == CompanionRole.Warrior || role == CompanionRole.Bard)
             {
                 if (_roleSword == null || _roleSword.Deleted) _roleSword = new Longsword { Movable = false };
                 if (_roleShield == null || _roleShield.Deleted) _roleShield = new MetalShield { Movable = false };
@@ -187,7 +187,7 @@ namespace Server.HavenPrototype
                 if (_roleBow == null || _roleBow.Deleted) _roleBow = new Bow { Movable = false };
                 AddItem(_roleBow);
             }
-            StopArmoryHelp();StopTamingAssist();ClearRoleSupport();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior ? 1 : 6;
+            StopArmoryHelp();StopTamingAssist();ClearRoleSupport();_role = role;if(role==CompanionRole.Bard)EnsureBardTools(); EnsureEvolvingEquipment(); RangeFight = role == CompanionRole.Warrior || role == CompanionRole.Bard ? 1 : 6;
             _companionAI = null; ChangeAIType(AIType.AI_Melee);
             return SetOrder(from, OrderType.Follow);
         }

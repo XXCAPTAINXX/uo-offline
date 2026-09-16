@@ -18,7 +18,7 @@ namespace Server.HavenPrototype
         public Mobile Owner;
         private readonly List<Item> _pieces = new List<Item>();
         public bool Deployed { get { return Parent == null && Map != null && Map != Map.Internal; } }
-        public HavenPersonalCamp(Mobile owner) { Owner=owner; Name="personal expedition camp"; Weight=10; LootType=LootType.Blessed; MaxItems=100; }
+        public HavenPersonalCamp(Mobile owner) { Owner=owner; Name="personal expedition camp"; Weight=10; LootType=LootType.Blessed; MaxItems=250; }
         public HavenPersonalCamp(Serial s):base(s) { }
         public override bool OnDroppedToWorld(Mobile p,Point3D point){p.SendMessage("Double-click the camp in your backpack to choose a campsite.");return false;}
         private bool Access(Mobile p) { return p != null && p == Owner && !Deleted && p.Alive && (IsChildOf(p.Backpack) || Deployed && p.Map == Map && p.InRange(this,2) && p.InLOS(this)); }
@@ -81,7 +81,7 @@ namespace Server.HavenPrototype
             account.SetTag(key,"claimed");p.SendMessage("Jenna gives you a personal camp. Set it in Haven before you own a house, then pack it and move it home later.");return true;
         }
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Owner);w.Write(_pieces.Count);foreach(var piece in _pieces)w.Write(piece);}
-        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();int count=r.ReadInt();for(int i=0;i<count;i++){var piece=r.ReadItem();if(piece!=null)_pieces.Add(piece);}}
+        public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();int count=r.ReadInt();for(int i=0;i<count;i++){var piece=r.ReadItem();if(piece!=null)_pieces.Add(piece);}MaxItems=250;}
         private sealed class CampTarget:Target
         {
             private readonly HavenPersonalCamp _camp;
