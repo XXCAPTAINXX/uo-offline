@@ -103,7 +103,7 @@ namespace Server.HavenPrototype
             FlatButton(24,462,210,4,"Recovery and supplies");
             FlatButton(249,462,210,5,"Opening quest / gifts");
             FlatButton(474,462,220,0,"Close");
-            if(stage>=1) FlatButton(24,512,435,6,"Claim personal camp from Jenna");
+            if(stage>=1) FlatButton(24,512,435,6,HavenPersonalCamp.Claimed(p)?"Replay Jenna's camp explanation":"Claim personal camp from Jenna");
         }
         public override void OnResponse(NetState state, RelayInfo info)
         {
@@ -113,7 +113,7 @@ namespace Server.HavenPrototype
             else if(info.ButtonID == 3) HavenBeaconQuest.Speak(_owner,8 + Math.Min(4,HavenRefugeQuest.Stage(_owner)),true);
             else if(info.ButtonID == 4) { _owner.SendGump(new HavenJennaFieldBriefing(_owner)); return; }
             else if(info.ButtonID == 5) { HavenBeaconQuest.Show(_owner); return; }
-            else if(info.ButtonID == 6 && !HavenPersonalCamp.Claim(_owner)) _owner.SendMessage("Keep Jenna nearby and make room in your backpack. Each character receives one camp.");
+            else if(info.ButtonID == 6){if(HavenPersonalCamp.Claimed(_owner))HavenBeaconQuest.Speak(_owner,13,true);else if(!HavenPersonalCamp.Claim(_owner))_owner.SendMessage("Keep Jenna nearby and make room in your backpack. Each character receives one camp.");}
             HavenRefugeQuest.Show(_owner);
         }
     }

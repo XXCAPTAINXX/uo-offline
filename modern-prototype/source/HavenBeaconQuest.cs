@@ -23,7 +23,8 @@ namespace Server.HavenPrototype
    "Now we know how to get back on our feet. Let's visit the supply stones. Select something to inspect it, check the price, and only buy when you're ready. You don't have to spend anything for my benefit.",
    "Before we sail, let's learn to fight together here on Haven. The expedition camp offers a few different threats. Find the camp with me. We're only scouting for now.",
    "Wildwood creatures, corsair raiders, or restless dead. Choose a normal Haven expedition: three waves, then its champion. Challenge mode combines all three threats. That can wait until we're ready.",
-   "Listen to this. Keep the refuge light burning. The next arrival must find the shore. Someone wanted you here. I don't know whether that makes me feel better. But at least we're asking the right questions."
+   "Listen to this. Keep the refuge light burning. The next arrival must find the shore. Someone wanted you here. I don't know whether that makes me feel better. But at least we're asking the right questions.",
+   "This camp is yours. Set it on clear ground in Haven while you train. The pack is private, and the forge and anvil work. Double-click the bedroll to pack everything together. Make room for the contents, then take it home when you have a house."
   };
   static string Key(Mobile p,string field){return "Haven.BeaconQuest:"+p.Serial.Value+":"+field;}
   static int Read(Mobile p,string field){int n;var a=p==null?null:p.Account as Account;return a!=null&&Int32.TryParse(a.GetTag(Key(p,field)),out n)?n:0;}

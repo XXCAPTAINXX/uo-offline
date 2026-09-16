@@ -128,5 +128,15 @@
     "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-14.wav",
+    "sound": 32763,
+    "seconds": 16.54,
+    "peak": 25455,
+    "source_peak": 18021,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   }
 ]

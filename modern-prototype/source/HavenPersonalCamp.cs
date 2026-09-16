@@ -20,6 +20,14 @@ namespace Server.HavenPrototype
         public bool Deployed { get { return Parent == null && Map != null && Map != Map.Internal; } }
         public HavenPersonalCamp(Mobile owner) { Owner=owner; Name="personal expedition camp"; Weight=10; LootType=LootType.Blessed; MaxItems=250; }
         public HavenPersonalCamp(Serial s):base(s) { }
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+            list.Add("Private storage: 250 items. Contents keep their normal weight.");
+            list.Add(Deployed ? "Open pack to store items; double-click bedroll to pack up." : "Double-click to set up in Haven, outdoors, or in your own house.");
+            list.Add("Packing requires backpack room for the camp and all contents.");
+        }
+        public static bool Claimed(Mobile p){var a=p==null?null:p.Account as Account;return a!=null&&a.GetTag("Haven.PersonalCamp:"+p.Serial.Value)!=null;}
         public override bool OnDroppedToWorld(Mobile p,Point3D point){p.SendMessage("Double-click the camp in your backpack to choose a campsite.");return false;}
         private bool Access(Mobile p) { return p != null && p == Owner && !Deleted && p.Alive && (IsChildOf(p.Backpack) || Deployed && p.Map == Map && p.InRange(this,2) && p.InLOS(this)); }
         public override bool IsAccessibleTo(Mobile p) { return Access(p) && base.IsAccessibleTo(p); }
@@ -52,7 +60,7 @@ namespace Server.HavenPrototype
             var nearby=map.GetMobilesInRange(point,12);
             try { foreach(Mobile m in nearby) { var creature=m as BaseCreature; if(creature!=null && creature.Alive && !creature.Controlled && !creature.IsInvulnerable && creature.FightMode!=FightMode.None)return false; } }
             finally { nearby.Free(); }
-            MoveToWorld(point,map); Movable=false;
+            MoveToWorld(point,map); Movable=false;InvalidateProperties();
             AddPiece(new HavenCampPiece(this,0xDE3),-1,-1);
             AddPiece(new HavenCampForge(this),-1,1);
             AddPiece(new HavenCampAnvil(this),-1,0);
@@ -68,7 +76,7 @@ namespace Server.HavenPrototype
             Movable=true;
             if(!p.Backpack.TryDropItem(p,this,false)){Movable=false;return false;}
             foreach(var piece in _pieces)if(piece!=null&&!piece.Deleted)piece.Delete();
-            _pieces.Clear();p.SendMessage("Camp packed. Every stored item remains inside the same pack.");return true;
+            _pieces.Clear();InvalidateProperties();p.SendMessage("Camp packed. Every stored item remains inside the same pack.");return true;
         }
         public override void OnAfterDelete(){foreach(var piece in _pieces)if(piece!=null&&!piece.Deleted)piece.Delete();_pieces.Clear();base.OnAfterDelete();}
         public static bool Claim(Mobile p)
@@ -78,7 +86,7 @@ namespace Server.HavenPrototype
             if(account.GetTag(key)!=null)return false;
             var camp=new HavenPersonalCamp(p);
             if(!p.Backpack.TryDropItem(p,camp,false)){camp.Delete();return false;}
-            account.SetTag(key,"claimed");p.SendMessage("Jenna gives you a personal camp. Set it in Haven before you own a house, then pack it and move it home later.");return true;
+            account.SetTag(key,"claimed");p.SendMessage("Jenna gives you a personal camp. Set it in Haven before you own a house, then pack it and move it home later.");HavenBeaconQuest.Speak(p,13);return true;
         }
         public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Owner);w.Write(_pieces.Count);foreach(var piece in _pieces)w.Write(piece);}
         public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Owner=r.ReadMobile();int count=r.ReadInt();for(int i=0;i<count;i++){var piece=r.ReadItem();if(piece!=null)_pieces.Add(piece);}MaxItems=250;}

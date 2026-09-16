@@ -14,7 +14,7 @@ root=Path(__file__).parent
 source=root/'source/HavenBeaconQuest.cs'
 section=re.search(r'VoiceLines=\{(.*?)\};',source.read_text(),re.S).group(1)
 lines=re.findall(r'"([^"\n]*)"',section)
-assert len(lines)==13
+assert len(lines)==14
 output=root/'assets/sounds/story'
 encoded=output/'encoded'
 encoded.mkdir(exist_ok=True)
