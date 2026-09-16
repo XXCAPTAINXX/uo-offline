@@ -93,7 +93,7 @@ namespace Server.HavenPrototype
                 "<B>Jenna:</B> Wildwood creatures, corsair raiders, or restless dead. Choose one threat and we'll face it together, here on Haven.<BR><BR>Start and finish any normal Haven mini-champ expedition. Each has three waves of five enemies, followed by its champion. Your damage, Jenna's damage and your pets' damage all count toward participation.<BR><BR>Challenge mode also counts, but is optional: three waves of fifteen enemies, then all three champions together.<BR><BR>Completion is recorded from the actual expedition victory. Existing expedition rewards still apply; this journal does not replace or duplicate them.",
                 "The expedition report includes a message recovered on Haven: <I>Keep the refuge light burning. The next arrival must find the shore.</I><BR><BR><B>Jenna:</B> They weren't trying to extinguish the beacon. Someone wants us to reach that island. I don't know whether that makes me feel better.<BR><BR><B>Chapter complete:</B> You learned Haven's recovery services, inspected the purchasing stones, found the Haven camp and completed an expedition. Collect any pending expedition rewards at the camp.<BR><BR>The island refuge is our next destination. Its Cove battles and dangerous northeastern wildlife come later; you do not need to visit the island to finish this chapter."
             };
-            AddBackground(0,0,720,530,3000);
+            AddBackground(0,0,720,570,3000);
             AddLabel(24,20,0,"THE REFUGE REMEMBERS | Chapter two");
             AddLabel(24,52,0,"Objective: " + objectives[stage]);
             AddHtml(24,90,670,300,"<BASEFONT COLOR=#3B2A1A>" + pages[stage] + "</BASEFONT>",false,true);
@@ -103,6 +103,7 @@ namespace Server.HavenPrototype
             FlatButton(24,462,210,4,"Recovery and supplies");
             FlatButton(249,462,210,5,"Opening quest / gifts");
             FlatButton(474,462,220,0,"Close");
+            if(stage>=1) FlatButton(24,512,435,6,"Claim personal camp from Jenna");
         }
         public override void OnResponse(NetState state, RelayInfo info)
         {
@@ -112,6 +113,7 @@ namespace Server.HavenPrototype
             else if(info.ButtonID == 3) HavenBeaconQuest.Speak(_owner,8 + Math.Min(4,HavenRefugeQuest.Stage(_owner)),true);
             else if(info.ButtonID == 4) { _owner.SendGump(new HavenJennaFieldBriefing(_owner)); return; }
             else if(info.ButtonID == 5) { HavenBeaconQuest.Show(_owner); return; }
+            else if(info.ButtonID == 6 && !HavenPersonalCamp.Claim(_owner)) _owner.SendMessage("Keep Jenna nearby and make room in your backpack. Each character receives one camp.");
             HavenRefugeQuest.Show(_owner);
         }
     }
