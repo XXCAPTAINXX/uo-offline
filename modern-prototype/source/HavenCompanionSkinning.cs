@@ -34,9 +34,9 @@ namespace Server.HavenPrototype
         {
             if(corpse==null||corpse.Deleted||corpse.Animated||corpse.Map!=Map||BoundOwner==null)return false;
             var animal=corpse.Owner as BaseCreature;
-            if(animal==null||animal.Hides<=0||animal.Controlled||animal.Summoned||animal.IsBonded||animal.Body.IsHuman||corpse.IsCriminalAction(BoundOwner))return false;
+            if(animal==null||(animal.Hides<=0&&animal.Meat<=0&&animal.Feathers<=0&&animal.Scales<=0&&!(animal is WildTiger))||animal.Controlled||animal.Summoned||animal.IsBonded||animal.Body.IsHuman||corpse.IsCriminalAction(BoundOwner))return false;
             if(!HuntingParticipant(corpse.Killer)&&!corpse.Aggressors.Any(HuntingParticipant))return false;
-            return !corpse.Carved||corpse.Items.Any(i=>i is BaseHides||i is BaseLeather);
+            return !corpse.Carved||corpse.Items.Any(i=>i.Movable);
         }
         internal bool SkinCorpse(Corpse corpse)
         {
@@ -52,14 +52,14 @@ namespace Server.HavenPrototype
             {
                 foreach(var item in corpse.Items.ToArray())
                 {
-                    if(!(item is BaseHides)&&!(item is BaseLeather))continue;
+                    if(!item.Movable)continue;
                     if(!Backpack.TryDropItem(this,item,false))continue;
-                    var hides=item as IScissorable;if(hides!=null)hides.Scissor(this,scissors);
+                    var hides=item is BaseHides?item as IScissorable:null;if(hides!=null)hides.Scissor(this,scissors);
                     gathered=true;
                 }
             }
             finally { scissors.Delete(); }
-            if(gathered)PlaySound(0x248);
+            if(gathered){var ledger=EnsureResourceLedger();if(ledger!=null)foreach(var resource in Backpack.Items.ToArray())ledger.AbsorbCarriedResource(this,resource);PlaySound(0x248);}
             return gathered;
         }
         private void ThinkSkinning()
