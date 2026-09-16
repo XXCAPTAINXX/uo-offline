@@ -20,7 +20,8 @@ public static class BeaconQuestSmoke
    Check(HavenStoryGifts.ClaimCape(p)&&!HavenStoryGifts.ClaimCape(p),"Cape duplicated");
    p.FollowersMax=10;Check(HavenStoryGifts.ClaimMount(p)&&!HavenStoryGifts.ClaimMount(p),"Mount claim");
    var apple=p.Backpack.FindItemByType(typeof(HavenStoryBondingApple),true) as HavenStoryBondingApple;Check(apple!=null,"Missing apple");horse=apple.Horse;
-   Check(!horse.IsBonded&&horse.ControlMaster==p,"Starter horse state");horse.MoveToWorld(p.Location,p.Map);
+   Check(!horse.IsBonded&&horse.ControlMaster==p,"Starter horse state");
+   var def=PetTrainingHelper.GetTrainingDefinition(horse);Check(def!=null&&def.Class!=Class.Untrainable&&def.ControlSlotsMax==5&&horse.ControlSlotsMax==5,"Horse training limits");foreach(var ability in PetTrainingHelper.MagicalAbilities)Check((def.MagicalAbilities&ability)==ability,"Horse missing magic "+ability);foreach(var definition in PetTrainingHelper.Definitions){foreach(var ability in definition.SpecialAbilities??new SpecialAbility[0])Check(def.SpecialAbilities.Contains(ability),"Horse special restriction");foreach(var ability in definition.WeaponAbilities??new WeaponAbility[0])Check(def.WeaponAbilities.Contains(ability),"Horse weapon restriction");foreach(var ability in definition.AreaEffects??new AreaEffect[0])Check(def.AreaEffects.Contains(ability),"Horse area restriction");}log("PASS starter horse full native training catalog and 1-to-5 follower-slot progression");horse.MoveToWorld(p.Location,p.Map);
    other=new Horse();other.MoveToWorld(p.Location,p.Map);Check(!other.OnDragDrop(p,apple)&&!apple.Deleted,"Other horse consumed quest food");
    Check(horse.OnDragDrop(p,apple)&&horse.IsBonded&&apple.Deleted,"Instant bonding failed");
    log("PASS one-time starter cape and controlled low-level horse; apple rejected by other horse; exact owner/horse bonds immediately");

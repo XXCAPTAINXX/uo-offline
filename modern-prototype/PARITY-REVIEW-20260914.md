@@ -178,3 +178,8 @@ Validation: audit and live Release builds0 errors/0 warnings; BeaconQuestSmoke p
 Deployment backup: `E:/Backups/Haven/Prototypes/servuo-before-beacon-quest-20260915-225636`. Native patch0055 adds final damage clamp and golem-only pet Parry eligibility. No audit saves copied to live.
 
 Approved next art direction: tide/anchor/star expedition motif; portable Wayfinder's Beacon with story-earned destinations, restored portal, custom Expedition Fountain. These new graphics and beacon travel functionality are not implemented in this release.
+
+## 2026-09-15 — Starter horse training
+Jenna's Haven trail horse now exposes the full existing pet-training catalog: all native magic/mastery choices, special abilities, weapon moves and area effects. It can train from 1 to 5 follower slots. Existing horses receive the expanded limits on load; ownership, bonding, stats, skills and purchased training remain intact. Ordinary horses are unchanged. Skill caps still require the existing power-scroll/training progression.
+
+Validation: extended BeaconQuestSmoke compares the horse's definition against every native training-table option and checks 1-to-5 slot limits. Full quest/bonding/fountain/sparring regression passed; audit and live Release builds checked before deployment.

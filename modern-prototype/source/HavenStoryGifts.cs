@@ -37,7 +37,8 @@ namespace Server.HavenPrototype
  public class HavenStoryHorse:Horse
  {
   public Mobile GiftOwner;
-  public HavenStoryHorse(Mobile owner):base("a Haven trail horse"){GiftOwner=owner;MinTameSkill=0;SetStr(35);SetDex(60);SetInt(10);SetHits(40);SetDamage(2,3);}
+  public override TrainingDefinition TrainingDefinition{get{return HavenPetTrainingBridge.Definition(this);}}
+  public HavenStoryHorse(Mobile owner):base("a Haven trail horse"){GiftOwner=owner;MinTameSkill=0;SetStr(35);SetDex(60);SetInt(10);SetHits(40);SetDamage(2,3);ControlSlotsMin=1;ControlSlotsMax=5;}
   public HavenStoryHorse(Serial s):base(s){}
   public override bool OnDragDrop(Mobile from,Item dropped)
   {
@@ -47,7 +48,7 @@ namespace Server.HavenPrototype
    IsBonded=true;Loyalty=MaxLoyalty;apple.Delete();from.SendMessage("Your Haven trail horse has bonded with you.");InvalidateProperties();return true;
   }
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(GiftOwner);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();GiftOwner=r.ReadMobile();}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();GiftOwner=r.ReadMobile();ControlSlotsMin=1;ControlSlotsMax=5;}
  }
  public class HavenStoryBondingApple:Item
  {
