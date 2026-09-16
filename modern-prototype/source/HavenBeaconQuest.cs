@@ -78,11 +78,11 @@ namespace Server.HavenPrototype
    HavenMarks.Award(p,20);Write(p,"glyph",3);Advance(p,5,4);p.SendMessage("A Light That Answers complete: 2,500 gold banked and 20 Haven Marks awarded.");return true;
   }
   public static int CurrentVoice(Mobile p){int phase=Phase(p);return phase<=1?0:phase==2?1:phase==3?2:phase==4?3:4;}
-  public static void Speak(Mobile p,int line)
+  public static void Speak(Mobile p,int line,bool replay=false)
   {
    if(p==null||p.Deleted||line<0||line>=VoiceLines.Length)return;
    p.SendMessage(0x59B,"Jenna: "+VoiceLines[line]);
-   if(VoiceEnabled(p)&&p.NetState!=null){var clock=VoiceClocks.GetValue(p,x=>new VoiceClock());if(DateTime.UtcNow>=clock.Next){clock.Next=DateTime.UtcNow.AddSeconds(22);p.Send(new PlaySound(32760+line,p.Location));}}
+   if(VoiceEnabled(p)&&p.NetState!=null){var clock=VoiceClocks.GetValue(p,x=>new VoiceClock());if(DateTime.UtcNow>=clock.Next){clock.Next=DateTime.UtcNow.AddSeconds(22);p.Send(new PlaySound(32760+line,p.Location));}else if(replay)p.SendMessage("Voice replay is ready in "+(int)Math.Ceiling((clock.Next-DateTime.UtcNow).TotalSeconds)+" seconds.");}else if(replay&&!VoiceEnabled(p))p.SendMessage("Voice is muted. Turn it on to hear Jenna.");
   }
   public static void Show(Mobile p){if(!HavenMarks.CanUse(p))return;p.CloseGump(typeof(HavenBeaconQuestGump));p.SendGump(new HavenBeaconQuestGump(p));}
   public static IEntity Target(Mobile p)

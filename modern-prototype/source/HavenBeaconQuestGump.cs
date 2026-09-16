@@ -35,7 +35,7 @@ namespace Server.HavenPrototype
    if(info.ButtonID>=20&&info.ButtonID<=22){bool ok=info.ButtonID==20?HavenStoryGifts.ClaimCape(_owner):info.ButtonID==21?HavenStoryGifts.ClaimMount(_owner):HavenStoryGifts.ClaimFountain(_owner);if(!ok)_owner.SendMessage("Reward unavailable: keep Jenna nearby, make pack space, and check whether you already claimed it. Your horse also needs one free follower slot.");HavenBeaconQuest.Show(_owner);return;}
    if(info.ButtonID==1&&!HavenBeaconQuest.Accept(_owner))_owner.SendMessage("Stand beside the beacon with Jenna. Finish the arrival meeting first if you are newly summoned.");
    else if(info.ButtonID==2)HavenBeaconQuest.Guide(_owner);
-   else if(info.ButtonID==4)HavenBeaconQuest.Speak(_owner,HavenBeaconQuest.CurrentVoice(_owner));
+   else if(info.ButtonID==4)HavenBeaconQuest.Speak(_owner,HavenBeaconQuest.CurrentVoice(_owner),true);
    else if(info.ButtonID==5)HavenBeaconQuest.ToggleVoice(_owner);
    else if(info.ButtonID==6){HavenArrivalStory.Show(_owner);return;}
    else if(info.ButtonID>=10&&info.ButtonID<=12)HavenBeaconQuest.ChooseGlyph(_owner,info.ButtonID-10);
