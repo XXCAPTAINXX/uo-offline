@@ -1,0 +1,20 @@
+--- a/Scripts/Misc/CharacterCreation.cs
++++ b/Scripts/Misc/CharacterCreation.cs
+@@ -279,14 +279,15 @@
+ 			var city = args.City;
+ 			var map = Siege.SiegeShard && city.Map == Map.Trammel ? Map.Felucca : city.Map;
+ 
+-			newChar.MoveToWorld(city.Location, map);
++			if (!Server.HavenPrototype.HavenArrivalStory.PlaceNewCharacter(newChar))
++                newChar.MoveToWorld(city.Location, map);
+ 
+ 			Utility.PushColor(ConsoleColor.Green);
+ 			Console.WriteLine("Login: {0}: New character being created (account={1})", state, args.Account.Username);
+ 			Utility.PopColor();
+ 			Utility.PushColor(ConsoleColor.DarkGreen);
+ 			Console.WriteLine(" - Character: {0} (serial={1})", newChar.Name, newChar.Serial);
+-			Console.WriteLine(" - Started: {0} {1} in {2}", city.City, city.Location, city.Map);
++			Console.WriteLine(" - Started: {0} {1} in {2}", city.City, newChar.Location, newChar.Map);
+ 			Utility.PopColor();
+ 
+ 			new WelcomeTimer(newChar).Start();
