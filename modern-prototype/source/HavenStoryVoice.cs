@@ -8,7 +8,7 @@ namespace Server.HavenPrototype
  {
   public const int FirstSound=32750;
   public static void Initialize(){EventSink.Logout+=e=>Clear(e.Mobile);}
-  public static readonly double[] VoiceSeconds={8.016,9.912,8.424,9.864,10.704,12.84,11.544,13.416,14.04,13.392,11.16,14.904,14.328};
+  public static readonly double[] VoiceSeconds={8.016,9.912,8.424,9.864,10.704,12.84,11.544,13.416,14.04,13.392,11.664,14.424,14.328};
   sealed class Playback{public readonly Queue<int> Pending=new Queue<int>();public DateTime Next;public int Playing=-1;public Timer Timer;}
   static readonly ConditionalWeakTable<Mobile,Playback> Players=new ConditionalWeakTable<Mobile,Playback>();
   public static void Clear(Mobile p){Playback state;if(p!=null&&Players.TryGetValue(p,out state)){state.Pending.Clear();if(state.Timer!=null)state.Timer.Stop();state.Timer=null;}}

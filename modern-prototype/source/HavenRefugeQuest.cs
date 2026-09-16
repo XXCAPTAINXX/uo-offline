@@ -21,9 +21,9 @@ namespace Server.HavenPrototype
             HavenBeaconQuest.StopGuide(p);
             HavenBeaconQuest.Speak(p, 8 + Math.Min(stage,4));
         }
-        public static HavenCoveEncounter Camp()
+        public static HavenMiniChamp Camp()
         {
-            return World.Items.Values.OfType<HavenCoveEncounter>().FirstOrDefault(x => !x.Deleted && x.Map != Map.Internal);
+            return HavenMiniChamp.Find();
         }
         public static bool Continue(Mobile p)
         {
@@ -49,9 +49,9 @@ namespace Server.HavenPrototype
         }
         public static void CompletedExpedition(Mobile p, HavenMiniChamp camp)
         {
-            if(!(camp is HavenCoveEncounter) || p == null || p.Deleted || !(p.Account is Account) || HavenBeaconQuest.Phase(p) != 5 || Stage(p) != 3) return;
+            if(camp == null || camp != Camp() || p == null || p.Deleted || !(p.Account is Account) || HavenBeaconQuest.Phase(p) != 5 || Stage(p) != 3) return;
             Advance(p,4);
-            p.SendMessage(53,"The Refuge Remembers: the captain's papers hold your next story clue. Open [storyquest and choose Continue island story.");
+            p.SendMessage(53,"The Refuge Remembers: the expedition report holds your next story clue. Open [storyquest and choose Continue adventure.");
         }
         public static void Guide(Mobile p)
         {
@@ -63,7 +63,7 @@ namespace Server.HavenPrototype
                 case 2: case 3: target = Camp(); break;
             }
             if(target == null) { p.SendMessage("No active destination is available for this objective."); return; }
-            if(p.Map != target.Map) { p.SendMessage("Destination: " + target.Map + " " + target.Location + (Stage(p)<2 ? ". Return to New Haven for this introduction." : ". Use the travel stone's Island services for Blackwake Cove.")); return; }
+            if(p.Map != target.Map) { p.SendMessage("Destination: " + target.Map + " " + target.Location + (Stage(p)<2 ? ". Return to New Haven for this introduction." : ". Return to Haven, then use [minichamp and Travel to camp.")); return; }
             if(p.QuestArrow != null) p.QuestArrow.Stop();
             p.QuestArrow = new HavenBeaconQuestArrow(p,target);
             p.SendMessage("Follow the arrow to " + target.Location + ". Bring Jenna with you.");
@@ -85,13 +85,13 @@ namespace Server.HavenPrototype
         {
             _owner = p;
             int stage = Math.Max(0,Math.Min(4,HavenRefugeQuest.Stage(p)));
-            string[] objectives = { "Meet the recovery steward", "Visit the purchasing stones", "Reach Blackwake Cove", "Complete a Cove expedition", "The captain's papers" };
+            string[] objectives = { "Meet the recovery steward", "Visit the purchasing stones", "Reach the Haven mini-champ", "Complete a Haven expedition", "The expedition report" };
             string[] pages = {
                 "<B>Jenna:</B> The beacon found our refuge, but I am not taking you into pirate country without a way home.<BR><BR>Visit Mara, Haven's pet healer and recovery steward, with Jenna beside you. Use Show direction, then choose Discuss this stop when you arrive.<BR><BR>Ava resurrects you. Mara heals or resurrects nearby pets and summons surviving corpses. You must open summoned corpses to reclaim their contents. Read Recovery and supplies below for the full explanation.<BR><BR>You do not need to die or spend anything to complete this introduction.",
                 "<B>Jenna:</B> Now we know how to recover from trouble. Let's try being prepared for it.<BR><BR>Visit a purchasing stone with Jenna and discuss the stop. No purchase is required.<BR><BR>Select an item to inspect its price and hover over its preview to read properties. Buy selected is the purchase action. Gold, Haven Marks and Astral shards are different currencies; check the price before buying.<BR><BR>Wear your leveling cape and bring healing supplies before we sail.",
-                "<B>Jenna:</B> Blackwake Cove was an expedition landing. If the crews have taken it over, they may have taken our records too.<BR><BR>Use the travel stone's Island services to reach the Cove. Follow Show direction on the island, approach the expedition camp with Jenna, then discuss the stop.<BR><BR>This is a scouting visit. Discussing the camp does not start a fight.",
-                "<B>Jenna:</B> Three crews, three captains. We only need one captain's papers. Pick the fight we're ready for.<BR><BR>Start and finish any normal Blackwake Cove expedition. Each has three waves of five enemies, followed by the captain. Your damage, Jenna's damage and your pets' damage all count toward participation.<BR><BR>Challenge mode also counts, but is optional: three waves of fifteen enemies, then all three champions together.<BR><BR>Completion is recorded from the actual expedition victory. Existing expedition rewards still apply; this journal does not replace or duplicate them.",
-                "Among the captain's papers is a salt-stained order: <I>Keep the refuge light burning. The next arrival must find the shore.</I><BR><BR><B>Jenna:</B> They weren't trying to extinguish the beacon. Someone wanted you to reach this island. I don't know whether that makes me feel better.<BR><BR><B>Chapter complete:</B> You learned Haven's recovery services, inspected the purchasing stones, found the Cove and defeated one of its crews. Collect any pending expedition rewards at the camp.<BR><BR>The northeastern wildlife is a separate danger. Inspect a creature with Animal Lore before attempting a tame; this chapter does not require you to fight or tame it."
+                "<B>Jenna:</B> Before we sail, we need some experience working together outside town. The Haven expedition camp is the place to start.<BR><BR>Use [minichamp and choose Travel to camp, or follow Show direction. Approach the Haven camp with Jenna, then discuss the stop.<BR><BR>This is a scouting visit. Discussing the camp does not start a fight.",
+                "<B>Jenna:</B> Wildwood creatures, corsair raiders, or restless dead. Choose one threat and we'll face it together, here on Haven.<BR><BR>Start and finish any normal Haven mini-champ expedition. Each has three waves of five enemies, followed by its champion. Your damage, Jenna's damage and your pets' damage all count toward participation.<BR><BR>Challenge mode also counts, but is optional: three waves of fifteen enemies, then all three champions together.<BR><BR>Completion is recorded from the actual expedition victory. Existing expedition rewards still apply; this journal does not replace or duplicate them.",
+                "The expedition report includes a message recovered on Haven: <I>Keep the refuge light burning. The next arrival must find the shore.</I><BR><BR><B>Jenna:</B> They weren't trying to extinguish the beacon. Someone wants us to reach that island. I don't know whether that makes me feel better.<BR><BR><B>Chapter complete:</B> You learned Haven's recovery services, inspected the purchasing stones, found the Haven camp and completed an expedition. Collect any pending expedition rewards at the camp.<BR><BR>The island refuge is our next destination. Its Cove battles and dangerous northeastern wildlife come later; you do not need to visit the island to finish this chapter."
             };
             AddBackground(0,0,720,530,3000);
             AddLabel(24,20,0,"THE REFUGE REMEMBERS | Chapter two");
