@@ -50,7 +50,7 @@ namespace Server.HavenPrototype
  {
   [Constructable] public HavenArrivalBeacon():base(0x1F14){Name="the recovered summoning beacon";Hue=0x489;Movable=false;}
   public HavenArrivalBeacon(Serial s):base(s){}
-  public override void OnDoubleClick(Mobile p){if(p.Map==Map&&p.InRange(this,3)&&p.InLOS(this))HavenArrivalStory.Show(p);else p.SendMessage("Come closer to the summoning beacon.");}
+  public override void OnDoubleClick(Mobile p){if(p.Map==Map&&p.InRange(this,3)&&p.InLOS(this)){if(HavenArrivalStory.Stage(p)==1)HavenArrivalStory.Show(p);else HavenBeaconQuest.Show(p);}else p.SendMessage("Come closer to the summoning beacon.");}
   public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);}
   public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();}
  }
@@ -65,13 +65,14 @@ namespace Server.HavenPrototype
     "The last thing you remember is a light where no light should have been.<BR><BR>You wake beside a cracked beacon in New Haven. Someone has draped a travel cloak over you. Beyond the doorway, a town carries on as though people fall out of other worlds every morning.<BR><BR>A woman kneels beside the stone, trying very hard to look as though this was the plan.<BR><BR><B>Jenna:</B> Well... you're definitely not the supplies I ordered. Can you stand? Good. Welcome to Haven. We can work out the impossible part over breakfast.":
     "<B>Jenna:</B> My expedition found this beacon in a ruin. Then the paths changed, our camp vanished, and I was the only one who made it back. I brought the beacon here hoping it could reach them.<BR><BR>It reached you instead.<BR><BR>The same mark shines on your hand and hers. For the first time since the expedition vanished, the stone points somewhere.<BR><BR><B>Jenna:</B> I'll help you learn this world. You help me find my people. Along the way, we might even discover why an ancient ruin thinks we're a team.<BR><BR><B>Your first step:</B> Get your bearings in Haven and speak with Jenna using [c. The road to your own island refuge begins here.";
    AddHtml(24,62,602,292,"<BASEFONT COLOR=#3B2A1A>"+text+"</BASEFONT>",false,true);
-   if(_page==0)FlatButton(24,375,240,1,first?"Meet Jenna":"Read the introduction");else FlatButton(24,375,240,2,"Back to the arrival");
-   FlatButton(420,375,205,0,"Continue adventuring");AddLabel(24,410,0,first?"Meet Jenna beside the New Haven beacon. [story reopens this page.":"Story replay only. Your location and progress are preserved.");
+   if(_page==0)FlatButton(24,375,190,1,first?"Meet Jenna":"Read the introduction");else FlatButton(24,375,190,2,"Back to the arrival");
+   FlatButton(224,375,185,3,"Quest journal");FlatButton(420,375,205,0,"Continue adventuring");AddLabel(24,410,0,first?"Meet Jenna beside the New Haven beacon. [story reopens this page.":"Story replay only. Your location and progress are preserved.");
   }
   public override void OnResponse(NetState state,RelayInfo info)
   {
    if(state.Mobile!=_owner||_owner.Deleted||info.ButtonID==0)return;
    if(info.ButtonID==1&&_page==0){if(HavenArrivalStory.Stage(_owner)==1&&HavenArrivalStory.Meet(_owner)==null){_owner.SendMessage("Return alive to the New Haven beacon. If you already recruited Jenna, recall her here before continuing.");HavenArrivalStory.Show(_owner);return;}HavenArrivalStory.Show(_owner,1);}
+   else if(info.ButtonID==3){HavenBeaconQuest.Show(_owner);return;}
    else if(info.ButtonID==2)HavenArrivalStory.Show(_owner);
   }
  }

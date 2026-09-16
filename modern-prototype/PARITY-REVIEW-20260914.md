@@ -160,3 +160,21 @@ Per-character account tags persist pending/completed introduction. Pending new c
 
 ArrivalStorySmoke passed valid spawn, repeated placement protection, beacon idempotence, single female Jenna introduction, existing-character exclusion and replay preserving location/skills. Source integration checked through native CharacterCreated->DoLogin. Audit build passed with zero warnings/errors; no client character-creation walkthrough or visual scene review claimed.
 Independent review found an absent-companion introduction edge; Meet now requires Jenna alive, present, unstabled and off mission before advancing. Regression verifies stage remains pending while she is elsewhere.
+
+## 2026-09-15 — A Light That Answers opening quest
+
+Implemented the original Haven beacon investigation for new and returning characters. Begin at the New Haven arrival beacon with Jenna after the first meeting; `[storyquest` reopens the journal. Physical clues, an actual50-damage training objective (player/pet/companion credit), direction arrow, tide/anchor/star sequence, and saved per-character progress lead to2,500 bank gold and20 Marks. Repeated responses cannot duplicate payout. The next island chapter remains future work.
+
+Jenna offers one character-bound evolving cape and one basic controlled trail horse with a blessed bonding apple through journal reward buttons. The apple works only for its original character and exact living quest horse; feeding bonds immediately. Claims remain available if pack space/follower capacity is insufficient. Completed characters can claim one Expedition Fountain of Life deed: house addon, instant one-for-one conversion of every ordinary bandage deposited, no charges/timer; native enhanced bandages and house security preserved. Uses existing art pending a separate custom-art client update.
+
+Haven golem now retaliates against its current player/controlled-pet trainee instead of being passive. It stays stationary, stops on departure/timeout, clamps final native AOS damage to1 and cannot deliver a lethal hit. Low-Wrestling pets can practice Parry against this golem through native skill checks. No loot or kill XP. Startup ensures the actual quest station exists, rather than accepting an unrelated house golem.
+
+Leveling tooltips now distinguish cumulative XP from XP remaining to the next level, explain qualifying XP sources, and show the next weapon mana-leech floor. Starter weapons also show next-level damage increase. Native properties retain current bonuses. Companion clothing correctly describes Jenna's combat/mission XP.
+
+Five original Jenna dialogue lines use temporary Microsoft Zira synthetic speech with subtitles, private player audio, mute/replay and overlap throttling. IDs32760–32764 installed; ICQ32766 untouched. TazUO's custom loader requires headerless PCM16 mono22050Hz in files named `.mp3`; named WAV masters and reproducible synthesis/packaging/install scripts included. Client restart required. No in-game listening/visual-art review claimed.
+
+Validation: audit and live Release builds0 errors/0 warnings; BeaconQuestSmoke passed native player/pet/Jenna damage credit, low-Wrestling Parry path,1000 incoming test clamped to<=1 and0 at1HP, one-time gifts, owner/horse bonding restrictions, out-of-order clue and absent-Jenna refusal, Mark-cap refusal, sequence reset, payout deduplication,60,234 ordinary-bandage conversion plus7 existing enhanced preserved, repeated conversion idempotence, all six journal pages and mute. Independent static critic approved pending those runtime checks; its companion-clothing tooltip correction was applied. Audio waveform validation passed8.65–11.42 seconds with no clipping.
+
+Deployment backup: `E:/Backups/Haven/Prototypes/servuo-before-beacon-quest-20260915-225636`. Native patch0055 adds final damage clamp and golem-only pet Parry eligibility. No audit saves copied to live.
+
+Approved next art direction: tide/anchor/star expedition motif; portable Wayfinder's Beacon with story-earned destinations, restored portal, custom Expedition Fountain. These new graphics and beacon travel functionality are not implemented in this release.

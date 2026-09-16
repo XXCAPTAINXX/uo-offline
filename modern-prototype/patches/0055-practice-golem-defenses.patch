@@ -1,0 +1,27 @@
+--- a/Scripts/Misc/AOS.cs
++++ b/Scripts/Misc/AOS.cs
+@@ -392,6 +392,9 @@
+             {
+                 DoLeech(totalDamage, from, m);
+             }
++
++            if (from is Server.HavenPrototype.HavenTrainingGolem)
++                totalDamage = Server.HavenPrototype.HavenTrainingGolem.LimitDamage(m,totalDamage);
+ 
+             totalDamage = m.Damage(totalDamage, from, true, false);
+ 
+--- a/Scripts/Items/Equipment/Weapons/BaseWeapon.cs
++++ b/Scripts/Items/Equipment/Weapons/BaseWeapon.cs
+@@ -1877,9 +1877,9 @@
+ 
+ 			if (defender.Player || defender.Body.IsHuman || (defender is BaseCreature && 
+                                                             ((BaseCreature)defender).Controlled &&
+-                                                            defender.Skills[SkillName.Wrestling].Base >= 100))
+-			{
+-				blocked = CheckParry(defender);
++                                                            (defender.Skills[SkillName.Wrestling].Base >= 100 || attacker is Server.HavenPrototype.HavenTrainingGolem)))
++			{
++				blocked = attacker is Server.HavenPrototype.HavenTrainingGolem && Server.HavenPrototype.HavenTrainingGolem.PracticePet(defender) ? Server.HavenPrototype.HavenTrainingGolem.CheckPracticeParry(defender) : CheckParry(defender);
+                 BaseWeapon weapon = defender.Weapon as BaseWeapon;
+ 
+ 				if (blocked)

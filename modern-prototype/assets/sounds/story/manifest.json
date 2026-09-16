@@ -1,0 +1,37 @@
+[
+  {
+    "file": "jenna-beacon-01.wav",
+    "sound": 32760,
+    "seconds": 8.65,
+    "peak": 14649,
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-02.wav",
+    "sound": 32761,
+    "seconds": 10.67,
+    "peak": 15170,
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-03.wav",
+    "sound": 32762,
+    "seconds": 8.98,
+    "peak": 14250,
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-04.wav",
+    "sound": 32763,
+    "seconds": 10.63,
+    "peak": 13650,
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-05.wav",
+    "sound": 32764,
+    "seconds": 11.42,
+    "peak": 14040,
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  }
+]
