@@ -1,0 +1,13 @@
+--- a/Scripts/Skills/AnimalLore.cs
++++ b/Scripts/Skills/AnimalLore.cs
+@@ -67,6 +67,10 @@
+                 if (!from.Alive)
+                 {
+                     from.SendLocalizedMessage(500331); // The spirits of the dead are not the province of animal lore.
++                }
++                else if (Server.HavenPrototype.HavenPreview.Enabled && targeted is Server.HavenPrototype.HavenPetTicket)
++                {
++                    ((Server.HavenPrototype.HavenPetTicket)targeted).ShowLore(from);
+                 }
+                 else if (targeted is BaseCreature)
+                 {

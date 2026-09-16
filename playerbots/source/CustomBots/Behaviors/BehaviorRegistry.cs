@@ -29,6 +29,8 @@ namespace Server.CustomBots
             Register("BankSitter", () => new BankSitterBehavior());
             Register("Adventurer", () => new AdventurerBehavior());
             Register("DungeonCrawler", () => new DungeonCrawlerBehavior());
+            Register("HavenFishing", () => new Server.UOOffline.HavenFishingBehavior());
+            Register("HavenDungeon", () => new Server.UOOffline.HavenDungeonBehavior());
             Register("PlayerGroup", () => new PlayerGroupBehavior());
             Register("Traveler",   () => new TravelerBehavior());
             Register("Shopper",    () => new ShopperBehavior());

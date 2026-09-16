@@ -1455,6 +1455,7 @@ namespace Server.CustomBots
             // keeps Vanq/Supremely locked to Master+ and rare even there.
             if (Utility.RandomDouble() < 0.06 + 0.07 * rank)
             {
+                if (Core.AOS) { HavenBotEquipment.RollMagic(w); return; }
                 w.DamageLevel = (WeaponDamageLevel)RollMagicLevel(rank);
                 if (Utility.RandomDouble() < 0.5)
                 {
@@ -1488,6 +1489,7 @@ namespace Server.CustomBots
             // caps them to Master+ and they barely roll even there.
             if (Utility.RandomDouble() < 0.02 + 0.03 * rank)
             {
+                if (Core.AOS) { HavenBotEquipment.RollMagic(a); return; }
                 a.ProtectionLevel = (ArmorProtectionLevel)RollMagicLevel(rank);
                 if (Utility.RandomDouble() < 0.3)
                 {

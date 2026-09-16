@@ -1,0 +1,11 @@
+--- a/Scripts/Skills/AnimalLore.cs
++++ b/Scripts/Skills/AnimalLore.cs
+@@ -33,7 +33,7 @@
+ 			{
+                 from.CheckTargetSkill(SkillName.AnimalLore, c, 0.0, 120.0);
+ 
+-                if (Server.HavenPrototype.HavenPreview.Enabled) { from.CloseGump(typeof(Server.HavenPrototype.HavenPetLoreGump)); from.SendGump(new Server.HavenPrototype.HavenPetLoreGump(c)); return; }
++                if (Server.HavenPrototype.HavenPreview.Enabled) { Server.HavenPrototype.HavenAnimalLoreGump.DisplayTo(from,c); return; }
+ 
+                 if (PetTrainingHelper.Enabled && from is PlayerMobile)
+                 {

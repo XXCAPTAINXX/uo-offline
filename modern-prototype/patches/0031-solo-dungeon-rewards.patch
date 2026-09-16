@@ -1,0 +1,63 @@
+--- a/Scripts/Services/PointsSystems/GauntletPoints.cs
++++ b/Scripts/Services/PointsSystems/GauntletPoints.cs
+@@ -55,7 +55,7 @@
+             const double A = 0.000863316841;
+             const double B = 0.00000425531915;
+ 
+-            double chance = A * Math.Pow(10, B * gpoints);
++            double chance = Server.HavenPrototype.HavenSoloDungeons.ArtifactChance(A * Math.Pow(10, B * gpoints));
+             double roll = Utility.RandomDouble();
+ 
+             if (chance > roll)
+--- a/Scripts/Services/PointsSystems/BlackthornData.cs
++++ b/Scripts/Services/PointsSystems/BlackthornData.cs
+@@ -50,7 +50,7 @@
+                 const double A = 0.000863316841;
+                 const double B = 0.00000425531915;
+ 
+-                double chance = A * Math.Pow(10, B * x);
++                double chance = Server.HavenPrototype.HavenSoloDungeons.ArtifactChance(A * Math.Pow(10, B * x));
+ 
+                 if (chance > Utility.RandomDouble())
+                 {
+--- a/Scripts/Services/Revamped Dungeons/BlackthornDungeon/InvasionSpawner/InvasionController.cs
++++ b/Scripts/Services/Revamped Dungeons/BlackthornDungeon/InvasionSpawner/InvasionController.cs
+@@ -374,7 +374,7 @@
+                 {
+                     foreach (Mobile damager in rights.Where(mob => mob.InRange(Beacon.Location, 12)))
+                     {
+-                        if (0.15 < Utility.RandomDouble())
++                        if (Server.HavenPrototype.HavenSoloDungeons.ArtifactChance(0.15) < Utility.RandomDouble())
+                             continue;
+ 
+                         Item i = CreateItem(damager);
+--- a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Bosses.cs
++++ b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Bosses.cs
+@@ -101,7 +101,7 @@
+ 
+                     int chance = 1000 + (luck / 15);
+ 
+-                    if (chance > Utility.Random(5000))
++                    if (Server.HavenPrototype.HavenSoloDungeons.ArtifactChance(chance / 5000.0) > Utility.RandomDouble())
+                     {
+                         Mobile m = ds.m_Mobile;
+                         Item artifact = Loot.Construct(ArtifactDrops[Utility.Random(ArtifactDrops.Length)]);
+--- a/Scripts/Services/Doom/GauntletSpawner.cs
++++ b/Scripts/Services/Doom/GauntletSpawner.cs
+@@ -765,7 +765,7 @@
+             if (count < 1)
+                 count = 1;
+ 
+-            return count;
++            return Server.HavenPrototype.HavenSoloDungeons.SpawnCount(this, count);
+         }
+ 
+         public virtual void ClearCreatures()
+@@ -778,6 +778,7 @@
+ 
+         public virtual void FullSpawn()
+         {
++            Server.HavenPrototype.HavenSoloDungeons.StartRoom(this);
+             ClearCreatures();
+ 
+             int count = ComputeSpawnCount();

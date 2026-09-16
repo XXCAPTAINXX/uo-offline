@@ -1,0 +1,11 @@
+diff --git a/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs b/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs
+--- a/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs
++++ b/Projects/UOContent/Engines/Character Creation/CharacterCreation.cs
+@@ -285,6 +285,7 @@ public static partial class CharacterCreation
+             newChar.Race = Race.Human;
+             newChar.Blessed = true;
+             newChar.AddItem(new StaffRobe(newChar.AccessLevel));
++            Server.UOOffline.StarterProvisioner.Provision(newChar);
+         }
+ 
+         var city = GetStartLocation(args);

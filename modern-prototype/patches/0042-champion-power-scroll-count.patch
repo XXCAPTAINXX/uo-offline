@@ -1,0 +1,12 @@
+diff --git a/Config/Champions.cfg b/Config/Champions.cfg
+--- a/Config/Champions.cfg
++++ b/Config/Champions.cfg
+@@ -27,7 +27,7 @@ HarrowerGoldMax=10000
+ 
+ # The number of power scrolls to give after a champion is defeated. Note that
+ # for every power scroll given, one is also given for protection.
+-PowerScrolls=6
++PowerScrolls=12
+ 
+ # The number of stat scrolls to give after the Harrower is defeated.
+ StatScrolls=16

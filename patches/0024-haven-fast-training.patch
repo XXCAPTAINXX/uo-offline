@@ -1,0 +1,33 @@
+diff --git a/Projects/UOContent/Skills/SkillCheck.cs b/Projects/UOContent/Skills/SkillCheck.cs
+index 8e1c930..932d240 100644
+--- a/Projects/UOContent/Skills/SkillCheck.cs
++++ b/Projects/UOContent/Skills/SkillCheck.cs
+@@ -117,6 +117,7 @@ public static bool CheckSkill(Mobile from, Skill skill, object amObj, double cha
+                 gc /= 2;
+ 
+                 gc *= skill.Info.GainFactor;
++                gc *= Server.UOOffline.HavenNewcomerTraining.ChanceMultiplier(from, skill);
+ 
+                 if (gc < 0.01)
+                 {
+@@ -226,6 +227,7 @@ public static void Gain(Mobile from, Skill skill)
+                 toGain = Utility.Random(4) + 1;
+             }
+ 
++            toGain = Server.UOOffline.HavenNewcomerTraining.GainAmount(from, skill, toGain);
+             var skills = from.Skills;
+ 
+             if (from.Player && !Server.UOOffline.HavenFreeSkills.IsFree(from, skill) && Server.UOOffline.HavenFreeSkills.CountedTotal(from) / (double)skills.Cap >= Utility.RandomDouble())
+@@ -247,6 +249,7 @@ public static void Gain(Mobile from, Skill skill)
+                 toGain *= Utility.RandomMinMax(2, 5);
+             }
+ 
++            if (Server.UOOffline.HavenNewcomerTraining.Applies(from, skill)) { toGain = Math.Min(toGain, 1000 - skill.BaseFixedPoint); }
+             if (!from.Player || Server.UOOffline.HavenFreeSkills.IsFree(from, skill) || Server.UOOffline.HavenFreeSkills.CountedTotal(from) < skills.Cap)
+             {
+                 if (from.Player && !Server.UOOffline.HavenFreeSkills.IsFree(from, skill)) { toGain = Math.Min(toGain, skills.Cap - Server.UOOffline.HavenFreeSkills.CountedTotal(from)); }
+@@ -476,4 +479,3 @@ public static void GainStat(Mobile from, Stat stat)
+         IncreaseStat(from, stat, atrophy);
+     }
+ }
+-

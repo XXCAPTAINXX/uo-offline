@@ -1,0 +1,31 @@
+--- a/Scripts/Skills/Peacemaking.cs
++++ b/Scripts/Skills/Peacemaking.cs
+@@ -219,7 +219,7 @@
+ 										seconds = 10;
+ 									}
+ 
+-									bc.Pacify(from, DateTime.UtcNow + TimeSpan.FromSeconds(seconds));
++									bc.Pacify(from, DateTime.UtcNow + TimeSpan.FromSeconds(Server.HavenPrototype.HavenOvercapBenefits.PeaceSeconds(from, seconds)));
+ 
+                                     #region Bard Mastery Quest
+                                     if (from is PlayerMobile)
+--- a/Scripts/Skills/Discordance.cs
++++ b/Scripts/Skills/Discordance.cs
+@@ -173,7 +173,7 @@
+ 						double music = from.Skills[SkillName.Musicianship].Value;
+ 
+                         if (from is BaseCreature)
+-                            music = 120.0;
++                            music = Server.HavenPrototype.HavenOvercapBenefits.DiscordMusic(from, 120.0);
+ 
+                         int masteryBonus = 0;
+ 
+@@ -225,7 +225,7 @@
+                                 {
+                                     double discord = from.Skills[SkillName.Discordance].Value;
+ 
+-                                    effect = (int)Math.Max(-28.0, (discord / -4.0));
++                                    effect = Server.HavenPrototype.HavenOvercapBenefits.DiscordEffect(from, (int)Math.Max(-28.0, (discord / -4.0)));
+ 
+                                     if (Core.SE && BaseInstrument.GetBaseDifficulty(targ) >= 160.0)
+                                     {

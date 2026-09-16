@@ -1,0 +1,35 @@
+diff --git a/Projects/UOContent/Gumps/Guilds/New Guild System/BaseGuildGump.cs b/Projects/UOContent/Gumps/Guilds/New Guild System/BaseGuildGump.cs
+--- a/Projects/UOContent/Gumps/Guilds/New Guild System/BaseGuildGump.cs
++++ b/Projects/UOContent/Gumps/Guilds/New Guild System/BaseGuildGump.cs
+@@ -96,7 +96,7 @@
+                 true,
+                 true,
+                 false,
+-                0,
++                -1,
+                 ProfanityProtection.Exceptions,
+                 ProfanityProtection.Disallowed,
+                 ProfanityProtection.DisallowedSearchValues
+diff --git a/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs b/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs
+--- a/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs
++++ b/Projects/UOContent/Gumps/Guilds/New Guild System/CreateGuildGump.cs
+@@ -87,13 +87,17 @@
+                             // An abbreviation cannot exceed ~1_val~ characters in length.
+                             pm.SendLocalizedMessage(1063037, Guild.AbbrevLimit.ToString());
+                         }
+-                        else if (BaseGuild.FindByAbbrev(guildAbbrev) != null || !BaseGuildGump.CheckProfanity(guildAbbrev))
++                        else if (BaseGuild.FindByAbbrev(guildAbbrev) != null)
+                         {
+                             pm.SendLocalizedMessage(501153); // That abbreviation is not available.
+                         }
+-                        else if (BaseGuild.FindByName(guildName) != null || !BaseGuildGump.CheckProfanity(guildName))
++                        else if (BaseGuild.FindByName(guildName) != null)
+                         {
+                             pm.SendLocalizedMessage(1063000); // That guild name is not available.
++                        }
++                        else if (!BaseGuildGump.CheckProfanity(guildName) || !BaseGuildGump.CheckProfanity(guildAbbrev))
++                        {
++                            pm.SendMessage("The guild name or abbreviation failed the name filter. Please choose different wording.");
+                         }
+                         else if (!Banker.Withdraw(pm, Guild.RegistrationFee))
+                         {

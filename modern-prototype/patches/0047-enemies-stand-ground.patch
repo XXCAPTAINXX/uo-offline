@@ -1,0 +1,17 @@
+diff --git a/Scripts/Mobiles/Normal/BaseCreature.cs b/Scripts/Mobiles/Normal/BaseCreature.cs
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -1133,4 +1133,4 @@
+         #region Flee!!!
+-        public bool PreventChampionFlee { get { return !Controlled && !Summoned && (IsChampionSpawn || this is BaseChampion); } }
++        public bool PreventChampionFlee { get { return Server.HavenPrototype.HavenEnemyRules.StandGround(this) || (!Controlled && !Summoned && (IsChampionSpawn || this is BaseChampion)); } }
+         public virtual bool CanFlee { get { return !PreventChampionFlee && !m_Paragon && !GivesMLMinorArtifact; } }
+ 
+diff --git a/Scripts/Mobiles/AI/BaseAI.cs b/Scripts/Mobiles/AI/BaseAI.cs
+--- a/Scripts/Mobiles/AI/BaseAI.cs
++++ b/Scripts/Mobiles/AI/BaseAI.cs
+@@ -114,3 +114,4 @@
+ 			{
++                if (value == ActionType.Flee && Server.HavenPrototype.HavenEnemyRules.StandGround(m_Mobile)) value = m_Mobile.Combatant != null ? ActionType.Combat : ActionType.Guard;
+ 				m_Action = value;
+ 				OnActionChanged();

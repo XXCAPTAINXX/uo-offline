@@ -1,0 +1,44 @@
+diff --git a/Projects/UOContent/Mobiles/AI/BaseAI/BaseAI.cs b/Projects/UOContent/Mobiles/AI/BaseAI/BaseAI.cs
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/BaseAI.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/BaseAI.cs
+@@ -158,6 +158,9 @@
+             return;
+         }
+ 
++        if (order == OrderType.Attack && Mobile is Server.UOOffline.HavenCompanion companion)
++        { companion.OrderAttack(from, target); return; }
++
+         if (Mobile.CheckControlChance(from))
+         {
+             Mobile.ControlTarget = target;
+diff --git a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrders.cs
+@@ -385,6 +385,8 @@
+                 continue;
+             }
+ 
++            if (Mobile is Server.UOOffline.HavenCompanion companion && !companion.MayHarmWildPet(aggr)) { continue; }
++
+             var isAttackingPet = aggr.Combatant == Mobile;
+             var isAttackingMaster = controlMaster != null && aggr.Combatant == controlMaster;
+ 
+@@ -416,6 +418,7 @@
+                     continue;
+                 }
+ 
++                if (Mobile is Server.UOOffline.HavenCompanion companion && !companion.MayHarmWildPet(aggressor)) { continue; }
+                 if (Mobile.InRange(aggressor, Mobile.RangePerception) && Mobile.CanSee(aggressor) && Mobile.InLOS(aggressor))
+                 {
+                     Mobile.ControlTarget = aggressor;
+diff --git a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
+--- a/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
++++ b/Projects/UOContent/Mobiles/AI/BaseAI/PetOrderHandlers.cs
+@@ -27,6 +27,7 @@
+         }
+ 
+         Server.UOOffline.HavenGuardPatrol.Clear(Mobile);
++        if (Mobile.ControlOrder != OrderType.Attack && Mobile is Server.UOOffline.HavenCompanion companion) { companion.ClearExplicitAttack(); }
+         Activate();
+ 
+         switch (Mobile.ControlOrder)

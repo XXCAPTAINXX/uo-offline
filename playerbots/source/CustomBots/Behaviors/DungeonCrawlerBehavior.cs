@@ -348,7 +348,7 @@ namespace Server.CustomBots
                 {
                     continue;
                 }
-                if (c.Owner is not BaseCreature)
+                if (c.Owner is not BaseCreature || !Server.UOOffline.HavenBotLoot.CanLoot(bot, c, range))
                 {
                     continue;
                 }
@@ -394,17 +394,24 @@ namespace Server.CustomBots
             for (int i = items.Count - 1; i >= 0; i--)
             {
                 var item = items[i];
+                if (Core.AOS && item is IAosItem && HavenBotEquipment.PropertyValue(item) > 0)
+                {
+                    find = BotAppraisal.NameFor(item);
+                    Server.UOOffline.HavenBotLoot.Receive(bot, item);
+                    Server.UOOffline.HavenMarketProduction.Consign(bot, item);
+                    continue;
+                }
                 switch (item)
                 {
                     case Gold g:
                         gold += g.Amount;
-                        bot.Backpack?.DropItem(g);
+                        Server.UOOffline.HavenBotLoot.Receive(bot, g);
                         break;
 
                     case SpellScroll:
                     case BaseReagent:
                         trinkets++;
-                        bot.Backpack?.DropItem(item);
+                        Server.UOOffline.HavenBotLoot.Receive(bot, item);
                         break;
 
                     case BaseWeapon w when
@@ -427,7 +434,7 @@ namespace Server.CustomBots
                         if (Array.IndexOf(Loot.GemTypes, item.GetType()) >= 0)
                         {
                             trinkets++;
-                            bot.Backpack?.DropItem(item);
+                            Server.UOOffline.HavenBotLoot.Receive(bot, item);
                         }
                         break;
                 }

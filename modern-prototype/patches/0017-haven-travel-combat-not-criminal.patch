@@ -1,0 +1,179 @@
+--- a/Scripts/Spells/Fourth/Recall.cs
++++ b/Scripts/Spells/Fourth/Recall.cs
+@@ -110,7 +110,7 @@
+                 Caster.SendLocalizedMessage(1061632); // You can't do that while carrying the sigil.
+                 return false;
+             }
+-            else if (Caster.Criminal)
++            else if ((Caster.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 Caster.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+@@ -173,7 +173,7 @@
+             {
+                 Caster.SendLocalizedMessage(1019004); // You are not allowed to travel there.
+             }
+-            else if (Caster.Criminal)
++            else if ((Caster.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 Caster.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+             }
+--- a/Scripts/Spells/Seventh/GateTravel.cs
++++ b/Scripts/Spells/Seventh/GateTravel.cs
+@@ -64,7 +64,7 @@
+                 Caster.SendLocalizedMessage(1061632); // You can't do that while carrying the sigil.
+                 return false;
+             }
+-            else if (Caster.Criminal)
++            else if ((Caster.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 Caster.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+@@ -122,7 +122,7 @@
+             {
+                 Caster.SendLocalizedMessage(1019004); // You are not allowed to travel there.
+             }
+-            else if (Caster.Criminal)
++            else if ((Caster.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 Caster.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+             }
+--- a/Scripts/Spells/Chivalry/SacredJourney.cs
++++ b/Scripts/Spells/Chivalry/SacredJourney.cs
+@@ -101,7 +101,7 @@
+                 Caster.SendLocalizedMessage(1061632); // You can't do that while carrying the sigil.
+                 return false;
+             }
+-            else if (Caster.Criminal)
++            else if ((Caster.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 Caster.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+@@ -164,7 +164,7 @@
+             {
+                 Caster.SendLocalizedMessage(1019004); // You are not allowed to travel there.
+             }
+-            else if (Caster.Criminal)
++            else if ((Caster.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 Caster.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+             }
+--- a/Scripts/Spells/Base/SpellHelper.cs
++++ b/Scripts/Spells/Base/SpellHelper.cs
+@@ -953,7 +953,7 @@
+                 m.SendLocalizedMessage(1061632); // You can't do that while carrying the sigil.
+                 return false;
+             }
+-            else if (m.Criminal)
++            else if ((m.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 m.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+--- a/Scripts/Items/Functional/PublicMoongate.cs
++++ b/Scripts/Items/Functional/PublicMoongate.cs
+@@ -185,7 +185,7 @@
+ 				return true;
+ 			}
+ 			
+-			if (m.Criminal)
++			if ((m.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+ 			{
+ 				// Thou'rt a criminal and cannot escape so easily.
+ 				m.SendLocalizedMessage(1005561, "", 0x22); 
+@@ -683,7 +683,7 @@
+ 				m_Mobile.SendLocalizedMessage(1019004); // You are not allowed to travel there.
+ 				return;
+ 			}
+-			else if (m_Mobile.Criminal)
++			else if ((m_Mobile.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+ 			{
+ 				m_Mobile.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+ 				return;
+--- a/Scripts/Items/Functional/SerpentsJawbone.cs
++++ b/Scripts/Items/Functional/SerpentsJawbone.cs
+@@ -137,7 +137,7 @@
+                 {
+                     User.SendLocalizedMessage(1019004); // You are not allowed to travel there.
+                 }
+-                else if (User.Criminal)
++                else if ((User.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+                 {
+                     User.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 }
+--- a/Scripts/Items/Internal/Teleporter.cs
++++ b/Scripts/Items/Internal/Teleporter.cs
+@@ -230,7 +230,7 @@
+                 return false;
+             }
+             
+-            if (m_CriminalCheck && m.Criminal)
++            if (m_CriminalCheck && (m.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 m.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+--- a/Scripts/Multis/HouseTeleporterTile.cs
++++ b/Scripts/Multis/HouseTeleporterTile.cs
+@@ -369,7 +369,7 @@
+                 from.SendLocalizedMessage(1061632); // You can't do that while carrying the sigil.
+                 return false;
+             }
+-            else if (from.Criminal)
++            else if ((from.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 from.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+--- a/Scripts/Items/Tools/BraceletOfBinding.cs
++++ b/Scripts/Items/Tools/BraceletOfBinding.cs
+@@ -330,7 +330,7 @@
+                 from.SendLocalizedMessage(1019004); // You are not allowed to travel there.
+                 return false;
+             }
+-            else if (from.Criminal)
++            else if ((from.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 from.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+--- a/Scripts/Quests/Eodon/MyrmidexThreat/Items/Rewards.cs
++++ b/Scripts/Quests/Eodon/MyrmidexThreat/Items/Rewards.cs
+@@ -212,7 +212,7 @@
+ 				{
+ 					User.SendLocalizedMessage( 1019004 ); // You are not allowed to travel there.
+ 				}
+-				else if ( User.Criminal )
++				else if ( (User.Criminal && !Server.HavenPrototype.HavenPreview.Enabled) )
+ 				{
+ 					User.SendLocalizedMessage( 1005561, "", 0x22 ); // Thou'rt a criminal and cannot escape so easily.
+ 				}
+--- a/Scripts/Services/ExploringTheDeep/Items/Teleporter/Whirlpool.cs
++++ b/Scripts/Services/ExploringTheDeep/Items/Teleporter/Whirlpool.cs
+@@ -199,7 +199,7 @@
+             {
+                 return false;
+             }
+-            else if (m_CriminalCheck && m.Criminal)
++            else if (m_CriminalCheck && (m.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+             {
+                 m.SendLocalizedMessage(1005561, "", 0x22); // Thou'rt a criminal and cannot escape so easily.
+                 return false;
+--- a/Scripts/Services/VeteranRewards/CrystalPortals/CrystalPortal.cs
++++ b/Scripts/Services/VeteranRewards/CrystalPortals/CrystalPortal.cs
+@@ -93,7 +93,7 @@
+ 				return false;
+ 			}
+ 
+-			if (m.Criminal)
++			if ((m.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+ 			{
+ 				if (message)
+ 				{
+--- a/Scripts/Services/VeteranRewards/CrystalPortals/CorruptedCrystalPortal.cs
++++ b/Scripts/Services/VeteranRewards/CrystalPortals/CorruptedCrystalPortal.cs
+@@ -94,7 +94,7 @@
+ 				return false;
+ 			}
+ 
+-			if (m.Criminal)
++			if ((m.Criminal && !Server.HavenPrototype.HavenPreview.Enabled))
+ 			{
+ 				if (message)
+ 				{

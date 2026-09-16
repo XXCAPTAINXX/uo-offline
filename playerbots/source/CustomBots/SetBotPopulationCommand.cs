@@ -37,7 +37,7 @@ namespace Server.CustomBots
             if (e.Length < 1)
             {
                 from.SendMessage(
-                    $"Current bot population target: {BotPopulation.TargetCount}");
+                    $"Base bot target: {BotPopulation.TargetCount}; two-thirds density target: {BotPopulation.EffectiveTargetCount}");
                 from.SendMessage("Usage: [SetBotPopulation <count>");
                 return;
             }
@@ -61,7 +61,7 @@ namespace Server.CustomBots
             int placed = GenerateBotsCommand.RegenerateForPopulation();
 
             from.SendMessage(0x35,
-                $"Placed {placed} spawners for ~{n} bots. " +
+                $"Placed {placed} spawners for ~{BotPopulation.EffectiveTargetCount} bots at two-thirds density. " +
                 $"They populate over the next few minutes.");
             Console.WriteLine(
                 $"[SetBotPopulation] {from.Name}: {old} -> {n} " +

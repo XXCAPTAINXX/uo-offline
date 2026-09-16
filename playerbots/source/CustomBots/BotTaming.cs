@@ -2,7 +2,7 @@
 // BotTaming.cs — taming as a visible activity (IDEAS 2.4).
 //
 // Tamer-class bots already have the skill on their sheet; this makes it
-// THEATER. A tamer crossing the wilds spots a wild animal, stalks up to
+// useful market stock. A tamer crossing the wilds spots a wild animal, stalks up to
 // it, and works it with the classic client taming spam ("I've always
 // wanted an animal like you") — sometimes it shies away, sometimes it
 // submits. A tamed animal FOLLOWS the tamer through town (half the
@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using Server;
 using Server.Commands;
 using Server.Mobiles;
+using Server.UOOffline;
 
 namespace Server.CustomBots
 {
@@ -108,7 +109,7 @@ namespace Server.CustomBots
         private static int CountWorking()
         {
             int n = _claims.Count;
-            foreach (var m in World.Mobiles.Values)
+            foreach (var m in BehaviorTickManager.Registered)
             {
                 if (m is PlayerBot { Deleted: false } bot &&
                     bot.Behavior is TamerBehavior)
@@ -128,18 +129,32 @@ namespace Server.CustomBots
             (bot.Behavior is TravelerBehavior or BankSitterBehavior
                           or IdleBehavior or WanderBehavior) &&
             !BotPartyManager.IsInParty(bot) &&
+            !BotPlayerParty.InPlayerParty(bot) && !HavenGuildCrew.Retained(bot) &&
             !DungeonRegistry.IsInDungeon(bot);
 
         public static bool IsGoodQuarry(BaseCreature bc, PlayerBot tamer) =>
             bc != null && !bc.Deleted && bc.Alive &&
             bc.Tamable && !bc.Controlled && !bc.Summoned &&
+            bc.Owners.Count == 0 && !bc.IsBonded && !bc.IsStabled &&
+            bc.MinTameSkill <= tamer.Skills.AnimalTaming.Value &&
+            !Server.SkillHandlers.AnimalTaming.MustBeSubdued(bc) &&
+            (tamer.Female ? bc.AllowFemaleTamer : bc.AllowMaleTamer) &&
+            tamer.Followers + bc.ControlSlots <= tamer.FollowersMax &&
             !bc.IsDeadPet && bc.Combatant == null &&
-            bc.Map == tamer.Map;
+            bc.Map == tamer.Map && !HasPlayerNearby(bc);
+
+        private static bool HasPlayerNearby(BaseCreature pet)
+        {
+            foreach (var mobile in pet.GetMobilesInRange(12))
+            { if (mobile.Player && mobile is not PlayerBot && mobile.NetState != null) { return true; } }
+            return false;
+        }
 
         public static bool TryStartTaming(bool force)
         {
+            if (HavenMarketExpansion.Find(HavenMarketTrade.Pets) == null) { return false; }
             var tamers = new List<PlayerBot>();
-            foreach (var m in World.Mobiles.Values)
+            foreach (var m in BehaviorTickManager.Registered)
             {
                 if (m is PlayerBot bot && IsEligibleTamer(bot))
                 {
@@ -182,6 +197,7 @@ namespace Server.CustomBots
         // Called by TamerBehavior on a successful tame.
         public static void OnTamed(PlayerBot tamer, BaseCreature pet)
         {
+            if (HavenMarketPets.Consign(tamer, pet)) { return; }
             _claims.Add(new Claim
             {
                 Tamer = tamer.Serial,
@@ -201,7 +217,7 @@ namespace Server.CustomBots
                 var tamer = World.FindEntity<Mobile>(claim.Tamer) as PlayerBot;
                 var pet = World.FindEntity<Mobile>(claim.Pet) as BaseCreature;
 
-                if (pet == null || pet.Deleted || !pet.Alive || !pet.Controlled)
+                if (pet == null || pet.Deleted || !pet.Alive || !pet.Controlled || pet.ControlMaster != tamer)
                 {
                     _claims.RemoveAt(i);
                     continue;
@@ -215,6 +231,7 @@ namespace Server.CustomBots
                     continue;
                 }
 
+                if (HavenMarketPets.Consign(tamer, pet)) { _claims.RemoveAt(i); continue; }
                 var age = Core.Now - claim.ClaimedAt;
 
                 // Ripe: try the sale once, wherever the tamer ended up —
@@ -273,7 +290,7 @@ namespace Server.CustomBots
             Timer.DelayCall(TimeSpan.FromSeconds(Utility.RandomMinMax(3, 6)), () =>
             {
                 if (b.Deleted || !b.Alive || p.Deleted || !p.Alive ||
-                    !p.Controlled || t.Deleted)
+                    !p.Controlled || p.ControlMaster != t || t.Deleted)
                 {
                     return;
                 }
@@ -324,7 +341,7 @@ namespace Server.CustomBots
 
         private static void Release(BaseCreature pet)
         {
-            if (pet == null || pet.Deleted)
+            if (pet == null || pet.Deleted || pet.ControlMaster is not PlayerBot owner || HavenGuildCrew.Retained(owner) || BotPlayerParty.InPlayerParty(owner))
             {
                 return;
             }
@@ -442,12 +459,19 @@ namespace Server.CustomBots
             _attemptsLeft--;
 
             // Later attempts land better — the classic grind.
-            bool success = _attemptsLeft <= 0
-                ? Utility.RandomDouble() < 0.60
-                : Utility.RandomDouble() < 0.35;
+            bool success = BotTaming.IsGoodQuarry(quarry, bot) &&
+                bot.CheckTargetSkill(SkillName.AnimalTaming, quarry, quarry.MinTameSkill - 0.1, quarry.MinTameSkill + 49.9);
 
             if (success && quarry.SetControlMaster(bot))
             {
+                if (quarry is GreaterDragon)
+                {
+                    Server.SkillHandlers.AnimalTaming.ScaleSkills(quarry, 0.72, 0.90);
+                    quarry.Skills.Magery.Base = quarry.Skills.Magery.Cap;
+                }
+                else { Server.SkillHandlers.AnimalTaming.ScaleSkills(quarry, quarry.Paralyzed ? 0.86 : 0.90); }
+                if (quarry.StatLossAfterTame) { Server.SkillHandlers.AnimalTaming.ScaleStats(quarry, 0.50); }
+                quarry.Owners.Add(bot);
                 quarry.ControlTarget = bot;
                 quarry.ControlOrder = OrderType.Follow;
 

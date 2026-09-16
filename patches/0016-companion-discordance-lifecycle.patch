@@ -1,0 +1,15 @@
+diff --git a/Projects/UOContent/Skills/Discordance.cs b/Projects/UOContent/Skills/Discordance.cs
+index 15b7ed118..a478e6e45 100644
+--- a/Projects/UOContent/Skills/Discordance.cs
++++ b/Projects/UOContent/Skills/Discordance.cs
+@@ -51,7 +51,9 @@ private static void ProcessDiscordance(DiscordanceInfo info)
+ 
+             // According to uoherald bard must remain alive, visible, and
+             // within range of the target or the effect ends in 15 seconds.
+-            if (!targ.Alive || targ.Deleted || !from.Alive || from.Hidden)
++            if (!targ.Alive || targ.Deleted || from.Deleted || !from.Alive || from.Hidden ||
++                from is Server.UOOffline.HavenCompanion companion &&
++                (companion.IsDeadPet || companion.Role != Server.UOOffline.HavenCompanionRole.Bard))
+             {
+                 ends = true;
+             }

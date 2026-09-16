@@ -1,0 +1,41 @@
+diff --git "a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Items.cs" "b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Items.cs"
+index 29ea465..4cdaee2 100644
+--- "a/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Items.cs"
++++ "b/Scripts/Services/Expansions/Time Of Legends/Shadowguard/Items.cs"
+@@ -131,7 +131,7 @@ namespace Server.Engines.Shadowguard
+ 
+         public bool _Thrown;
+ 
+-		public override int Lifespan { get { return 30; } }
++		public override int Lifespan { get { return Server.HavenPrototype.HavenPreview.Enabled ? 120 : 30; } }
+ 	
+ 		public ShadowguardApple(OrchardEncounter encounter, ShadowguardCypress tree) : base(0x9D0)
+ 		{
+@@ -142,7 +142,8 @@ namespace Server.Engines.Shadowguard
+ 		public override void AddNameProperty( ObjectPropertyList list )
+ 		{
+             if(Tree != null)
+-			    list.Add(1156210, Tree.VirtueType.ToString()); // An Enchanted Apple of ~1_TYPE~
++			    list.Add(1156210, Tree.VirtueType.ToString());
++            Server.HavenPrototype.HavenOrchardHelp.AppleProperties(this, list); // An Enchanted Apple of ~1_TYPE~
+ 		}
+ 	
+ 		public override void OnDoubleClick(Mobile m)
+@@ -352,7 +353,8 @@ namespace Server.Engines.Shadowguard
+ 			}
+ 		}
+ 		
+-		public bool IsOppositeVirtue(VirtueType type)
++		public override void GetProperties(ObjectPropertyList list) { base.GetProperties(list); Server.HavenPrototype.HavenOrchardHelp.TreeProperties(this, list); }
++        public bool IsOppositeVirtue(VirtueType type)
+ 		{
+ 			switch(type)
+ 			{
+@@ -404,6 +406,7 @@ namespace Server.Engines.Shadowguard
+                     Tree.OnDoubleClick(m);
+             }
+ 
++            public override void GetProperties(ObjectPropertyList list) { base.GetProperties(list); Server.HavenPrototype.HavenOrchardHelp.TreeProperties(Tree, list); }
+             public ShadowguardCypressFoilage(Serial serial)
+                 : base(serial)
+             {

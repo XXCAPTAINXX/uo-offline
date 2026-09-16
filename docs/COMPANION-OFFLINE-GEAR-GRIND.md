@@ -1,0 +1,13 @@
+# Offline gear assignment
+
+An explicit offline gear assignment lets an existing companion run five-minute Grind missions while its owner is logged out. This uses the normal expedition loot generator and training rules. It does not simulate travel through live dungeons or guarantee that every dropped item is an upgrade.
+
+Each completed run generates the normal gold, Haven marks and equipment directly in the shared pack, awards expedition skill/stat progress, and adds experience to equipped evolving gear. Existing equipment is preserved; dropped replacements are left for the owner to inspect. No gear is sold, deleted or automatically swapped. Rewards are granted only after the deadline, at most one run per timer tick. Available pack space is checked before generating rewards; a nearly full pack stops the assignment instead of dropping items into the world.
+
+A pre-existing expedition is completed using its original duration and reward rules once it is due, before new grinding proceeds. The offline completion path requires an active owned assignment and a logged-out owner. It neither moves the owner's character into the world nor grants early mission rewards. Its claimed flag and deletion still prevent duplicate collection.
+
+The assignment is a separately serialized record in the companion pack, preserving ownership, running state, next deadline and completed-run count across saves. A five-second main-loop timer performs checks. Existing automatic AFK missions defer to the assignment. On the owner's next in-world login, the assignment stops, automatic AFK departure is disabled, and the normal companion recall/claim routine brings the companion back where eligible. Use `[companiongrind` to view the result or `[companiongrind off` to cancel, and `[c` for normal controls.
+
+Ordinary AFK mission behavior is otherwise unchanged. The local operator action `companion-gear-grind` requires an existing owner's serial, resolves only that owner's already-claimed companion through its account tag, and never creates another companion. Repeating that action on a running assignment preserves its deadline and progress.
+
+Validation: **992 content tests passed, zero failed or skipped**. Assignment tests cover elapsed-time rewards, no duplicate payouts, equipped-item preservation, login stopping, pack capacity, serialization, and safe collection of a previously completed expedition. The first live gear payout was confirmed and saved. Final deployment evidence is stored in `artifacts/HavenGearAssignmentRelease20260909b`; see [deployment report](DEPLOYMENT-GEAR-ASSIGNMENT-2026-09-09.md).

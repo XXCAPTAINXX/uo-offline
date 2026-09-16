@@ -56,6 +56,34 @@ public partial class VampiricSteed : BaseMount
         ControlSlots = 2;
     }
 
+    internal bool IsGentleIslandSteed => !Controlled && !Summoned && Map == Map.Trammel &&
+        X >= 3314 && X < 3814 && Y >= 2345 && Y < 3095;
+
+    public override int HitsMax => IsGentleIslandSteed ? Math.Min(120, base.HitsMax) : base.HitsMax;
+
+    internal void UpdateIslandDifficulty()
+    {
+        if (Controlled && RawDex < 180)
+        {
+            SetDex(180, 210);
+            Stam = StamMax;
+        }
+        var desiredAI = IsGentleIslandSteed ? AIType.AI_Melee : AIType.AI_Mage;
+        if (AI != desiredAI) { AI = desiredAI; }
+        if (Hits > HitsMax) { Hits = HitsMax; }
+    }
+
+    public override void OnThink()
+    {
+        UpdateIslandDifficulty();
+        base.OnThink();
+    }
+
+    public override void AlterMeleeDamageTo(Mobile to, ref int damage)
+    {
+        base.AlterMeleeDamageTo(to, ref damage);
+        if (IsGentleIslandSteed && damage > 0) { damage = Math.Clamp(damage * 2 / 5, 1, 8); }
+    }
     public override int StepsMax => 6400;
     public override string CorpseName => "a vampiric steed corpse";
     public override int Meat => 3;

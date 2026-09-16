@@ -1,0 +1,19 @@
+--- a/Scripts/Skills/AnimalTaming.cs
++++ b/Scripts/Skills/AnimalTaming.cs
+@@ -107,6 +107,7 @@
+ 
+ 		public static void ScaleSkills(BaseCreature bc, double scalar, double capScalar, bool firstTame)
+ 		{
++            if (Server.HavenPrototype.HavenPetTamingSkills.Scale(bc, scalar, firstTame)) return;
+ 			for (int i = 0; i < bc.Skills.Length; ++i)
+ 			{
+                 if (Server.HavenPrototype.HavenLegendaryPetSkills.Protects(bc, (SkillName)i)) continue;
+@@ -427,7 +428,7 @@
+                                 if (m_Creature is GreaterDragon)
+                                 {
+                                     ScaleSkills(m_Creature, 0.72, 0.90, true); // 72% of original skills trainable to 90%
+-                                    m_Creature.Skills[SkillName.Magery].Base = m_Creature.Skills[SkillName.Magery].Cap;
++                                    if (!Server.HavenPrototype.HavenPreview.Enabled) m_Creature.Skills[SkillName.Magery].Base = m_Creature.Skills[SkillName.Magery].Cap;
+                                     // Greater dragons have a 90% cap reduction and 90% skill reduction on magery
+                                 }
+                                 else if (m_Paralyzed)

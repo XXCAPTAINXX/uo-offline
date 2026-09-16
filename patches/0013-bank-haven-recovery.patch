@@ -1,0 +1,13 @@
+diff --git a/Projects/UOContent/Commands/Handlers.cs b/Projects/UOContent/Commands/Handlers.cs
+--- a/Projects/UOContent/Commands/Handlers.cs
++++ b/Projects/UOContent/Commands/Handlers.cs
+@@ -34,6 +34,8 @@ namespace Server.Commands
+             Register("SMsg", AccessLevel.Counselor, StaffMessage_OnCommand);
+             Register("BCast", AccessLevel.GameMaster, BroadcastMessage_OnCommand);
+-            Register("Bank", AccessLevel.GameMaster, Bank_OnCommand);
++            Register("BankBox", AccessLevel.GameMaster, Bank_OnCommand);
++            Register("Bank", AccessLevel.Player, e => Server.UOOffline.HavenRecovery.GoToBank(e.Mobile));
++            Register("OhShit", AccessLevel.Player, e => Server.UOOffline.HavenRecovery.GoToBank(e.Mobile));
+             Register("Echo", AccessLevel.Counselor, Echo_OnCommand);
+             Register("Sound", AccessLevel.GameMaster, Sound_OnCommand);
+             Register("ViewEquip", AccessLevel.GameMaster, ViewEquip_OnCommand);

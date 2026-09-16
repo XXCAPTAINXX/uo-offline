@@ -1,0 +1,55 @@
+diff --git "a/Scripts/Services/Expansions/High Seas/Mobiles/BaseSeaChampion.cs" "b/Scripts/Services/Expansions/High Seas/Mobiles/BaseSeaChampion.cs"
+index 93a79cd..3ffb2f0 100644
+--- "a/Scripts/Services/Expansions/High Seas/Mobiles/BaseSeaChampion.cs"
++++ "b/Scripts/Services/Expansions/High Seas/Mobiles/BaseSeaChampion.cs"
+@@ -106,22 +106,23 @@ namespace Server.Mobiles
+ 
+             foreach (KeyValuePair<Mobile, int> kvp in m_DamageEntries)
+             {
+-                if (IsEligible(kvp.Key, artifact))
++                if (kvp.Value > 0 && IsEligible(kvp.Key, artifact))
+                 {
+                     validEntries.Add(kvp.Key, kvp.Value);
+                     totalDamage += kvp.Value;
+                 }
+             }
+ 
++            if (totalDamage <= 0) { artifact.Delete(); return; }
+             int randomDamage = Utility.RandomMinMax(1, totalDamage);
+ 
+             totalDamage = 0;
+ 
+-            foreach (KeyValuePair<Mobile, int> kvp in m_DamageEntries)
++            foreach (KeyValuePair<Mobile, int> kvp in validEntries)
+             {
+                 totalDamage += kvp.Value;
+ 
+-                if (totalDamage > randomDamage)
++                if (totalDamage >= randomDamage)
+                 {
+                     GiveArtifact(kvp.Key, artifact);
+                     return;
+@@ -137,6 +138,13 @@ namespace Server.Mobiles
+             if (to == null || artifact == null)
+                 return;
+ 
++            if (Server.HavenPrototype.HavenPreview.Enabled && to is PlayerMobile && !to.Deleted)
++            {
++                Server.HavenPrototype.HavenAdvancedGear.Attach(artifact, Server.HavenPrototype.HavenAdvancedGear.AutoKind(artifact));
++                if (to.Backpack != null && to.Backpack.TryDropItem(to, artifact, false)) to.SendLocalizedMessage(1062317);
++                else { to.BankBox.DropItem(artifact); to.SendMessage("Your sea-boss artifact was placed in your bank because your backpack could not hold it."); }
++                return;
++            }
+             Container pack = to.Backpack;
+ 
+             if (pack == null || !pack.TryDropItem(to, artifact, false))
+@@ -147,7 +155,8 @@ namespace Server.Mobiles
+ 
+         public bool IsEligible(Mobile m, Item Artifact)
+         {
+-            return m.Player && m.Alive && m.InRange(Location, 32) && m.Backpack != null && m.Backpack.CheckHold(m, Artifact, false);
++            if (m == null || m.Deleted || !m.Player || !m.Alive || m.Map != Map || !m.InRange(Location, 32)) return false;
++            return Server.HavenPrototype.HavenPreview.Enabled || (m.Backpack != null && m.Backpack.CheckHold(m, Artifact, false));
+         }
+ 
+         public void TryDamageBoat()

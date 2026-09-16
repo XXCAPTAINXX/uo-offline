@@ -1,0 +1,13 @@
+--- a/Scripts/Items/Tools/Dyes.cs
++++ b/Scripts/Items/Tools/Dyes.cs
+@@ -56,7 +56,9 @@
+ 
+                     if (tub.Redyable)
+                     {
+-                        if (tub.CustomHuePicker == null)
++                        if (tub is Server.HavenPrototype.HavenUniversalDyeTub && Server.HavenPrototype.HavenPreview.Enabled)
++                            ((Server.HavenPrototype.HavenUniversalDyeTub)tub).ShowPalette(from);
++                        else if (tub.CustomHuePicker == null)
+                             from.SendHuePicker(new InternalPicker(tub));
+                         else
+                             from.SendGump(new CustomHuePickerGump(from, tub.CustomHuePicker, new CustomHuePickerCallback(SetTubHue), tub));

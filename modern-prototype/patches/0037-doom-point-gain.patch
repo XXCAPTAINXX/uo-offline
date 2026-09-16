@@ -1,0 +1,11 @@
+--- a/Scripts/Services/PointsSystems/GauntletPoints.cs
++++ b/Scripts/Services/PointsSystems/GauntletPoints.cs
+@@ -49,7 +49,7 @@
+                 return;
+ 
+             int luck = Math.Max(0, pm.RealLuck);
+-            AwardPoints(pm, (int)Math.Max(0, (bc.Fame * (1 + Math.Sqrt(luck) / 100)) / 2));
++            AwardPoints(pm, (int)Math.Max(0, (bc.Fame * (1 + Math.Sqrt(luck) / 100 * (Server.HavenPrototype.HavenPreview.Enabled ? 1.5 : 1.0))) / 2 * (Server.HavenPrototype.HavenPreview.Enabled ? 1.25 : 1.0)));
+ 
+             double gpoints = GetPoints(pm);
+             const double A = 0.000863316841;

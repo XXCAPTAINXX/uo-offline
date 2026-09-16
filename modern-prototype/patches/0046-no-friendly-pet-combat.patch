@@ -1,0 +1,18 @@
+diff --git a/Scripts/Mobiles/Normal/BaseCreature.cs b/Scripts/Mobiles/Normal/BaseCreature.cs
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -1649,3 +1649,4 @@
+         public override int Damage(int amount, Mobile from, bool informMount, bool checkDisrupt)
+         {
++            if (Server.HavenPrototype.HavenFollowerMovement.CanPass(this, from)) return 0;
+             int oldHits = Hits;
+@@ -6582,3 +6583,4 @@
+         public override bool CanBeHarmful(IDamageable damageable, bool message, bool ignoreOurBlessedness)
+         {
++            if (Server.HavenPrototype.HavenFollowerMovement.CanPass(this, damageable as Mobile)) return false;
+             Mobile target = damageable as Mobile;
+@@ -7415,3 +7417,4 @@
+         public virtual void OnThink()
+         {
++            Server.HavenPrototype.HavenFollowerCombat.Clear(this);
+             long tc = Core.TickCount;

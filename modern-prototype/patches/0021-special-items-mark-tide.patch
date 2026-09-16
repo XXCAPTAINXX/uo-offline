@@ -1,0 +1,33 @@
+--- a/Scripts/Mobiles/Normal/BaseMount.cs
++++ b/Scripts/Mobiles/Normal/BaseMount.cs
+@@ -108,6 +108,7 @@
+             {
+                 if (m_Rider != value)
+                 {
++                    Mobile previousRider = m_Rider;
+                     if (value == null)
+                     {
+                         Point3D loc = m_Rider.Location;
+@@ -149,6 +150,7 @@
+                     }
+ 
+                     m_Rider = value;
++                    Server.HavenPrototype.HavenTideSteed.RiderChanged(this, previousRider, value);
+                 }
+             }
+         }
+--- a/Scripts/Spells/Sixth/Mark.cs
++++ b/Scripts/Spells/Sixth/Mark.cs
+@@ -85,7 +85,11 @@
+ 
+             protected override void OnTarget(Mobile from, object o)
+             {
+-                if (o is RecallRune)
++                if (Server.HavenPrototype.HavenPreview.Enabled && o is Server.HavenPrototype.HavenRunePouch)
++                {
++                    if (!((Server.HavenPrototype.HavenRunePouch)o).MarkRune(from, m_Owner.CheckSequence)) from.SendMessage("Keep blank runes in your pouch and leave backpack space; this location must allow Mark.");
++                }
++                else if (o is RecallRune)
+                 {
+                     m_Owner.Target((RecallRune)o);
+                 }

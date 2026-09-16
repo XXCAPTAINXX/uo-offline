@@ -1,0 +1,62 @@
+--- a/Scripts/Mobiles/PlayerMobile.cs
++++ b/Scripts/Mobiles/PlayerMobile.cs
+@@ -4394,7 +4394,7 @@
+ 
+         public override int GetInventoryAccessRange(Item item) { return Server.HavenPrototype.HavenCompanionAccess.InventoryRange(this, item); }
+ 
+-        public override int Luck { get { return AosAttributes.GetValue(this, AosAttribute.Luck) + TenthAnniversarySculpture.GetLuckBonus(this); } }
++        public override int Luck { get { return AosAttributes.GetValue(this, AosAttribute.Luck) + TenthAnniversarySculpture.GetLuckBonus(this) + Server.HavenPrototype.HavenNewcomerBonus.Luck(this); } }
+ 
+         public int RealLuck
+ 		{ 
+--- a/Scripts/Misc/SkillCheck.cs
++++ b/Scripts/Misc/SkillCheck.cs
+@@ -226,6 +226,7 @@
+             gc /= 4;
+ 
+             gc *= skill.Info.GainFactor;
++            gc *= Server.HavenPrototype.HavenNewcomerBonus.Chance(from, skill);
+ 
+             if (gc < 0.01)
+                 gc = 0.01;
+@@ -269,6 +270,7 @@
+             gc /= 2;
+ 
+             gc *= skill.Info.GainFactor;
++            gc *= Server.HavenPrototype.HavenNewcomerBonus.Chance(from, skill);
+ 
+             if (gc < 0.01)
+                 gc = 0.01;
+@@ -385,7 +387,8 @@
+ 					{
+ 						if (Siege.CheckSkillGain((PlayerMobile)from, minsPerGain, skill))
+ 						{
+-							CheckReduceSkill(skills, toGain, skill);
++							toGain = Server.HavenPrototype.HavenNewcomerBonus.Amount(from, skill, toGain);
++                            CheckReduceSkill(skills, toGain, skill);
+ 
+ 							if (Server.HavenPrototype.HavenPlayerCaps.IsFree(from,skill) || Server.HavenPrototype.HavenPlayerCaps.Counted(skills) + toGain <= skills.Cap)
+ 							{
+@@ -438,7 +441,8 @@
+ 
+ 				if (from is PlayerMobile)
+ 				{
+-					CheckReduceSkill(skills, toGain, skill);
++					toGain = Server.HavenPrototype.HavenNewcomerBonus.Amount(from, skill, toGain);
++                            CheckReduceSkill(skills, toGain, skill);
+ 				}
+ 
+ 				if (!from.Player || (Server.HavenPrototype.HavenPlayerCaps.IsFree(from,skill) || Server.HavenPrototype.HavenPlayerCaps.Counted(skills) + toGain <= skills.Cap))
+--- a/Scripts/Spells/Base/Spell.cs
++++ b/Scripts/Spells/Base/Spell.cs
+@@ -1180,7 +1180,9 @@
+ 					}
+ 				}
+ 
+-				int karma = ComputeKarmaAward();
++				Server.HavenPrototype.HavenStarterGear.Cast(m_Caster);
++
++                int karma = ComputeKarmaAward();
+ 
+ 				if (karma != 0)
+ 				{

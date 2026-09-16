@@ -47,6 +47,14 @@ namespace Server.CustomBots
 
         public static void AddDraftEntry(Mobile m, string behaviorName, int count = 0)
         {
+            foreach (var entry in GetDraft(m))
+            {
+                if (entry.BehaviorName == behaviorName)
+                {
+                    entry.Count += count;
+                    return;
+                }
+            }
             GetDraft(m).Add(new DraftEntry { BehaviorName = behaviorName, Count = count });
         }
 

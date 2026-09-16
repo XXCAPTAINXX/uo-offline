@@ -1,0 +1,25 @@
+diff --git a/Projects/UOContent/Mobiles/BaseCreature.cs b/Projects/UOContent/Mobiles/BaseCreature.cs
+index 77c3477..1c9c7f8 100644
+--- a/Projects/UOContent/Mobiles/BaseCreature.cs
++++ b/Projects/UOContent/Mobiles/BaseCreature.cs
+@@ -2413,6 +2413,7 @@ namespace Server.Mobiles
+ 
+         public virtual void OnGaveMeleeAttack(Mobile defender, int damage)
+         {
++            Server.UOOffline.HavenPetRarity.OnAttack(this, defender);
+             var p = m_Paragon ? PoisonImpl.IncreaseLevel(HitPoison) : HitPoison;
+ 
+             if (p != null && HitPoisonChance >= Utility.RandomDouble())
+diff --git a/Projects/UOContent/Migrations/Server.UOOffline.HavenExpeditionPetClaim.v0.json b/Projects/UOContent/Migrations/Server.UOOffline.HavenExpeditionPetClaim.v0.json
+new file mode 100644
+--- /dev/null
++++ b/Projects/UOContent/Migrations/Server.UOOffline.HavenExpeditionPetClaim.v0.json
+@@ -0,0 +1,8 @@
++{
++  "version": 0,
++  "type": "Server.UOOffline.HavenExpeditionPetClaim",
++  "properties": [
++    { "name": "Owner", "type": "Server.Mobile", "rule": "SerializableInterfaceMigrationRule" },
++    { "name": "Kind", "type": "Server.UOOffline.HavenExpeditionKind", "rule": "EnumMigrationRule" }
++  ]
++}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ModernUO.Serialization;
 using Server.Items;
+using Server.Gumps;
 
 namespace Server.UOOffline;
 
@@ -58,7 +59,7 @@ public partial class NewHavenAdventurersRobe : BaseOuterTorso, IStarterUpgradeab
         return true;
     }
 
-    private void ApplyTier()
+    internal void ApplyTier()
     {
         Attributes.Luck = 50 + UpgradeTier * 25;
         Attributes.RegenHits = 1 + UpgradeTier / 2;
@@ -106,14 +107,16 @@ public partial class ApprenticeGrimoire : Spellbook
 
     public void BindTo(Mobile mobile) => BoundTo = mobile;
 
-    public void GainCastExperience(Mobile caster)
+    public void GainCastExperience(Mobile caster) => GainSharedExperience(caster, 1);
+
+    internal void GainSharedExperience(Mobile caster, int amount)
     {
-        if (caster == null || caster != BoundTo || Level >= MaxLevel)
+        if (caster == null || caster != BoundTo || Level >= MaxLevel || amount <= 0)
         {
             return;
         }
 
-        Experience++;
+        Experience += amount;
 
         var needed = 20 + Level * 10;
         if (Experience < needed)
@@ -129,12 +132,14 @@ public partial class ApprenticeGrimoire : Spellbook
         caster.SendMessage($"Your apprentice grimoire has reached level {Level}.");
     }
 
+    [AfterDeserialization] private void RefreshManaSustain() => Attributes.RegenMana = Math.Max(Attributes.RegenMana,1 + Math.Clamp(Level,1,20)/3);
+
     private void ApplyLevelBonuses()
     {
         Attributes.Luck = 25 + Math.Min(Level, 10) * 10;
         Attributes.BonusMana = Math.Min(10, Level / 2);
         Attributes.LowerManaCost = Math.Min(10, Level / 2);
-        Attributes.RegenMana = Math.Min(3, Level / 6);
+        Attributes.RegenMana = Math.Max(Attributes.RegenMana, 1 + Math.Clamp(Level,1,20) / 3);
         Attributes.CastRecovery = Level >= 10 ? 1 : 0;
         Attributes.CastSpeed = Level >= 20 ? 1 : 0;
     }
@@ -158,23 +163,50 @@ public partial class ApprenticeGrimoire : Spellbook
     }
 }
 
-[SerializationGenerator(0)]
+[SerializationGenerator(2)]
 public partial class AdventurersWallet : Item
 {
     [SerializableField(0)]
     [InvalidateProperties]
     private long _balance;
 
+    [SerializableField(1)]
+    [InvalidateProperties]
+    private long _astralShards;
+
+    [SerializableField(2)]
+    [InvalidateProperties]
+    private long _havenMarks;
+    private void MigrateFrom(V1Content content) { _balance = content.Balance; _astralShards = content.AstralShards; }
+    private void MigrateFrom(V0Content content) { _balance = content.Balance; }
+
     public override string DefaultName => "adventurer's wallet";
 
     [Constructible]
-    public AdventurersWallet() : base(0xE79)
+    public AdventurersWallet() : base(0xEEF)
     {
         Weight = 1.0;
         LootType = LootType.Blessed;
+        UpdateWalletAppearance();
     }
 
+    [AfterDeserialization]
+    private void UpdateWalletAppearance() { ItemID = 0xEEF; Hue = 0x8A5; }
+
     public override void OnDoubleClick(Mobile from)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack))
+        {
+            from.SendMessage("Keep the wallet in your backpack to use it.");
+            return;
+        }
+        DepositBackpackGold(from);
+        DepositBackpackMarks(from);
+        DepositBackpackShards(from);
+        CollectNearbyGold(from);
+    }
+
+    public void DepositBackpackGold(Mobile from)
     {
         var pack = from.Backpack;
 
@@ -195,9 +227,14 @@ public partial class AdventurersWallet : Item
         }
 
         long deposited = 0;
+        foreach (var gold in coins) { deposited += gold.Amount; }
+        if (deposited > long.MaxValue - Balance)
+        {
+            from.SendMessage("Your wallet cannot hold that much gold.");
+            return;
+        }
         foreach (var gold in coins)
         {
-            deposited += gold.Amount;
             gold.Delete();
         }
 
@@ -210,6 +247,81 @@ public partial class AdventurersWallet : Item
         Balance += deposited;
         InvalidateProperties();
         from.SendMessage($"{deposited:N0} gold deposited into your wallet. Balance: {Balance:N0}.");
+    }
+
+    internal long DepositBackpackMarks(Mobile from)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack)) { return 0; }
+        var marks = new List<HavenMark>();
+        long amount = 0;
+        foreach (var mark in from.Backpack.FindItemsByType<HavenMark>())
+        {
+            if (!mark.Deleted) { marks.Add(mark); amount += mark.Amount; }
+        }
+        if (amount <= 0 || amount > long.MaxValue - HavenMarks) { return 0; }
+        foreach (var mark in marks) { mark.Delete(); }
+        HavenMarks += amount;
+        from.SendMessage($"Deposited {amount:N0} Haven marks. Wallet marks: {HavenMarks:N0}.");
+        return amount;
+    }
+    internal long DepositBackpackShards(Mobile from)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack)) { return 0; }
+        var shards = new List<AstralShard>(); long amount = 0;
+        foreach (var shard in from.Backpack.FindItemsByType<AstralShard>())
+        { if (!shard.Deleted) { shards.Add(shard); amount += shard.Amount; } }
+        if (amount <= 0 || amount > long.MaxValue - AstralShards) { return 0; }
+        foreach (var shard in shards) { shard.Delete(); }
+        AstralShards += amount;
+        from.SendMessage($"Deposited {amount:N0} Astral shards. Wallet shards: {AstralShards:N0}.");
+        return amount;
+    }
+    internal bool WithdrawMarks(Mobile from, int amount)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack) || amount is < 1 or > 60000 || HavenMarks < amount) { return false; }
+        var marks = new HavenMark(amount);
+        if (!from.Backpack.TryDropItem(from, marks, false)) { marks.Delete(); return false; }
+        HavenMarks -= amount;
+        from.SendMessage($"Withdrew {amount:N0} Haven marks.");
+        return true;
+    }
+    internal long CollectNearbyGold(Mobile from)
+    {
+        if (Deleted || !from.Alive || from.Backpack == null || !IsChildOf(from.Backpack) || from.Map == Map.Internal) { return 0; }
+        var coins = new List<Gold>();
+        foreach (var gold in from.Map.GetItemsInRange<Gold>(from.Location, 8))
+        {
+            if (!gold.Deleted && gold.Parent == null && gold.Movable && !gold.IsLockedDown && !gold.IsSecure &&
+                from.CanSee(gold) && from.InLOS(gold) && gold.CheckLift(from)) { coins.Add(gold); }
+        }
+        long collected = 0;
+        foreach (var gold in coins)
+        {
+            if (gold.Amount > long.MaxValue - Balance) { continue; }
+            Balance += gold.Amount;
+            collected += gold.Amount;
+            gold.Delete();
+        }
+        if (collected > 0) { from.SendMessage($"Collected {collected:N0} nearby gold. Wallet: {Balance:N0}."); }
+        return collected;
+    }
+    internal bool Withdraw(Mobile from, int amount)
+    {
+        if (Deleted || from.Backpack == null || !IsChildOf(from.Backpack) || amount < 1 || amount > 60000 || Balance < amount)
+        {
+            from.SendMessage("Enter 1 to 60,000 gold, within your wallet balance, and keep the wallet in your backpack.");
+            return false;
+        }
+        var gold = new Gold(amount);
+        if (!from.Backpack.TryDropItem(from, gold, false))
+        {
+            gold.Delete();
+            from.SendMessage("Your backpack needs more room or weight capacity. Your wallet was not charged.");
+            return false;
+        }
+        Balance -= amount;
+        from.SendMessage($"{amount:N0} gold withdrawn to your backpack.");
+        return true;
     }
 
     public bool TrySpend(long amount)
@@ -231,15 +343,17 @@ public partial class AdventurersWallet : Item
             return;
         }
 
-        Balance += amount;
+        Balance = amount > long.MaxValue - Balance ? long.MaxValue : Balance + amount;
         InvalidateProperties();
     }
 
     public override void GetProperties(IPropertyList list)
     {
         base.GetProperties(list);
-        list.Add($"Stored gold: {Balance:N0}");
-        list.Add("Double-click to deposit backpack gold");
+        list.Add($"{"Stored gold:"} {Balance:N0}");
+        list.Add($"{"Astral shards:"} {AstralShards:N0}");
+        list.Add($"{"Haven marks:"} {HavenMarks:N0}");
+        list.Add("Double-click: collect gold. Say withdraw 1000. Use [wallet for rewards.");
     }
 }
 
@@ -247,9 +361,25 @@ public static class StarterProgression
 {
     public static void OnSuccessfulSpellCast(Mobile caster)
     {
-        if (caster?.FindItemOnLayer(Layer.OneHanded) is ApprenticeGrimoire grimoire)
+        if (caster == null)
+        {
+            return;
+        }
+        if (caster.FindItemOnLayer(Layer.OneHanded) is ApprenticeGrimoire grimoire && grimoire.BoundTo == caster)
         {
             grimoire.GainCastExperience(caster);
+            return;
+        }
+        if (caster.Backpack != null)
+        {
+            foreach (var book in caster.Backpack.FindItemsByType<ApprenticeGrimoire>())
+            {
+                if (book.BoundTo == caster)
+                {
+                    book.GainCastExperience(caster);
+                    return;
+                }
+            }
         }
     }
 }

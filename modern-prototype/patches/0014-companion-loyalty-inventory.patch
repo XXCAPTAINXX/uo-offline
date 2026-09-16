@@ -1,0 +1,27 @@
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -7914,6 +7914,14 @@
+                     {
+                         BaseCreature c = (BaseCreature)m;
+ 
++                        // Persistent companions use account ownership, not pet loyalty.
++                        if (c is Server.HavenPrototype.HavenCompanion)
++                        {
++                            c.Loyalty = BaseCreature.MaxLoyalty;
++                            c.OwnerAbandonTime = DateTime.MinValue;
++                            return;
++                        }
++
+                         if (c.IsDeadPet)
+                         {
+                             Mobile owner = c.ControlMaster;
+--- a/Scripts/Mobiles/AI/BaseAI.cs
++++ b/Scripts/Mobiles/AI/BaseAI.cs
+@@ -1800,6 +1800,7 @@
+ 
+ 		public virtual bool DoOrderRelease()
+ 		{
++			if (m_Mobile is Server.HavenPrototype.HavenCompanion) return false;
+ 			m_Mobile.DebugSay("I have been released");
+ 
+ 			m_Mobile.PlaySound(m_Mobile.GetAngerSound());

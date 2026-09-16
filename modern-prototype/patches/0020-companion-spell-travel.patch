@@ -1,0 +1,18 @@
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -7696,6 +7696,7 @@
+                 if (m is BaseCreature)
+                 {
+                     BaseCreature pet = (BaseCreature)m;
++                    if (Server.HavenPrototype.HavenPreview.Enabled && pet is Server.HavenPrototype.HavenCompanion) continue;
+ 
+                     if (pet.Controlled && pet.ControlMaster == master)
+                     {
+@@ -7719,6 +7720,7 @@
+             }
+ 
+             ColUtility.Free(move);
++            Server.HavenPrototype.HavenCompanion.TravelWithOwner(master, loc, map);
+         }
+ 
+         public virtual void ResurrectPet()

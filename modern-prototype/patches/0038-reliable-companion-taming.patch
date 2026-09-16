@@ -1,0 +1,24 @@
+--- a/Scripts/Skills/AnimalTaming.cs
++++ b/Scripts/Skills/AnimalTaming.cs
+@@ -54,6 +54,12 @@
+ 		}
+ 
+ 		public static bool IsBeingTamed(BaseCreature bc){return m_BeingTamed.Contains(bc);}
++        public static bool BeginAssistedTame(Server.HavenPrototype.HavenCompanion companion,BaseCreature creature)
++        {
++            if(!companion.CalmTamingTarget(creature)||companion.Target!=null||companion.Spell!=null||IsBeingTamed(creature))return false;
++            var target=new InternalTarget(companion);companion.Target=target;target.Invoke(companion,creature);
++            return IsBeingTamed(creature);
++        }
+ 
+         public static bool MustBeSubdued(BaseCreature bc)
+ 		{
+@@ -205,7 +211,7 @@
+ 								creature.PrivateOverheadMessage(MessageType.Regular, 0x3B2, 502802, from.NetState);
+ 									// Someone else is already taming this.
+ 							}
+-							else if (creature.CanAngerOnTame && 0.95 >= Utility.RandomDouble())
++							else if (creature.CanAngerOnTame && !(from is Server.HavenPrototype.HavenCompanion && ((Server.HavenPrototype.HavenCompanion)from).CalmTamingTarget(creature)) && 0.95 >= Utility.RandomDouble())
+ 							{
+ 								creature.PrivateOverheadMessage(MessageType.Regular, 0x3B2, 502805, from.NetState);
+ 									// You seem to anger the beast!

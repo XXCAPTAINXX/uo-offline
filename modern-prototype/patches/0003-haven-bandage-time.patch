@@ -1,0 +1,10 @@
+diff --git a/Scripts/Items/Resource/Bandage.cs b/Scripts/Items/Resource/Bandage.cs
+--- a/Scripts/Items/Resource/Bandage.cs
++++ b/Scripts/Items/Resource/Bandage.cs
+@@ -760,4 +760,5 @@
+-			return TimeSpan.FromSeconds(seconds);
++            if (Server.HavenPrototype.HavenPreview.Enabled) seconds = Math.Min(seconds, 2.0);
++			return TimeSpan.FromSeconds(seconds);
+ 		}
+ 	}
+ 

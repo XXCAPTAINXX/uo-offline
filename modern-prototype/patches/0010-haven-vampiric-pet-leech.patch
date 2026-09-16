@@ -1,0 +1,10 @@
+--- a/Scripts/Items/Equipment/Weapons/BaseWeapon.cs
++++ b/Scripts/Items/Equipment/Weapons/BaseWeapon.cs
+@@ -2982,6 +2982,7 @@
+ 
+ 			if (attacker is BaseCreature)
+ 			{
++				Server.HavenPrototype.VampiricSteed.LifeDrain(attacker, damageGiven);
+ 				((BaseCreature)attacker).OnGaveMeleeAttack(defender);
+ 			}
+ 

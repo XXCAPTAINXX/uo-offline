@@ -1,0 +1,35 @@
+diff --git a/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v2.json b/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v2.json
+new file mode 100644
+--- /dev/null
++++ b/Projects/UOContent/Migrations/Server.UOOffline.AdventurersWallet.v2.json
+@@ -0,0 +1,30 @@
++{
++  "version": 2,
++  "type": "Server.UOOffline.AdventurersWallet",
++  "properties": [
++    {
++      "name": "Balance",
++      "type": "long",
++      "rule": "PrimitiveTypeMigrationRule",
++      "ruleArguments": [
++        ""
++      ]
++    },
++    {
++      "name": "AstralShards",
++      "type": "long",
++      "rule": "PrimitiveTypeMigrationRule",
++      "ruleArguments": [
++        ""
++      ]
++    },
++    {
++      "name": "HavenMarks",
++      "type": "long",
++      "rule": "PrimitiveTypeMigrationRule",
++      "ruleArguments": [
++        ""
++      ]
++    }
++  ]
++}

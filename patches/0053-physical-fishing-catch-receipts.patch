@@ -1,0 +1,18 @@
+diff --git a/Projects/UOContent/Engines/Harvest/Fishing.cs b/Projects/UOContent/Engines/Harvest/Fishing.cs
+--- a/Projects/UOContent/Engines/Harvest/Fishing.cs
++++ b/Projects/UOContent/Engines/Harvest/Fishing.cs
+@@ -362,12 +362,14 @@
+                 serp.RangeHome = 10;
+ 
+                 serp.PackItem(item);
++                Server.UOOffline.HavenFishingFleet.Spawned(m, serp);
+ 
+                 m.SendLocalizedMessage(503170); // Uh oh! That doesn't look like a fish!
+ 
+                 return true; // we don't want to give the item to the player, it's on the serpent
+             }
+ 
++            if (Server.UOOffline.HavenFishingFleet.DeliverCatch(m, item)) { return true; }
+             return base.Give(m, item, placeAtFeet || item is BigFish or WoodenChest or MetalGoldenChest);
+         }
+ 

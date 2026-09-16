@@ -1,0 +1,90 @@
+--- a/Server/Mobile.cs
++++ b/Server/Mobile.cs
+@@ -4474,6 +4474,8 @@
+ 
+ 		public static int ActionDelay { get { return m_ActionDelay; } set { m_ActionDelay = value; } }
+ 
++		public virtual int GetInventoryAccessRange(Item item) { return 2; }
++
+ 		public virtual void Lift(Item item, int amount, out bool rejected, out LRReason reject)
+ 		{
+ 			rejected = true;
+@@ -4497,7 +4499,7 @@
+ 					{
+ 						reject = LRReason.AreHolding;
+ 					}
+-					else if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(item.GetWorldLocation(), 2))
++					else if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(item.GetWorldLocation(), from.GetInventoryAccessRange(item)))
+ 					{
+ 						reject = LRReason.OutOfRange;
+                     }
+--- a/Server/Item.cs
++++ b/Server/Item.cs
+@@ -5078,7 +5078,7 @@
+             {
+                 return false;
+             }
+-            else if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(target.GetWorldLocation(), 2))
++            else if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(target.GetWorldLocation(), from.GetInventoryAccessRange(target)))
+             {
+                 return false;
+             }
+@@ -5114,7 +5114,7 @@
+ 
+             var root = target.RootParent;
+ 
+-            if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(target.GetWorldLocation(), 2))
++            if (from.AccessLevel < AccessLevel.GameMaster && !from.InRange(target.GetWorldLocation(), from.GetInventoryAccessRange(target)))
+             {
+                 return false;
+             }
+--- a/Scripts/Mobiles/PlayerMobile.cs
++++ b/Scripts/Mobiles/PlayerMobile.cs
+@@ -4392,6 +4392,8 @@
+ 
+ 		public List<Mobile> PermaFlags { get { return m_PermaFlags; } }
+ 
++        public override int GetInventoryAccessRange(Item item) { return Server.HavenPrototype.HavenCompanionAccess.InventoryRange(this, item); }
++
+         public override int Luck { get { return AosAttributes.GetValue(this, AosAttribute.Luck) + TenthAnniversarySculpture.GetLuckBonus(this); } }
+ 
+         public int RealLuck
+--- a/Scripts/Items/Containers/Container.cs
++++ b/Scripts/Items/Containers/Container.cs
+@@ -229,7 +229,7 @@
+         public override void OnDoubleClick(Mobile from)
+         {
+             if (from.IsStaff() || RootParent is PlayerVendor ||
+-                (from.InRange(GetWorldLocation(), 2) && (Parent != null || (Z >= from.Z - 8 && Z <= from.Z + 16))))
++                (from.InRange(GetWorldLocation(), from.GetInventoryAccessRange(this)) && (Parent != null || (Z >= from.Z - 8 && Z <= from.Z + 16))))
+             {
+                 Open(from);
+             }
+--- a/Scripts/Items/Resource/Bandage.cs
++++ b/Scripts/Items/Resource/Bandage.cs
+@@ -122,7 +122,7 @@
+ 			private readonly Bandage m_Bandage;
+ 
+ 			public InternalTarget(Bandage bandage)
+-				: base(Bandage.Range, false, TargetFlags.Beneficial)
++				: base(Server.HavenPrototype.HavenPreview.Enabled ? 12 : Bandage.Range, false, TargetFlags.Beneficial)
+ 			{
+ 				m_Bandage = bandage;
+ 			}
+@@ -330,7 +330,7 @@
+                 patientNumber = -1;
+                 playSound = false;
+             }
+-            else if (!m_Healer.InRange(m_Patient, Bandage.Range))
++            else if (!m_Healer.InRange(m_Patient, Server.HavenPrototype.HavenCompanionAccess.BandageRange(m_Healer, m_Patient)))
+             {
+                 healerNumber = 500963; // You did not stay close enough to heal your target.
+                 patientNumber = -1;
+@@ -647,6 +647,7 @@
+ 
+         public static BandageContext BeginHeal(Mobile healer, Mobile patient, bool enhanced)
+         {
++            if (healer.Map != patient.Map || !healer.InRange(patient, Server.HavenPrototype.HavenCompanionAccess.BandageRange(healer, patient))) return null;
+             bool isDeadPet = (patient is BaseCreature && ((BaseCreature)patient).IsDeadPet);
+ 
+             if (patient is IRepairableMobile)

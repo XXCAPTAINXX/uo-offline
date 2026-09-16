@@ -1,0 +1,14 @@
+--- a/Projects/UOContent/Misc/AOS.cs
++++ b/Projects/UOContent/Misc/AOS.cs
+@@ -108,6 +108,11 @@
+             }
+ 
+             BaseQuiver quiver = null;
++
++            if (Server.UOOffline.HavenShadowActor.Absorb(m, from, damage, ignoreArmor, phys, fire, cold, pois, nrgy, direct))
++            {
++                return 0;
++            }
+ 
+             if (archer && from != null)
+             {

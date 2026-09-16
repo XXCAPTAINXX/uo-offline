@@ -1,0 +1,142 @@
+[
+  {
+    "file": "jenna-beacon-01.wav",
+    "sound": 32750,
+    "seconds": 8.02,
+    "peak": 27700,
+    "source_peak": 19610,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-02.wav",
+    "sound": 32751,
+    "seconds": 9.91,
+    "peak": 25542,
+    "source_peak": 18082,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-03.wav",
+    "sound": 32752,
+    "seconds": 8.42,
+    "peak": 28506,
+    "source_peak": 20181,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-04.wav",
+    "sound": 32753,
+    "seconds": 9.86,
+    "peak": 28145,
+    "source_peak": 19925,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-05.wav",
+    "sound": 32754,
+    "seconds": 10.7,
+    "peak": 30587,
+    "source_peak": 21654,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-06.wav",
+    "sound": 32755,
+    "seconds": 12.84,
+    "peak": 26311,
+    "source_peak": 18627,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-07.wav",
+    "sound": 32756,
+    "seconds": 11.54,
+    "peak": 28494,
+    "source_peak": 20172,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-08.wav",
+    "sound": 32757,
+    "seconds": 13.42,
+    "peak": 26373,
+    "source_peak": 18671,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-09.wav",
+    "sound": 32758,
+    "seconds": 14.04,
+    "peak": 28198,
+    "source_peak": 19963,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-10.wav",
+    "sound": 32759,
+    "seconds": 13.39,
+    "peak": 24445,
+    "source_peak": 17306,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-11.wav",
+    "sound": 32760,
+    "seconds": 11.66,
+    "peak": 29528,
+    "source_peak": 20904,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-12.wav",
+    "sound": 32761,
+    "seconds": 14.42,
+    "peak": 25334,
+    "source_peak": 17935,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-13.wav",
+    "sound": 32762,
+    "seconds": 14.33,
+    "peak": 28799,
+    "source_peak": 20388,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  },
+  {
+    "file": "jenna-beacon-14.wav",
+    "sound": 32763,
+    "seconds": 16.54,
+    "peak": 25455,
+    "source_peak": 18021,
+    "gain_db": 3.0,
+    "voice": "en-GB-SoniaNeural",
+    "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
+  }
+]

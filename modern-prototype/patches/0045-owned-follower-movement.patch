@@ -1,0 +1,16 @@
+diff --git a/Scripts/Mobiles/Normal/BaseCreature.cs b/Scripts/Mobiles/Normal/BaseCreature.cs
+--- a/Scripts/Mobiles/Normal/BaseCreature.cs
++++ b/Scripts/Mobiles/Normal/BaseCreature.cs
+@@ -4553,3 +4553,4 @@
+         public override bool OnMoveOver(Mobile m)
+         {
++            if (Server.HavenPrototype.HavenFollowerMovement.CanPass(this, m)) return true;
+             if (m is BaseCreature && !((BaseCreature)m).Controlled)
+diff --git a/Scripts/Mobiles/PlayerMobile.cs b/Scripts/Mobiles/PlayerMobile.cs
+--- a/Scripts/Mobiles/PlayerMobile.cs
++++ b/Scripts/Mobiles/PlayerMobile.cs
+@@ -3486,3 +3486,4 @@
+ 		public override bool OnMoveOver(Mobile m)
+ 		{
++            if (Server.HavenPrototype.HavenFollowerMovement.CanPass(this, m)) return true;
+ 			if (m is BaseCreature && !((BaseCreature)m).Controlled)
