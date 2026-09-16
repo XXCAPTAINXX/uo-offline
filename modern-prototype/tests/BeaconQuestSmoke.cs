@@ -17,8 +17,8 @@ public static class BeaconQuestSmoke
    HavenArrivalStory.PlaceNewCharacter(p);var b=HavenArrivalStory.EnsureBeacon();p.MoveToWorld(b.Location,b.Map);c=HavenCompanion.Claim(p);c.MoveToWorld(p.Location,p.Map);
    Check(!HavenBeaconQuest.Accept(p),"Skipped arrival meeting");Check(HavenArrivalStory.Meet(p)!=null,"Meet failed");
    Check(HavenBeaconQuest.Accept(p)&&!HavenBeaconQuest.Accept(p),"Accept/repeat");
-   Check(HavenStoryGifts.ClaimCape(p)&&!HavenStoryGifts.ClaimCape(p),"Cape duplicated");
-   p.FollowersMax=10;Check(HavenStoryGifts.ClaimMount(p)&&!HavenStoryGifts.ClaimMount(p),"Mount claim");
+   Check(HavenStoryGifts.Claimed(p,"cape")&&!HavenStoryGifts.ClaimCape(p),"Automatic cape missing or duplicated");
+   p.FollowersMax=10;Check(HavenStoryGifts.Claimed(p,"mount")&&!HavenStoryGifts.ClaimMount(p),"Automatic mount missing or duplicated");
    var apple=p.Backpack.FindItemByType(typeof(HavenStoryBondingApple),true) as HavenStoryBondingApple;Check(apple!=null,"Missing apple");horse=apple.Horse;
    Check(!horse.IsBonded&&horse.ControlMaster==p,"Starter horse state");
    var def=PetTrainingHelper.GetTrainingDefinition(horse);Check(def!=null&&def.Class!=Class.Untrainable&&def.ControlSlotsMax==5&&horse.ControlSlotsMax==5,"Horse training limits");foreach(var ability in PetTrainingHelper.MagicalAbilities)Check((def.MagicalAbilities&ability)==ability,"Horse missing magic "+ability);foreach(var definition in PetTrainingHelper.Definitions){foreach(var ability in definition.SpecialAbilities??new SpecialAbility[0])Check(def.SpecialAbilities.Contains(ability),"Horse special restriction");foreach(var ability in definition.WeaponAbilities??new WeaponAbility[0])Check(def.WeaponAbilities.Contains(ability),"Horse weapon restriction");foreach(var ability in definition.AreaEffects??new AreaEffect[0])Check(def.AreaEffects.Contains(ability),"Horse area restriction");}log("PASS starter horse full native training catalog and 1-to-5 follower-slot progression");horse.MoveToWorld(p.Location,p.Map);

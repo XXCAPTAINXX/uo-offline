@@ -191,3 +191,12 @@ Operator validation used an isolated world copy, then a fresh-process reload and
 
 ## 2026-09-15 — Arrival voice trigger
 Fixed silent opening: the automatic first-arrival introduction now sends Jenna's greeting sound as well as showing the story. The intro has replay and voice mute controls; returning characters can use `[story` to hear it without resetting progress. Manual replay now explains muted audio or the remaining overlap cooldown instead of silently doing nothing. Confirmed all five installed sound files exist and the running client started after installation. Audit/live builds passed and ArrivalStorySmoke passed; in-client audible output remains for user confirmation.
+
+## 2026-09-15 — English Jenna and automatic starter gifts
+Replaced the temporary Zira voice with eight en-GB-SoniaNeural lines. User approved the English-accent gear sample. New clips cover cape growth, the horse/bonding apple, and the fountain alongside the five original story beats. Installed sound IDs32750–32757; ICQ32766 unchanged. Client must fully restart to load the new sound inventory. Build scripts retain actual MP3/WAV masters and generate the client-specific raw-PCM overrides, with measured durations matching the server queue.
+
+Starter cape, horse and apple now arrive automatically after meeting Jenna. Existing introduced characters receive missing gifts on login near her, or by reopening `[story` after recalling her. Clear receipt messages identify the backpack items and nearby horse. Full packs/follower limits leave rewards unclaimed and available through the journal. Claimed gift buttons replay explanations without duplicating gifts.
+
+Playback queues different lines instead of dropping gift explanations during the greeting. Duplicate queued/playing lines are suppressed, mute/logout clear pending lines, and a measured-duration gap prevents overlap. Mute cannot interrupt a sound already sent to the client.
+
+Validation: all eight waveforms passed PCM format, duration and non-clipping checks. BeaconQuestSmoke and ArrivalStorySmoke passed with automatic delivery. StoryVoiceSmoke captured native PlaySound packets in greeting/cape/horse order, verified deduplication and pending-queue mute. Independent static review found no gift-duplication or queue blocker; its missing-Jenna notice and logout cleanup improvements were applied. Live Release build checked before startup.

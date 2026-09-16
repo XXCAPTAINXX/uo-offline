@@ -15,10 +15,11 @@ namespace Server.HavenPrototype
    "That is Captain Mara's handwriting. She was planning a rescue, not a treasure hunt. Come on. Let's see what this mark of yours can do.",
    "There! Did you see the light? The beacon answers when we work together. And the golem still has most of its dignity.",
    "Tide, anchor, star. A sailor's way home. Remember that order. I think our stubborn little beacon is about to tell us something.",
-   "An island! That's our old refuge. If the beacon remembers the route, someone may still be out there. Looks like you and I have an adventure ahead of us."
+   "An island! That's our old refuge. If the beacon remembers the route, someone may still be out there. Looks like you and I have an adventure ahead of us.",
+   "Here, this cape is yours. Wear it when you fight, and it will grow stronger with you, all the way to level twenty. Hover over it to see your progress. Consider it a welcome present.",
+   "And this gentle horse is yours, too. Feed it the apple in your pack, and it will bond with you immediately. Double-click to ride. Look after each other, all right?",
+   "You earned this. Place the expedition fountain in your house, then put your bandages inside. It will enhance the whole stack at once. No waiting around. We've got adventures to get to."
   };
-  sealed class VoiceClock {public DateTime Next;}
-  static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Mobile,VoiceClock> VoiceClocks=new System.Runtime.CompilerServices.ConditionalWeakTable<Mobile,VoiceClock>();
   static string Key(Mobile p,string field){return "Haven.BeaconQuest:"+p.Serial.Value+":"+field;}
   static int Read(Mobile p,string field){int n;var a=p==null?null:p.Account as Account;return a!=null&&Int32.TryParse(a.GetTag(Key(p,field)),out n)?n:0;}
   static void Write(Mobile p,string field,int n){((Account)p.Account).SetTag(Key(p,field),n.ToString());}
@@ -26,7 +27,7 @@ namespace Server.HavenPrototype
   public static int Damage(Mobile p){return Read(p,"damage");}
   public static int Glyph(Mobile p){return Read(p,"glyph");}
   public static bool VoiceEnabled(Mobile p){return Read(p,"muted")==0;}
-  public static void ToggleVoice(Mobile p){if(HavenMarks.CanUse(p))Write(p,"muted",VoiceEnabled(p)?1:0);}
+  public static void ToggleVoice(Mobile p){if(HavenMarks.CanUse(p)){Write(p,"muted",VoiceEnabled(p)?1:0);if(!VoiceEnabled(p))HavenStoryVoice.Clear(p);}}
   public static void Initialize(){HavenTrainingGolem.PracticeDamage+=RecordPractice;CommandSystem.Register("storyquest",AccessLevel.Player,e=>Show(e.Mobile));EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)Timer.DelayCall(TimeSpan.FromSeconds(4),()=>EnsureNodes());};}
   public static HavenCompanion NearbyJenna(Mobile p){return p==null?null:World.Mobiles.Values.OfType<HavenCompanion>().FirstOrDefault(c=>!c.Deleted&&c.IsOwner(p)&&c.Alive&&!c.IsDeadPet&&!c.IsStabled&&!c.OnMission&&c.Map==p.Map&&c.InRange(p,8)&&c.InLOS(p));}
   static bool Ready(Mobile p){return HavenMarks.CanUse(p)&&NearbyJenna(p)!=null;}
@@ -50,7 +51,7 @@ namespace Server.HavenPrototype
   public static bool Accept(Mobile p)
   {
    if(!Ready(p)||!AtBeacon(p)||Phase(p)!=0||HavenArrivalStory.Stage(p)==1||!EnsureNodes())return false;
-   Write(p,"damage",0);Write(p,"glyph",0);Advance(p,1,0);return true;
+   Write(p,"damage",0);Write(p,"glyph",0);Advance(p,1,0);HavenStoryGifts.GiveStarterItems(p);return true;
   }
   public static bool Inspect(Mobile p,HavenBeaconClue node)
   {
@@ -82,7 +83,8 @@ namespace Server.HavenPrototype
   {
    if(p==null||p.Deleted||line<0||line>=VoiceLines.Length)return;
    p.SendMessage(0x59B,"Jenna: "+VoiceLines[line]);
-   if(VoiceEnabled(p)&&p.NetState!=null){var clock=VoiceClocks.GetValue(p,x=>new VoiceClock());if(DateTime.UtcNow>=clock.Next){clock.Next=DateTime.UtcNow.AddSeconds(22);p.Send(new PlaySound(32760+line,p.Location));}else if(replay)p.SendMessage("Voice replay is ready in "+(int)Math.Ceiling((clock.Next-DateTime.UtcNow).TotalSeconds)+" seconds.");}else if(replay&&!VoiceEnabled(p))p.SendMessage("Voice is muted. Turn it on to hear Jenna.");
+   if(VoiceEnabled(p))HavenStoryVoice.Enqueue(p,line,replay);
+   else if(replay)p.SendMessage("Voice is muted. Turn it on to hear Jenna.");
   }
   public static void Show(Mobile p){if(!HavenMarks.CanUse(p))return;p.CloseGump(typeof(HavenBeaconQuestGump));p.SendGump(new HavenBeaconQuestGump(p));}
   public static IEntity Target(Mobile p)

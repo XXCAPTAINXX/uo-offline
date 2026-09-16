@@ -1,8 +1,13 @@
-# Jenna: A Light That Answers
-Original dialogue written for Haven, spoken by Microsoft Zira Desktop using System.Speech. This is a temporary synthetic female voice, not an actor performance or voice clone.
+# Jenna: English-accent neural dialogue
 
-Build-StoryVoice.ps1 creates the WAVs; Package-StoryVoice.py validates and packages them. Install-StoryVoice.ps1 installs sound IDs32760–32764. The existing ICQ sound32766 is untouched.
+Original Haven dialogue synthesized with Microsoft en-GB-SoniaNeural through edge-tts. This replaces the temporary Windows Zira desktop voice. No actor cloning or book excerpts.
 
-The installed TazUO override loader scans `.mp3` names but plays their bytes as raw signed16-bit mono22050Hz PCM. Consequently the numbered files deliberately contain headerless PCM, not encoded MP3. Use the named WAV files for ordinary playback/editing. Real MP3 or RIFF headers in these overrides cause static.
+Install edge-tts and imageio-ffmpeg in a build-only Python environment. Build-StoryVoiceNeural.py (or Build-StoryVoice.ps1) generates eight genuine MP3 masters under encoded/, WAV masters, headerless game overrides, a manifest and the matching duration table in HavenStoryVoice.cs. Only the original dialogue text goes to the online synthesis service. Gameplay plays the installed files locally.
 
-Restart TazUO after installing. The quest journal provides replay and mute controls; subtitles are always available. Voice playback is private to the player. A22-second guard prevents overlapping clips; each clip is under12seconds. In-client listening still requires verification.
+Install-StoryVoice.ps1 installs IDs 32750–32757. ICQ 32766 is untouched. Older 32760–32764 overrides are unused. Fully restart TazUO after installing because it caches available overrides/audio.
+
+The installed TazUO loader scans .mp3 filenames but plays raw signed 16-bit mono 22050Hz PCM. Numbered .mp3 files are therefore deliberately headerless PCM. The encoded/ MP3 and named WAV files are for ordinary playback.
+
+Gift explanations play only after successful delivery. Missing starter gifts are retried on login near Jenna after the introduction, with journal collection as a fallback for full packs/follower slots. Received-gift buttons replay their explanations without giving duplicate rewards. Audio queues in order using measured clip lengths, skips duplicate queued lines, and clears queued playback when muted or disconnected. Current playing audio cannot be stopped by the server mute toggle.
+
+Technical waveform/build/runtime checks are automated. Final voice quality and in-client listening are user-reviewed.

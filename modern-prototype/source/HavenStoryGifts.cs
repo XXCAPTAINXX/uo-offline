@@ -8,30 +8,37 @@ namespace Server.HavenPrototype
  {
   static string Key(Mobile p,string gift){return "Haven.StoryGift:"+p.Serial.Value+":"+gift;}
   public static bool Claimed(Mobile p,string gift){var a=p.Account as Account;return a!=null&&a.GetTag(Key(p,gift))=="1";}
+  public static void GiveStarterItems(Mobile p)
+  {
+   if(!HavenMarks.CanUse(p)||(HavenBeaconQuest.Phase(p)<1&&HavenArrivalStory.Stage(p)<2)||(Claimed(p,"cape")&&Claimed(p,"mount")))return;
+   if(HavenBeaconQuest.NearbyJenna(p)==null){p.SendMessage("Jenna still has your starter gifts. Recall her beside you, then type [story to receive them.");return;}
+   if(!Claimed(p,"cape")&&!ClaimCape(p))p.SendMessage("Jenna is holding your cape: make room in your backpack, then use the quest journal to collect it.");
+   if(!Claimed(p,"mount")&&!ClaimMount(p))p.SendMessage("Jenna is holding your horse and apple: free one follower slot and backpack space, then collect them from the quest journal.");
+  }
   public static bool ClaimFountain(Mobile p)
   {
    if(!HavenMarks.CanUse(p)||HavenBeaconQuest.Phase(p)!=5||HavenBeaconQuest.NearbyJenna(p)==null||Claimed(p,"fountain")||p.Backpack==null)return false;
    var deed=new HavenExpeditionFountainDeed();if(!p.Backpack.TryDropItem(p,deed,false)){deed.Delete();return false;}
-   ((Account)p.Account).SetTag(Key(p,"fountain"),"1");p.SendMessage("Jenna gives you an expedition fountain deed. Place it in your house; all ordinary bandages deposited are enhanced immediately.");return true;
+   ((Account)p.Account).SetTag(Key(p,"fountain"),"1");HavenBeaconQuest.Speak(p,7);return true;
   }
   public static bool ClaimMount(Mobile p)
   {
-   if(!HavenMarks.CanUse(p)||HavenBeaconQuest.Phase(p)<1||HavenBeaconQuest.NearbyJenna(p)==null||Claimed(p,"mount"))return false;
+   if(!HavenMarks.CanUse(p)||(HavenBeaconQuest.Phase(p)<1&&HavenArrivalStory.Stage(p)<2)||HavenBeaconQuest.NearbyJenna(p)==null||Claimed(p,"mount"))return false;
    if(p.Backpack==null||p.Followers>=p.FollowersMax){p.SendMessage("Make room in your backpack and free one follower slot for your horse.");return false;}
    Point3D point;if(!HavenPreview.FindLanding(new HavenPreview.Destination("Starter horse",p.Map,p.X,p.Y,p.Z),out point))return false;
    var horse=new HavenStoryHorse(p);var treat=new HavenStoryBondingApple(p,horse);
    if(!p.Backpack.CheckHold(p,treat,false)||!horse.SetControlMaster(p)){treat.Delete();horse.Delete();return false;}
    horse.Owners.Add(p);horse.ControlTarget=p;horse.ControlOrder=OrderType.Follow;horse.MoveToWorld(point,p.Map);p.Backpack.DropItem(treat);
    ((Account)p.Account).SetTag(Key(p,"mount"),"1");
-   p.SendMessage(0x59B,"Jenna: A gentle horse for the road. Drag the bonding apple from your pack onto your horse to bond immediately. Double-click your horse to ride; say 'all follow me' to call it. A bonded pet can be resurrected if it dies.");return true;
+   p.SendMessage("Received: a trail horse beside you and a bonding apple in your backpack.");HavenBeaconQuest.Speak(p,6);p.SendMessage("Horse care: A gentle horse for the road. Drag the bonding apple from your pack onto your horse to bond immediately. Double-click your horse to ride; say 'all follow me' to call it. A bonded pet can be resurrected if it dies.");return true;
   }
   public static bool ClaimCape(Mobile p)
   {
-   if(!HavenMarks.CanUse(p)||HavenBeaconQuest.Phase(p)<1||HavenBeaconQuest.NearbyJenna(p)==null||Claimed(p,"cape")||p.Backpack==null)return false;
+   if(!HavenMarks.CanUse(p)||(HavenBeaconQuest.Phase(p)<1&&HavenArrivalStory.Stage(p)<2)||HavenBeaconQuest.NearbyJenna(p)==null||Claimed(p,"cape")||p.Backpack==null)return false;
    var cape=new HavenEvolvingCape();cape.Progress.Owner=p;HavenStarterGear.Apply(cape);
    if(!p.Backpack.TryDropItem(p,cape,false)){cape.Delete();return false;}
    ((Account)p.Account).SetTag(Key(p,"cape"),"1");
-   p.SendMessage(0x59B,"Jenna: Wear this cape while defeating hostile monsters. It earns experience and grows to level 20, improving luck, regeneration, defenses and attributes. Hover over it to check progress. Practice golems do not give kill XP.");return true;
+   p.SendMessage("Received: your leveling cape is in your backpack.");HavenBeaconQuest.Speak(p,5);p.SendMessage("Gear details: Wear this cape while defeating hostile monsters. It earns experience and grows to level 20, improving luck, regeneration, defenses and attributes. Hover over it to check progress. Practice golems do not give kill XP.");return true;
   }
  }
  public class HavenStoryHorse:Horse

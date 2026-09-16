@@ -23,6 +23,6 @@ public static class ArrivalStorySmoke
    p.MoveToWorld(new Point3D(1400,1700,0),Map.Felucca);at=p.Location;HavenArrivalStory.Show(p);if(p.Location!=at||p.Map!=Map.Felucca||companion.Skills.Total!=skills)throw new Exception("Replay changed progress/location");
    var old=new PlayerMobile{Player=true,Body=0x190};account[1]=old;old.MoveToWorld(at,Map.Felucca);try{if(HavenArrivalStory.PlaceNewCharacter(old)||HavenArrivalStory.Meet(old)!=null||HavenArrivalStory.Stage(old)!=0)throw new Exception("Existing character enrolled");if(new HavenArrivalStoryGump(old,0).Entries.Count==0||new HavenArrivalStoryGump(old,1).Entries.Count==0)throw new Exception("Replay pages");}finally{old.Delete();}
    log("PASS first-character arrival at valid Haven landing; no repeated movement; beacon idempotence; female Jenna recruitment once; existing-character replay preserves location/skills and cannot recruit/reset");
-  }finally{if(companion!=null)companion.Delete();p.Delete();}
+  }finally{foreach(var horse in World.Mobiles.Values.OfType<HavenStoryHorse>().Where(h=>h.GiftOwner==p).ToArray())horse.Delete();if(companion!=null)companion.Delete();p.Delete();}
  }
 }

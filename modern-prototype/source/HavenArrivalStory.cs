@@ -18,7 +18,7 @@ namespace Server.HavenPrototype
   {
    CommandSystem.Register("story",AccessLevel.Player,e=>Show(e.Mobile));
    EventSink.ServerStarted+=()=>{if(HavenPreview.Enabled)EnsureBeacon();};
-   EventSink.Login+=e=>Timer.DelayCall(TimeSpan.FromSeconds(2),()=>{if(HavenPreview.Enabled&&e.Mobile!=null&&!e.Mobile.Deleted&&e.Mobile.NetState!=null&&Stage(e.Mobile)==1){Show(e.Mobile);HavenBeaconQuest.Speak(e.Mobile,0);}});
+   EventSink.Login+=e=>Timer.DelayCall(TimeSpan.FromSeconds(2),()=>{if(HavenPreview.Enabled&&e.Mobile!=null&&!e.Mobile.Deleted&&e.Mobile.NetState!=null&&Stage(e.Mobile)==1){Show(e.Mobile);HavenBeaconQuest.Speak(e.Mobile,0);}else if(HavenPreview.Enabled&&e.Mobile!=null&&!e.Mobile.Deleted&&e.Mobile.NetState!=null&&(Stage(e.Mobile)==2||HavenBeaconQuest.Phase(e.Mobile)>0))HavenStoryGifts.GiveStarterItems(e.Mobile);});
   }
   public static bool PlaceNewCharacter(Mobile p)
   {
@@ -36,6 +36,7 @@ namespace Server.HavenPrototype
   public static void Show(Mobile p,int page=0)
   {
    if(!HavenPreview.Enabled||p==null||p.Deleted||!p.Player)return;
+   if(Stage(p)>=2)HavenStoryGifts.GiveStarterItems(p);
    p.CloseGump(typeof(HavenArrivalStoryGump));p.SendGump(new HavenArrivalStoryGump(p,page));
   }
   public static HavenCompanion Meet(Mobile p)
@@ -43,7 +44,7 @@ namespace Server.HavenPrototype
    if(!HavenPreview.Enabled||p==null||!p.Alive||Stage(p)!=1||p.Map!=Arrival.Map||!p.InRange(Arrival.Point,8)||!p.InLOS(Arrival.Point))return null;
    var c=HavenCompanion.Claim(p);if(c==null||!c.Alive||c.IsDeadPet||c.IsStabled||c.OnMission||c.Map!=p.Map||!c.InRange(p,8)||!c.InLOS(p))return null;
    c.Female=true;c.Body=0x191;c.FacialHairItemID=0;c.Name="Jenna Ashford";c.EnsureWardrobe();
-   SetStage(p,2);HavenCompanionPresence.EnsureParty(c,p);c.SayTo(p,"Well... you're definitely not the supplies I ordered. Welcome to Haven.");return c;
+   SetStage(p,2);HavenCompanionPresence.EnsureParty(c,p);c.SayTo(p,"Well... you're definitely not the supplies I ordered. Welcome to Haven.");HavenStoryGifts.GiveStarterItems(p);return c;
   }
  }
  public class HavenArrivalBeacon:Item
