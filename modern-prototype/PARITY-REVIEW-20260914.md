@@ -183,3 +183,8 @@ Approved next art direction: tide/anchor/star expedition motif; portable Wayfind
 Jenna's Haven trail horse now exposes the full existing pet-training catalog: all native magic/mastery choices, special abilities, weapon moves and area effects. It can train from 1 to 5 follower slots. Existing horses receive the expanded limits on load; ownership, bonding, stats, skills and purchased training remain intact. Ordinary horses are unchanged. Skill caps still require the existing power-scroll/training progression.
 
 Validation: extended BeaconQuestSmoke compares the horse's definition against every native training-table option and checks 1-to-5 slot limits. Full quest/bonding/fountain/sparring regression passed; audit and live Release builds checked before deployment.
+
+## 2026-09-15 — Verified fresh-start house handoff
+Added a one-time, account-tagged house ownership handoff for an explicitly requested character reset. It transfers only listed houses still owned by the archived character, updates lockdown/secure/addon ownership, calls native OnTransfer, and issues fresh keys. Missing archived owners are rejected; unresolved houses remain pending instead of losing their recovery record. Subsequent logins cannot repeat a completed handoff.
+
+Operator validation used an isolated world copy, then a fresh-process reload and simulated new-character arrival. Both furnished houses transferred once and the new character reached the story beacon. Live reset preserved the original character/items/pets in a banned archive account and a separate hash-verified full-world backup; household stored contents were archived while furnishings remained. No audit saves were deployed. The one-time operator was removed after completion.
