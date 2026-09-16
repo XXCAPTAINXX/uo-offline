@@ -200,3 +200,6 @@ Starter cape, horse and apple now arrive automatically after meeting Jenna. Exis
 Playback queues different lines instead of dropping gift explanations during the greeting. Duplicate queued/playing lines are suppressed, mute/logout clear pending lines, and a measured-duration gap prevents overlap. Mute cannot interrupt a sound already sent to the client.
 
 Validation: all eight waveforms passed PCM format, duration and non-clipping checks. BeaconQuestSmoke and ArrivalStorySmoke passed with automatic delivery. StoryVoiceSmoke captured native PlaySound packets in greeting/cape/horse order, verified deduplication and pending-queue mute. Independent static review found no gift-duplication or queue blocker; its missing-Jenna notice and logout cleanup improvements were applied. Live Release build checked before startup.
+
+## 2026-09-15 — Louder Jenna voice
+Raised all eight installed Jenna voice overrides by +3 dB using the unchanged WAV masters. Peak validation passed without clipping (maximum 30,587 of 32,767); durations and voice queue timing are unchanged. Both packaging and future neural rebuilds apply the same non-cumulative gain. Client overrides were backed up and replaced; a full client restart refreshes cached sounds. No server restart required.

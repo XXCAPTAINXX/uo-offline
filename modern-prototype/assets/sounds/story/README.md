@@ -11,3 +11,5 @@ The installed TazUO loader scans .mp3 filenames but plays raw signed 16-bit mono
 Gift explanations play only after successful delivery. Missing starter gifts are retried on login near Jenna after the introduction, with journal collection as a fallback for full packs/follower slots. Received-gift buttons replay their explanations without giving duplicate rewards. Audio queues in order using measured clip lengths, skips duplicate queued lines, and clears queued playback when muted or disconnected. Current playing audio cannot be stopped by the server mute toggle.
 
 Technical waveform/build/runtime checks are automated. Final voice quality and in-client listening are user-reviewed.
+
+Game overrides receive a reproducible +3 dB voice gain from the unmodified WAV masters. Packaging rejects clipping; rebuilding never compounds the gain.

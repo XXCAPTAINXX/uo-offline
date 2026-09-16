@@ -36,3 +36,4 @@ async def build():
     text=re.sub(r'VoiceSeconds=\{.*?\}', 'VoiceSeconds={'+','.join(str(x['seconds']) for x in report)+'}',text)
     voice_source.write_text(text)
 asyncio.run(build())
+subprocess.run([sys.executable,str(root/'Package-StoryVoice.py')],check=True)

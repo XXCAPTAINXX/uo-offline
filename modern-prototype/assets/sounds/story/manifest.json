@@ -3,7 +3,9 @@
     "file": "jenna-beacon-01.wav",
     "sound": 32750,
     "seconds": 8.02,
-    "peak": 19610,
+    "peak": 27700,
+    "source_peak": 19610,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -11,7 +13,9 @@
     "file": "jenna-beacon-02.wav",
     "sound": 32751,
     "seconds": 9.91,
-    "peak": 18082,
+    "peak": 25542,
+    "source_peak": 18082,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -19,7 +23,9 @@
     "file": "jenna-beacon-03.wav",
     "sound": 32752,
     "seconds": 8.42,
-    "peak": 20181,
+    "peak": 28506,
+    "source_peak": 20181,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -27,7 +33,9 @@
     "file": "jenna-beacon-04.wav",
     "sound": 32753,
     "seconds": 9.86,
-    "peak": 19925,
+    "peak": 28145,
+    "source_peak": 19925,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -35,7 +43,9 @@
     "file": "jenna-beacon-05.wav",
     "sound": 32754,
     "seconds": 10.7,
-    "peak": 21654,
+    "peak": 30587,
+    "source_peak": 21654,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -43,7 +53,9 @@
     "file": "jenna-beacon-06.wav",
     "sound": 32755,
     "seconds": 12.84,
-    "peak": 18627,
+    "peak": 26311,
+    "source_peak": 18627,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -51,7 +63,9 @@
     "file": "jenna-beacon-07.wav",
     "sound": 32756,
     "seconds": 11.54,
-    "peak": 20172,
+    "peak": 28494,
+    "source_peak": 20172,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   },
@@ -59,7 +73,9 @@
     "file": "jenna-beacon-08.wav",
     "sound": 32757,
     "seconds": 13.42,
-    "peak": 18671,
+    "peak": 26373,
+    "source_peak": 18671,
+    "gain_db": 3.0,
     "voice": "en-GB-SoniaNeural",
     "format": "PCM16 mono 22050Hz; override is headerless despite .mp3 extension"
   }
