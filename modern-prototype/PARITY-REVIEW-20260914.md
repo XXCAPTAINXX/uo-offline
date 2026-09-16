@@ -135,3 +135,9 @@ Mission pets apply rarity before taming loss, then persist a prepared flag (tick
 Patch 0053 hooks native AnimalTaming.ScaleSkills and removes the normal-taming GreaterDragon Magery refill in Haven. GM-only PetTrainTest retains its separate native Magery refill. Lore text now explains training loss and scroll caps.
 
 PetTamingProgressionSmoke passed all rarities, normal and rolled caps, supporting skills, legendary serialization/repair, retained 120 cap with 110-to-99 retame loss, mission generation, actual ticket claim without double loss, and stored 110/120 pet recovery without mutation. Build passed with zero warnings/errors. Independent review identified retame clipping; corrected before deployment. No retroactive character/pet reset performed.
+
+### September 15: revised new-pet starting skills
+
+Per the player's correction, first-tame starting levels are now Tactics/Wrestling/Anatomy 60.0-69.9, and other previously active skills 0.0-5.0; inactive skills remain zero. This replaces the earlier percentage-based first-tame levels for all rarities and species. Ordinary caps100 and random overcap ceilings are unchanged. Retames keep percentage loss; stored pets retain their exact skills.
+
+Ticket v4 stores preparation version2, so never-owned mission pets prepared under the earlier rules receive the new starting values once on successful claim. Newly prepared tickets and stored pets avoid rerolls. Existing owned pets are not reset. Lore descriptions updated. Native runtime tests passed exact ranges for all rarities, mission pets, restart repair serialization, cap retention, ticket claims and stored-pet preservation; audit/live builds and login probe verify deployment.
