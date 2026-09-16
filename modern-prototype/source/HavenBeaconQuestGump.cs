@@ -18,11 +18,12 @@ namespace Server.HavenPrototype
     "The ledger's final entry reads: <I>We are not bringing treasure home. We are bringing people. If the route fails, let the tide carry the anchor beneath the star.</I><BR><BR>The beacon's twin marks flare when you and Jenna work together. Test that safely at the Haven practice golem.<BR><BR>Deal 50 total damage using weapons, spells, a pet, or Jenna. Keep Jenna nearby. The golem returns attacks for at most 1 damage and stops before a lethal hit. Use [cc to command Jenna to attack, or use your own weapon or spell. Refresh this journal to check progress.<BR><BR><B>Progress:</B> "+HavenBeaconQuest.Damage(p)+" / 50 damage.",
     "A flash from the practice golem lights a worn mark in the stonework nearby. Follow the direction arrow to the tide-marked waystone and double-click it with Jenna nearby.<BR><BR><B>Jenna:</B> That wasn't a battle signal. It was an answer. Someone built this thing to recognize a partnership.",
     "Three shapes emerge from the waystone: a tide, an anchor, and a star. Below them is a sailor's promise: <I>The tide brings us to the anchor; the star leads us home.</I><BR><BR>Return to the beacon with Jenna and touch the symbols in that order. A mistake only resets the sequence.<BR><BR><B>Symbols answered:</B> "+HavenBeaconQuest.Glyph(p)+" / 3.",
-    "The beacon unfolds a map of an island refuge. Beside the cove is Mara's expedition mark, still burning gold.<BR><BR><B>Jenna:</B> That's our old refuge. Someone kept the light on.<BR><BR>For a moment another message appears: <I>Rescue route restored. One arrival confirmed.</I><BR><BR>You were not summoned as a weapon. You were an answer to a call for help.<BR><BR><B>Reward received:</B> 2,500 gold banked and 20 Haven Marks. Claim your expedition fountain deed below. Place it in your house to enhance every deposited bandage immediately.<BR><BR>Your next lead is the island refuge; its story chapter will continue from this discovery."
+    "The beacon unfolds a map of an island refuge. Beside the cove is Mara's expedition mark, still burning gold.<BR><BR><B>Jenna:</B> That's our old refuge. Someone kept the light on.<BR><BR>For a moment another message appears: <I>Rescue route restored. One arrival confirmed.</I><BR><BR>You were not summoned as a weapon. You were an answer to a call for help.<BR><BR><B>Reward received:</B> 2,500 gold banked and 20 Haven Marks. Claim your expedition fountain deed below. Place it in your house to enhance every deposited bandage immediately.<BR><BR>Choose Continue island story below to prepare with Jenna and investigate Blackwake Cove."
    };
    AddHtml(24,91,670,280,"<BASEFONT COLOR=#3B2A1A>"+text[System.Math.Max(0,System.Math.Min(5,phase))]+"</BASEFONT>",false,true);
    if(phase==0)FlatButton(24,387,220,1,"Begin with Jenna");
    if(phase!=4)FlatButton(474,387,220,7,"Jenna's field guide");
+   if(phase==5)FlatButton(24,387,420,8,"Continue island story");
    if(phase==4){FlatButton(24,387,200,10,"Tide");FlatButton(248,387,200,11,"Anchor");FlatButton(472,387,220,12,"Star");}
    if(phase>=1||HavenArrivalStory.Stage(p)>=2){FlatButton(24,528,205,20,HavenStoryGifts.Claimed(p,"cape")?"Replay cape explanation":"Jenna's leveling cape");FlatButton(249,528,205,21,HavenStoryGifts.Claimed(p,"mount")?"Replay horse explanation":"Horse and bonding apple");}
    if(phase==5)FlatButton(474,528,220,22,HavenStoryGifts.Claimed(p,"fountain")?"Replay fountain explanation":"Claim fountain deed");
@@ -40,6 +41,7 @@ namespace Server.HavenPrototype
    else if(info.ButtonID==5)HavenBeaconQuest.ToggleVoice(_owner);
    else if(info.ButtonID==6){HavenArrivalStory.Show(_owner);return;}
    else if(info.ButtonID==7){_owner.SendGump(new HavenJennaFieldBriefing(_owner));return;}
+   else if(info.ButtonID==8){HavenRefugeQuest.Show(_owner);return;}
    else if(info.ButtonID>=10&&info.ButtonID<=12)HavenBeaconQuest.ChooseGlyph(_owner,info.ButtonID-10);
    HavenBeaconQuest.Show(_owner);
   }

@@ -18,7 +18,12 @@ namespace Server.HavenPrototype
    "An island! That's our old refuge. If the beacon remembers the route, someone may still be out there. Looks like you and I have an adventure ahead of us.",
    "Here, this cape is yours. Wear it when you fight, and it will grow stronger with you, all the way to level twenty. Hover over it to see your progress. Consider it a welcome present.",
    "And this gentle horse is yours, too. Feed it the apple in your pack, and it will bond with you immediately. Double-click to ride. Look after each other, all right?",
-   "You earned this. Place the expedition fountain in your house, then put your bandages inside. It will enhance the whole stack at once. No waiting around. We've got adventures to get to."
+   "You earned this. Place the expedition fountain in your house, then put your bandages inside. It will enhance the whole stack at once. No waiting around. We've got adventures to get to.",
+   "Before we chase that light across the sea, let's meet the recovery steward. Ava brings you back to life. Mara helps our pets and brings surviving corpses home. Remember to open them and collect your things.",
+   "Now we know how to get back on our feet. Let's visit the supply stones. Select something to inspect it, check the price, and only buy when you're ready. You don't have to spend anything for my benefit.",
+   "Blackwake Cove was our landing place. If those crews have taken it over, they may have our records too. Let's find their camp. We're only scouting for now.",
+   "Three crews, three captains. We only need one captain's papers. Choose a normal expedition first: three waves, then the captain. Challenge mode brings all three captains together. That can wait.",
+   "Listen to this. Keep the refuge light burning. The next arrival must find the shore. Someone wanted you here. I don't know whether that makes me feel better. But at least we're asking the right questions."
   };
   static string Key(Mobile p,string field){return "Haven.BeaconQuest:"+p.Serial.Value+":"+field;}
   static int Read(Mobile p,string field){int n;var a=p==null?null:p.Account as Account;return a!=null&&Int32.TryParse(a.GetTag(Key(p,field)),out n)?n:0;}
@@ -46,7 +51,7 @@ namespace Server.HavenPrototype
    }
    return Node(0)!=null&&Node(1)!=null&&HavenTrainingGolem.EnsureStation();
   }
-  static void StopGuide(Mobile p){if(p.QuestArrow is HavenBeaconQuestArrow)p.QuestArrow.Stop();}
+  public static void StopGuide(Mobile p){if(p.QuestArrow is HavenBeaconQuestArrow)p.QuestArrow.Stop();}
   static void Advance(Mobile p,int phase,int voice){Write(p,"phase",phase);StopGuide(p);Speak(p,voice);Show(p);}
   public static bool Accept(Mobile p)
   {

@@ -45,6 +45,20 @@ public static class BeaconQuestSmoke
    Check(fountain.Items.OfType<EnhancedBandage>().Sum(x=>x.Amount)==60241&&!fountain.Items.Any(x=>x.GetType()==typeof(Bandage)),"Fountain quantity");fountain.ConvertBandages();Check(fountain.Items.OfType<EnhancedBandage>().Sum(x=>x.Amount)==60241,"Repeated enhancement duplication");
    for(int phase=0;phase<=5;phase++){a.SetTag("Haven.BeaconQuest:"+p.Serial.Value+":phase",phase.ToString());Check(new HavenBeaconQuestGump(p).Entries.Count>0,"Journal phase");}
    HavenBeaconQuest.ToggleVoice(p);Check(!HavenBeaconQuest.VoiceEnabled(p),"Mute");HavenBeaconQuest.Speak(p,0);
+   Check(!HavenRefugeQuest.Continue(p),"Refuge remote recovery stop accepted");
+   HavenRecovery.Ensure();var steward=HavenRecovery.Steward();Check(steward!=null,"Recovery steward missing");
+   p.MoveToWorld(steward.Location,steward.Map);c.MoveToWorld(p.Location,p.Map);
+   Check(HavenRefugeQuest.Continue(p)&&HavenRefugeQuest.Stage(p)==1,"Recovery introduction");
+   HavenStarterHub.Ensure();var shop=World.Items.Values.OfType<HavenServiceStone>().First(s=>!s.Deleted&&s.Service==1&&s.Map==Map.Trammel);
+   p.MoveToWorld(shop.Location,shop.Map);c.MoveToWorld(p.Location,p.Map);Check(HavenRefugeQuest.Continue(p)&&HavenRefugeQuest.Stage(p)==2,"Shop visit without purchase");
+   var camp=HavenRefugeQuest.Camp();Check(camp!=null,"Cove missing");
+   HavenRefugeQuest.CompletedExpedition(p,camp);Check(HavenRefugeQuest.Stage(p)==2,"Premature expedition credit");
+   p.MoveToWorld(camp.Location,camp.Map);c.MoveToWorld(p.Location,p.Map);Check(HavenRefugeQuest.Continue(p)&&HavenRefugeQuest.Stage(p)==3,"Camp scouting");
+   Check(!HavenRefugeQuest.Continue(p),"Clicked through victory requirement");
+   int originalMarks=HavenMarks.Balance(p);HavenRefugeQuest.CompletedExpedition(p,camp);HavenRefugeQuest.CompletedExpedition(p,camp);
+   Check(HavenRefugeQuest.Stage(p)==4&&HavenMarks.Balance(p)==originalMarks,"Chapter completion duplicates expedition currency");
+   for(int step=0;step<5;step++){a.SetTag("Haven.RefugeQuest:"+p.Serial.Value,step.ToString());Check(new HavenRefugeQuestGump(p).Entries.Count>0,"Refuge page");}
+   log("PASS chapter two physical visits, no purchase required, premature win rejected, victory required, duplicate completion safe, all pages");
    log("PASS clues and glyph order; one-time Marks and fountain deed;60234 bandages instantly enhanced preserving existing7; repeated conversion idempotent; all journal pages and mute");
   }finally{if(p.QuestArrow!=null)p.QuestArrow.Stop();if(fountain!=null)fountain.Delete();if(other!=null)other.Delete();if(horse!=null)horse.Delete();if(c!=null)c.Delete();p.Delete();}
  }

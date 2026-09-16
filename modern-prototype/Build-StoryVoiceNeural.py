@@ -5,6 +5,7 @@ import argparse, asyncio, json, re, subprocess, sys, wave
 from pathlib import Path
 parser=argparse.ArgumentParser()
 parser.add_argument('--dependencies')
+parser.add_argument('--start-index',type=int,default=0)
 parser.add_argument('--voice',default='en-GB-SoniaNeural')
 args=parser.parse_args()
 if args.dependencies: sys.path.insert(0,args.dependencies)
@@ -13,7 +14,7 @@ root=Path(__file__).parent
 source=root/'source/HavenBeaconQuest.cs'
 section=re.search(r'VoiceLines=\{(.*?)\};',source.read_text(),re.S).group(1)
 lines=re.findall(r'"([^"\n]*)"',section)
-assert len(lines)==8
+assert len(lines)==13
 output=root/'assets/sounds/story'
 encoded=output/'encoded'
 encoded.mkdir(exist_ok=True)
@@ -22,7 +23,8 @@ async def build():
     for i,line in enumerate(lines):
         mp3=encoded/f'jenna-beacon-{i+1:02}.mp3'
         wav=output/f'jenna-beacon-{i+1:02}.wav'
-        await edge_tts.Communicate(line,args.voice,rate='-3%').save(str(mp3))
+        if i >= args.start_index or not mp3.exists():
+            await edge_tts.Communicate(line,args.voice,rate='-3%').save(str(mp3))
         subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),'-y','-loglevel','error','-i',str(mp3),'-ac','1','-ar','22050','-c:a','pcm_s16le',str(wav)],check=True)
         with wave.open(str(wav),'rb') as f:
             data=f.readframes(f.getnframes());seconds=len(data)/44100

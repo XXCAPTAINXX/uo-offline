@@ -21,6 +21,6 @@ for i, path in enumerate(sorted(root.glob('jenna-beacon-*.wav'))):
     (root / ('%d.mp3' % (32750+i))).write_bytes(data)
     report.append(dict(file=path.name, sound=32750+i, seconds=round(seconds,2), peak=output_peak, source_peak=peak, gain_db=gain_db, voice='en-GB-SoniaNeural',
                        format='PCM16 mono 22050Hz; override is headerless despite .mp3 extension'))
-assert len(report) == 8
+assert len(report) == 13
 (root / 'manifest.json').write_text(json.dumps(report, indent=2)+'\n')
 print(json.dumps(report, indent=2))
