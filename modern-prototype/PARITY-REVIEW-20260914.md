@@ -203,3 +203,6 @@ Validation: all eight waveforms passed PCM format, duration and non-clipping che
 
 ## 2026-09-15 — Louder Jenna voice
 Raised all eight installed Jenna voice overrides by +3 dB using the unchanged WAV masters. Peak validation passed without clipping (maximum 30,587 of 32,767); durations and voice queue timing are unchanged. Both packaging and future neural rebuilds apply the same non-cumulative gain. Client overrides were backed up and replaced; a full client restart refreshes cached sounds. No server restart required.
+
+## 2026-09-15 — Visible quest waystone
+Moved the tide-marked waystone away from the house corner to open ground beside the training area at Trammel3473,2603,10. Existing stones migrate once in place, preserving their serial and all character quest progress; the direction arrow already tracks the stone object. Persisted placement revision prevents repeated relocation. Native map checks found no wall or roof tiles within two tiles of the new spot. Full BeaconQuestSmoke passed including migration, repeat-ensure stability and quest completion. No client art update required.

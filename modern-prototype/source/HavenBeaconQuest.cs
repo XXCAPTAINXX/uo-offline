@@ -38,11 +38,11 @@ namespace Server.HavenPrototype
    if(!HavenPreview.Enabled)return false;
    for(int kind=0;kind<2;kind++)
    {
-    if(Node(kind)!=null)continue;
-    int x=kind==0?3495:3461,y=kind==0?2572:2595;
+    var existing=Node(kind);if(existing!=null&&(kind!=1||existing.PlacementRevision>=1))continue;
+    int x=kind==0?3495:3473,y=kind==0?2572:2603;
     var site=new HavenPreview.Destination("Expedition clue",Map.Trammel,x,y,Map.Trammel.GetAverageZ(x,y));Point3D landing;
     if(!HavenPreview.FindLanding(site,out landing))continue;
-    new HavenBeaconClue(kind).MoveToWorld(landing,Map.Trammel);
+    var clue=existing??new HavenBeaconClue(kind);clue.MoveToWorld(landing,Map.Trammel);clue.PlacementRevision=1;
    }
    return Node(0)!=null&&Node(1)!=null&&HavenTrainingGolem.EnsureStation();
   }
@@ -103,11 +103,12 @@ namespace Server.HavenPrototype
  public class HavenBeaconClue:Item
  {
   public int Kind{get;private set;}
+  public int PlacementRevision{get;internal set;}
   public HavenBeaconClue(int kind):base(kind==0?0xFF1:0x1F14){Kind=kind;Name=kind==0?"Mara's expedition ledger":"the tide-marked waystone";Hue=kind==0?0:0x489;Movable=false;}
   public HavenBeaconClue(Serial s):base(s){}
   public override void OnDoubleClick(Mobile p){if(!HavenBeaconQuest.Inspect(p,this)){p.SendMessage("Follow your current objective with Jenna nearby. Stand beside the clue to inspect it.");HavenBeaconQuest.Show(p);}}
-  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(0);w.Write(Kind);}
-  public override void Deserialize(GenericReader r){base.Deserialize(r);r.ReadInt();Kind=r.ReadInt();}
+  public override void Serialize(GenericWriter w){base.Serialize(w);w.Write(1);w.Write(Kind);w.Write(PlacementRevision);}
+  public override void Deserialize(GenericReader r){base.Deserialize(r);int version=r.ReadInt();Kind=r.ReadInt();PlacementRevision=version>=1?r.ReadInt():0;}
  }
  public sealed class HavenBeaconQuestArrow:QuestArrow
  {
